@@ -35,6 +35,7 @@ namespace llexer {
     reg_prime
         | '*' reg_prime
         | '+' reg_prime
+        | '?' reg_prime
         | '-' reg reg_prime
         | '|' reg reg_prime
         | epsilon
@@ -459,6 +460,25 @@ namespace llexer {
 
         private ASTReg reg;
 
+    }
+
+    public class ASTRegQuestion : ASTReg {
+        public ASTRegQuestion(ASTReg reg) {
+            this.reg = reg;
+        }
+
+        public override string toString(int level) {
+            string str = tab(level);
+            str += "QUESTION\n";
+            str += reg.toString(level + 1);
+            return str;
+        }
+
+        public override NFATable toNFA() {
+            return reg.toNFA().question();
+        }
+
+        private ASTReg reg;
     }
 
     public class ASTRegAnd : ASTReg {

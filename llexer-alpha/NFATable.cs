@@ -130,7 +130,6 @@ namespace llexer {
             // Create a new NFA.
             NFATable nfa = new NFATable();
             nfa.addState();
-            nfa.setStateFinal(1);
             nfa.addTransition(0, 1, CharMap.EPSILON);
 
             // Merge nfa with this one.
@@ -138,6 +137,37 @@ namespace llexer {
 
             // Connect the end of nfa to S1.
             ret.addTransition(1, 2, CharMap.EPSILON);
+
+            // Set the final states of ret.
+            ret.setStateFinal(1);
+
+            // Connect the E1 to the end of nfa.
+            int offset = 2;
+            foreach (int final in finalStates) {
+                ret.addTransition(final + offset, 1, CharMap.EPSILON);
+            }
+
+            return ret;
+        }
+
+        /// <summary>
+        /// ? operation.
+        ///    reg
+        ///   /e  \e
+        ///  S ---> E
+        /// </summary>
+        /// <returns> A new NFATable with "reg?".</returns>
+        public NFATable question() {
+            // Create a new NFA.
+            NFATable nfa = new NFATable();
+            nfa.addState();
+            nfa.addTransition(0, 1, CharMap.EPSILON);
+
+            // Merge nfa with this one.
+            NFATable ret = nfa.merge(this);
+
+            // Connect the end of nfa to S1.
+            ret.addTransition(0, 2, CharMap.EPSILON);
 
             // Set the final states of ret.
             ret.setStateFinal(1);

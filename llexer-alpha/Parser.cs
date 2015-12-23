@@ -170,6 +170,12 @@ namespace llexer {
             }
 
             pos = posBk;
+            if (match(src, ref pos, '?')) {
+                ret = new ASTRegQuestion(ret);
+                return parse_reg_prime(src, ref pos, ref ret);
+            }
+
+            pos = posBk;
             if (match(src, ref pos, '-') &&
                 parse_reg(src, ref pos, out next)
                 ) {
