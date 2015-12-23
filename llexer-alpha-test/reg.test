@@ -1,0 +1,37 @@
+﻿\a
+# 1 a
+# 0 b
+\a*
+# 1 aaaaaaa
+# 1 
+# 0 aaaabaaa
+# 0 baaaa
+\b-\a+
+# 1 baaa
+# 1 ba
+# 0 bab
+# 0 b
+\a|\b
+# 1 a
+# 1 b
+# 0 *
+\a-\b
+# 1 ab
+# 0 abb
+# 0 b
+# 0 a
+# 0 ba
+\a-\b-\c
+# 1 abc
+\\WLD*
+# 1 abdoaifangoiarb
+# 1 ,./';89123]
+\[-\\a-z*-\]
+# 1 [whatcoivpaoiaiodv]
+# 0 [whatcoivpaoiaiodv
+# 0 whatcoivpaoiaiodv]
+\/-\/-\\WLD*
+# 1 // this is a comment
+\[
+# 1 [
+# 0 [[
