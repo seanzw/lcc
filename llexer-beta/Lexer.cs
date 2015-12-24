@@ -11,7 +11,7 @@ namespace llexer {
         public static readonly int WILD = CHARSETSIZE;
         public static readonly int EPSILON = CHARSETSIZE + 1;
 
-        public static readonly int EOF = 0x1A;
+        public static readonly int EOF = 0x1A;         
     }
 
     public class Token {
@@ -60,7 +60,7 @@ namespace llexer {
 
         /* Feed an input to this DFA. */
         public void scan(int input) {
-
+            
             switch (state) {
                 case SUCCESS_STATE:
                     state = FAILURE_STATE;
@@ -124,99 +124,109 @@ namespace llexer {
                 Console.WriteLine("Lexe Error: " + _msg);
             };
 
-            #region User code.
+        #region User code.
 
-            Func<int, int> code = (i) => {
-                while (i < llSrc.Length) {
-                    if (llSrc[i] == '}' && llSrc[i - 1] == '\n') {
-                        return i + 1;
+    Func<int, int> code = (i) => {
+        while (i < llSrc.Length) {
+            if (llSrc[i] == '}' && llSrc[i - 1] == '\n') {
+                return i + 1;
+            }
+            i++;
+        }
+        return -1;
+    };
+
+    Func<int, int> atom = (i) => {
+        if (i < llSrc.Length) {
+            if (llSrc[i++] == '\\') {
+                if (i + 3 < llSrc.Length) {
+                    string sub = llSrc.Substring(i, 3);
+                    if (sub == "WLD" ||
+                        sub == "a-z" ||
+                        sub == "a-Z" ||
+                        sub == "0-9"
+                        ) {
+                        return i + 3;
                     }
-                    i++;
                 }
-                return -1;
-            };
-
-            Func<int, int> atom = (i) => {
-                if (i < llSrc.Length) {
-                    if (llSrc[i++] == '\\') {
-                        if (i + 3 < llSrc.Length) {
-                            string sub = llSrc.Substring(i, 3);
-                            if (sub == "WLD" ||
-                                sub == "a-z" ||
-                                sub == "a-Z" ||
-                                sub == "0-9"
-                                ) {
-                                return i + 3;
-                            }
-                        }
-                        if (i + 1 < llSrc.Length) {
-                            return i + 1;
-                        } else {
-                            return -1;
-                        }
-                    } else {
-                        return i;
-                    }
+                if (i + 1 < llSrc.Length) {
+                    return i + 1;
                 } else {
                     return -1;
                 }
-            };
+            } else {
+                return i;
+            }
+        } else {
+            return -1;
+        }
+    };
 
             Func<int, bool> _action = (_rule) => {
                 switch (_rule) {
-                    case 0: {
-                            // Code block.
-                            llCur = code(llPre);
-                            if (llCur != -1) {
-                                llTokens.Add(new Token(TOKEN.CODE, llSrc.Substring(llPre, llCur - llPre)));
-                                return true;
-                            } else {
-                                llError("Unknown token at " + ", maybe CODE?");
-                                return false;
-                            }
-                        }
-                    case 1: {
-                            llTokens.Add(new Token(TOKEN.LBRACKET, llSrc.Substring(llPre, llCur - llPre)));
-                            return true;
-                        }
-                    case 2: {
-                            llTokens.Add(new Token(TOKEN.RBRACKET, llSrc.Substring(llPre, llCur - llPre)));
-                            return true;
-                        }
-                    case 3: {
-                            llTokens.Add(new Token(TOKEN.STAR, llSrc.Substring(llPre, llCur - llPre)));
-                            return true;
-                        }
-                    case 4: {
-                            llTokens.Add(new Token(TOKEN.PLUS, llSrc.Substring(llPre, llCur - llPre)));
-                            return true;
-                        }
-                    case 5: {
-                            llTokens.Add(new Token(TOKEN.AND, llSrc.Substring(llPre, llCur - llPre)));
-                            return true;
-                        }
-                    case 6: {
-                            llTokens.Add(new Token(TOKEN.OR, llSrc.Substring(llPre, llCur - llPre)));
-                            return true;
-                        }
-                    case 7: {
-                            llCur = atom(llCur);
-                            if (llCur != -1) {
-                                llTokens.Add(new Token(TOKEN.ATOM, llSrc.Substring(llPre, llCur - llPre)));
-                                return true;
-                            } else {
-                                llError("Unknown token, maybe ATOM?");
-                                return false;
-                            }
-                        }
-                    case 8: {
-                            // Ignore space.
-                            return true;
-                        }
-                    case 9: {
-                            // Ignore line comment.
-                            return true;
-                        }
+                    case 0:
+{
+    // Code block.
+    llCur = code(llPre);
+    if (llCur != -1) {
+        llTokens.Add(new Token(TOKEN.CODE, llSrc.Substring(llPre, llCur - llPre)));
+        return true;
+    } else {
+        llError("Unknown token at " + ", maybe CODE?");
+        return false;
+    }
+}
+                    case 1:
+{
+    llTokens.Add(new Token(TOKEN.LBRACKET, llSrc.Substring(llPre, llCur - llPre)));
+    return true;
+}
+                    case 2:
+{
+    llTokens.Add(new Token(TOKEN.RBRACKET, llSrc.Substring(llPre, llCur - llPre)));
+    return true;
+}
+                    case 3:
+{
+    llTokens.Add(new Token(TOKEN.STAR, llSrc.Substring(llPre, llCur - llPre)));
+    return true;
+}
+                    case 4:
+{
+    llTokens.Add(new Token(TOKEN.PLUS, llSrc.Substring(llPre, llCur - llPre)));
+    return true;
+}
+                    case 5:
+{
+    llTokens.Add(new Token(TOKEN.AND, llSrc.Substring(llPre, llCur - llPre)));
+    return true;
+}
+                    case 6:
+{
+    llTokens.Add(new Token(TOKEN.OR, llSrc.Substring(llPre, llCur - llPre)));
+    return true;
+}
+                    case 7:
+{
+    llCur = atom(llCur);
+    if (llCur != -1) {
+        llTokens.Add(new Token(TOKEN.ATOM, llSrc.Substring(llPre, llCur - llPre)));
+        return true;
+    } else {
+        llError("Unknown token, maybe ATOM?");
+        return false;
+    }
+}
+                    case 8:
+{
+    // Ignore space.
+    return true;
+}
+                    case 9:
+{
+    // Ignore line comment.
+    return true;
+}
                     default:
                         llError("Unkown rule.");
                         return false;
@@ -266,9 +276,9 @@ namespace llexer {
                 }
                 return map;
             };
-            List<DFA> dfas = new List<DFA>();
+			List<DFA> dfas = new List<DFA>();
             #region DFA0
-            {
+			{
                 int[,] trans = new int[,] {
                     { 1 },
                     { -1 },
@@ -282,10 +292,10 @@ namespace llexer {
                 };
                 int wild = -1;
                 dfas.Add(new DFA(trans, finals, buildMap(dict, wild)));
-            }
+			}
             #endregion
             #region DFA1
-            {
+			{
                 int[,] trans = new int[,] {
                     { 1 },
                     { -1 },
@@ -299,10 +309,10 @@ namespace llexer {
                 };
                 int wild = -1;
                 dfas.Add(new DFA(trans, finals, buildMap(dict, wild)));
-            }
+			}
             #endregion
             #region DFA2
-            {
+			{
                 int[,] trans = new int[,] {
                     { 1 },
                     { -1 },
@@ -316,10 +326,10 @@ namespace llexer {
                 };
                 int wild = -1;
                 dfas.Add(new DFA(trans, finals, buildMap(dict, wild)));
-            }
+			}
             #endregion
             #region DFA3
-            {
+			{
                 int[,] trans = new int[,] {
                     { 1 },
                     { -1 },
@@ -333,10 +343,10 @@ namespace llexer {
                 };
                 int wild = -1;
                 dfas.Add(new DFA(trans, finals, buildMap(dict, wild)));
-            }
+			}
             #endregion
             #region DFA4
-            {
+			{
                 int[,] trans = new int[,] {
                     { 1 },
                     { -1 },
@@ -350,10 +360,10 @@ namespace llexer {
                 };
                 int wild = -1;
                 dfas.Add(new DFA(trans, finals, buildMap(dict, wild)));
-            }
+			}
             #endregion
             #region DFA5
-            {
+			{
                 int[,] trans = new int[,] {
                     { 1 },
                     { -1 },
@@ -367,10 +377,10 @@ namespace llexer {
                 };
                 int wild = -1;
                 dfas.Add(new DFA(trans, finals, buildMap(dict, wild)));
-            }
+			}
             #endregion
             #region DFA6
-            {
+			{
                 int[,] trans = new int[,] {
                     { 1 },
                     { -1 },
@@ -384,10 +394,10 @@ namespace llexer {
                 };
                 int wild = -1;
                 dfas.Add(new DFA(trans, finals, buildMap(dict, wild)));
-            }
+			}
             #endregion
             #region DFA7
-            {
+			{
                 int[,] trans = new int[,] {
                     { 1 },
                     { -1 },
@@ -401,10 +411,10 @@ namespace llexer {
                 };
                 int wild = -1;
                 dfas.Add(new DFA(trans, finals, buildMap(dict, wild)));
-            }
+			}
             #endregion
             #region DFA8
-            {
+			{
                 int[,] trans = new int[,] {
                     { 1, 2, 3, 4 },
                     { 5, 6, 7, 8 },
@@ -435,10 +445,10 @@ namespace llexer {
                 };
                 int wild = -1;
                 dfas.Add(new DFA(trans, finals, buildMap(dict, wild)));
-            }
+			}
             #endregion
             #region DFA9
-            {
+			{
                 int[,] trans = new int[,] {
                     { 1, -1 },
                     { 2, -1 },
@@ -458,10 +468,10 @@ namespace llexer {
                 };
                 int wild = 1;
                 dfas.Add(new DFA(trans, finals, buildMap(dict, wild)));
-            }
+			}
             #endregion
             Lexer lexer = new Lexer(dfas);
             return lexer.scan(src);
-        }
-    }
+		}
+	}
 }

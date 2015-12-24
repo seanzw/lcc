@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "llexer-alpha-test", "llexer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "llexer-beta-test", "llexer-beta-test\llexer-beta-test.csproj", "{24544908-8713-4E11-B07D-8E95267FC38D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegEx", "llexer\RegEx\RegEx.csproj", "{FA842D39-6335-4F80-9A4A-EDE9669F36B1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegExTests", "llexer\RegExTests\RegExTests.csproj", "{D918A319-DA77-4F1E-92C4-4B298105F99D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{24544908-8713-4E11-B07D-8E95267FC38D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{24544908-8713-4E11-B07D-8E95267FC38D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{24544908-8713-4E11-B07D-8E95267FC38D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FA842D39-6335-4F80-9A4A-EDE9669F36B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA842D39-6335-4F80-9A4A-EDE9669F36B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA842D39-6335-4F80-9A4A-EDE9669F36B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA842D39-6335-4F80-9A4A-EDE9669F36B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D918A319-DA77-4F1E-92C4-4B298105F99D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D918A319-DA77-4F1E-92C4-4B298105F99D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D918A319-DA77-4F1E-92C4-4B298105F99D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D918A319-DA77-4F1E-92C4-4B298105F99D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
