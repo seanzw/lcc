@@ -21,5 +21,24 @@ $(\\.|[^\$\n\\])*$
                 Console.WriteLine(token);
             }
         }
+
+        [TestMethod]
+        public void llexer_alpha_parser() {
+
+            string src = @"
+$(\\.|[^\$\n\\])*$  
+    lltokens.AddLast(new T_REGEX_LITERAL(lltext));
+
+$[ \n\r\t]+$
+
+%%
+
+            ";
+
+            var tokens = Lexer.Instance.scan(src);
+            var parser = new llexer_alpha.Parser();
+            llexer_alpha.ASTLex ast = parser.parse(tokens);
+            Console.WriteLine(ast);
+        }
     }
 }

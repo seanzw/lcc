@@ -10,28 +10,24 @@ namespace llexer_alpha {
     /**************************************************
 
     lex
-        : rules_list SPLITER code_list
+        : rules SPLITER codes
         ;
 
-    rules_list
-        : rule rules_list_star
+    rules
+        : rule rules_tail
         ;
 
-    rules_list_star
-        : rules_list
+    rules_tail
+        : rules
         | epsilon
         ;
 
     rule
-        : REGEX_LITERAL code_list
+        : REGEX_LITERAL codes
         ;
 
-    code_list
-        : CODE_LINE code_list_prime
-        ;
-
-    code_list_prime
-        : code_list
+    codes
+        : CODE_LINE codes
         | epsilon
         ;
     
@@ -55,7 +51,7 @@ namespace llexer_alpha {
     }
 
     public class ASTLex : ASTNode {
-        public ASTLex(List<ASTRule> rules, List<ASTCode> codes) {
+        public ASTLex(List<ASTRule> rules, List<string> codes) {
             this.rules = rules;
             this.codes = codes;
         }
@@ -387,57 +383,41 @@ namespace llexer_alpha {
     //    }
 
         public readonly List<ASTRule> rules;
-        public readonly List<ASTCode> codes;
+        public readonly List<string> codes;
     }
 
-    public class ASTCode : ASTNode {
-        public ASTCode(string code) {
-            this.code = code;
-        }
-        public override string ToString(int level) {
-            string str = tab(level);
-            str += "CODE: ";
-            str += code;
-            return str;
-        }
+    //public class ASTCode : ASTNode {
+    //    public ASTCode(string code) {
+    //        this.code = code;
+    //    }
+    //    public override string ToString(int level) {
+    //        string str = tab(level);
+    //        str += "CODE: ";
+    //        str += code;
+    //        return str;
+    //    }
 
-        public readonly string code;
-    }
+    //    public readonly string code;
+    //}
 
     public class ASTRule : ASTNode {
-        public ASTRule(ASTRegEx regex, List<ASTCode> codes) {
+        public ASTRule(string regex, List<string> codes) {
             this.regex = regex;
             this.codes = codes;
         }
 
         public override string ToString(int level) {
             string str = tab(level);
-            str += "Rule:\n";
-            str += regex.ToString(level + 1);
+            str += "Rule: ";
+            str += regex;
             str += '\n';
             foreach (var code in codes) {
-                str += code.ToString(level + 1);
+                str += tab(level + 1) + code + "\n";
             }
             return str;
         }
-        public readonly ASTRegEx regex;
-        public readonly List<ASTCode> codes;
-    }
-
-    public sealed class ASTRegEx : ASTNode {
-        public ASTRegEx(string regex_literal) {
-            this.regex_literal = regex_literal;
-        }
-
-        public override string ToString(int level) {
-            string ret = tab(level);
-            ret += "REGEX: ";
-            ret += regex_literal;
-            return ret;
-        }
-
-
-        public readonly string regex_literal;
+        public readonly string regex;
+        public readonly List<string> codes;
     }
 
     //public class ASTRegStar : ASTRegEx {
