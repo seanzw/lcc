@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using NDState = System.Collections.Generic.HashSet<int>;    // Nondistinguishable state.
 using System.Text;
 using System.Threading.Tasks;
 
@@ -59,7 +60,7 @@ namespace RegEx {
         /// Remove unreachable state.
         /// </summary>
         /// <returns></returns>
-        public DFATable removeUnreachable() {
+        private DFATable removeUnreachable() {
 
             // All the state that can be reached from 0.
 
@@ -135,58 +136,81 @@ namespace RegEx {
 
         /// <summary>
         /// Use Hopcroft's Algorithm to simplify this DFATable.
+        /// 
+        /// https://en.wikipedia.org/wiki/DFA_minimization
         /// </summary>
         /// <returns> A new DFATable. </returns>
-        public DFATable Hopcroft() {
+        private DFATable Hopcroft() {
 
-            List<HashSet<int>> list = new List<HashSet<int>>();
+            // The list of new states.
+            List<NDState> P = new List<NDState>();
 
-            Stack<HashSet<int>> W = new Stack<HashSet<int>>();
+            // The stack to be processed.
+            Stack<NDState> W = new Stack<NDState>();
 
-            // Push finals.
-            W.Push(new HashSet<int>(finals));
+            // Push finals and non-finals.
+            // P := { F, NF };
+            // W := { F };
+            {
+                NDState F = new NDState(finals);
+                W.Push(F);
+                P.Add(F);
 
-            // Push Non-finals.
-            HashSet<int> non_finals = new HashSet<int>();
-            for (int i = 0; i < table.Count(); ++i) {
-                if (!finals.Contains(i))
-                    non_finals.Add(i);
-            }
-            if (non_finals.Count() > 0) {
-                W.Push(non_finals);
+                NDState NF = new NDState();
+                for (int i = 0; i < table.Count(); ++i) {
+                    if (!F.Contains(i))
+                        NF.Add(i);
+                }
+                if (NF.Count() > 0) {
+                    P.Add(NF);
+                }
             }
 
             while (W.Count() > 0) {
-                HashSet<int> set = W.Pop();
-                int first = set.First();
-                HashSet<int> X = new HashSet<int> { first };
-                HashSet<int> Y = new HashSet<int>();
-                foreach (int s in set.Skip(1)) {
-                    bool isDifferent = false;
-                    for (int i = 0; i < revMap.Count(); ++i) {
-                        if (table[s][i] != table[first][i]) {
-                            Y.Add(s);
-                            isDifferent = true;
-                            break;
+                NDState A = W.Pop();
+                for (int c = 0; c < revMap.Count(); ++c) {
+
+                    // X is the set of states for which a transition on c
+                    // leads to a state in A.
+                    NDState X = new NDState();
+                    for (int i = 0; i < table.Count(); ++i) {
+                        if (A.Contains(table[i][c])) {
+                            X.Add(i);
                         }
                     }
-                    if (!isDifferent) {
-                        X.Add(s);
+
+                    int PSize = P.Count();
+                    for (int i = 0; i < PSize; ++i) {
+                        NDState Y = P[i];
+                        NDState I = new NDState(X.Intersect(Y));
+                        if (I.Count() > 0 && I.Count() < Y.Count()) {
+
+                            // Replace Y with intersec(X, Y) and Y \ X.
+                            Y.ExceptWith(I);
+                            P.Add(I);
+
+                            // If Y is in W, replace Y with intersec(X, Y) and Y \ X.
+                            // Notice that since object is reference, Y in W has already changed.
+                            if (W.Contains(Y)) {
+                                W.Push(I);
+                            } else {
+                                if (I.Count() <= Y.Count()) {
+                                    W.Push(I);
+                                } else {
+                                    W.Push(Y);
+                                }
+                            }
+                        }
                     }
-                }
-                if (X.Count() > 0 && Y.Count() > 0) {
-                    W.Push(Y);
-                    W.Push(X);
-                } else {
-                    list.Add(set);
                 }
             }
 
-            for (int i = 0; i < list.Count(); ++i) {
-                if (list[i].Contains(0)) {
-                    HashSet<int> tmp = list[0];
-                    list[0] = list[i];
-                    list[i] = tmp;
+            // Make sure that 0 is the start state.
+            for (int i = 0; i < P.Count(); ++i) {
+                if (P[i].Contains(0)) {
+                    NDState tmp = P[0];
+                    P[0] = P[i];
+                    P[i] = tmp;
                     break;
                 }
             }
@@ -194,18 +218,19 @@ namespace RegEx {
             // Build the new DFATable.
             int[] newId = new int[table.Count()];
             DFATable dfa = new DFATable(map, revMap);
-            for (int i = 0; i < list.Count(); ++i) {
+            for (int i = 0; i < P.Count(); ++i) {
                 int x = dfa.addState();
-                foreach (int s in list[i]) {
+                foreach (int s in P[i]) {
                     newId[s] = x;
                 }
-                if (finals.Contains(list[i].First())) {
+                if (finals.Contains(P[i].First())) {
                     dfa.setStateFinal(x);
                 }
             }
 
-            for (int i = 0; i < list.Count(); ++i) {
-                int s = list[i].First();
+            // Copy the transition.
+            for (int i = 0; i < P.Count(); ++i) {
+                int s = P[i].First();
                 for (int c = 0; c < revMap.Count(); ++c) {
                     if (table[s][c] != -1) {
                         dfa.addTransition(newId[s], newId[table[s][c]], revMap[c]);
@@ -214,78 +239,6 @@ namespace RegEx {
             }
             return dfa;
         }
-
-            //// All the state that can be reached from 0.
-
-            //// Find all reachable states.
-            //Func<int, HashSet<int>> findReachableClosure = x => {
-            //    Stack<int> stack = new Stack<int>();
-            //    HashSet<int> closure = new HashSet<int> { x };
-            //    stack.Push(x);
-            //    while (stack.Count() > 0) {
-            //        int s = stack.Pop();
-            //        foreach (int t in table[s]) {
-            //            if (t != -1 && !closure.Contains(t)) {
-            //                stack.Push(t);
-            //                closure.Add(t);
-            //            }
-            //        }
-            //    }
-            //    return closure;
-            //};
-
-            //HashSet<int> startClosure = findReachableClosure(0);
-
-            ////
-            //// Helper function to check if this state should be deleted.
-            //// A state should be deleted when
-            //// 1. Starting from 0, there is no way to reach it OR
-            //// 2. Starting from it, there is no way to reach final state.
-            ////
-            //Func<int, bool> isDeletable = s => {
-            //    if (!startClosure.Contains(s)) {
-            //        return true;
-            //    }
-            //    HashSet<int> reachable = findReachableClosure(s);
-            //    return reachable.Intersect(finals).Count() == 0;
-            //};
-
-            //DFATable dfa = new DFATable(map, revMap);
-            //bool[] deleted = new bool[table.Count()];
-            //int[] newId = new int[table.Count()];
-
-            //// Find all the state to be deleted.
-            //for (int i = 0; i < table.Count(); ++i) {
-            //    deleted[i] = isDeletable(i);
-            //    if (!deleted[i]) {
-            //        // Create the new state in the simplified DFA.
-            //        newId[i] = dfa.addState();
-            //    }
-            //}
-
-            //// Copy the transitions.
-            //for (int s = 0; s < table.Count(); ++s) {
-            //    // Is this state deleted?
-            //    if (!deleted[s]) {
-            //        for (int i = 0; i < table[s].Count(); ++i) {
-            //            int t = table[s][i];
-            //            // Is t deleted?
-            //            if (t != -1 && !deleted[t]) {
-            //                dfa.addTransition(newId[s], newId[t], revMap[i]);
-            //            }
-            //        }
-            //    }
-            //}
-
-            //// Set the final states.
-            //foreach (int s in finals) {
-            //    if (!deleted[s]) {
-            //        dfa.setStateFinal(newId[s]);
-            //    }
-            //}
-
-            //return dfa;
-        //}
 
         public override string ToString() {
             string ret = "DFATable: \n";

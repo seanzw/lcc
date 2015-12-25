@@ -87,6 +87,7 @@ namespace RegExTests {
             };
             Parser parser = new Parser();
             foreach (var src in srcs) {
+                Console.WriteLine(src);
                 ASTExpression ast = parser.parse(src);
                 NFATable nfa = ast.gen();
                 DFATable dfa = nfa.toDFATable();
