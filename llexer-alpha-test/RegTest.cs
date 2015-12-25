@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using llexer;
+using llexer_alpha;
 
 namespace llexer_alpha_test {
     [TestClass]
@@ -15,11 +15,11 @@ namespace llexer_alpha_test {
                     continue;
                 }
                 Console.WriteLine(src);
-                ASTReg reg;
+                ASTRegEx reg;
                 int pos = 0;
                 
                 Parser.parse_reg(src, ref pos, out reg);
-                Console.WriteLine(reg.toString(0));
+                Console.WriteLine(reg.ToString(0));
                 NFATable nfa = reg.toNFA();
                 Console.WriteLine(nfa);
                 //Console.WriteLine(nfa.toDFATable());
@@ -37,7 +37,7 @@ namespace llexer_alpha_test {
             {
                 string src = "[\\a]*";
                 int pos = 0;
-                ASTReg reg;
+                ASTRegEx reg;
                 Parser.parse_reg(src, ref pos, out reg);
                 table = reg.toNFA().toDFATable().simplify();
                 dfa = table.toDFA();
@@ -47,7 +47,7 @@ namespace llexer_alpha_test {
                 string src = f.ReadLine();
                 if (src[0] != '#') {
                     Console.WriteLine(src);
-                    ASTReg reg;
+                    ASTRegEx reg;
                     int pos = 0;
                     Parser.parse_reg(src, ref pos, out reg);
                     table = reg.toNFA().toDFATable().simplify();

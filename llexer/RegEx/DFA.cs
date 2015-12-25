@@ -4,14 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace llexer_alpha {
+namespace RegEx {
+
     public class DFA {
 
         public enum Status {
-            RUNNING,
+            RUN,
             FAILED,
             SUCCEED
-        };
+        }
 
         public DFA(int[,] table, bool[] final, int[] map) {
             this.table = table;
@@ -20,12 +21,17 @@ namespace llexer_alpha {
             reset();
         }
 
-        /* Reset the DFA to start state. */
+        /// <summary>
+        /// Reset this DFA to the start state.
+        /// </summary>
         public void reset() {
             state = 0;
         }
 
-        /* Get the current status of this DFA. */
+        /// <summary>
+        /// Check the status.
+        /// </summary>
+        /// <returns> Returns the status. </returns>
         public Status status() {
             switch (state) {
                 case SUCCESS_STATE:
@@ -33,13 +39,11 @@ namespace llexer_alpha {
                 case FAILURE_STATE:
                     return Status.FAILED;
                 default:
-                    return Status.RUNNING;
+                    return Status.RUN;
             }
         }
 
-        /* Feed an input to this DFA. */
-        public void scan(int input) {
-            
+        public void scan(char c) {
             switch (state) {
                 case SUCCESS_STATE:
                     state = FAILURE_STATE;
@@ -47,10 +51,10 @@ namespace llexer_alpha {
                 case FAILURE_STATE:
                     break;
                 default:
-                    if (map[input] == -1 || table[state, map[input]] == -1) {
+                    if (map[c] == -1 || table[state, map[c]] == -1) {
                         state = final[state] ? SUCCESS_STATE : FAILURE_STATE;
                     } else {
-                        state = table[state, map[input]];
+                        state = table[state, map[c]];
                     }
                     break;
             }
@@ -60,11 +64,12 @@ namespace llexer_alpha {
         private readonly bool[] final;
         private readonly int[] map;
 
-        // Current state.
+        /// <summary>
+        /// Current state.
+        /// </summary>
         private int state;
 
         private const int FAILURE_STATE = -1;
         private const int SUCCESS_STATE = -2;
-
     }
 }

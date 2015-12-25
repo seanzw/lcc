@@ -15,6 +15,10 @@ namespace RegEx {
     class Utility {
         public static string print(char c) {
             switch (c) {
+                case '\r':
+                    return "\\r";
+                case '\n':
+                    return "\\n";
                 default:
                     return new string(c, 1);
             }

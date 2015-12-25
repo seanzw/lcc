@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace llexer {
+namespace llexer_alpha {
     /*****************************************************************
 
         This class maps char to its group id in the transition table.

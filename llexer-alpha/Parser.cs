@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace llexer {
+namespace llexer_alpha {
     public class Parser {
 
         public Parser() { }
@@ -74,7 +74,7 @@ namespace llexer {
 
             Utility.DEBUG("parse_rule: " + pos);
 
-            ASTReg reg;
+            ASTRegEx reg;
             //ASTToken token;
             ASTCode code;
             int posBk = pos;
@@ -119,12 +119,12 @@ namespace llexer {
             return false;
         }
 
-        static public bool parse_reg(string src, ref int pos, out ASTReg ret) {
+        static public bool parse_reg(string src, ref int pos, out ASTRegEx ret) {
 
             Utility.DEBUG("parse_reg: " + pos);
 
             int posBk = pos;
-            ASTReg reg;
+            ASTRegEx reg;
             if (parse_atom(src, ref pos, out reg) &&
                 parse_reg_prime(src, ref pos, ref reg)
                 ) {
@@ -154,10 +154,10 @@ namespace llexer {
         /// <param name="pos">Current position. </param>
         /// <param name="ret">Inout ASTReg. </param>
         /// <returns></returns>
-        static public bool parse_reg_prime(string src, ref int pos, ref ASTReg ret) {
+        static public bool parse_reg_prime(string src, ref int pos, ref ASTRegEx ret) {
 
             int posBk = pos;
-            ASTReg next;
+            ASTRegEx next;
             if (match(src, ref pos, '*')) {
                 ret = new ASTRegStar(ret);
                 return parse_reg_prime(src, ref pos, ref ret);
@@ -196,7 +196,7 @@ namespace llexer {
             return true;
         }
 
-        static public bool parse_atom(string src, ref int pos, out ASTReg ret) {
+        static public bool parse_atom(string src, ref int pos, out ASTRegEx ret) {
 
             int posBk = pos;
             if (match(src, ref pos, '\\')) {

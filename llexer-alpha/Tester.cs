@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace llexer {
+namespace llexer_alpha {
     class Tester {
 
         delegate Func<A, R> Recusive<A, R>(Recusive<A, R> r);

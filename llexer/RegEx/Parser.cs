@@ -12,8 +12,8 @@ namespace RegEx {
         public ASTExpression parse(string src) {
             this.src = src;
             ASTExpression expr = parseExpression();
-            if (expr == null || more()) {
-                throw new ArgumentException("Can't parse this regex. Sorry~");
+            if (more()) {
+                return null;
             } else {
                 return expr;
             }
@@ -274,6 +274,8 @@ namespace RegEx {
                 case '^':
                     src = srcBk;
                     return null;
+                case '.':
+                    return new ASTCharSetWild();
                 default:
                     return new ASTCharSet(new HashSet<char> { c });
             }

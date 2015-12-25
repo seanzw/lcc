@@ -47,7 +47,7 @@
     <Compile Include="CharMap.cs" />
     <Compile Include="DFA.cs" />
     <Compile Include="DFATable.cs" />
-    <Compile Include="LexerScratch.cs" />
+    <Compile Include="Lexer.cs" />
     <Compile Include="NFATable.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="Program.cs" />
@@ -58,6 +58,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\llexer\RegEx\RegEx.csproj">
+      <Project>{fa842d39-6335-4f80-9a4a-ede9669f36b1}</Project>
+      <Name>RegEx</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

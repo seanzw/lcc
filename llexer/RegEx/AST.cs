@@ -182,15 +182,17 @@ namespace RegEx {
         public MetaChar meta;
     }
 
-    public sealed class ASTCharSet : ASTRegEx {
+    public class ASTCharSet : ASTRegEx {
         public ASTCharSet(HashSet<char> set) {
             this.set = set;
         }
 
+        protected ASTCharSet() { }
+
         public override string ToString(int level) {
             string str = tab(level) + "CharSet: ";
             foreach (char c in set) {
-                str += c;
+                str += Utility.print(c);
             }
             str += "\n";
             return str;
@@ -233,6 +235,22 @@ namespace RegEx {
         public HashSet<char> set;
     }
 
+    public sealed class ASTCharSetWild : ASTCharSet {
+
+        public ASTCharSetWild() {
+            set = new HashSet<char>();
+            for (int i = Const.FIRSTCHAR; i < Const.CHARSIZE; ++i) {
+                set.Add((char)i);
+            }
+        }
+
+        public override string ToString(int level) {
+            string str = tab(level) + "CharSet: WILD\n";
+            return str;
+        }
+
+    }
+
     public sealed class ASTCharSetNeg : ASTRegEx {
         public ASTCharSetNeg(HashSet<char> set) {
             this.set = set;
@@ -241,7 +259,7 @@ namespace RegEx {
         public override string ToString(int level) {
             string str = tab(level) + "CharSetNeg: ";
             foreach (char c in set) {
-                str += c;
+                str += Utility.print(c);
             }
             str += "\n";
             return str;
@@ -262,9 +280,9 @@ namespace RegEx {
 
         private HashSet<char> inverse() {
             HashSet<char> pos = new HashSet<char>();
-            for (char i = Const.FIRSTCHAR; i < Const.CHARSIZE; ++i) {
-                if (!set.Contains(i)) {
-                    pos.Add(i);
+            for (int i = Const.FIRSTCHAR; i < Const.CHARSIZE; ++i) {
+                if (!set.Contains((char)i)) {
+                    pos.Add((char)i);
                 }
             }
             return pos;

@@ -80,8 +80,12 @@ namespace RegEx {
                     if (table[i][j].Count() > 0) {
                         ret += "  ";
                         if (j < revMap.Count()) {
-                            foreach (char c in revMap[j]) {
-                                ret += Utility.print(c);
+                            if (revMap[j].Count() > 100) {
+                                ret += "WILD";
+                            } else {
+                                foreach (char c in revMap[j]) {
+                                    ret += Utility.print(c);
+                                }
                             }
                         } else {
                             // Epsilon edge.

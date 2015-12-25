@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace llexer {
+namespace llexer_alpha {
     public class Utility {
 
         public static readonly int CHARSETSIZE = 1 << 16;

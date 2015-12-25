@@ -52,8 +52,39 @@ namespace RegEx {
             finals.Add(state);
         }
 
+        /// <summary>
+        /// Minimize this DFATable.
+        /// </summary>
+        /// <returns></returns>
         public DFATable minimize() {
             return removeUnreachable().Hopcroft();
+        }
+
+        /// <summary>
+        /// Generate a DFA.
+        /// </summary>
+        /// <returns> The DFA. </returns>
+        public DFA toDFA() {
+
+            // Generate the table.
+            int[,] table = new int[this.table.Count(), revMap.Count()];
+            for (int i = 0; i < this.table.Count(); ++i) {
+                for (int j = 0; j < revMap.Count(); ++j) {
+                    table[i, j] = this.table[i][j];
+                }
+            }
+
+            // Generate final flags.
+            bool[] final = new bool[this.table.Count()];
+            for (int i = 0; i < final.Count(); ++i) {
+                final[i] = false;
+            }
+            foreach (int i in this.finals) {
+                final[i] = true;
+            }
+
+            // Generate the DFA.
+            return new DFA(table, final, map);
         }
 
         /// <summary>
@@ -194,11 +225,8 @@ namespace RegEx {
                             if (W.Contains(Y)) {
                                 W.Push(I);
                             } else {
-                                if (I.Count() <= Y.Count()) {
-                                    W.Push(I);
-                                } else {
-                                    W.Push(Y);
-                                }
+                                W.Push(I);
+                                W.Push(Y);
                             }
                         }
                     }
@@ -256,8 +284,12 @@ namespace RegEx {
                 for (int j = 0; j < revMap.Count(); ++j) {
                     if (table[i][j] != -1) {
                         ret += "  ";
-                        foreach (char c in revMap[j]) {
-                            ret += Utility.print(c);
+                        if (revMap[j].Count() > 100) {
+                            ret += "WILD";
+                        } else {
+                            foreach (char c in revMap[j]) {
+                                ret += Utility.print(c);
+                            }
                         }
                         ret += ": ";
                         ret += table[i][j];

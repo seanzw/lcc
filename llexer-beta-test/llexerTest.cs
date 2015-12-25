@@ -11,7 +11,7 @@ namespace llexer_beta_test {
             StreamReader t = new StreamReader("../../../llexer-beta/llexer-beta.ll");
             string src = t.ReadToEnd();
 
-            var tokens = llexer.Main.scan(src);
+            var tokens = llexer_alpha.Main.scan(src);
             foreach (var s in tokens) {
                 Console.WriteLine(s);
             }
