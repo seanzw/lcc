@@ -100,11 +100,35 @@ namespace RegExTests {
         }
 
         [TestMethod]
+        public void reg_regex_match() {
+
+            string src = @"$(\\[^\n]|[^\n$\\])*$";
+            Dictionary<string, bool> tests = new Dictionary<string, bool> {
+                { "$\\\\$",     true },
+                { "$\\\n$",     true },
+                { "$\n$",       false },
+                { "$\\\r\n$",   true }
+            };
+
+            RegEx.RegEx regex = new RegEx.RegEx(src);
+
+            foreach (var test in tests) {
+                Assert.AreEqual(regex.match(test.Key), test.Value);
+            }
+        }
+
+        [TestMethod]
         public void reg_str_match() {
 
-            string src = "$(\\\\.|[^$\\\\])*$";
+            string src = @"L?""(\\(.|\r\n)|[^\n""\\])*""";
             Dictionary<string, bool> tests = new Dictionary<string, bool> {
-                { "$\\\\$", true }
+                { "\"abc\"",     true },
+                { "\"abc",       false },
+                { "abc\"",       false },
+                { "\"\n\"",      false },
+                { "\"\\\n\"",    true },
+                { "\"\\\r\n\"",  true },
+                { "\"ab\r\n\"",  false }
             };
 
             RegEx.RegEx regex = new RegEx.RegEx(src);

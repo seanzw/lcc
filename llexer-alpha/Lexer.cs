@@ -26,7 +26,7 @@ namespace llexer {
         private Lexer() {
 
             List<string> regSrcs = new List<string> {
-                @"$(\\.|[^\$\n\\])*$",
+                @"$(\\[^\n]|[^\$\n\\])*$",
                 @"[^$ \n\r\t%][^\n]*",
                 @"[ \n\r\t]+",
                 @"%%",
