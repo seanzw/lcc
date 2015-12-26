@@ -5,13 +5,13 @@ VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lcc", "lcc\lcc.csproj", "{64A93E29-0A9C-4E34-8372-CC5192EFF269}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "llexer-alpha", "llexer-alpha\llexer-alpha.csproj", "{3504FF1B-F9F9-41A5-BC2E-142A20C15025}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "llexer-alpha", "llexer\llexer-alpha\llexer-alpha.csproj", "{3504FF1B-F9F9-41A5-BC2E-142A20C15025}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "llexer-beta", "llexer-beta\llexer-beta.csproj", "{95B2522D-3DEE-47AA-9615-22E7283702D3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "llexer-beta", "llexer\llexer-beta\llexer-beta.csproj", "{95B2522D-3DEE-47AA-9615-22E7283702D3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "llexer-alpha-test", "llexer-alpha-test\llexer-alpha-test.csproj", "{977F7CA2-4A1A-4488-85C5-4E88BECE3D4A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "llexer-alpha-test", "llexer\llexer-alpha-test\llexer-alpha-test.csproj", "{977F7CA2-4A1A-4488-85C5-4E88BECE3D4A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "llexer-beta-test", "llexer-beta-test\llexer-beta-test.csproj", "{24544908-8713-4E11-B07D-8E95267FC38D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "llexer-beta-test", "llexer\llexer-beta-test\llexer-beta-test.csproj", "{24544908-8713-4E11-B07D-8E95267FC38D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegEx", "llexer\RegEx\RegEx.csproj", "{FA842D39-6335-4F80-9A4A-EDE9669F36B1}"
 EndProject

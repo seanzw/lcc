@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using RegEx;
 
-namespace llexer_beta {
+namespace llexer_alpha {
 
     /**************************************************
 
     lex
-        : rules SPLITER codes
+        : codes SPLITER rules SPLITER codes
         ;
 
     rules
@@ -50,7 +50,8 @@ namespace llexer_beta {
     }
 
     public class ASTLex : ASTNode {
-        public ASTLex(List<ASTRule> rules, List<string> codes) {
+        public ASTLex(List<string> headers, List<ASTRule> rules, List<string> codes) {
+            this.headers = headers;
             this.rules = rules;
             this.codes = codes;
         }
@@ -69,6 +70,7 @@ namespace llexer_beta {
 
             StringBuilder src = new StringBuilder();
 
+            #region Helpers.
             Action<int, List<string>> writeLines = (level, ss) => {
                 foreach (var s in ss) {
                     src.AppendLine(tab(level) + s);
@@ -119,6 +121,7 @@ namespace llexer_beta {
                 }
                 src.AppendLine(tab(level) + "};");
             };
+            #endregion
 
             #region Header.
             List<string> headers = new List<string> {
@@ -126,10 +129,10 @@ namespace llexer_beta {
                 "using System.Linq;",
                 "using System.Text;",
                 "using System.Collections.Generic;",
-                "using RegEx;",
-                "using llexer_beta;"    // For debug.
+                "using RegEx;"
             };
             writeLines(0, headers);
+            writeLines(0, this.headers);
             #endregion
 
             #region LexerBody.
@@ -317,6 +320,7 @@ namespace llexer_beta {
 
         }
 
+        public readonly List<string> headers;
         public readonly List<ASTRule> rules;
         public readonly List<string> codes;
     }

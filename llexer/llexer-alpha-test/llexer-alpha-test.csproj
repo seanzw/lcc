@@ -61,9 +61,6 @@
       <Name>llexer-alpha</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="reg.test" />
-  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

@@ -26,15 +26,18 @@ namespace llparser {
         private ASTLex parseLex() {
 
             int idxBk = idx;
+            List<string> headers;
             List<ASTRule> rules;
             List<string> codes;
 
-            // lex : rules_list SPLITER code_list.
-            if ((rules = parseRules()) != null &&
+            // lex : codes SPLITER rules SPLITER codes.
+            if ((headers = parseCodes()) != null &&
+                match(next(), Token.TYPE.SPLITER) &&
+                (rules = parseRules()) != null &&
                 next().type == Token.TYPE.SPLITER &&
                 (codes = parseCodes()) != null
                 ) {
-                return new ASTLex(rules, codes);
+                return new ASTLex(headers, rules, codes);
             }
 
             idx = idxBk;

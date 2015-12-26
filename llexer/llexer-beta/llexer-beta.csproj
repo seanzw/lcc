@@ -55,7 +55,7 @@
     <None Include="llexer-beta.ll" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\llexer\RegEx\RegEx.csproj">
+    <ProjectReference Include="..\RegEx\RegEx.csproj">
       <Project>{fa842d39-6335-4f80-9a4a-ede9669f36b1}</Project>
       <Name>RegEx</Name>
     </ProjectReference>
