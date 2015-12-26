@@ -102,12 +102,12 @@ namespace RegExTests {
         [TestMethod]
         public void reg_regex_match() {
 
-            string src = @"$(\\[^\n]|[^\n$\\])*$";
+            string src = @"$(\\[^\n\r\t]|[^\n\r\t$\\])*$";
             Dictionary<string, bool> tests = new Dictionary<string, bool> {
                 { "$\\\\$",     true },
-                { "$\\\n$",     true },
+                { "$\\\n$",     false },
                 { "$\n$",       false },
-                { "$\\\r\n$",   true }
+                { "$\\\r\n$",   false }
             };
 
             RegEx.RegEx regex = new RegEx.RegEx(src);

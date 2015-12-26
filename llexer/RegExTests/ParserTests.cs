@@ -41,6 +41,7 @@ namespace RegExTests {
                 "[a-zA-Z0-9_]",
                 "[a-z]",
                 "[b-a]",
+                @"$(\\[^\n]|[^\n$\\])*$"
             };
             Parser parser = new Parser();
             foreach (var src in srcs) {
@@ -68,7 +69,7 @@ namespace RegExTests {
                 "a?",
                 "a*",
                 "a+",
-                "$(\\\\a|[^$\\\\])*$"
+                @"$(\\[^\n]|[^\n$\\])*$"
             };
             Parser parser = new Parser();
             foreach (var src in srcs) {
@@ -86,7 +87,8 @@ namespace RegExTests {
                 "a?",
                 "a*",
                 "a+",
-                "$(\\\\a|[^$\\\\])*$"
+                "$(\\\\a|[^$\\\\])*$",
+                @"$(\\[^\n]|[^\n$\\])*$"
             };
             Parser parser = new Parser();
             foreach (var src in srcs) {

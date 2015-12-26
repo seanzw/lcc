@@ -10,6 +10,7 @@ namespace RegEx {
         public Parser() {}
 
         public ASTExpression parse(string src) {
+            idx = 0;
             this.src = src;
             ASTExpression expr = parseExpression();
             if (more()) {
@@ -30,7 +31,7 @@ namespace RegEx {
 
         private ASTExpression parseExpression() {
 
-            string srcBk = src;
+            int idxBk = idx;
             ASTExpression expr;
             ASTTerm term;
 
@@ -42,12 +43,12 @@ namespace RegEx {
                 return expr;
             }
 
-            src = srcBk;
+            idx = idxBk;
             return null;
         }
 
         private ASTExpression parseExpressionTail() {
-            string srcBk = src;
+            int idxBk = idx;
             ASTExpression expr;
 
             // expression_tail : | expression
@@ -58,13 +59,13 @@ namespace RegEx {
             }
 
             // expression_tail : epsilon
-            src = srcBk;
+            idx = idxBk;
             return new ASTExpression();
         }
 
         private ASTTerm parseTerm() {
 
-            string srcBk = src;
+            int idxBk = idx;
             ASTFactor factor;
             ASTTerm term;
 
@@ -76,14 +77,14 @@ namespace RegEx {
                 return term;
             }
 
-            src = srcBk;
+            idx = idxBk;
             return null;
 
         }
 
         private ASTTerm parseTermTail() {
 
-            string srcBk = src;
+            int idxBk = idx;
             ASTTerm term;
 
             // term_tail : term
@@ -92,13 +93,13 @@ namespace RegEx {
             }
 
             // term_tail : epsilon
-            src = srcBk;
+            idx = idxBk;
             return new ASTTerm();
         }
 
         private ASTFactor parseFactor() {
 
-            string srcBk = src;
+            int idxBk = idx;
 
             ASTRegEx atom;
             if ((atom = parseAtom()) != null) {
@@ -106,12 +107,12 @@ namespace RegEx {
                 return new ASTFactor(atom, meta);
             }
 
-            src = srcBk;
+            idx = idxBk;
             return null;
         }
 
         private ASTFactor.MetaChar parseMeta() {
-            string srcBk = src;
+            int idxBk = idx;
             switch (next()) {
                 case '*':
                     return ASTFactor.MetaChar.STAR;
@@ -121,14 +122,14 @@ namespace RegEx {
                     return ASTFactor.MetaChar.QUES;
                 case NONE:
                 default:
-                    src = srcBk;
+                    idx = idxBk;
                     return ASTFactor.MetaChar.NULL;
             }
         }
 
         private ASTRegEx parseAtom() {
 
-            string srcBk = src;
+            int idxBk = idx;
             ASTRegEx expr;
             ASTCharSet charset;
 
@@ -138,7 +139,7 @@ namespace RegEx {
             }
 
             // atom : ( expression )
-            src = srcBk;
+            idx = idxBk;
             if (next() == '(' &&
                 (expr = parseExpression()) != null &&
                 next() == ')'
@@ -147,7 +148,7 @@ namespace RegEx {
             }
 
             // atom : [ charset ]
-            src = srcBk;
+            idx = idxBk;
             if (next() == '[' &&
                 (charset = parseCharSet()) != null &&
                 next() == ']'
@@ -156,7 +157,7 @@ namespace RegEx {
             }
 
             // atom : [ ^ charset ]
-            src = srcBk;
+            idx = idxBk;
             if (next() == '[' &&
                 next() == '^' &&
                 (charset = parseCharSet()) != null &&
@@ -165,13 +166,13 @@ namespace RegEx {
                 return new ASTCharSetNeg(charset.set);
             }
 
-            src = srcBk;
+            idx = idxBk;
             return null;
         }
 
         private ASTCharSet parseCharSet() {
 
-            string srcBk = src;
+            int idxBk = idx;
             ASTCharSet set1, set2;
             // charset : charrange charset_tail
             if ((set1 = parseCharRange()) != null &&
@@ -181,13 +182,13 @@ namespace RegEx {
                 return set1;
             }
 
-            src = srcBk;
+            idx = idxBk;
             return null;
         }
 
         private ASTCharSet parseCharSetTail() {
 
-            string srcBk = src;
+            int idxBk = idx;
             ASTCharSet set;
 
             // charset_tail : charset
@@ -196,13 +197,13 @@ namespace RegEx {
             }
 
             // charset_tail : epsilon
-            src = srcBk;
+            idx = idxBk;
             return new ASTCharSet(new HashSet<char>());
         }
 
         private ASTCharSet parseCharRange() {
 
-            string srcBk = src;
+            int idxBk = idx;
             ASTCharSet set1, set2;
 
             // charrange : character - character
@@ -223,18 +224,18 @@ namespace RegEx {
             }
 
             // charrange : character
-            src = srcBk;
+            idx = idxBk;
             if ((set1 = parseCharacter()) != null) {
                 return set1;
             }
 
-            src = srcBk;
+            idx = idxBk;
             return null;
         }
 
         private ASTCharSet parseCharacter() {
 
-            string srcBk = src;
+            int idxBk = idx;
             char c;
             
             // character : \ anychar
@@ -242,7 +243,7 @@ namespace RegEx {
                 c = next();
                 switch (c) {
                     case NONE:
-                        src = srcBk;
+                        idx = idxBk;
                         return null;
                     case 'r':
                         return new ASTCharSet(new HashSet<char> { '\r' });
@@ -256,11 +257,11 @@ namespace RegEx {
             }
 
             // character : anycharexceptmetachar
-            src = srcBk;
+            idx = idxBk;
             c = next();
             switch (c) {
                 case NONE:
-                    src = srcBk;
+                    idx = idxBk;
                     return null;
                 case '*':
                 case '|':
@@ -272,7 +273,7 @@ namespace RegEx {
                 case ']':
                 case '-':
                 case '^':
-                    src = srcBk;
+                    idx = idxBk;
                     return null;
                 case '.':
                     return new ASTCharSetWild();
@@ -287,20 +288,19 @@ namespace RegEx {
 
         private char next() {
             if (more()) {
-                char c = src[0];
-                src = src.Substring(1);
-                return c;
+                idx++;
+                return src[idx - 1];
             } else {
                 return NONE;
             }
         }
 
         private bool more() {
-            return src.Length > 0;
+            return idx < src.Length;
         }
 
         #endregion
-
+        private int idx;
         private string src;
 
         private const char NONE = (char)0;

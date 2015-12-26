@@ -26,8 +26,8 @@ namespace llexer {
         private Lexer() {
 
             List<string> regSrcs = new List<string> {
-                @"$(\\[^\n]|[^\$\n\\])*$",
-                @"[^$ \n\r\t%][^\n]*",
+                @"$(\\[^\n\r\t]|[^\n\r\t$\\])*$",
+                @"[^$ \n\r\t%][^\r\n]*",
                 @"[ \n\r\t]+",
                 @"%%",
             };
@@ -64,8 +64,7 @@ namespace llexer {
         public List<Token> scan(string src) {
 
             // Replacing the line breaker.
-            RegEx.RegEx regex = new RegEx.RegEx(@"\r\n?|\n");
-            _src = regex.replace(src, "\n");
+            _src = src;
 
             List<Token> lltokens = new List<Token>();
 
