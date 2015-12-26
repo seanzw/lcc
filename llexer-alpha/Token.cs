@@ -31,8 +31,8 @@ namespace llexer_alpha {
         public readonly TYPE type;
     }
 
-    public sealed class TokenSpliter : Token {
-        public TokenSpliter() : base(TYPE.SPLITER) { }
+    public sealed class T_SPLITER : Token {
+        public T_SPLITER() : base(TYPE.SPLITER) { }
     }
 
     abstract public class TokenSymbol : Token {
@@ -51,12 +51,12 @@ namespace llexer_alpha {
         protected readonly string src;
     }
 
-    public sealed class TokenREGEX : TokenSymbol {
-        public TokenREGEX(string src) : base(src, TYPE.REGEX_LITERAL) { }
+    public sealed class T_REGEX : TokenSymbol {
+        public T_REGEX(string src) : base(src, TYPE.REGEX_LITERAL) { }
     }
 
-    public sealed class TokenCODE : TokenSymbol {
-        public TokenCODE(string src) : base(src, TYPE.CODE_LINE) { }
+    public sealed class T_CODE : TokenSymbol {
+        public T_CODE(string src) : base(src, TYPE.CODE_LINE) { }
     }
 
 

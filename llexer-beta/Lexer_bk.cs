@@ -1,19 +1,11 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Text;
 using System.Collections.Generic;
 using RegEx;
-
-using llexer_alpha;
-
+using llexer_beta;
 namespace llexer {
-
-    /// <summary>
-    /// Lexer for llexer-alpha.
-    /// This is a singleton class.
-    /// </summary>
     public sealed class Lexer {
-
         private int _idx;
         private string _src;
         private StringBuilder _lltext;
@@ -81,19 +73,10 @@ namespace llexer {
             return lltokens;
         }
 
-        #region API for user.
-        /// <summary>
-        /// Is there any more character in the src?
-        /// </summary>
-        /// <returns> True if the src string is not empty. </returns>
         private bool more() {
             return _idx < _src.Length;
         }
 
-        /// <summary>
-        /// Peek the next char.
-        /// </summary>
-        /// <returns> Char. </returns>
         private char peek() {
             if (more()) {
                 return _src[_idx];
@@ -102,10 +85,6 @@ namespace llexer {
             }
         }
 
-        /// <summary>
-        /// Eat the next Char.
-        /// </summary>
-        /// <returns> Char. </returns>
         private char next() {
             if (more()) {
                 _lltext.Append(_src[_idx]);
@@ -119,39 +98,90 @@ namespace llexer {
             throw new ArgumentException("Lexer Error: " + msg);
         }
 
-        /// <summary>
-        /// Current matched src.
-        /// </summary>
         private string lltext {
             get {
                 return _lltext.ToString();
             }
         }
-        #endregion
-
-        /// <summary>
-        /// Initialize the Lexer code.
-        /// </summary>
         private Lexer() {
-
             _lltext = new StringBuilder();
-
-            List<string> regSrcs = new List<string> {
-                @"\$(\\[^\n\r\t]|[^\n\r\t\$\\])*\$",
-                @"[^\$ \n\r\t%][^\r\n]*",
-                @"[ \n\r\t]+",
-                @"%%",
-            };
-
-            _dfas = new List<DFA>(regSrcs.Count());
-            foreach (string src in regSrcs) {
-                Parser parser = new Parser();
-                ASTExpression expr = parser.parse(src);
-                _dfas.Add(expr.gen().toDFATable().toDFA());
+            _dfas = new List<DFA>(4);
+            #region RULE 0
+            {
+                bool[] final = new bool[4] {
+                    false, true, false, false, 
+                };
+                int[,] table = new int[,] {
+                    { 2, -1, -1, },
+                    { -1, -1, -1, },
+                    { 1, 3, 2, },
+                    { 2, 2, 2, },
+                };
+                int[] range = new int[10] {
+                    0, 8, 10, 12, 13, 35, 36, 91, 92, 65535, 
+                };
+                int[] value = new int[10] {
+                    -1, 2, -1, 2, -1, 2, 0, 2, 1, 2, 
+                };
+                _dfas.Add(new DFA(table, final, range, value));
             }
-
+            #endregion
+            #region RULE 1
+            {
+                bool[] final = new bool[2] {
+                    false, true, 
+                };
+                int[,] table = new int[,] {
+                    { 1, -1, },
+                    { 1, 1, },
+                };
+                int[] range = new int[11] {
+                    0, 8, 9, 10, 12, 13, 31, 32, 35, 37, 65535, 
+                };
+                int[] value = new int[11] {
+                    -1, 0, 1, -1, 0, -1, 0, 1, 0, 1, 0, 
+                };
+                _dfas.Add(new DFA(table, final, range, value));
+            }
+            #endregion
+            #region RULE 2
+            {
+                bool[] final = new bool[2] {
+                    false, true, 
+                };
+                int[,] table = new int[,] {
+                    { 1, },
+                    { 1, },
+                };
+                int[] range = new int[7] {
+                    8, 10, 12, 13, 31, 32, 65535, 
+                };
+                int[] value = new int[7] {
+                    -1, 0, -1, 0, -1, 0, -1, 
+                };
+                _dfas.Add(new DFA(table, final, range, value));
+            }
+            #endregion
+            #region RULE 3
+            {
+                bool[] final = new bool[3] {
+                    false, true, false, 
+                };
+                int[,] table = new int[,] {
+                    { 2, },
+                    { -1, },
+                    { 1, },
+                };
+                int[] range = new int[3] {
+                    36, 37, 65535, 
+                };
+                int[] value = new int[3] {
+                    -1, 0, -1, 
+                };
+                _dfas.Add(new DFA(table, final, range, value));
+            }
+            #endregion
         }
-
         private void _action(int _rule, ref List<Token> lltokens) {
             switch (_rule) {
                 case 0:
@@ -161,7 +191,6 @@ namespace llexer {
                     lltokens.Add(new T_CODE(lltext));
                     break;
                 case 2:
-                    // Ignore space.
                     break;
                 case 3:
                     lltokens.Add(new T_SPLITER());

@@ -44,15 +44,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AST.cs" />
-    <Compile Include="CharMap.cs" />
-    <Compile Include="DFA.cs" />
-    <Compile Include="DFATable.cs" />
     <Compile Include="Lexer.cs" />
-    <Compile Include="NFATable.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Tester.cs" />
     <Compile Include="Token.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>

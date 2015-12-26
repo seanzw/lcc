@@ -21,6 +21,13 @@ namespace RegEx {
             reset();
         }
 
+        public DFA(int[,] table, bool[] final, int[] range, int[] value) {
+            this.table = table;
+            this.final = final;
+            map = expandMap(range, value);
+            reset();
+        }
+
         /// <summary>
         /// Reset this DFA to the start state.
         /// </summary>
@@ -60,9 +67,42 @@ namespace RegEx {
             }
         }
 
-        private readonly int[,] table;
-        private readonly bool[] final;
-        private readonly int[] map;
+        public Tuple<int[], int[]> shrinkMap() {
+
+            LinkedList<int> range = new LinkedList<int>();
+            LinkedList<int> value = new LinkedList<int>();
+
+            value.AddLast(map[0]);
+            for (int i = 1; i < Const.CHARSIZE; ++i) {
+                if (map[i] != map[i - 1]) {
+                    range.AddLast(i - 1);
+                    value.AddLast(map[i]);
+                }
+            }
+            range.AddLast(Const.CHARSIZE - 1);
+
+            return new Tuple<int[], int[]>(range.ToArray(), value.ToArray());
+        }
+
+        private int[] expandMap(int[] range, int[] value) {
+
+            int[] ret = new int[Const.CHARSIZE];
+            for (int i = 0; i <= range[0]; ++i) {
+                ret[i] = value[0];
+            }
+            for (int i = 1; i < range.Count(); ++i) {
+                for (int j = range[i - 1] + 1; j <= range[i]; ++j) {
+                    ret[j] = value[i];
+                }
+            }
+
+            return ret;
+        }
+
+
+        public readonly int[,] table;
+        public readonly bool[] final;
+        public readonly int[] map;
 
         /// <summary>
         /// Current state.

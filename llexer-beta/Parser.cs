@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using llexer_alpha;
+using llexer_beta;
 
 namespace llparser {
     public class Parser {

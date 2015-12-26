@@ -74,6 +74,6 @@ namespace RegEx
         }
 
 
-        private DFA dfa;
+        public readonly DFA dfa;
     }
 }

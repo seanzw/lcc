@@ -36,8 +36,7 @@ $[ \n\r\t]+$
             ";
 
             var tokens = Lexer.Instance.scan(src);
-            var parser = new llexer_alpha.Parser();
-            llexer_alpha.ASTLex ast = parser.parse(tokens);
+            llexer_alpha.ASTLex ast = llparser.Parser.Instance.parse(tokens);
             Console.WriteLine(ast);
         }
     }
