@@ -86,7 +86,7 @@ namespace llparser {
             if ((token = Next() as T_REGEX) != null &&
                 (codes = ParseCodes())      != null
                 ) {
-                return new ASTRule(token.getSrc(), codes);
+                return new ASTRule(token.src, codes);
             }
 
             idx = idxBk;
@@ -103,7 +103,7 @@ namespace llparser {
             if ((token = Next() as T_CODE)  != null &&
                 (codes = ParseCodes())      != null
                 ) {
-                codes.AddFirst(token.getSrc());
+                codes.AddFirst(token.src);
                 return codes;
             }
 

@@ -24,10 +24,6 @@ namespace llexer_alpha {
             return type.ToString();
         }
 
-        virtual public string getSrc() {
-            throw new NotImplementedException();
-        }
-
         public readonly TYPE type;
     }
 
@@ -44,11 +40,7 @@ namespace llexer_alpha {
             return type + ": " + src;
         }
 
-        public override string getSrc() {
-            return src;
-        }
-
-        protected readonly string src;
+        public readonly string src;
     }
 
     public sealed class T_REGEX : TokenSymbol {
