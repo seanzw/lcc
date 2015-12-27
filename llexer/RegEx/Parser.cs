@@ -5,15 +5,23 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace RegEx {
-    public class Parser {
+    class Parser {
 
-        public Parser() {}
+        private static Parser instance = new Parser();
 
-        public ASTExpression parse(string src) {
+        public static Parser Instance {
+            get {
+                return instance;
+            }
+        }
+
+        private Parser() {}
+
+        public ASTExpr Parse(string src) {
             idx = 0;
             this.src = src;
-            ASTExpression expr = parseExpression();
-            if (more()) {
+            ASTExpr expr = ParseExpr();
+            if (More()) {
                 return null;
             } else {
                 return expr;
@@ -29,15 +37,15 @@ namespace RegEx {
 
         **************************************************************************************************/
 
-        private ASTExpression parseExpression() {
+        private ASTExpr ParseExpr() {
 
             int idxBk = idx;
-            ASTExpression expr;
+            ASTExpr expr;
             ASTTerm term;
 
             // expression : term expression_tail
-            if ((term = parseTerm()) != null &&
-                (expr = parseExpressionTail()) != null
+            if ((term = ParseTerm()) != null &&
+                (expr = ParseExprTail()) != null
                 ) {
                 expr.terms.AddFirst(term);
                 return expr;
@@ -47,31 +55,31 @@ namespace RegEx {
             return null;
         }
 
-        private ASTExpression parseExpressionTail() {
+        private ASTExpr ParseExprTail() {
             int idxBk = idx;
-            ASTExpression expr;
+            ASTExpr expr;
 
             // expression_tail : | expression
-            if (next() == '|' &&
-                (expr = parseExpression()) != null
+            if (Next() == '|' &&
+                (expr = ParseExpr()) != null
                 ) {
                 return expr;
             }
 
             // expression_tail : epsilon
             idx = idxBk;
-            return new ASTExpression();
+            return new ASTExpr();
         }
 
-        private ASTTerm parseTerm() {
+        private ASTTerm ParseTerm() {
 
             int idxBk = idx;
             ASTFactor factor;
             ASTTerm term;
 
             // term : factor term_tail
-            if ((factor = parseFactor()) != null &&
-                (term = parseTermTail()) != null
+            if ((factor = ParseFactor()) != null &&
+                (term = ParseTermTail()) != null
                 ) {
                 term.factors.AddFirst(factor);
                 return term;
@@ -82,13 +90,13 @@ namespace RegEx {
 
         }
 
-        private ASTTerm parseTermTail() {
+        private ASTTerm ParseTermTail() {
 
             int idxBk = idx;
             ASTTerm term;
 
             // term_tail : term
-            if ((term = parseTerm()) != null) {
+            if ((term = ParseTerm()) != null) {
                 return term;
             }
 
@@ -97,13 +105,13 @@ namespace RegEx {
             return new ASTTerm();
         }
 
-        private ASTFactor parseFactor() {
+        private ASTFactor ParseFactor() {
 
             int idxBk = idx;
 
             ASTRegEx atom;
-            if ((atom = parseAtom()) != null) {
-                ASTFactor.MetaChar meta = parseMeta();
+            if ((atom = ParseAtom()) != null) {
+                ASTFactor.MetaChar meta = ParseMeta();
                 return new ASTFactor(atom, meta);
             }
 
@@ -111,9 +119,9 @@ namespace RegEx {
             return null;
         }
 
-        private ASTFactor.MetaChar parseMeta() {
+        private ASTFactor.MetaChar ParseMeta() {
             int idxBk = idx;
-            switch (next()) {
+            switch (Next()) {
                 case '*':
                     return ASTFactor.MetaChar.STAR;
                 case '+':
@@ -127,41 +135,41 @@ namespace RegEx {
             }
         }
 
-        private ASTRegEx parseAtom() {
+        private ASTRegEx ParseAtom() {
 
             int idxBk = idx;
             ASTRegEx expr;
             ASTCharSet charset;
 
             // atom : character
-            if ((charset = parseCharacter()) != null) {
+            if ((charset = ParseCharacter()) != null) {
                 return charset;
             }
 
             // atom : ( expression )
             idx = idxBk;
-            if (next() == '(' &&
-                (expr = parseExpression()) != null &&
-                next() == ')'
+            if (Next() == '(' &&
+                (expr = ParseExpr()) != null &&
+                Next() == ')'
                 ) {
                 return expr;
             }
 
             // atom : [ charset ]
             idx = idxBk;
-            if (next() == '[' &&
-                (charset = parseCharSet()) != null &&
-                next() == ']'
+            if (Next() == '[' &&
+                (charset = ParseCharSet()) != null &&
+                Next() == ']'
                 ) {
                 return charset;
             }
 
             // atom : [ ^ charset ]
             idx = idxBk;
-            if (next() == '[' &&
-                next() == '^' &&
-                (charset = parseCharSet()) != null &&
-                next() == ']'
+            if (Next() == '[' &&
+                Next() == '^' &&
+                (charset = ParseCharSet()) != null &&
+                Next() == ']'
                 ) {
                 return new ASTCharSetNeg(charset.set);
             }
@@ -170,13 +178,13 @@ namespace RegEx {
             return null;
         }
 
-        private ASTCharSet parseCharSet() {
+        private ASTCharSet ParseCharSet() {
 
             int idxBk = idx;
             ASTCharSet set1, set2;
             // charset : charrange charset_tail
-            if ((set1 = parseCharRange()) != null &&
-                (set2 = parseCharSetTail()) != null
+            if ((set1 = ParseCharRange()) != null &&
+                (set2 = ParseCharSetTail()) != null
                 ) {
                 set1.set.UnionWith(set2.set);
                 return set1;
@@ -186,13 +194,13 @@ namespace RegEx {
             return null;
         }
 
-        private ASTCharSet parseCharSetTail() {
+        private ASTCharSet ParseCharSetTail() {
 
             int idxBk = idx;
             ASTCharSet set;
 
             // charset_tail : charset
-            if ((set = parseCharSet()) != null) {
+            if ((set = ParseCharSet()) != null) {
                 return set;
             }
 
@@ -201,15 +209,15 @@ namespace RegEx {
             return new ASTCharSet(new HashSet<char>());
         }
 
-        private ASTCharSet parseCharRange() {
+        private ASTCharSet ParseCharRange() {
 
             int idxBk = idx;
             ASTCharSet set1, set2;
 
             // charrange : character - character
-            if ((set1 = parseCharacter()) != null &&
-                next() == '-' &&
-                (set2 = parseCharacter()) != null
+            if ((set1 = ParseCharacter()) != null &&
+                Next() == '-' &&
+                (set2 = ParseCharacter()) != null
                 ) {
                 if (set1.set.Count != 1 || set2.set.Count != 1) {
                     throw new InvalidOperationException("parseCharacter should return only 1 char.");
@@ -225,7 +233,7 @@ namespace RegEx {
 
             // charrange : character
             idx = idxBk;
-            if ((set1 = parseCharacter()) != null) {
+            if ((set1 = ParseCharacter()) != null) {
                 return set1;
             }
 
@@ -233,14 +241,14 @@ namespace RegEx {
             return null;
         }
 
-        private ASTCharSet parseCharacter() {
+        private ASTCharSet ParseCharacter() {
 
             int idxBk = idx;
             char c;
             
             // character : \ anychar
-            if (next() == '\\') {
-                c = next();
+            if (Next() == '\\') {
+                c = Next();
                 switch (c) {
                     case NONE:
                         idx = idxBk;
@@ -258,7 +266,7 @@ namespace RegEx {
 
             // character : anycharexceptmetachar
             idx = idxBk;
-            c = next();
+            c = Next();
             switch (c) {
                 case NONE:
                     idx = idxBk;
@@ -286,8 +294,8 @@ namespace RegEx {
 
         #region Helper function.
 
-        private char next() {
-            if (more()) {
+        private char Next() {
+            if (More()) {
                 idx++;
                 return src[idx - 1];
             } else {
@@ -295,7 +303,7 @@ namespace RegEx {
             }
         }
 
-        private bool more() {
+        private bool More() {
             return idx < src.Length;
         }
 

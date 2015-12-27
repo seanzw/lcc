@@ -17,25 +17,25 @@ namespace llparser {
 
         private Parser() { }
 
-        public ASTLex parse(List<Token> tokens) {
+        public ASTLex Parse(List<Token> tokens) {
             this.tokens = tokens;
             idx = 0;
-            return parseLex();
+            return ParseLex();
         }
 
-        private ASTLex parseLex() {
+        private ASTLex ParseLex() {
 
             int idxBk = idx;
-            List<string> headers;
-            List<ASTRule> rules;
-            List<string> codes;
+            LinkedList<string> headers;
+            LinkedList<ASTRule> rules;
+            LinkedList<string> codes;
 
             // lex : codes SPLITER rules SPLITER codes.
-            if ((headers = parseCodes()) != null &&
-                match(next(), Token.TYPE.SPLITER) &&
-                (rules = parseRules()) != null &&
-                next().type == Token.TYPE.SPLITER &&
-                (codes = parseCodes()) != null
+            if ((headers = ParseCodes())    != null &&
+                (Next() as T_SPLITER)       != null &&
+                (rules = ParseRules())      != null &&
+                (Next() as T_SPLITER)       != null &&
+                (codes = ParseCodes())      != null
                 ) {
                 return new ASTLex(headers, rules, codes);
             }
@@ -44,17 +44,17 @@ namespace llparser {
             return null;
         }
 
-        private List<ASTRule> parseRules() {
+        private LinkedList<ASTRule> ParseRules() {
 
             int idxBk = idx;
-            List<ASTRule> rules;
+            LinkedList<ASTRule> rules;
             ASTRule rule;
 
             // rules : rule rules_tail
-            if ((rule = parseRule()) != null &&
-                (rules = parseRulesTail()) != null
+            if ((rule = ParseRule())        != null &&
+                (rules = ParseRulesTail())  != null
                 ) {
-                rules.Add(rule);
+                rules.AddFirst(rule);
                 return rules;
             }
 
@@ -62,29 +62,29 @@ namespace llparser {
             return null;
         }
 
-        private List<ASTRule> parseRulesTail() {
+        private LinkedList<ASTRule> ParseRulesTail() {
 
             int idxBk = idx;
-            List<ASTRule> rules;
+            LinkedList<ASTRule> rules;
 
             // rules_tail : rules
-            if ((rules = parseRules()) != null) {
+            if ((rules = ParseRules()) != null) {
                 return rules;
             }
 
             // rules_tail : epsilon
             idx = idxBk;
-            return new List<ASTRule>();
+            return new LinkedList<ASTRule>();
         }
 
-        private ASTRule parseRule() {
+        private ASTRule ParseRule() {
             int idxBk = idx;
-            List<string> codes;
+            LinkedList<string> codes;
 
             // rule : REGEX_LITERAL codes
-            Token token = next();
-            if (match(token, Token.TYPE.REGEX_LITERAL) &&
-                (codes = parseCodes()) != null
+            T_REGEX token;
+            if ((token = Next() as T_REGEX) != null &&
+                (codes = ParseCodes())      != null
                 ) {
                 return new ASTRule(token.getSrc(), codes);
             }
@@ -93,58 +93,31 @@ namespace llparser {
             return null;
         }
 
-        private List<string> parseCodes() {
+        private LinkedList<string> ParseCodes() {
 
             int idxBk = idx;
-            List<string> codes;
+            LinkedList<string> codes;
 
             // codes : code codes
-            Token token = next();
-            if (match(token, Token.TYPE.CODE_LINE) &&
-                (codes = parseCodes()) != null
+            T_CODE token;
+            if ((token = Next() as T_CODE)  != null &&
+                (codes = ParseCodes())      != null
                 ) {
-                codes.Add(token.getSrc());
+                codes.AddFirst(token.getSrc());
                 return codes;
             }
 
             // codes : epsilon
             idx = idxBk;
-            return new List<string>();
+            return new LinkedList<string>();
         }
 
-        private List<string> parseCodesTail() {
-            int idxBk = idx;
-            List<string> codes;
-
-            // codes_tail : codes
-            if ((codes = parseCodes()) != null) {
-                return codes;
-            }
-
-            // codes_tail : epsilon
-            idx = idxBk;
-            return new List<string>();
-        }
-
-        /// <summary>
-        /// Match a token.
-        /// </summary>
-        /// <param name="type"> Which type of token to be matched? </param>
-        /// <returns> True if matched. </returns>
-        private bool match(Token token, Token.TYPE type) {
-            if (token != null) {
-                return token.type == type;
-            } else {
-                return false;
-            }
-        }
-
-        private bool more() {
+        private bool More() {
             return idx < tokens.Count();
         }
 
-        private Token next() {
-            if (more()) {
+        private Token Next() {
+            if (More()) {
                 return tokens[idx++];
             } else {
                 return null;

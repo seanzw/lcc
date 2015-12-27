@@ -23,11 +23,11 @@ namespace llexer_alpha {
             StreamReader f = new StreamReader(args[0]);
 
             string src = f.ReadToEnd();
-            List<Token> tokens = llexer.Lexer.Instance.scan(src);
-            ASTLex ast = llparser.Parser.Instance.parse(tokens);
+            List<Token> tokens = llexer.Lexer.Instance.Scan(src);
+            ASTLex ast = llparser.Parser.Instance.Parse(tokens);
 
             StreamWriter o = new StreamWriter("Lexer.cs");
-            o.Write(ast.writeLexer());
+            o.Write(ast.WriteLexer());
 
             o.Close();
             f.Close();

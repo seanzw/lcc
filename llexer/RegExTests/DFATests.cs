@@ -11,20 +11,20 @@ namespace RegExTests {
 
             RegEx.RegEx regex = new RegEx.RegEx(src);
             RegEx.DFA original = regex.dfa;
-            var compressed = original.shrinkMap();
+            var compressed = original.CompressMap();
             RegEx.DFA reconstructed = new RegEx.DFA(original.table, original.final, compressed.Item1, compressed.Item2);
 
             for (int i = 0; i < original.map.Length; ++i) {
                 Assert.AreEqual(original.map[i], reconstructed.map[i]);
             }
 
-            original.reset();
-            reconstructed.reset();
+            original.Reset();
+            reconstructed.Reset();
             string test = @"$\$(\\[^\n\r\t]|[^\n\r\t\$\\])*\$$";
             foreach (var c in test) {
-                original.scan(c);
-                reconstructed.scan(c);
-                Assert.AreEqual(original.status(), reconstructed.status());
+                original.Scan(c);
+                reconstructed.Scan(c);
+                Assert.AreEqual(original.status, reconstructed.status);
             }
         }
     }

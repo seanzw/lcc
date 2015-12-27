@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using DFAState = System.Collections.Generic.HashSet<int>;
 
 namespace RegEx {
-    public class NFATable {
+    class NFATable {
 
         /// <summary>
         /// Construct a new NFA table.
@@ -31,13 +31,13 @@ namespace RegEx {
             finals = new HashSet<int>();
         }
 
-        public void addTransition(int from, int to, HashSet<char> inputs) {
+        public void AddTransition(int from, int to, HashSet<char> inputs) {
             foreach (char input in inputs) {
                 table[from][map[input]].Add(to);
             }
         }
 
-        public void addEpsilonTransition(int from, int to) {
+        public void AddEpsilonTransition(int from, int to) {
             table[from][revMap.Count()].Add(to);
         }
 
@@ -46,7 +46,7 @@ namespace RegEx {
         /// There is no edge in this state.
         /// </summary>
         /// <returns> The state ID. </returns>
-        public int addState() {
+        public int AddState() {
             table.Add(new HashSet<int>[revMap.Count() + 1]);
             int newId = table.Count() - 1;
             for (int i = 0; i < table[newId].Count(); ++i) {
@@ -59,7 +59,7 @@ namespace RegEx {
         /// Set one state final.
         /// </summary>
         /// <param name="state"> State ID. </param>
-        public void setStateFinal(int state) {
+        public void SetStateFinal(int state) {
             finals.Add(state);
         }
 
@@ -84,7 +84,7 @@ namespace RegEx {
                                 ret += "WILD";
                             } else {
                                 foreach (char c in revMap[j]) {
-                                    ret += Utility.print(c);
+                                    ret += Utility.Print(c);
                                 }
                             }
                         } else {
@@ -108,10 +108,10 @@ namespace RegEx {
         /// Convert NFATable to DFATable.
         /// </summary>
         /// <returns> A DFATable. </returns>
-        public DFATable toDFATable() {
+        public DFATable ToDFATable() {
 
             // Helper function to check if this DFAState is final.
-            Func<DFAState, bool> isFinal = x => {
+            Func<DFAState, bool> IsFinal = x => {
                 foreach (int s in x) {
                     if (finals.Contains(s)) {
                         return true;
@@ -127,11 +127,11 @@ namespace RegEx {
             Stack<DFAState> unmarked = new Stack<DFAState>();
 
             // Initialize the first DFA state.
-            DFAState closure = findEpsilonClosure(new HashSet<int> { 0 });
-            dict.Add(closure, dfa.addState());
+            DFAState closure = FindEpsilonClosure(new HashSet<int> { 0 });
+            dict.Add(closure, dfa.AddState());
             unmarked.Push(closure);
-            if (isFinal(closure)) {
-                dfa.setStateFinal(dict[closure]);
+            if (IsFinal(closure)) {
+                dfa.SetStateFinal(dict[closure]);
             }
 
             // Build the DFA by simulating NFA.
@@ -147,42 +147,42 @@ namespace RegEx {
                     }
 
                     // U = epsilon-closure(move).
-                    DFAState U = findEpsilonClosure(move);
+                    DFAState U = FindEpsilonClosure(move);
                     if (!dict.ContainsKey(U)) {
                         // This is a new DFAState.
-                        dict.Add(U, dfa.addState());
+                        dict.Add(U, dfa.AddState());
                         unmarked.Push(U);
-                        if (isFinal(U)) {
-                            dfa.setStateFinal(dict[U]);
+                        if (IsFinal(U)) {
+                            dfa.SetStateFinal(dict[U]);
                         }
                     }
 
                     // Add transition from T to U with i.
-                    dfa.addTransition(dict[T], dict[U], revMap[i]);
+                    dfa.AddTransition(dict[T], dict[U], revMap[i]);
                 }
             }
-            return dfa.minimize();
+            return dfa.Minimize();
         }
 
         /// <summary>
         /// Star operation.
         /// </summary>
         /// <returns> A new NFATable. </returns>
-        public NFATable star() {
+        public NFATable Star() {
 
             NFATable nfa = new NFATable(map, revMap);
-            nfa.addState();
-            nfa.addEpsilonTransition(0, 1);
+            nfa.AddState();
+            nfa.AddEpsilonTransition(0, 1);
 
             // Merge.
-            NFATable ret = nfa.merge(this);
+            NFATable ret = nfa.Merge(this);
 
-            ret.addEpsilonTransition(1, 2);
-            ret.setStateFinal(1);
+            ret.AddEpsilonTransition(1, 2);
+            ret.SetStateFinal(1);
 
             int offset = 2;
             foreach (int final in finals) {
-                ret.addEpsilonTransition(final + offset, 1);
+                ret.AddEpsilonTransition(final + offset, 1);
             }
 
             return ret;
@@ -192,20 +192,20 @@ namespace RegEx {
         /// Match one or more.
         /// </summary>
         /// <returns> A new NFATable. </returns>
-        public NFATable ques() {
+        public NFATable Ques() {
 
             NFATable nfa = new NFATable(map, revMap);
-            nfa.addState();
-            nfa.addEpsilonTransition(0, 1);
+            nfa.AddState();
+            nfa.AddEpsilonTransition(0, 1);
 
-            NFATable ret = nfa.merge(this);
-            ret.addEpsilonTransition(0, 2);
+            NFATable ret = nfa.Merge(this);
+            ret.AddEpsilonTransition(0, 2);
 
-            ret.setStateFinal(1);
+            ret.SetStateFinal(1);
 
             int offset = 2;
             foreach (int final in finals) {
-                ret.addEpsilonTransition(final + offset, 1);
+                ret.AddEpsilonTransition(final + offset, 1);
             }
 
             return ret;
@@ -219,17 +219,17 @@ namespace RegEx {
         /// <returns> A new NFATable. </returns>
         public static NFATable operator + (NFATable nfa1, NFATable nfa2) {
 
-            NFATable ret = nfa1.merge(nfa2);
+            NFATable ret = nfa1.Merge(nfa2);
             int offset = nfa1.table.Count();
 
             // Connect this.final to other.start.
             foreach (int final in nfa1.finals) {
-                ret.addEpsilonTransition(final, offset);
+                ret.AddEpsilonTransition(final, offset);
             }
 
             // Set the final states.
             foreach (int final in nfa2.finals) {
-                ret.setStateFinal(final + offset);
+                ret.SetStateFinal(final + offset);
             }
 
             return ret;
@@ -243,17 +243,17 @@ namespace RegEx {
         /// <returns> A new NFATable. </returns>
         public static NFATable operator | (NFATable nfa1, NFATable nfa2) {
 
-            NFATable ret = nfa1.merge(nfa2);
+            NFATable ret = nfa1.Merge(nfa2);
             int offset = nfa1.table.Count();
-            ret.addEpsilonTransition(0, offset);
+            ret.AddEpsilonTransition(0, offset);
 
             foreach (int final in nfa1.finals) {
-                ret.setStateFinal(final);
+                ret.SetStateFinal(final);
             }
 
             int end = nfa1.finals.First();
             foreach (int final in nfa2.finals) {
-                ret.addEpsilonTransition(final + offset, end);
+                ret.AddEpsilonTransition(final + offset, end);
             }
 
             return ret;
@@ -266,14 +266,14 @@ namespace RegEx {
         /// </summary>
         /// <param name="other"> NFATable to be merged. </param>
         /// <returns> The new merged NFATable. </returns>
-        private NFATable merge(NFATable other) {
+        private NFATable Merge(NFATable other) {
 
-            NFATable ret = copy();
+            NFATable ret = Copy();
 
             // Add the second nfa.
             int offset = ret.table.Count();
             for (int i = 0; i < other.table.Count(); ++i) {
-                ret.addState();
+                ret.AddState();
             }
             for (int from = 0; from < other.table.Count(); ++from) {
                 for (int i = 0; i < other.table[from].Count(); ++i) {
@@ -291,14 +291,14 @@ namespace RegEx {
         /// Notice that the new NFATable has no final state.
         /// </summary>
         /// <returns> A new NFATable. </returns>
-        private NFATable copy() {
+        private NFATable Copy() {
 
             NFATable ret = new NFATable(map, revMap);
 
             // Add the first nfa.
             // Starts from 1 to avoid two 0 state.
             for (int i = 1; i < table.Count(); ++i) {
-                ret.addState();
+                ret.AddState();
             }
             for (int from = 0; from < table.Count(); ++from) {
                 for (int i = 0; i < table[from].Count(); ++i) {
@@ -314,7 +314,7 @@ namespace RegEx {
         /// </summary>
         /// <param name="states"> Initial states. </param>
         /// <returns> Epsilon closure. </returns>
-        private HashSet<int> findEpsilonClosure(HashSet<int> states) {
+        private HashSet<int> FindEpsilonClosure(HashSet<int> states) {
 
             HashSet<int> closure = new HashSet<int>(states);
 

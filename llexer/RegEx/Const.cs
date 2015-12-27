@@ -13,7 +13,7 @@ namespace RegEx {
     }
 
     class Utility {
-        public static string print(char c) {
+        public static string Print(char c) {
             switch (c) {
                 case '\r':
                     return "\\r";

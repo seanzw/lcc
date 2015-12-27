@@ -8,7 +8,7 @@ namespace llexer {
     public sealed class Lexer {
         private int _idx;
         private string _src;
-        private StringBuilder _lltext;
+        private StringBuilder _text;
         private const char NONE = (char)0;
         private readonly List<DFA> _dfas;
         private static readonly Lexer instance = new Lexer();
@@ -19,92 +19,92 @@ namespace llexer {
             }
         }
 
-        public List<Token> scan(string src) {
+        public List<Token> Scan(string src) {
 
             _idx = 0;
             _src = src;
 
-            List<Token> lltokens = new List<Token>();
+            List<Token> tokens = new List<Token>();
 
             Func<DFA.Status, int> _find = s => {
                 for (int i = 0; i < _dfas.Count(); ++i)
-                    if (_dfas[i].status() == s)
+                    if (_dfas[i].status == s)
                         return i;
                 return -1;
             };
 
             Action _reset = () => {
-                _dfas.ForEach(dfa => dfa.reset());
-                _lltext.Clear();
+                _dfas.ForEach(dfa => dfa.Reset());
+                _text.Clear();
             };
 
             _reset();
-            while (more()) {
-                _dfas.ForEach(dfa => dfa.scan(peek()));
+            while (More()) {
+                _dfas.ForEach(dfa => dfa.Scan(Peek()));
                 if (_find(DFA.Status.RUN) != -1) {
-                    next();
+                    Next();
                     continue;
                 }
                 int _rule = _find(DFA.Status.SUCCEED);
                 if (_rule != -1) {
                     // Find a token.
-                    _action(_rule, ref lltokens);
+                    _Action(_rule, ref tokens);
                     _reset();
-                    _dfas.ForEach(dfa => dfa.scan(peek()));
-                    next();
+                    _dfas.ForEach(dfa => dfa.Scan(Peek()));
+                    Next();
                 } else {
                     // Cannot match this token.
-                    llerror(lltext);
+                    Error("Unmatched token " + text);
                 }
             }
 
             // Feed the EOF.
             if (_find(DFA.Status.RUN) != -1) {
-                _dfas.ForEach(dfa => dfa.scan(NONE));
+                _dfas.ForEach(dfa => dfa.Scan(NONE));
                 int _rule = _find(DFA.Status.SUCCEED);
                 if (_rule != -1) {
-                    _action(_rule, ref lltokens);
+                    _Action(_rule, ref tokens);
                 } else {
                     // Cannot match this token.
-                    llerror(lltext);
+                    Error("Unmatched token " + text);
                 }
             }
 
-            return lltokens;
+            return tokens;
         }
 
-        private bool more() {
+        private bool More() {
             return _idx < _src.Length;
         }
 
-        private char peek() {
-            if (more()) {
+        private char Peek() {
+            if (More()) {
                 return _src[_idx];
             } else {
                 return NONE;
             }
         }
 
-        private char next() {
-            if (more()) {
-                _lltext.Append(_src[_idx]);
+        private char Next() {
+            if (More()) {
+                _text.Append(_src[_idx]);
                 return _src[_idx++];
             } else {
                 return NONE;
             }
         }
 
-        private void llerror(string msg) {
+        private void Error(string msg) {
             throw new ArgumentException("Lexer Error: " + msg);
         }
 
-        private string lltext {
+        private string text {
             get {
-                return _lltext.ToString();
+                return _text.ToString();
             }
         }
         private Lexer() {
-            _lltext = new StringBuilder();
+            _text = new StringBuilder();
             _dfas = new List<DFA>(4);
             #region RULE 0
             {
@@ -182,21 +182,21 @@ namespace llexer {
             }
             #endregion
         }
-        private void _action(int _rule, ref List<Token> lltokens) {
+        private void _Action(int _rule, ref List<Token> tokens) {
             switch (_rule) {
                 case 0:
-                    lltokens.Add(new T_REGEX(lltext.Substring(1, lltext.Length - 2)));
+                    tokens.Add(new T_REGEX(text.Substring(1, text.Length - 2)));
                     break;
                 case 1:
-                    lltokens.Add(new T_CODE(lltext));
+                    tokens.Add(new T_CODE(text));
                     break;
                 case 2:
                     break;
                 case 3:
-                    lltokens.Add(new T_SPLITER());
+                    tokens.Add(new T_SPLITER());
                     break;
                 default:
-                    llerror("UNKNOWN RULE: THIS SHOULD NEVER HAPPEN!");
+                    Error("UNKNOWN RULE: THIS SHOULD NEVER HAPPEN!");
                     break;
             }
         }

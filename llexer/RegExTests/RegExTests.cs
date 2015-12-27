@@ -26,7 +26,7 @@ namespace RegExTests {
             RegEx.RegEx regex = new RegEx.RegEx(src);
 
             foreach (var test in tests) {
-                Assert.AreEqual(regex.match(test.Key), test.Value);
+                Assert.AreEqual(regex.Match(test.Key), test.Value);
             }
         }
 
@@ -48,7 +48,7 @@ namespace RegExTests {
             RegEx.RegEx regex = new RegEx.RegEx(src);
 
             foreach (var test in tests) {
-                Assert.AreEqual(regex.match(test.Key), test.Value);
+                Assert.AreEqual(regex.Match(test.Key), test.Value);
             }
         }
 
@@ -71,7 +71,7 @@ namespace RegExTests {
             RegEx.RegEx regex = new RegEx.RegEx(src);
 
             foreach (var test in tests) {
-                Assert.AreEqual(regex.match(test.Key), test.Value);
+                Assert.AreEqual(regex.Match(test.Key), test.Value);
             }
         }
 
@@ -95,7 +95,7 @@ namespace RegExTests {
             RegEx.RegEx regex = new RegEx.RegEx(src);
 
             foreach (var test in tests) {
-                Assert.AreEqual(regex.match(test.Key), test.Value);
+                Assert.AreEqual(regex.Match(test.Key), test.Value);
             }
         }
 
@@ -113,7 +113,7 @@ namespace RegExTests {
             RegEx.RegEx regex = new RegEx.RegEx(src);
 
             foreach (var test in tests) {
-                Assert.AreEqual(regex.match(test.Key), test.Value);
+                Assert.AreEqual(regex.Match(test.Key), test.Value);
             }
         }
 
@@ -134,7 +134,7 @@ namespace RegExTests {
             RegEx.RegEx regex = new RegEx.RegEx(src);
 
             foreach (var test in tests) {
-                Assert.AreEqual(regex.match(test.Key), test.Value);
+                Assert.AreEqual(regex.Match(test.Key), test.Value);
             }
         }
 
@@ -159,7 +159,7 @@ namespace RegExTests {
             RegEx.RegEx regex = new RegEx.RegEx(src);
 
             foreach (var test in tests) {
-                Assert.AreEqual(regex.match(test.Key), test.Value);
+                Assert.AreEqual(regex.Match(test.Key), test.Value);
             }
         }
 
@@ -177,7 +177,7 @@ namespace RegExTests {
             RegEx.RegEx regex = new RegEx.RegEx(src);
 
             foreach (var test in tests) {
-                Assert.AreEqual(regex.replace(test.Key, patch), test.Value);
+                Assert.AreEqual(regex.Replace(test.Key, patch), test.Value);
             }
         }
     }

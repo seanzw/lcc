@@ -4,13 +4,13 @@ using llexer_beta;
 %%
 
 $\$(\\[^\n\r\t]|[^\n\r\t\$\\])*\$$  
-    lltokens.Add(new T_REGEX(lltext.Substring(1, lltext.Length - 2)));
+    tokens.Add(new T_REGEX(text.Substring(1, text.Length - 2)));
 
 $[^\$ \n\r\t%][^\r\n]*$
-    lltokens.Add(new T_CODE(lltext));
+    tokens.Add(new T_CODE(text));
 
 $[ \n\r\t]+$
     
 $%%$
-    lltokens.Add(new T_SPLITER());
+    tokens.Add(new T_SPLITER());
 %%

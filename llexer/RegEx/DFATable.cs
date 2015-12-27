@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace RegEx {
-    public class DFATable {
+    class DFATable {
 
         /// <summary>
         /// Constructor of DFATable.
@@ -24,7 +24,7 @@ namespace RegEx {
             finals = new HashSet<int>();
         }
 
-        public void addTransition(int from, int to, IEnumerable<char> inputs) {
+        public void AddTransition(int from, int to, IEnumerable<char> inputs) {
             foreach (char input in inputs) {
                 table[from][map[input]] = to;
             }
@@ -35,7 +35,7 @@ namespace RegEx {
         /// There is no edge in this state.
         /// </summary>
         /// <returns> The state ID. </returns>
-        public int addState() {
+        public int AddState() {
             table.Add(new int[revMap.Count()]);
             int newId = table.Count() - 1;
             for (int i = 0; i < table[newId].Count(); ++i) {
@@ -48,7 +48,7 @@ namespace RegEx {
         /// Set one state final.
         /// </summary>
         /// <param name="state"> State ID. </param>
-        public void setStateFinal(int state) {
+        public void SetStateFinal(int state) {
             finals.Add(state);
         }
 
@@ -56,15 +56,15 @@ namespace RegEx {
         /// Minimize this DFATable.
         /// </summary>
         /// <returns></returns>
-        public DFATable minimize() {
-            return removeUnreachable().Hopcroft();
+        public DFATable Minimize() {
+            return RemoveUnreachable().Hopcroft();
         }
 
         /// <summary>
         /// Generate a DFA.
         /// </summary>
         /// <returns> The DFA. </returns>
-        public DFA toDFA() {
+        public DFA ToDFA() {
 
             // Generate the table.
             int[,] table = new int[this.table.Count(), revMap.Count()];
@@ -91,12 +91,12 @@ namespace RegEx {
         /// Remove unreachable state.
         /// </summary>
         /// <returns></returns>
-        private DFATable removeUnreachable() {
+        private DFATable RemoveUnreachable() {
 
             // All the state that can be reached from 0.
 
             // Find all reachable states.
-            Func<int, HashSet<int>> findReachableClosure = x => {
+            Func<int, HashSet<int>> FindReachableClosure = x => {
                 Stack<int> stack = new Stack<int>();
                 HashSet<int> closure = new HashSet<int> { x };
                 stack.Push(x);
@@ -112,7 +112,7 @@ namespace RegEx {
                 return closure;
             };
 
-            HashSet<int> startClosure = findReachableClosure(0);
+            HashSet<int> startClosure = FindReachableClosure(0);
 
             //
             // Helper function to check if this state should be deleted.
@@ -120,11 +120,11 @@ namespace RegEx {
             // 1. Starting from 0, there is no way to reach it OR
             // 2. Starting from it, there is no way to reach final state.
             //
-            Func<int, bool> isDeletable = s => {
+            Func<int, bool> IsDeletable = s => {
                 if (!startClosure.Contains(s)) {
                     return true;
                 }
-                HashSet<int> reachable = findReachableClosure(s);
+                HashSet<int> reachable = FindReachableClosure(s);
                 return reachable.Intersect(finals).Count() == 0;
             };
 
@@ -134,10 +134,10 @@ namespace RegEx {
 
             // Find all the state to be deleted.
             for (int i = 0; i < table.Count(); ++i) {
-                deleted[i] = isDeletable(i);
+                deleted[i] = IsDeletable(i);
                 if (!deleted[i]) {
                     // Create the new state in the simplified DFA.
-                    newId[i] = dfa.addState();
+                    newId[i] = dfa.AddState();
                 }
             }
 
@@ -149,7 +149,7 @@ namespace RegEx {
                         int t = table[s][i];
                         // Is t deleted?
                         if (t != -1 && !deleted[t]) {
-                            dfa.addTransition(newId[s], newId[t], revMap[i]);
+                            dfa.AddTransition(newId[s], newId[t], revMap[i]);
                         }
                     }
                 }
@@ -158,7 +158,7 @@ namespace RegEx {
             // Set the final states.
             foreach (int s in finals) {
                 if (!deleted[s]) {
-                    dfa.setStateFinal(newId[s]);
+                    dfa.SetStateFinal(newId[s]);
                 }
             }
 
@@ -247,12 +247,12 @@ namespace RegEx {
             int[] newId = new int[table.Count()];
             DFATable dfa = new DFATable(map, revMap);
             for (int i = 0; i < P.Count(); ++i) {
-                int x = dfa.addState();
+                int x = dfa.AddState();
                 foreach (int s in P[i]) {
                     newId[s] = x;
                 }
                 if (finals.Contains(P[i].First())) {
-                    dfa.setStateFinal(x);
+                    dfa.SetStateFinal(x);
                 }
             }
 
@@ -261,7 +261,7 @@ namespace RegEx {
                 int s = P[i].First();
                 for (int c = 0; c < revMap.Count(); ++c) {
                     if (table[s][c] != -1) {
-                        dfa.addTransition(newId[s], newId[table[s][c]], revMap[c]);
+                        dfa.AddTransition(newId[s], newId[table[s][c]], revMap[c]);
                     }
                 }
             }
@@ -288,7 +288,7 @@ namespace RegEx {
                             ret += "WILD";
                         } else {
                             foreach (char c in revMap[j]) {
-                                ret += Utility.print(c);
+                                ret += Utility.Print(c);
                             }
                         }
                         ret += ": ";

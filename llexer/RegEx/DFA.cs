@@ -18,20 +18,20 @@ namespace RegEx {
             this.table = table;
             this.final = final;
             this.map = map;
-            reset();
+            Reset();
         }
 
         public DFA(int[,] table, bool[] final, int[] range, int[] value) {
             this.table = table;
             this.final = final;
-            map = expandMap(range, value);
-            reset();
+            map = ExpandMap(range, value);
+            Reset();
         }
 
         /// <summary>
         /// Reset this DFA to the start state.
         /// </summary>
-        public void reset() {
+        public void Reset() {
             state = 0;
         }
 
@@ -39,18 +39,20 @@ namespace RegEx {
         /// Check the status.
         /// </summary>
         /// <returns> Returns the status. </returns>
-        public Status status() {
-            switch (state) {
-                case SUCCESS_STATE:
-                    return Status.SUCCEED;
-                case FAILURE_STATE:
-                    return Status.FAILED;
-                default:
-                    return Status.RUN;
+        public Status status {
+            get {
+                switch (state) {
+                    case SUCCESS_STATE:
+                        return Status.SUCCEED;
+                    case FAILURE_STATE:
+                        return Status.FAILED;
+                    default:
+                        return Status.RUN;
+                }
             }
         }
 
-        public void scan(char c) {
+        public void Scan(char c) {
             switch (state) {
                 case SUCCESS_STATE:
                     state = FAILURE_STATE;
@@ -67,7 +69,7 @@ namespace RegEx {
             }
         }
 
-        public Tuple<int[], int[]> shrinkMap() {
+        public Tuple<int[], int[]> CompressMap() {
 
             LinkedList<int> range = new LinkedList<int>();
             LinkedList<int> value = new LinkedList<int>();
@@ -84,7 +86,7 @@ namespace RegEx {
             return new Tuple<int[], int[]>(range.ToArray(), value.ToArray());
         }
 
-        private int[] expandMap(int[] range, int[] value) {
+        private int[] ExpandMap(int[] range, int[] value) {
 
             int[] ret = new int[Const.CHARSIZE];
             for (int i = 0; i <= range[0]; ++i) {
