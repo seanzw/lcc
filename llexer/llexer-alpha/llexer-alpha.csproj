@@ -7,7 +7,7 @@
     <ProjectGuid>{3504FF1B-F9F9-41A5-BC2E-142A20C15025}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>llexer_alpha</RootNamespace>
+    <RootNamespace>LLexerAlpha</RootNamespace>
     <AssemblyName>llexer-alpha</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

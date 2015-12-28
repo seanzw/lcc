@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using RegEx;
 
-namespace llexer_beta {
+namespace LLexerBeta {
 
     /**************************************************
 
@@ -136,7 +136,7 @@ namespace llexer_beta {
             #endregion
 
             #region LexerBody.
-            src.AppendLine("namespace llexer {");
+            src.AppendLine("namespace LLexer {");
             src.AppendLine(Tab(1) + "public sealed class Lexer {");
 
             #region Attributes.

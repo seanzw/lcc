@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TOKEN = System.String;
 
-namespace llexer_alpha {
+namespace LLexerAlpha {
     abstract public class Token {
 
         public enum TYPE {

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace llexer_beta {
+namespace LLexerBeta {
     class Program {
         static void Main(string[] args) {
 
@@ -23,8 +23,8 @@ namespace llexer_beta {
             StreamReader f = new StreamReader(args[0]);
 
             string src = f.ReadToEnd();
-            List<Token> tokens = llexer.Lexer.Instance.Scan(src);
-            ASTLex ast = llparser.Parser.Instance.Parse(tokens);
+            List<Token> tokens = LLexer.Lexer.Instance.Scan(src);
+            ASTLex ast = LParser.Parser.Instance.Parse(tokens);
             Console.WriteLine(ast);
 
             StreamWriter o = new StreamWriter("Lexer.cs");

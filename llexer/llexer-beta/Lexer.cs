@@ -3,8 +3,8 @@ using System.Linq;
 using System.Text;
 using System.Collections.Generic;
 using RegEx;
-using llexer_beta;
-namespace llexer {
+using LLexerBeta;
+namespace LLexer {
     public sealed class Lexer {
         private int _idx;
         private string _src;

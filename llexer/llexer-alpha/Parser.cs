@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using llexer_alpha;
+using LLexerAlpha;
 
-namespace llparser {
+namespace LParser {
     public class Parser {
 
         private static readonly Parser instance = new Parser();

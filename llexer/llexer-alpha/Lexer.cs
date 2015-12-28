@@ -4,9 +4,9 @@ using System.Text;
 using System.Collections.Generic;
 using RegEx;
 
-using llexer_alpha;
+using LLexerAlpha;
 
-namespace llexer {
+namespace LLexer {
 
     /// <summary>
     /// Lexer for llexer-alpha.

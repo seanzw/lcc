@@ -7,8 +7,8 @@
     <ProjectGuid>{95B2522D-3DEE-47AA-9615-22E7283702D3}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>llexer_beta</RootNamespace>
-    <AssemblyName>llexer_beta</AssemblyName>
+    <RootNamespace>LLexerBeta</RootNamespace>
+    <AssemblyName>llexer-beta</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
