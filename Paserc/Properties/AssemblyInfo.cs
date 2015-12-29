@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("llexer_beta")]
+[assembly: AssemblyTitle("Paserc")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("llexer_beta")]
+[assembly: AssemblyProduct("Paserc")]
 [assembly: AssemblyCopyright("Copyright ©  2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("95b2522d-3dee-47aa-9615-22e7283702d3")]
+[assembly: Guid("1e1d1782-3fbb-406b-8c1a-1cf5b8cce76a")]
 
 // Version information for an assembly consists of the following four values:
 //

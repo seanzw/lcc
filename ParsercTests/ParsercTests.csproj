@@ -3,11 +3,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{D918A319-DA77-4F1E-92C4-4B298105F99D}</ProjectGuid>
+    <ProjectGuid>{4246EE0B-AB96-495A-AA7A-85BC08D891A4}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RegExTests</RootNamespace>
-    <AssemblyName>RegExTests</AssemblyName>
+    <RootNamespace>ParsercTests</RootNamespace>
+    <AssemblyName>ParsercTests</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -45,21 +45,18 @@
     </When>
     <Otherwise>
       <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework">
-          <Private>False</Private>
-        </Reference>
+        <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
       </ItemGroup>
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="DFATests.cs" />
+    <Compile Include="ParsercTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RegExTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\RegEx\RegEx.csproj">
-      <Project>{fa842d39-6335-4f80-9a4a-ede9669f36b1}</Project>
-      <Name>RegEx</Name>
+    <ProjectReference Include="..\Paserc\Parserc.csproj">
+      <Project>{1e1d1782-3fbb-406b-8c1a-1cf5b8cce76a}</Project>
+      <Name>Parserc</Name>
     </ProjectReference>
   </ItemGroup>
   <Choose>
