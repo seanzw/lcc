@@ -4,15 +4,57 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using static Parserc.Primitive;
-
 namespace Parserc {
 
-    public static class Combinator {
+    public delegate List<ParserResult<I, V>> Parser<I, V>(ITokenStream<I> tokens);
+
+    public static class Parserc {
+
+        /// <summary>
+        /// Returns a parser that match everything.
+        /// </summary>
+        /// <param name="value"> Returned value for this parser. </param>
+        /// <returns> A result parser. </returns>
+        public static Parser<I, V> Result<I, V>(V value) {
+            return tokens => {
+                var tokensNew = tokens.Copy();
+                return new List<ParserResult<I, V>> {
+                    new ParserResult<I, V>(value, tokensNew)
+                };
+            };
+        }
+
+        /// <summary>
+        /// Returns a parser that always fails.
+        /// </summary>
+        /// <returns></returns>
+        public static Parser<I, V> Zero<I, V>() {
+            return tokens => {
+                return new List<ParserResult<I, V>>();
+            };
+        }
+
+        /// <summary>
+        /// Consumes and returns a token.
+        /// </summary>
+        /// <typeparam name="I"></typeparam>
+        /// <returns></returns>
+        public static Parser<I, I> Item<I>() {
+            return tokens => {
+                var tokensNew = tokens.Copy();
+                if (tokens.More()) {
+                    return new List<ParserResult<I, I>> {
+                        new ParserResult<I, I>(tokensNew.Next(), tokensNew)
+                    };
+                } else {
+                    return new List<ParserResult<I, I>>();
+                }
+            };
+        }
 
         /// <summary>
         /// Bind two parsers together.
-        /// The result array is flated.
+        /// The result list is flatened.
         /// </summary>
         /// <typeparam name="I"> Input type. </typeparam>
         /// <typeparam name="V"> Return value type. </typeparam>
@@ -148,6 +190,27 @@ namespace Parserc {
                 .Bind(s => parser
                 .Bind(x => ket
                 .Bind(t => Result<I, V>(x))));
+        }
+
+        public static Parser<I, V> ChainPlus<I, V>(this Parser<I, V> parser, Parser<I, Func<V, V, V>> op) {
+            Func<V, Parser<I, V>> rest = Recursion.Y<V, Parser<I, V>>(
+                rec => x => op
+                .Bind(f => parser
+                .Bind(y => rec(f(x, y))))
+                .Or(Result<I, V>(x))
+                );
+
+            return parser.Bind(rest);
+        }
+
+        public static Parser<I, V> Ref<I, V>(Func<Parser<I, V>> reference) {
+            Parser<I, V> p = null;
+            return i => {
+                if (p == null) {
+                    p = reference();
+                }
+                return p(i);
+            };
         }
     }
 }

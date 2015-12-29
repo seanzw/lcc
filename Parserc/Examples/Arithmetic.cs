@@ -1,0 +1,66 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Parserc.PChar;
+using static Parserc.PChar.CharParser;
+using static Parserc.Parserc;
+
+namespace Parserc.Examples {
+
+    /// <summary>
+    /// A simple parser calculates simple arithmetic expression.
+    /// Supported operator:
+    /// + - ^
+    /// </summary>
+    static public class Arithmetic {
+
+        public static int Eval(string expr) {
+            CharStream tokens = new CharStream(expr);
+            var results = Expr()(tokens);
+            if (results.Count == 0) {
+                throw new ArgumentException("Syntax Error: failed parsing!");
+            } else {
+                return results.First().value;
+            }
+        }
+
+        public static Parser<char, int> Expr() {
+            return Term().ChainPlus(Add());
+        }
+
+        public static Parser<char, int> Term() {
+            return Factor().ChainPlus(Exp());
+        }
+
+        public static Parser<char, int> Factor() {
+            return Integer()
+                .Or(Ref(() => Expr()).Bracket(Character('('), Character(')')));
+        }
+
+        public static Parser<char, Func<int, int, int>> Add() {
+            return Character('+')
+                .Bind(_ => Result<char, Func<int, int, int>>((x, y) => x + y))
+                .Or(Character('-')
+                .Bind(_ => Result<char, Func<int, int, int>>((x, y) => x - y)));
+        }
+
+        public static Parser<char, Func<int, int, int>> Exp() {
+            return Character('^')
+                .Bind(_ => Result<char, Func<int, int, int>>((x, y) => {
+                    int ret = 1;
+                    while (y != 0) {
+                        if ((y & 1) == 1) {
+                            ret *= x;
+                        }
+                        x *= x;
+                        y >>= 1;
+                    }
+                    return ret;
+                }));
+        }
+
+
+    }
+}

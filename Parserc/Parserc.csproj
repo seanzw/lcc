@@ -40,12 +40,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Examples\Arithmetic.cs" />
     <Compile Include="PChar\CharParser.cs" />
     <Compile Include="ITokenStream.cs" />
-    <Compile Include="Combinator.cs" />
-    <Compile Include="Primitive.cs" />
+    <Compile Include="Parserc.cs" />
+    <Compile Include="Recursive.cs" />
     <Compile Include="TokenStream.cs" />
-    <Compile Include="Result.cs" />
+    <Compile Include="ParserResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PChar\CharStream.cs" />
   </ItemGroup>

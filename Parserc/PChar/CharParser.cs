@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using static Parserc.Primitive;
+using static Parserc.Parserc;
 
 namespace Parserc.PChar {
 
@@ -19,19 +19,19 @@ namespace Parserc.PChar {
         /// <param name="c"> Char to be matched. </param>
         /// <returns></returns>
         public static Parser<char, char> Character(char c) {
-            return Combinator.Sat<char>(x => x == c);
+            return Parserc.Sat<char>(x => x == c);
         }
 
         public static Parser<char, char> Digit() {
-            return Combinator.Sat<char>(x => x >= '0' && x <= '9');
+            return Parserc.Sat<char>(x => x >= '0' && x <= '9');
         }
 
         public static Parser<char, char> Lower() {
-            return Combinator.Sat<char>(x => x >= 'a' && x <= 'z');
+            return Parserc.Sat<char>(x => x >= 'a' && x <= 'z');
         }
 
         public static Parser<char, char> Upper() {
-            return Combinator.Sat<char>(x => x >= 'A' && x <= 'Z');
+            return Parserc.Sat<char>(x => x >= 'A' && x <= 'Z');
         }
 
         public static Parser<char, char> Letter() {
@@ -48,7 +48,7 @@ namespace Parserc.PChar {
         /// <returns></returns>
         public static Parser<char, string> Word() {
             return Letter().Many().Bind(xs => {
-                return Primitive.Result<char, string>(new string(xs.ToArray()));
+                return Result<char, string>(new string(xs.ToArray()));
             });
         }
 

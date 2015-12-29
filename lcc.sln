@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegEx", "RegEx\RegEx.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegExTests", "RegExTests\RegExTests.csproj", "{D918A319-DA77-4F1E-92C4-4B298105F99D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Parserc", "Paserc\Parserc.csproj", "{1E1D1782-3FBB-406B-8C1A-1CF5B8CCE76A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Parserc", "Parserc\Parserc.csproj", "{1E1D1782-3FBB-406B-8C1A-1CF5B8CCE76A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParsercTests", "ParsercTests\ParsercTests.csproj", "{4246EE0B-AB96-495A-AA7A-85BC08D891A4}"
 EndProject
