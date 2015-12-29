@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using static Parserc.Primitive;
+
 namespace Parserc.PChar {
 
     /// <summary>
@@ -50,14 +52,37 @@ namespace Parserc.PChar {
             });
         }
 
-        public static Parser<char, uint> Nat() {
+        public static Parser<char, uint> Natural() {
             return Digit().Plus().Bind(xs => {
                 uint x = 0;
                 foreach (char c in xs) {
                     x = x * 10 + (uint)char.GetNumericValue(c);
                 }
-                return Primitive.Result<char, uint>(x);
+                return Result<char, uint>(x);
             });
+        }
+
+        /// <summary>
+        /// Parse an integer.
+        /// </summary>
+        /// <returns></returns>
+        public static Parser<char, int> Integer() {
+            var Sign = Character('-')
+                .Bind(_ => Result<char, Func<uint, int>>(x => -(int)x))
+                .Or(Result<char, Func<uint, int>>(x => (int)x));
+            return Sign
+                .Bind(f => Natural()
+                .Bind(u => Result<char, int>(f(u))));
+        }
+
+        /// <summary>
+        /// Parser an integer list as {int,int,int}.
+        /// </summary>
+        /// <returns></returns>
+        public static Parser<char, LinkedList<int>> IntegerList() {
+            return Integer()
+                .ManySeperatedBy(Character(','))
+                .Bracket(Character('{'), Character('}'));
         }
     }
 }

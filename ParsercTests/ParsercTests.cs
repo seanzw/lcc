@@ -91,8 +91,8 @@ namespace ParsercTests {
         }
 
         [TestMethod]
-        public void parserc_nat() {
-            Parser<char, uint> parser = CharParser.Nat();
+        public void parserc_natural() {
+            Parser<char, uint> parser = CharParser.Natural();
             string src = "629abc";
             ITokenStream<char> tokens = new CharStream(src);
             var result = parser(tokens);
@@ -100,6 +100,41 @@ namespace ParsercTests {
             Assert.AreEqual(result[0].value, 629u);
             Assert.AreEqual(result[1].value, 62u);
             Assert.AreEqual(result[2].value, 6u);
+        }
+
+        [TestMethod]
+        public void parserc_integer() {
+            Parser<char, int> parser = CharParser.Integer();
+            string src = "-629abc";
+            ITokenStream<char> tokens = new CharStream(src);
+            var result = parser(tokens);
+            Assert.AreEqual(result.Count, 3);
+            Assert.AreEqual(result[0].value, -629);
+            Assert.AreEqual(result[1].value, -62);
+            Assert.AreEqual(result[2].value, -6);
+        }
+
+        [TestMethod]
+        public void parserc_integer_list() {
+            Parser<char, LinkedList<int>> parser = CharParser.IntegerList();
+            string src = "{1,2,3,4,5}";
+            ITokenStream<char> tokens = new CharStream(src);
+            var result = parser(tokens);
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(5, result[0].value.Count);
+            {
+                int i = 1;
+                foreach (int r in result[0].value) {
+                    Assert.AreEqual(i, r);
+                    i++;
+                }
+            }
+
+            string empty = "{}";
+            tokens = new CharStream(empty);
+            result = parser(tokens);
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(0, result[0].value.Count);
         }
     }
 }

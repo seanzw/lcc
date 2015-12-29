@@ -90,6 +90,64 @@ namespace Parserc {
                 .Or(Result<I, LinkedList<V>>(new LinkedList<V>()));
         }
 
+        /// <summary>
+        /// Apply the parser in the following pattern.
+        /// 
+        /// [x:xs | x = parser, xs = many [y | _ = sep, y = parser]]
+        /// 
+        /// parser sep parser ... sep parser
+        /// </summary>
+        /// <typeparam name="I"></typeparam>
+        /// <typeparam name="V"></typeparam>
+        /// <typeparam name="S"></typeparam>
+        /// <param name="parser"></param>
+        /// <param name="sep"></param>
+        /// <returns></returns>
+        public static Parser<I, LinkedList<V>> PlusSeperatedBy<I, V, S>(this Parser<I, V> parser, Parser<I, S> sep) {
+            return parser
+                .Bind(x => sep
+                .Bind(_ => parser)
+                .Many()
+                .Bind(xs => {
+                    xs.AddFirst(x);
+                    return Result<I, LinkedList<V>>(xs);
+                }));
+        }
 
+        /// <summary>
+        /// Apply parser in following pattern:
+        /// parser sep parser ... sep parser OR
+        /// epsilon
+        /// </summary>
+        /// <typeparam name="I"></typeparam>
+        /// <typeparam name="V"></typeparam>
+        /// <typeparam name="S"></typeparam>
+        /// <param name="parser"></param>
+        /// <param name="sep"></param>
+        /// <returns></returns>
+        public static Parser<I, LinkedList<V>> ManySeperatedBy<I, V, S>(this Parser<I, V> parser, Parser<I, S> sep) {
+            return parser
+                .PlusSeperatedBy(sep)
+                .Or(Result<I, LinkedList<V>>(new LinkedList<V>()));
+        }
+
+        /// <summary>
+        /// Apply the parser in following pattern:
+        /// bra parser ket
+        /// </summary>
+        /// <typeparam name="I"></typeparam>
+        /// <typeparam name="V"></typeparam>
+        /// <typeparam name="S1"></typeparam>
+        /// <typeparam name="S2"></typeparam>
+        /// <param name="parser"></param>
+        /// <param name="bra"></param>
+        /// <param name="ket"></param>
+        /// <returns></returns>
+        public static Parser<I, V> Bracket<I, V, S1, S2>(this Parser<I, V> parser, Parser<I, S1> bra, Parser<I, S2> ket) {
+            return bra
+                .Bind(s => parser
+                .Bind(x => ket
+                .Bind(t => Result<I, V>(x))));
+        }
     }
 }
