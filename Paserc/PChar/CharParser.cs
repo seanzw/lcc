@@ -16,7 +16,7 @@ namespace Parserc.PChar {
         /// </summary>
         /// <param name="c"> Char to be matched. </param>
         /// <returns></returns>
-        public static Parser<char, char> Char(char c) {
+        public static Parser<char, char> Character(char c) {
             return Combinator.Sat<char>(x => x == c);
         }
 
@@ -33,24 +33,31 @@ namespace Parserc.PChar {
         }
 
         public static Parser<char, char> Letter() {
-            return Lower().Plus(Upper());
+            return Lower().Or(Upper());
         }
 
         public static Parser<char, char> AlphaNum() {
-            return Letter().Plus(Digit());
+            return Letter().Or(Digit());
         }
 
         /// <summary>
         /// Match a word, which can be empty.
-        /// This actually is lazy evaluation.
         /// </summary>
         /// <returns></returns>
         public static Parser<char, string> Word() {
-            Parser<char, string> neWord = Letter()
-                .Bind(x => { return Word()
-                .Bind(xs => { return Primitive.Result<char, string>(x + xs); });
-                });
-            return neWord.Plus(Primitive.Result<char, string>(""));
+            return Letter().Many().Bind(xs => {
+                return Primitive.Result<char, string>(new string(xs.ToArray()));
+            });
+        }
+
+        public static Parser<char, uint> Nat() {
+            return Digit().Plus().Bind(xs => {
+                uint x = 0;
+                foreach (char c in xs) {
+                    x = x * 10 + (uint)char.GetNumericValue(c);
+                }
+                return Primitive.Result<char, uint>(x);
+            });
         }
     }
 }

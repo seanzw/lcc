@@ -31,16 +31,63 @@ namespace Parserc {
             };
         }
 
+        /// <summary>
+        /// Match one token that satisifys predicate.
+        /// </summary>
+        /// <typeparam name="I"> Token type. </typeparam>
+        /// <param name="predicate"></param>
+        /// <returns></returns>
         public static Parser<I, I> Sat<I>(Func<I, bool> predicate) {
             return 
                 Item<I>()
                 .Bind(x => predicate(x) ? Result<I, I>(x) : Zero<I, I>());
         }
 
-        public static Parser<I, V> Plus<I, V>(this Parser<I, V> first, Parser<I, V> second) {
+        /// <summary>
+        /// Applys parser1 and parser2.
+        /// Returns the combined result.
+        /// </summary>
+        /// <typeparam name="I"></typeparam>
+        /// <typeparam name="V"></typeparam>
+        /// <param name="first"></param>
+        /// <param name="second"></param>
+        /// <returns></returns>
+        public static Parser<I, V> Or<I, V>(this Parser<I, V> first, Parser<I, V> second) {
             return tokens => {
                 return new List<ParserResult<I, V>>(first(tokens).Concat(second(tokens)));
             };
+        }
+
+        /// <summary>
+        /// Apply the parser one or more times.
+        /// Result is stored in a linked list.
+        /// </summary>
+        /// <typeparam name="I"></typeparam>
+        /// <typeparam name="V"></typeparam>
+        /// <param name="parser"></param>
+        /// <returns></returns>
+        public static Parser<I, LinkedList<V>> Plus<I, V>(this Parser<I, V> parser) {
+            return parser
+                .Bind(x => parser
+                .Many()
+                .Bind(xs => {
+                    xs.AddFirst(x);
+                    return Result<I, LinkedList<V>>(xs);
+                }));
+        }
+
+        /// <summary>
+        /// Apply the parser zero or more times.
+        /// Result is stored in a LinkedList.
+        /// </summary>
+        /// <typeparam name="I"></typeparam>
+        /// <typeparam name="V"></typeparam>
+        /// <param name="parser"></param>
+        /// <returns></returns>
+        public static Parser<I, LinkedList<V>> Many<I, V>(this Parser<I, V> parser) {
+            return parser
+                .Plus()
+                .Or(Result<I, LinkedList<V>>(new LinkedList<V>()));
         }
 
 

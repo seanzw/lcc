@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using Parserc;
 using Parserc.PChar;
 
@@ -84,8 +84,22 @@ namespace ParsercTests {
             ITokenStream<char> tokens = new CharStream(src);
             var result = parser(tokens);
             Assert.AreEqual(result.Count, 4);
-            Assert.AreEqual(result[0].value.Length, 3);
-            Assert.AreEqual(result[0].value, src);
+            Assert.AreEqual(result[0].value, "abc");
+            Assert.AreEqual(result[1].value, "ab");
+            Assert.AreEqual(result[2].value, "a");
+            Assert.AreEqual(result[3].value, "");
+        }
+
+        [TestMethod]
+        public void parserc_nat() {
+            Parser<char, uint> parser = CharParser.Nat();
+            string src = "629abc";
+            ITokenStream<char> tokens = new CharStream(src);
+            var result = parser(tokens);
+            Assert.AreEqual(result.Count, 3);
+            Assert.AreEqual(result[0].value, 629u);
+            Assert.AreEqual(result[1].value, 62u);
+            Assert.AreEqual(result[2].value, 6u);
         }
     }
 }
