@@ -90,8 +90,45 @@ namespace Parserc {
             };
         }
 
+        /// <summary>
+        /// Simpler version of Bind without taking the result of previous parser.
+        /// </summary>
+        /// <typeparam name="I"></typeparam>
+        /// <typeparam name="S"></typeparam>
+        /// <typeparam name="V"></typeparam>
+        /// <param name="first"></param>
+        /// <param name="second"></param>
+        /// <returns></returns>
         public static Parser<I, V> Then<I, S, V>(this Parser<I, S> first, Parser<I, V> second) {
             return first.Bind(_ => second);
+        }
+
+        /// <summary>
+        /// Project the result to another domain.
+        /// </summary>
+        /// <typeparam name="I"></typeparam>
+        /// <typeparam name="V1"></typeparam>
+        /// <typeparam name="V2"></typeparam>
+        /// <param name="parser"></param>
+        /// <param name="converter"></param>
+        /// <returns></returns>
+        public static Parser<I, V2> Select<I, V1, V2>(this Parser<I, V1> parser, Func<V1, V2> converter) {
+            return parser.Bind(x => Result<I, V2>(converter(x)));
+        }
+
+        /// <summary>
+        /// Return the result if the previous parser succeed.
+        /// Bind <-> Select
+        /// Then <-> Return
+        /// </summary>
+        /// <typeparam name="I"></typeparam>
+        /// <typeparam name="V1"></typeparam>
+        /// <typeparam name="V2"></typeparam>
+        /// <param name="parser"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        public static Parser<I, V2> Return<I, V1, V2>(this Parser<I, V1> parser, V2 result) {
+            return parser.Then(Result<I, V2>(result));
         }
 
         /// <summary>
@@ -224,6 +261,14 @@ namespace Parserc {
                 .Bind(t => Result<I, V>(x))));
         }
 
+        /// <summary>
+        /// Apply a left assocative operator.
+        /// </summary>
+        /// <typeparam name="I"></typeparam>
+        /// <typeparam name="V"></typeparam>
+        /// <param name="parser"></param>
+        /// <param name="op"></param>
+        /// <returns></returns>
         public static Parser<I, V> ChainPlus<I, V>(this Parser<I, V> parser, Parser<I, Func<V, V, V>> op) {
             Func<V, Parser<I, V>> rest = Recursion.Y<V, Parser<I, V>>(
                 rec => x => op
@@ -235,6 +280,13 @@ namespace Parserc {
             return parser.Bind(rest);
         }
 
+        /// <summary>
+        /// Allow circular reference by delay the evaluation with lambda expression.
+        /// </summary>
+        /// <typeparam name="I"></typeparam>
+        /// <typeparam name="V"></typeparam>
+        /// <param name="reference"></param>
+        /// <returns></returns>
         public static Parser<I, V> Ref<I, V>(Func<Parser<I, V>> reference) {
             Parser<I, V> p = null;
             return i => {
@@ -245,9 +297,6 @@ namespace Parserc {
             };
         }
 
-        public static Parser<I, V2> Trans<I, V1, V2>(this Parser<I, V1> parser)
-            where V1 : V2 {
-            return parser.Bind(x => Result<I, V2>(x));
-        }
+
     }
 }

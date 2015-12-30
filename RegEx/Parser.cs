@@ -38,7 +38,8 @@ namespace RegEx {
             ;
 
         atom
-            : singlechar
+            : wild
+            | singlechar
             | '(' expression ')'
             | '[' charset ']'
             | '[' '^' charset ']'
@@ -87,34 +88,35 @@ namespace RegEx {
         }
 
         static Parserc.Parser<char, ASTFactor.MetaChar> Meta() {
-            return Character('*').Bind(x => Result<char, ASTFactor.MetaChar>(ASTFactor.MetaChar.STAR))
-                .Else(Character('+').Bind(x => Result<char, ASTFactor.MetaChar>(ASTFactor.MetaChar.PLUS)))
-                .Else(Character('?').Bind(x => Result<char, ASTFactor.MetaChar>(ASTFactor.MetaChar.QUES)))
+            return Character('*').Return(ASTFactor.MetaChar.STAR)
+                .Else(Character('+').Return(ASTFactor.MetaChar.PLUS))
+                .Else(Character('?').Return(ASTFactor.MetaChar.QUES))
                 .Else(Result<char, ASTFactor.MetaChar>(ASTFactor.MetaChar.NULL));
         }
 
         static Parserc.Parser<char, ASTRegEx> Atom() {
-            return SingleChar().Trans<char, ASTCharSet, ASTRegEx>()
+            return SingleChar()
+                    .Select(x => x as ASTRegEx)
                 .Or(Ref(Expression)
                     .Bracket(Character('('), Character(')'))
-                    .Trans<char, ASTExpr, ASTRegEx>())
+                    .Select(x => x as ASTRegEx))
                 .Or(CharSet()
                     .Bracket(Character('['), Character(']'))
-                    .Trans<char, ASTCharSet, ASTRegEx>())
+                    .Select(x => x as ASTRegEx))
                 .Or(Character('^')
-                    .Bind(_ => CharSet()
-                    .Bind(charset => Result<char, ASTCharSetNeg>(new ASTCharSetNeg(charset.set))))
+                    .Then(CharSet()
+                    .Select(charset => new ASTCharSetNeg(charset.set)))
                     .Bracket(Character('['), Character(']'))
-                    .Trans<char, ASTCharSetNeg, ASTRegEx>());
+                    .Select(x => x as ASTRegEx));
         }
 
         static Parserc.Parser<char, ASTCharSet> CharSet() {
-            return CharRange().Plus().Bind(sets => {
+            return CharRange().Plus().Select(sets => {
                 HashSet<char> union = new HashSet<char>();
                 foreach (var set in sets) {
                     union.UnionWith(set);
                 }
-                return Result<char, ASTCharSet>(new ASTCharSet(union));
+                return new ASTCharSet(union);
             });
         }
 
@@ -123,12 +125,12 @@ namespace RegEx {
                 .Bind(beg => 
                     Character('-')
                     .Then(SingleChar()
-                    .Bind(end => {
+                    .Select(end => {
                         HashSet<char> set = new HashSet<char>();
                         for (char i = beg.set.First(); i <= end.set.First(); ++i) {
                             set.Add(i);
                         }
-                        return Result<char, HashSet<char>>(set);
+                        return set;
                     }))
                     .Else(Result<char, HashSet<char>>(beg.set))
                 );
