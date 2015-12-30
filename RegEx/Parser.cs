@@ -4,313 +4,166 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using static Parserc.Parserc;
+using static Parserc.PChar.CharParser;
+
 namespace RegEx {
-    class Parser {
 
-        private static Parser instance = new Parser();
+    /// <summary>
+    /// Parser written in parser combinator.
+    /// </summary>
+    static class Parser {
 
-        public static Parser Instance {
-            get {
-                return instance;
-            }
-        }
+        /***********************************************************
+    
+        expression
+            : term '|' expression
+            | term
+            ;
 
-        private Parser() {}
+        term
+            : factor term
+            | factor
+            ;
 
-        public ASTExpr Parse(string src) {
-            idx = 0;
-            this.src = src;
-            ASTExpr expr = ParseExpr();
-            if (More()) {
-                return null;
+        factor
+            : atom meta
+            ;
+
+        meta
+            : '*'
+            | '+'
+            | '?'
+            | epsilon
+            ;
+
+        atom
+            : singlechar
+            | '(' expression ')'
+            | '[' charset ']'
+            | '[' '^' charset ']'
+            ;
+
+        charset
+            : charrange charset
+            | charrange
+            ;
+
+        charrange
+            : singlechar '-' singlechar
+            | singlechar
+            ;
+
+    *************************************************************/
+
+        public static ASTExpr Parse(string src) {
+            Parserc.PChar.CharStream tokens = new Parserc.PChar.CharStream(src);
+            var results = Expression().End()(tokens);
+            if (results.Count == 0) {
+                throw new ArgumentException("Syntax Error: failed parsing!");
+            } else if (results.Count > 1) {
+                throw new ArgumentException("Syntax Error: ambiguous result!");
             } else {
-                return expr;
+                return results.First().value;
             }
         }
 
-        #region
-        /*************************************************************************************************
-
-            Notice that for all the parsing functions, when
-            1. Successfully matched, returns the ASTNode and modifies the src.
-            2. No match is found, returns null and leaves src unchanged.
-
-        **************************************************************************************************/
-
-        private ASTExpr ParseExpr() {
-
-            int idxBk = idx;
-            ASTExpr expr;
-            ASTTerm term;
-
-            // expression : term expression_tail
-            if ((term = ParseTerm()) != null &&
-                (expr = ParseExprTail()) != null
-                ) {
-                expr.terms.AddFirst(term);
-                return expr;
-            }
-
-            idx = idxBk;
-            return null;
+        static Parserc.Parser<char, ASTExpr> Expression() {
+            return Term()
+                .PlusSeperatedBy(Character('|'))
+                .Bind(terms => Result<char, ASTExpr>(new ASTExpr(terms)));
         }
 
-        private ASTExpr ParseExprTail() {
-            int idxBk = idx;
-            ASTExpr expr;
-
-            // expression_tail : | expression
-            if (Next() == '|' &&
-                (expr = ParseExpr()) != null
-                ) {
-                return expr;
-            }
-
-            // expression_tail : epsilon
-            idx = idxBk;
-            return new ASTExpr();
+        static Parserc.Parser<char, ASTTerm> Term() {
+            return Factor()
+                .Plus()
+                .Bind(factors => Result<char, ASTTerm>(new ASTTerm(factors)));
         }
 
-        private ASTTerm ParseTerm() {
-
-            int idxBk = idx;
-            ASTFactor factor;
-            ASTTerm term;
-
-            // term : factor term_tail
-            if ((factor = ParseFactor()) != null &&
-                (term = ParseTermTail()) != null
-                ) {
-                term.factors.AddFirst(factor);
-                return term;
-            }
-
-            idx = idxBk;
-            return null;
-
+        static Parserc.Parser<char, ASTFactor> Factor() {
+            return Atom()
+                .Bind(atom => Meta()
+                .Bind(meta => Result<char, ASTFactor>(new ASTFactor(atom, meta))));
         }
 
-        private ASTTerm ParseTermTail() {
-
-            int idxBk = idx;
-            ASTTerm term;
-
-            // term_tail : term
-            if ((term = ParseTerm()) != null) {
-                return term;
-            }
-
-            // term_tail : epsilon
-            idx = idxBk;
-            return new ASTTerm();
+        static Parserc.Parser<char, ASTFactor.MetaChar> Meta() {
+            return Character('*').Bind(x => Result<char, ASTFactor.MetaChar>(ASTFactor.MetaChar.STAR))
+                .Else(Character('+').Bind(x => Result<char, ASTFactor.MetaChar>(ASTFactor.MetaChar.PLUS)))
+                .Else(Character('?').Bind(x => Result<char, ASTFactor.MetaChar>(ASTFactor.MetaChar.QUES)))
+                .Else(Result<char, ASTFactor.MetaChar>(ASTFactor.MetaChar.NULL));
         }
 
-        private ASTFactor ParseFactor() {
-
-            int idxBk = idx;
-
-            ASTRegEx atom;
-            if ((atom = ParseAtom()) != null) {
-                ASTFactor.MetaChar meta = ParseMeta();
-                return new ASTFactor(atom, meta);
-            }
-
-            idx = idxBk;
-            return null;
+        static Parserc.Parser<char, ASTRegEx> Atom() {
+            return SingleChar().Trans<char, ASTCharSet, ASTRegEx>()
+                .Or(Ref(Expression)
+                    .Bracket(Character('('), Character(')'))
+                    .Trans<char, ASTExpr, ASTRegEx>())
+                .Or(CharSet()
+                    .Bracket(Character('['), Character(']'))
+                    .Trans<char, ASTCharSet, ASTRegEx>())
+                .Or(Character('^')
+                    .Bind(_ => CharSet()
+                    .Bind(charset => Result<char, ASTCharSetNeg>(new ASTCharSetNeg(charset.set))))
+                    .Bracket(Character('['), Character(']'))
+                    .Trans<char, ASTCharSetNeg, ASTRegEx>());
         }
 
-        private ASTFactor.MetaChar ParseMeta() {
-            int idxBk = idx;
-            switch (Next()) {
-                case '*':
-                    return ASTFactor.MetaChar.STAR;
-                case '+':
-                    return ASTFactor.MetaChar.PLUS;
-                case '?':
-                    return ASTFactor.MetaChar.QUES;
-                case NONE:
-                default:
-                    idx = idxBk;
-                    return ASTFactor.MetaChar.NULL;
-            }
-        }
-
-        private ASTRegEx ParseAtom() {
-
-            int idxBk = idx;
-            ASTRegEx expr;
-            ASTCharSet charset;
-
-            // atom : character
-            if ((charset = ParseCharacter()) != null) {
-                return charset;
-            }
-
-            // atom : ( expression )
-            idx = idxBk;
-            if (Next() == '(' &&
-                (expr = ParseExpr()) != null &&
-                Next() == ')'
-                ) {
-                return expr;
-            }
-
-            // atom : [ charset ]
-            idx = idxBk;
-            if (Next() == '[' &&
-                (charset = ParseCharSet()) != null &&
-                Next() == ']'
-                ) {
-                return charset;
-            }
-
-            // atom : [ ^ charset ]
-            idx = idxBk;
-            if (Next() == '[' &&
-                Next() == '^' &&
-                (charset = ParseCharSet()) != null &&
-                Next() == ']'
-                ) {
-                return new ASTCharSetNeg(charset.set);
-            }
-
-            idx = idxBk;
-            return null;
-        }
-
-        private ASTCharSet ParseCharSet() {
-
-            int idxBk = idx;
-            ASTCharSet set1, set2;
-            // charset : charrange charset_tail
-            if ((set1 = ParseCharRange()) != null &&
-                (set2 = ParseCharSetTail()) != null
-                ) {
-                set1.set.UnionWith(set2.set);
-                return set1;
-            }
-
-            idx = idxBk;
-            return null;
-        }
-
-        private ASTCharSet ParseCharSetTail() {
-
-            int idxBk = idx;
-            ASTCharSet set;
-
-            // charset_tail : charset
-            if ((set = ParseCharSet()) != null) {
-                return set;
-            }
-
-            // charset_tail : epsilon
-            idx = idxBk;
-            return new ASTCharSet(new HashSet<char>());
-        }
-
-        private ASTCharSet ParseCharRange() {
-
-            int idxBk = idx;
-            ASTCharSet set1, set2;
-
-            // charrange : character - character
-            if ((set1 = ParseCharacter()) != null &&
-                Next() == '-' &&
-                (set2 = ParseCharacter()) != null
-                ) {
-                if (set1.set.Count != 1 || set2.set.Count != 1) {
-                    throw new InvalidOperationException("parseCharacter should return only 1 char.");
+        static Parserc.Parser<char, ASTCharSet> CharSet() {
+            return CharRange().Plus().Bind(sets => {
+                HashSet<char> union = new HashSet<char>();
+                foreach (var set in sets) {
+                    union.UnionWith(set);
                 }
-                char beg = set1.set.First();
-                char end = set2.set.First();
-                HashSet<char> set = new HashSet<char>();
-                for (char i = beg; i <= end; ++i) {
-                    set.Add(i);
-                }
-                return new ASTCharSet(set);
-            }
-
-            // charrange : character
-            idx = idxBk;
-            if ((set1 = ParseCharacter()) != null) {
-                return set1;
-            }
-
-            idx = idxBk;
-            return null;
+                return Result<char, ASTCharSet>(new ASTCharSet(union));
+            });
         }
 
-        private ASTCharSet ParseCharacter() {
-
-            int idxBk = idx;
-            char c;
-            
-            // character : \ anychar
-            if (Next() == '\\') {
-                c = Next();
-                switch (c) {
-                    case NONE:
-                        idx = idxBk;
-                        return null;
-                    case 'r':
-                        return new ASTCharSet(new HashSet<char> { '\r' });
-                    case 'n':
-                        return new ASTCharSet(new HashSet<char> { '\n' });
-                    case 't':
-                        return new ASTCharSet(new HashSet<char> { '\t' });
-                    default:
-                        return new ASTCharSet(new HashSet<char> { c });
-                }
-            }
-
-            // character : anycharexceptmetachar
-            idx = idxBk;
-            c = Next();
-            switch (c) {
-                case NONE:
-                    idx = idxBk;
-                    return null;
-                case '*':
-                case '|':
-                case '?':
-                case '+':
-                case '(':
-                case ')':
-                case '[':
-                case ']':
-                case '-':
-                case '^':
-                    idx = idxBk;
-                    return null;
-                case '.':
-                    return new ASTCharSetWild();
-                default:
-                    return new ASTCharSet(new HashSet<char> { c });
-            }
+        static Parserc.Parser<char, HashSet<char>> CharRange() {
+            return SingleChar()
+                .Bind(beg => 
+                    Character('-')
+                    .Then(SingleChar()
+                    .Bind(end => {
+                        HashSet<char> set = new HashSet<char>();
+                        for (char i = beg.set.First(); i <= end.set.First(); ++i) {
+                            set.Add(i);
+                        }
+                        return Result<char, HashSet<char>>(set);
+                    }))
+                    .Else(Result<char, HashSet<char>>(beg.set))
+                );
         }
 
-        #endregion
-
-        #region Helper function.
-
-        private char Next() {
-            if (More()) {
-                idx++;
-                return src[idx - 1];
-            } else {
-                return NONE;
-            }
+        static Parserc.Parser<char, ASTCharSet> SingleChar() {
+            return Character('\\')
+                .Then(Character('r')
+                    .Then(Result<char, ASTCharSet>(new ASTCharSet(new HashSet<char> { '\r' })))
+                    .Else(Character('n')
+                    .Then(Result<char, ASTCharSet>(new ASTCharSet(new HashSet<char> { '\n' }))))
+                    .Else(Character('t')
+                    .Then(Result<char, ASTCharSet>(new ASTCharSet(new HashSet<char> { '\t' }))))
+                    .Else(Item<char>()
+                    .Bind(c => Result<char, ASTCharSet>(new ASTCharSet(new HashSet<char> { c })))))
+                .Else(Item<char>()
+                    .Bind(c => {
+                        switch (c) {
+                            case '*':
+                            case '|':
+                            case '?':
+                            case '+':
+                            case '(':
+                            case ')':
+                            case '[':
+                            case ']':
+                            case '-':
+                            case '^':
+                                return Zero<char, ASTCharSet>();
+                            case '.':
+                                return Result<char, ASTCharSet>(new ASTCharSetWild());
+                            default:
+                                return Result<char, ASTCharSet>(new ASTCharSet(new HashSet<char> { c }));
+                        }
+                    }));
         }
-
-        private bool More() {
-            return idx < src.Length;
-        }
-
-        #endregion
-        private int idx;
-        private string src;
-
-        private const char NONE = (char)0;
     }
 }

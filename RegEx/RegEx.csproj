@@ -46,12 +46,19 @@
     <Compile Include="DFA.cs" />
     <Compile Include="DFATable.cs" />
     <Compile Include="NFATable.cs" />
+    <None Include="ParserRD.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="RegEx.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Parserc\Parserc.csproj">
+      <Project>{1e1d1782-3fbb-406b-8c1a-1cf5b8cce76a}</Project>
+      <Name>Parserc</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -48,6 +48,10 @@ namespace RegEx {
             terms = new LinkedList<ASTTerm>();
         }
 
+        public ASTExpr(LinkedList<ASTTerm> terms) {
+            this.terms = terms;
+        }
+
         public override string ToString(int level) {
             string str = Tab(level) + "Expression: \n";
             foreach (ASTTerm term in terms) {
@@ -109,6 +113,10 @@ namespace RegEx {
 
         public ASTTerm() {
             factors = new LinkedList<ASTFactor>();
+        }
+
+        public ASTTerm(LinkedList<ASTFactor> factors) {
+            this.factors = factors;
         }
 
         public override string ToString(int level) {

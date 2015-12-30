@@ -18,9 +18,11 @@ namespace Parserc.Examples {
 
         public static int Eval(string expr) {
             CharStream tokens = new CharStream(expr);
-            var results = Expr()(tokens);
+            var results = Expr().End()(tokens);
             if (results.Count == 0) {
                 throw new ArgumentException("Syntax Error: failed parsing!");
+            } else if (results.Count > 1) {
+                throw new ArgumentException("Syntax Error: ambiguous result!");
             } else {
                 return results.First().value;
             }
@@ -36,7 +38,7 @@ namespace Parserc.Examples {
 
         public static Parser<char, int> Factor() {
             return Integer()
-                .Or(Ref(() => Expr()).Bracket(Character('('), Character(')')));
+                .Or(Ref(Expr).Bracket(Character('('), Character(')')));
         }
 
         public static Parser<char, Func<int, int, int>> Add() {
@@ -60,7 +62,5 @@ namespace Parserc.Examples {
                     return ret;
                 }));
         }
-
-
     }
 }

@@ -52,6 +52,23 @@ namespace Parserc {
             };
         }
 
+        public static Parser<I, V> End<I, V>(this Parser<I, V> parser) {
+            return parser.Bind(x => End<I, V>(x));
+        }
+
+        public static Parser<I, V> End<I, V>(V value) {
+            return tokens => {
+                if (tokens.More()) {
+                    return new List<ParserResult<I, V>>();
+                } else {
+                    var tokensNew = tokens.Copy();
+                    return new List<ParserResult<I, V>> {
+                        new ParserResult<I, V>(value, tokensNew)
+                    };
+                }
+            };
+        }
+
         /// <summary>
         /// Bind two parsers together.
         /// The result list is flatened.
@@ -71,6 +88,10 @@ namespace Parserc {
                 }
                 return ret;
             };
+        }
+
+        public static Parser<I, V> Then<I, S, V>(this Parser<I, S> first, Parser<I, V> second) {
+            return first.Bind(_ => second);
         }
 
         /// <summary>
@@ -97,6 +118,17 @@ namespace Parserc {
         public static Parser<I, V> Or<I, V>(this Parser<I, V> first, Parser<I, V> second) {
             return tokens => {
                 return new List<ParserResult<I, V>>(first(tokens).Concat(second(tokens)));
+            };
+        }
+
+        public static Parser<I, V> Else<I, V>(this Parser<I, V> first, Parser<I, V> second) {
+            return tokens => {
+                var r = first(tokens);
+                if (r.Count == 0) {
+                    return second(tokens);
+                } else {
+                    return r;
+                }
             };
         }
 
@@ -211,6 +243,11 @@ namespace Parserc {
                 }
                 return p(i);
             };
+        }
+
+        public static Parser<I, V2> Trans<I, V1, V2>(this Parser<I, V1> parser)
+            where V1 : V2 {
+            return parser.Bind(x => Result<I, V2>(x));
         }
     }
 }

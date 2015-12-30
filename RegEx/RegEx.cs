@@ -12,7 +12,7 @@ namespace RegEx {
         /// </summary>
         /// <param name="src"> The regular expression. </param>
         public RegEx(string src) {
-            ASTExpr ast = Parser.Instance.Parse(src);
+            ASTExpr ast = Parser.Parse(src);
             if (ast == null) {
                 throw new ArgumentException("Can't parse this regex. Sorry~");
             }
