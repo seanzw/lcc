@@ -45,6 +45,10 @@ namespace RegEx {
             | '[' '^' charset ']'
             ;
 
+        wild
+            : '.'
+            ;
+
         charset
             : charrange charset
             | charrange
@@ -70,21 +74,17 @@ namespace RegEx {
         }
 
         static Parserc.Parser<char, ASTExpr> Expression() {
-            return Term()
-                .PlusSeperatedBy(Character('|'))
-                .Bind(terms => Result<char, ASTExpr>(new ASTExpr(terms)));
+            return Term().PlusSeperatedBy(Character('|')).Select(terms => new ASTExpr(terms));
         }
 
         static Parserc.Parser<char, ASTTerm> Term() {
-            return Factor()
-                .Plus()
-                .Bind(factors => Result<char, ASTTerm>(new ASTTerm(factors)));
+            return Factor().Plus().Select(factors => new ASTTerm(factors));
         }
 
         static Parserc.Parser<char, ASTFactor> Factor() {
             return Atom()
                 .Bind(atom => Meta()
-                .Bind(meta => Result<char, ASTFactor>(new ASTFactor(atom, meta))));
+                .Select(meta => new ASTFactor(atom, meta)));
         }
 
         static Parserc.Parser<char, ASTFactor.MetaChar> Meta() {
@@ -95,8 +95,9 @@ namespace RegEx {
         }
 
         static Parserc.Parser<char, ASTRegEx> Atom() {
-            return SingleChar()
-                    .Select(x => x as ASTRegEx)
+            return Wild().Select(x => x as ASTRegEx)
+                .Or(SingleChar()
+                    .Select(x => new ASTCharSet(new HashSet<char> { x }) as ASTRegEx))
                 .Or(Ref(Expression)
                     .Bracket(Character('('), Character(')'))
                     .Select(x => x as ASTRegEx))
@@ -127,25 +128,26 @@ namespace RegEx {
                     .Then(SingleChar()
                     .Select(end => {
                         HashSet<char> set = new HashSet<char>();
-                        for (char i = beg.set.First(); i <= end.set.First(); ++i) {
+                        for (char i = beg; i <= end; ++i) {
                             set.Add(i);
                         }
                         return set;
                     }))
-                    .Else(Result<char, HashSet<char>>(beg.set))
+                    .Else(Result<char, HashSet<char>>(new HashSet<char> { beg }))
                 );
         }
 
-        static Parserc.Parser<char, ASTCharSet> SingleChar() {
+        static Parserc.Parser<char, ASTCharSetWild> Wild() {
+            return Character('.').Return(new ASTCharSetWild());
+        }
+
+        static Parserc.Parser<char, char> SingleChar() {
             return Character('\\')
-                .Then(Character('r')
-                    .Then(Result<char, ASTCharSet>(new ASTCharSet(new HashSet<char> { '\r' })))
-                    .Else(Character('n')
-                    .Then(Result<char, ASTCharSet>(new ASTCharSet(new HashSet<char> { '\n' }))))
-                    .Else(Character('t')
-                    .Then(Result<char, ASTCharSet>(new ASTCharSet(new HashSet<char> { '\t' }))))
+                .Then(Character('r').Return('\r')
+                    .Else(Character('n').Return('\n'))
+                    .Else(Character('t').Return('\t'))
                     .Else(Item<char>()
-                    .Bind(c => Result<char, ASTCharSet>(new ASTCharSet(new HashSet<char> { c })))))
+                    .Select(c => c)))
                 .Else(Item<char>()
                     .Bind(c => {
                         switch (c) {
@@ -159,11 +161,10 @@ namespace RegEx {
                             case ']':
                             case '-':
                             case '^':
-                                return Zero<char, ASTCharSet>();
                             case '.':
-                                return Result<char, ASTCharSet>(new ASTCharSetWild());
+                                return Zero<char, char>();
                             default:
-                                return Result<char, ASTCharSet>(new ASTCharSet(new HashSet<char> { c }));
+                                return Result<char, char>(c);
                         }
                     }));
         }
