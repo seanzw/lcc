@@ -46,6 +46,7 @@
     <Compile Include="AST.cs" />
     <None Include="LexerAlpha.cs" />
     <Compile Include="Lexer.cs" />
+    <None Include="ParserRD.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -56,6 +57,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Parserc\Parserc.csproj">
+      <Project>{1e1d1782-3fbb-406b-8c1a-1cf5b8cce76a}</Project>
+      <Name>Parserc</Name>
+    </ProjectReference>
     <ProjectReference Include="..\RegEx\RegEx.csproj">
       <Project>{fa842d39-6335-4f80-9a4a-ede9669f36b1}</Project>
       <Name>RegEx</Name>

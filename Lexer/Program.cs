@@ -24,7 +24,8 @@ namespace Lexer {
 
             string src = f.ReadToEnd();
             List<Token> tokens = LLexer.Lexer.Instance.Scan(src);
-            ASTLex ast = LParser.Parser.Instance.Parse(tokens);
+            ASTLex ast = Parser.Parser.Parse(tokens);
+            Console.WriteLine(ast);
 
             StreamWriter o = new StreamWriter("Lexer.cs");
             o.Write(ast.WriteLexer());

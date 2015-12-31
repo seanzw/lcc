@@ -1,131 +1,78 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 using Lexer;
+using static Parserc.Parserc;
 
-namespace LParser {
-    public class Parser {
+namespace Parser {
 
-        private static readonly Parser instance = new Parser();
+    /**************************************************
 
-        public static Parser Instance {
-            get {
-                return instance;
-            }
-        }
+    lex
+        : codes SPLITER rules SPLITER codes
+        ;
 
-        private Parser() { }
+    rules
+        : rule rules
+        | rule
+        ;
 
-        public ASTLex Parse(List<Token> tokens) {
-            this.tokens = tokens;
-            idx = 0;
-            return ParseLex();
-        }
+    rule
+        : REGEX_LITERAL codes
+        ;
 
-        private ASTLex ParseLex() {
+    codes
+        : CODE_LINE codes
+        | epsilon
+        ;
+    
+    ***************************************************/
 
-            int idxBk = idx;
-            LinkedList<string> headers;
-            LinkedList<ASTRule> rules;
-            LinkedList<string> codes;
+    static class Parser {
 
-            // lex : codes SPLITER rules SPLITER codes.
-            if ((headers = ParseCodes())    != null &&
-                (Next() as T_SPLITER)       != null &&
-                (rules = ParseRules())      != null &&
-                (Next() as T_SPLITER)       != null &&
-                (codes = ParseCodes())      != null
-                ) {
-                return new ASTLex(headers, rules, codes);
-            }
-
-            idx = idxBk;
-            return null;
-        }
-
-        private LinkedList<ASTRule> ParseRules() {
-
-            int idxBk = idx;
-            LinkedList<ASTRule> rules;
-            ASTRule rule;
-
-            // rules : rule rules_tail
-            if ((rule = ParseRule())        != null &&
-                (rules = ParseRulesTail())  != null
-                ) {
-                rules.AddFirst(rule);
-                return rules;
-            }
-
-            idx = idxBk;
-            return null;
-        }
-
-        private LinkedList<ASTRule> ParseRulesTail() {
-
-            int idxBk = idx;
-            LinkedList<ASTRule> rules;
-
-            // rules_tail : rules
-            if ((rules = ParseRules()) != null) {
-                return rules;
-            }
-
-            // rules_tail : epsilon
-            idx = idxBk;
-            return new LinkedList<ASTRule>();
-        }
-
-        private ASTRule ParseRule() {
-            int idxBk = idx;
-            LinkedList<string> codes;
-
-            // rule : REGEX_LITERAL codes
-            T_REGEX token;
-            if ((token = Next() as T_REGEX) != null &&
-                (codes = ParseCodes())      != null
-                ) {
-                return new ASTRule(token.src, codes);
-            }
-
-            idx = idxBk;
-            return null;
-        }
-
-        private LinkedList<string> ParseCodes() {
-
-            int idxBk = idx;
-            LinkedList<string> codes;
-
-            // codes : code codes
-            T_CODE token;
-            if ((token = Next() as T_CODE)  != null &&
-                (codes = ParseCodes())      != null
-                ) {
-                codes.AddFirst(token.src);
-                return codes;
-            }
-
-            // codes : epsilon
-            idx = idxBk;
-            return new LinkedList<string>();
-        }
-
-        private bool More() {
-            return idx < tokens.Count();
-        }
-
-        private Token Next() {
-            if (More()) {
-                return tokens[idx++];
+        public static ASTLex Parse(List<Token> tokens) {
+            Parserc.TokenStream<Token> stream = new Parserc.TokenStream<Token>(tokens.AsReadOnly());
+            var result = Lex().End()(stream);
+            if (result.Count == 0) {
+                throw new ArgumentException("Syntax Error: failed parsing!");
+            } else if (result.Count > 1) {
+                throw new ArgumentException("Syntax Error: ambiguous result!");
             } else {
-                return null;
+                return result.First().value;
             }
         }
 
-        private int idx;
-        private List<Token> tokens;
-        
+        static Parserc.Parser<Token, ASTLex> Lex() {
+            return Code().Many()
+                .Bind(headers => Match<T_SPLITER>()
+                .Then(Rule().Plus()
+                .Bind(rules => Match<T_SPLITER>()
+                .Then(Code().Many()
+                .Select(codes => new ASTLex(headers, rules, codes))))));
+        }
+
+        static Parserc.Parser<Token, ASTRule> Rule() {
+            return RegExLiteral()
+                .Bind(regex_literal => Code()
+                .Many()
+                .Select(codes => new ASTRule(regex_literal, codes)));
+        }
+
+        static Parserc.Parser<Token, string> Code() {
+            return Match<T_CODE>().Select(t => t.src);
+        }
+
+        static Parserc.Parser<Token, string> RegExLiteral() {
+            return Match<T_REGEX>().Select(t => t.src);
+        }
+
+        static Parserc.Parser<Token, T> Match<T>()
+            where T : Token {
+            return Sat<Token>(t => (t as T) != null)
+                .Select(t => t as T);
+        }
     }
 }

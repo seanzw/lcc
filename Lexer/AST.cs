@@ -6,32 +6,7 @@ using RegEx;
 
 namespace Lexer {
 
-    /**************************************************
-
-    lex
-        : codes SPLITER rules SPLITER codes
-        ;
-
-    rules
-        : rule rules_tail
-        ;
-
-    rules_tail
-        : rules
-        | epsilon
-        ;
-
-    rule
-        : REGEX_LITERAL codes
-        ;
-
-    codes
-        : CODE_LINE codes
-        | epsilon
-        ;
     
-    ***************************************************/
-
     public abstract class ASTNode {
         public ASTNode() { }
 
