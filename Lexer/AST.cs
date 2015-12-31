@@ -117,6 +117,8 @@ namespace Lexer {
             #region Attributes.
             List<string> attributes = new List<string> {
                 "private int _idx;",
+                "private int _line;",
+                "private int _lineInc;",
                 "private string _src;",
                 "private StringBuilder _text;",
                 "private const char NONE = (char)0;",
@@ -141,6 +143,7 @@ namespace Lexer {
         public List<Token> Scan(string src) {
 
             _idx = 0;
+            _line = 1;
             _src = src;
 
             List<Token> tokens = new List<Token>();
@@ -155,6 +158,8 @@ namespace Lexer {
             Action _reset = () => {
                 _dfas.ForEach(dfa => dfa.Reset());
                 _text.Clear();
+                _line += _lineInc;
+                _lineInc = 0;
             };
 
             _reset();
@@ -214,8 +219,11 @@ namespace Lexer {
             string next = @"
         private char Next() {
             if (More()) {
-                _text.Append(_src[_idx]);
-                return _src[_idx++];
+                char c = _src[_idx++];
+                _text.Append(c);
+                if (c == '\n')
+                    _lineInc++;
+                return c;
             } else {
                 return NONE;
             }
@@ -235,6 +243,14 @@ namespace Lexer {
             }
         }";
             src.AppendLine(lltext);
+
+            string lline = @"
+        private int line {
+            get {
+                return _line;
+            }
+        }";
+            src.AppendLine(lline);
 
             #endregion
 

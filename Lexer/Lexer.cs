@@ -7,6 +7,8 @@ using Lexer;
 namespace LLexer {
     public sealed class Lexer {
         private int _idx;
+        private int _line;
+        private int _lineInc;
         private string _src;
         private StringBuilder _text;
         private const char NONE = (char)0;
@@ -22,6 +24,7 @@ namespace LLexer {
         public List<Token> Scan(string src) {
 
             _idx = 0;
+            _line = 1;
             _src = src;
 
             List<Token> tokens = new List<Token>();
@@ -36,6 +39,8 @@ namespace LLexer {
             Action _reset = () => {
                 _dfas.ForEach(dfa => dfa.Reset());
                 _text.Clear();
+                _line += _lineInc;
+                _lineInc = 0;
             };
 
             _reset();
@@ -87,8 +92,11 @@ namespace LLexer {
 
         private char Next() {
             if (More()) {
-                _text.Append(_src[_idx]);
-                return _src[_idx++];
+                char c = _src[_idx++];
+                _text.Append(c);
+                if (c == '\n')
+                    _lineInc++;
+                return c;
             } else {
                 return NONE;
             }
@@ -101,6 +109,12 @@ namespace LLexer {
         private string text {
             get {
                 return _text.ToString();
+            }
+        }
+
+        private int line {
+            get {
+                return _line;
             }
         }
         private Lexer() {

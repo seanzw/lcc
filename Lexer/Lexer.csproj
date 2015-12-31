@@ -46,7 +46,6 @@
     <Compile Include="AST.cs" />
     <None Include="LexerAlpha.cs" />
     <Compile Include="Lexer.cs" />
-    <None Include="ParserRD.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
