@@ -10,7 +10,7 @@ namespace lcc {
         static void Main(string[] args) {
 
             TestLexer.TestKeyword();
-
+            TestLexer.TestIdentifier();
         }
     }
 }

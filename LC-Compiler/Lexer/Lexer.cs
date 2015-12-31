@@ -25,6 +25,7 @@ namespace LLexer {
 
             _idx = 0;
             _line = 1;
+            _lineInc = 0;
             _src = src;
 
             List<Token> tokens = new List<Token>();
@@ -119,7 +120,7 @@ namespace LLexer {
         }
         private Lexer() {
             _text = new StringBuilder();
-            _dfas = new List<DFA>(38);
+            _dfas = new List<DFA>(39);
             #region RULE 0
             {
                 bool[] final = new bool[5] {
@@ -958,6 +959,24 @@ namespace LLexer {
                     false, true, 
                 };
                 int[,] table = new int[,] {
+                    { 1, -1, },
+                    { 1, 1, },
+                };
+                int[] range = new int[9] {
+                    47, 57, 64, 90, 94, 95, 96, 122, 65535, 
+                };
+                int[] value = new int[9] {
+                    -1, 1, -1, 0, -1, 0, -1, 0, -1, 
+                };
+                _dfas.Add(new DFA(table, final, range, value));
+            }
+            #endregion
+            #region RULE 38
+            {
+                bool[] final = new bool[2] {
+                    false, true, 
+                };
+                int[,] table = new int[,] {
                     { 1, },
                     { 1, },
                 };
@@ -1085,6 +1104,9 @@ namespace LLexer {
                     tokens.Add(new T_KEY__IMAGINARY(line));
                     break;
                 case 37:
+                    tokens.Add(new T_IDENTIFIER(line, text));
+                    break;
+                case 38:
                     break;
                 default:
                     Error("UNKNOWN RULE: THIS SHOULD NEVER HAPPEN!");

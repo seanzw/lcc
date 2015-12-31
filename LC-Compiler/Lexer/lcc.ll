@@ -41,6 +41,8 @@ $_Bool$         tokens.Add(new T_KEY__BOOL(line));
 $_Complex$      tokens.Add(new T_KEY__COMPLEX(line));
 $_Imaginary$    tokens.Add(new T_KEY__IMAGINARY(line));
 
+$[_a-zA-Z][_a-zA-Z0-9]*$
+    tokens.Add(new T_IDENTIFIER(line, text));
 $[ \n\r\t]+$
     
 %%

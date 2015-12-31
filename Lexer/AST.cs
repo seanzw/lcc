@@ -144,6 +144,7 @@ namespace Lexer {
 
             _idx = 0;
             _line = 1;
+            _lineInc = 0;
             _src = src;
 
             List<Token> tokens = new List<Token>();

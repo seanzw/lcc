@@ -10,6 +10,33 @@ using LLexer;
 namespace lcc.Test {
     static class TestLexer {
 
+        private static void Aux(string src, List<Token.Token> truth) {
+            var tokens = Lexer.Instance.Scan(src);
+            if (tokens.Count != truth.Count) {
+                Console.WriteLine("Unmatched numbers!");
+                return;
+            }
+            for (int i = 0; i < tokens.Count; ++i) {
+                if (truth[i].GetType().Equals(tokens[i].GetType())) {
+                    if (truth[i].line == tokens[i].line) {
+                        if ((tokens[i] as T_IDENTIFIER) != null &&
+                            (truth[i] as T_IDENTIFIER) != null) {
+                            var i1 = truth[i] as T_IDENTIFIER;
+                            var i2 = tokens[i] as T_IDENTIFIER;
+                            if (i1.name == i2.name) {
+                                continue;
+                            }
+                        } else {
+                            continue;
+                        }
+                    }
+                }
+                Console.WriteLine("Wrong token!");
+                return;
+            }
+            Console.WriteLine("Perfect!");
+        }
+
         public static void TestKeyword() {
             string src = @"
 auto auto break char const 
@@ -44,21 +71,26 @@ union struct void typedef switch _Complex _Imaginary
                 new T_KEY__COMPLEX(5),
                 new T_KEY__IMAGINARY(5)
             };
-            var tokens = Lexer.Instance.Scan(src);
-            if (tokens.Count != truth.Count) {
-                Console.WriteLine("Unmatched numbers!");
-                return;
-            }
-            for (int i = 0; i < tokens.Count; ++i) {
-                if (truth[i].GetType().Equals(tokens[i].GetType())) {
-                    if (truth[i].line == tokens[i].line) {
-                        continue;
-                    }
-                }
-                Console.WriteLine("Wrong token!");
-                return;
-            }
-            Console.WriteLine("Perfect!");
+            Aux(src, truth);
+        }
+
+        public static void TestIdentifier() {
+            string src = @"
+int a char b double _a int a0 what c_0_CA_0
+            ";
+            List<Token.Token> truth = new List<Token.Token> {
+                new T_KEY_INT(2),
+                new T_IDENTIFIER(2, "a"),
+                new T_KEY_CHAR(2),
+                new T_IDENTIFIER(2, "b"),
+                new T_KEY_DOUBLE(2),
+                new T_IDENTIFIER(2, "_a"),
+                new T_KEY_INT(2),
+                new T_IDENTIFIER(2, "a0"),
+                new T_IDENTIFIER(2, "what"),
+                new T_IDENTIFIER(2, "c_0_CA_0")
+            };
+            Aux(src, truth);
         }
 
     }
