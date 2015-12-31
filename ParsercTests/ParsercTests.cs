@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Parserc;
-using Parserc.PChar;
 using static Parserc.Parserc;
 using Parserc.Examples;
 
@@ -80,8 +79,8 @@ namespace ParsercTests {
         [TestMethod]
         public void parserc_bind() {
             Parser<char, char[]> parser =
-                CharParser.Lower().Bind(x => { return
-                CharParser.Lower().Bind(y => { return
+                CharParserc.Lower().Bind(x => { return
+                CharParserc.Lower().Bind(y => { return
                 Result<char, char[]>(new char[] { x, y }); });});
             string src = "abc";
             ITokenStream<char> tokens = new CharStream(src);
@@ -95,7 +94,7 @@ namespace ParsercTests {
 
         [TestMethod]
         public void parserc_word() {
-            Parser<char, string> parser = CharParser.Word();
+            Parser<char, string> parser = CharParserc.Word();
             string src = "abc";
             ITokenStream<char> tokens = new CharStream(src);
             var result = parser(tokens);
@@ -108,7 +107,7 @@ namespace ParsercTests {
 
         [TestMethod]
         public void parserc_natural() {
-            Parser<char, uint> parser = CharParser.Natural();
+            Parser<char, uint> parser = CharParserc.Natural();
             string src = "629abc";
             ITokenStream<char> tokens = new CharStream(src);
             var result = parser(tokens);
@@ -120,7 +119,7 @@ namespace ParsercTests {
 
         [TestMethod]
         public void parserc_integer() {
-            Parser<char, int> parser = CharParser.Integer();
+            Parser<char, int> parser = CharParserc.Integer();
             string src = "-629abc";
             ITokenStream<char> tokens = new CharStream(src);
             var result = parser(tokens);
@@ -132,7 +131,7 @@ namespace ParsercTests {
 
         [TestMethod]
         public void parserc_integer_list() {
-            Parser<char, LinkedList<int>> parser = CharParser.IntegerList();
+            Parser<char, LinkedList<int>> parser = CharParserc.IntegerList();
             string src = "{1,2,3,4,5}";
             ITokenStream<char> tokens = new CharStream(src);
             var result = parser(tokens);

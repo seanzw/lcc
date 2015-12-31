@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using static Parserc.Parserc;
-using static Parserc.PChar.CharParser;
+using static Parserc.CharParserc;
 
 namespace RegEx {
 
@@ -62,7 +62,7 @@ namespace RegEx {
     *************************************************************/
 
         public static ASTExpr Parse(string src) {
-            Parserc.PChar.CharStream tokens = new Parserc.PChar.CharStream(src);
+            Parserc.CharStream tokens = new Parserc.CharStream(src);
             var results = Expression().End()(tokens);
             if (results.Count == 0) {
                 throw new ArgumentException("Syntax Error: failed parsing!");
@@ -123,8 +123,7 @@ namespace RegEx {
 
         static Parserc.Parser<char, HashSet<char>> CharRange() {
             return SingleChar()
-                .Bind(beg => 
-                    Character('-')
+                .Bind(beg => Character('-')
                     .Then(SingleChar()
                     .Select(end => {
                         HashSet<char> set = new HashSet<char>();

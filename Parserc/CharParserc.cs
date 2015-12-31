@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 using static Parserc.Parserc;
 
-namespace Parserc.PChar {
+namespace Parserc {
 
     /// <summary>
     /// Some useful parsers for processing char.
     /// </summary>
-    public static class CharParser {
+    public static class CharParserc {
 
         /// <summary>
         /// Match a single char.

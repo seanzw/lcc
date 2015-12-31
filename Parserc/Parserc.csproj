@@ -41,14 +41,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Examples\Arithmetic.cs" />
-    <Compile Include="PChar\CharParser.cs" />
+    <Compile Include="CharParserc.cs" />
     <Compile Include="ITokenStream.cs" />
     <Compile Include="Parserc.cs" />
     <Compile Include="Recursive.cs" />
     <Compile Include="TokenStream.cs" />
     <Compile Include="ParserResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PChar\CharStream.cs" />
+    <Compile Include="CharStream.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

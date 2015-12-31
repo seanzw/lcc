@@ -46,7 +46,6 @@
     <Compile Include="DFA.cs" />
     <Compile Include="DFATable.cs" />
     <Compile Include="NFATable.cs" />
-    <None Include="ParserRD.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="RegEx.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

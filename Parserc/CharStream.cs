@@ -1,4 +1,4 @@
-﻿namespace Parserc.PChar {
+﻿namespace Parserc {
 
     /// <summary>
     /// Wrap string as a token stream.
