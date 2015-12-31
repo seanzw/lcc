@@ -43,11 +43,27 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Lexer\Lexer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Test\TestLexer.cs" />
+    <Compile Include="Token\Keywords.cs" />
+    <Compile Include="Token\Token.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="AST\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Lexer\lcc.ll" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RegEx\RegEx.csproj">
+      <Project>{fa842d39-6335-4f80-9a4a-ede9669f36b1}</Project>
+      <Name>RegEx</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
