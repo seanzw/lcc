@@ -120,7 +120,7 @@ namespace LLexer {
         }
         private Lexer() {
             _text = new StringBuilder();
-            _dfas = new List<DFA>(39);
+            _dfas = new List<DFA>(50);
             #region RULE 0
             {
                 bool[] final = new bool[5] {
@@ -973,6 +973,258 @@ namespace LLexer {
             #endregion
             #region RULE 38
             {
+                bool[] final = new bool[7] {
+                    false, true, true, true, true, true, false, 
+                };
+                int[,] table = new int[,] {
+                    { 6, -1, -1, -1, -1, -1, },
+                    { -1, -1, -1, -1, -1, -1, },
+                    { 2, -1, 2, 5, 3, 4, },
+                    { -1, -1, -1, -1, 1, -1, },
+                    { -1, -1, -1, -1, -1, 1, },
+                    { -1, -1, -1, -1, 3, 4, },
+                    { -1, 2, -1, -1, -1, -1, },
+                };
+                int[] range = new int[20] {
+                    47, 48, 57, 64, 70, 75, 76, 84, 85, 87, 88, 96, 102, 107, 108, 116, 117, 119, 120, 65535, 
+                };
+                int[] value = new int[20] {
+                    -1, 0, 2, -1, 2, -1, 5, -1, 3, -1, 1, -1, 2, -1, 4, -1, 3, -1, 1, -1, 
+                };
+                _dfas.Add(new DFA(table, final, range, value));
+            }
+            #endregion
+            #region RULE 39
+            {
+                bool[] final = new bool[7] {
+                    false, false, false, false, true, false, false, 
+                };
+                int[,] table = new int[,] {
+                    { 1, -1, -1, -1, -1, -1, },
+                    { -1, 3, -1, -1, -1, -1, },
+                    { -1, -1, -1, -1, -1, 4, },
+                    { 3, -1, 3, 5, 6, -1, },
+                    { -1, -1, -1, -1, -1, -1, },
+                    { -1, -1, -1, 2, -1, 4, },
+                    { -1, -1, -1, -1, 2, 4, },
+                };
+                int[] range = new int[20] {
+                    47, 48, 57, 64, 70, 75, 76, 84, 85, 87, 88, 96, 102, 107, 108, 116, 117, 119, 120, 65535, 
+                };
+                int[] value = new int[20] {
+                    -1, 0, 2, -1, 2, -1, 4, -1, 5, -1, 1, -1, 2, -1, 3, -1, 5, -1, 1, -1, 
+                };
+                _dfas.Add(new DFA(table, final, range, value));
+            }
+            #endregion
+            #region RULE 40
+            {
+                bool[] final = new bool[6] {
+                    false, true, true, true, true, true, 
+                };
+                int[,] table = new int[,] {
+                    { 2, -1, -1, -1, -1, },
+                    { -1, -1, -1, -1, -1, },
+                    { 2, 2, 5, 3, 4, },
+                    { -1, -1, -1, 1, -1, },
+                    { -1, -1, -1, -1, 1, },
+                    { -1, -1, -1, 3, 4, },
+                };
+                int[] range = new int[12] {
+                    47, 48, 55, 75, 76, 84, 85, 107, 108, 116, 117, 65535, 
+                };
+                int[] value = new int[12] {
+                    -1, 0, 1, -1, 4, -1, 2, -1, 3, -1, 2, -1, 
+                };
+                _dfas.Add(new DFA(table, final, range, value));
+            }
+            #endregion
+            #region RULE 41
+            {
+                bool[] final = new bool[6] {
+                    false, true, false, false, false, false, 
+                };
+                int[,] table = new int[,] {
+                    { 3, -1, -1, -1, -1, },
+                    { -1, -1, -1, -1, -1, },
+                    { -1, -1, -1, -1, 1, },
+                    { 3, 3, 4, 5, -1, },
+                    { -1, -1, 2, -1, 1, },
+                    { -1, -1, -1, 2, 1, },
+                };
+                int[] range = new int[12] {
+                    47, 48, 55, 75, 76, 84, 85, 107, 108, 116, 117, 65535, 
+                };
+                int[] value = new int[12] {
+                    -1, 0, 1, -1, 3, -1, 4, -1, 2, -1, 4, -1, 
+                };
+                _dfas.Add(new DFA(table, final, range, value));
+            }
+            #endregion
+            #region RULE 42
+            {
+                bool[] final = new bool[6] {
+                    false, true, true, true, true, true, 
+                };
+                int[,] table = new int[,] {
+                    { 2, -1, -1, -1, -1, },
+                    { -1, -1, -1, -1, -1, },
+                    { 2, 2, 5, 3, 4, },
+                    { -1, -1, -1, 1, -1, },
+                    { -1, -1, -1, -1, 1, },
+                    { -1, -1, -1, 3, 4, },
+                };
+                int[] range = new int[12] {
+                    47, 48, 57, 75, 76, 84, 85, 107, 108, 116, 117, 65535, 
+                };
+                int[] value = new int[12] {
+                    -1, 1, 0, -1, 4, -1, 2, -1, 3, -1, 2, -1, 
+                };
+                _dfas.Add(new DFA(table, final, range, value));
+            }
+            #endregion
+            #region RULE 43
+            {
+                bool[] final = new bool[6] {
+                    false, true, false, false, false, false, 
+                };
+                int[,] table = new int[,] {
+                    { 3, -1, -1, -1, -1, },
+                    { -1, -1, -1, -1, -1, },
+                    { -1, -1, -1, -1, 1, },
+                    { 3, 3, 4, 5, -1, },
+                    { -1, -1, 2, -1, 1, },
+                    { -1, -1, -1, 2, 1, },
+                };
+                int[] range = new int[12] {
+                    47, 48, 57, 75, 76, 84, 85, 107, 108, 116, 117, 65535, 
+                };
+                int[] value = new int[12] {
+                    -1, 1, 0, -1, 3, -1, 4, -1, 2, -1, 4, -1, 
+                };
+                _dfas.Add(new DFA(table, final, range, value));
+            }
+            #endregion
+            #region RULE 44
+            {
+                bool[] final = new bool[7] {
+                    false, true, true, false, true, false, false, 
+                };
+                int[,] table = new int[,] {
+                    { 0, 6, -1, -1, -1, },
+                    { -1, -1, -1, -1, -1, },
+                    { 2, -1, -1, -1, 1, },
+                    { 2, -1, -1, -1, -1, },
+                    { 4, -1, 5, -1, 1, },
+                    { 2, -1, -1, 3, -1, },
+                    { 4, -1, -1, -1, -1, },
+                };
+                int[] range = new int[18] {
+                    42, 43, 44, 45, 46, 47, 57, 68, 69, 70, 75, 76, 100, 101, 102, 107, 108, 65535, 
+                };
+                int[] value = new int[18] {
+                    -1, 3, -1, 3, 1, -1, 0, -1, 2, 4, -1, 4, -1, 2, 4, -1, 4, -1, 
+                };
+                _dfas.Add(new DFA(table, final, range, value));
+            }
+            #endregion
+            #region RULE 45
+            {
+                bool[] final = new bool[7] {
+                    false, true, true, false, false, true, false, 
+                };
+                int[,] table = new int[,] {
+                    { 4, -1, -1, -1, -1, },
+                    { -1, -1, -1, -1, -1, },
+                    { 2, -1, -1, -1, 1, },
+                    { 2, -1, -1, -1, -1, },
+                    { 4, 5, -1, -1, -1, },
+                    { -1, -1, 6, -1, 1, },
+                    { 2, -1, -1, 3, -1, },
+                };
+                int[] range = new int[18] {
+                    42, 43, 44, 45, 46, 47, 57, 68, 69, 70, 75, 76, 100, 101, 102, 107, 108, 65535, 
+                };
+                int[] value = new int[18] {
+                    -1, 3, -1, 3, 1, -1, 0, -1, 2, 4, -1, 4, -1, 2, 4, -1, 4, -1, 
+                };
+                _dfas.Add(new DFA(table, final, range, value));
+            }
+            #endregion
+            #region RULE 46
+            {
+                bool[] final = new bool[6] {
+                    false, true, true, false, false, false, 
+                };
+                int[,] table = new int[,] {
+                    { 4, -1, -1, -1, },
+                    { -1, -1, -1, -1, },
+                    { 2, -1, -1, 1, },
+                    { 2, -1, -1, -1, },
+                    { 4, 5, -1, -1, },
+                    { 2, -1, 3, -1, },
+                };
+                int[] range = new int[17] {
+                    42, 43, 44, 45, 47, 57, 68, 69, 70, 75, 76, 100, 101, 102, 107, 108, 65535, 
+                };
+                int[] value = new int[17] {
+                    -1, 2, -1, 2, -1, 0, -1, 1, 3, -1, 3, -1, 1, 3, -1, 3, -1, 
+                };
+                _dfas.Add(new DFA(table, final, range, value));
+            }
+            #endregion
+            #region RULE 47
+            {
+                bool[] final = new bool[9] {
+                    false, false, true, false, false, true, false, false, false, 
+                };
+                int[,] table = new int[,] {
+                    { 1, -1, -1, -1, -1, -1, -1, -1, -1, },
+                    { -1, 6, -1, -1, -1, -1, -1, -1, -1, },
+                    { 2, -1, 2, 5, -1, -1, -1, -1, 5, },
+                    { 2, -1, 2, -1, -1, -1, -1, -1, -1, },
+                    { 7, -1, 7, 7, 7, -1, -1, -1, -1, },
+                    { -1, -1, -1, -1, -1, -1, -1, -1, -1, },
+                    { 6, -1, 6, 6, 6, 4, -1, -1, -1, },
+                    { 7, -1, 7, 7, 7, -1, 8, -1, -1, },
+                    { 2, -1, 2, -1, -1, -1, -1, 3, -1, },
+                };
+                int[] range = new int[27] {
+                    42, 43, 44, 45, 46, 47, 48, 57, 64, 69, 70, 75, 76, 79, 80, 87, 88, 96, 101, 102, 107, 108, 111, 112, 119, 120, 65535, 
+                };
+                int[] value = new int[27] {
+                    -1, 7, -1, 7, 5, -1, 0, 2, -1, 4, 3, -1, 8, -1, 6, -1, 1, -1, 4, 3, -1, 8, -1, 6, -1, 1, -1, 
+                };
+                _dfas.Add(new DFA(table, final, range, value));
+            }
+            #endregion
+            #region RULE 48
+            {
+                bool[] final = new bool[9] {
+                    false, false, true, false, true, false, false, false, false, 
+                };
+                int[,] table = new int[,] {
+                    { 7, -1, -1, -1, -1, -1, -1, -1, -1, },
+                    { -1, -1, -1, -1, -1, -1, 8, -1, -1, },
+                    { 2, -1, 2, 4, -1, -1, -1, -1, 4, },
+                    { 2, -1, 2, -1, -1, -1, -1, -1, -1, },
+                    { -1, -1, -1, -1, -1, -1, -1, -1, -1, },
+                    { 5, -1, 5, 5, 5, 1, 8, -1, -1, },
+                    { 5, -1, 5, 5, 5, -1, -1, -1, -1, },
+                    { -1, 6, -1, -1, -1, -1, -1, -1, -1, },
+                    { 2, -1, 2, -1, -1, -1, -1, 3, -1, },
+                };
+                int[] range = new int[27] {
+                    42, 43, 44, 45, 46, 47, 48, 57, 64, 69, 70, 75, 76, 79, 80, 87, 88, 96, 101, 102, 107, 108, 111, 112, 119, 120, 65535, 
+                };
+                int[] value = new int[27] {
+                    -1, 7, -1, 7, 5, -1, 0, 2, -1, 4, 3, -1, 8, -1, 6, -1, 1, -1, 4, 3, -1, 8, -1, 6, -1, 1, -1, 
+                };
+                _dfas.Add(new DFA(table, final, range, value));
+            }
+            #endregion
+            #region RULE 49
+            {
                 bool[] final = new bool[2] {
                     false, true, 
                 };
@@ -1107,6 +1359,39 @@ namespace LLexer {
                     tokens.Add(new T_IDENTIFIER(line, text));
                     break;
                 case 38:
+                    tokens.Add(new T_CONST_INT(line, text.Substring(2), 16));
+                    break;
+                case 39:
+                    tokens.Add(new T_CONST_INT(line, text.Substring(2), 16));
+                    break;
+                case 40:
+                    tokens.Add(new T_CONST_INT(line, text.Substring(1), 8));
+                    break;
+                case 41:
+                    tokens.Add(new T_CONST_INT(line, text.Substring(1), 8));
+                    break;
+                case 42:
+                    tokens.Add(new T_CONST_INT(line, text, 10));
+                    break;
+                case 43:
+                    tokens.Add(new T_CONST_INT(line, text, 10));
+                    break;
+                case 44:
+                    tokens.Add(new T_CONST_FLOAT(line, text, 10));
+                    break;
+                case 45:
+                    tokens.Add(new T_CONST_FLOAT(line, text, 10));
+                    break;
+                case 46:
+                    tokens.Add(new T_CONST_FLOAT(line, text, 10));
+                    break;
+                case 47:
+                    tokens.Add(new T_CONST_FLOAT(line, text.Substring(2), 16));
+                    break;
+                case 48:
+                    tokens.Add(new T_CONST_FLOAT(line, text.Substring(2), 16));
+                    break;
+                case 49:
                     break;
                 default:
                     Error("UNKNOWN RULE: THIS SHOULD NEVER HAPPEN!");

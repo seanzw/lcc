@@ -43,6 +43,31 @@ $_Imaginary$    tokens.Add(new T_KEY__IMAGINARY(line));
 
 $[_a-zA-Z][_a-zA-Z0-9]*$
     tokens.Add(new T_IDENTIFIER(line, text));
+
+$0[xX][0-9a-fA-F]*[uU]?(l|L|ll|LL)?$
+    tokens.Add(new T_CONST_INT(line, text.Substring(2), 16));
+$0[xX][0-9a-fA-F]*(l|L|ll|LL)[uU]$
+    tokens.Add(new T_CONST_INT(line, text.Substring(2), 16));
+$0[0-7]*[uU]?(l|L|ll|LL)?$
+    tokens.Add(new T_CONST_INT(line, text.Substring(1), 8));
+$0[0-7]*(l|L|ll|LL)[uU]$
+    tokens.Add(new T_CONST_INT(line, text.Substring(1), 8));
+$[1-9][0-9]*[uU]?(l|L|ll|LL)?$
+    tokens.Add(new T_CONST_INT(line, text, 10));
+$[1-9][0-9]*(l|L|ll|LL)[uU]$
+    tokens.Add(new T_CONST_INT(line, text, 10));
+
+$([0-9]+)?\.[0-9]+([eE][\+\-]?[0-9]+)?[fFlL]?$
+    tokens.Add(new T_CONST_FLOAT(line, text, 10));
+$([0-9]+)\.([eE][\+\-]?[0-9]+)?[fFlL]?$
+    tokens.Add(new T_CONST_FLOAT(line, text, 10));
+$([0-9]+)[eE][\+\-]?[0-9]+[fFlL]?$
+    tokens.Add(new T_CONST_FLOAT(line, text, 10));
+$0[xX]([0-9a-fA-F]+)?\.[0-9a-fA-F]+[pP][\+\-]?[0-9]+[fFlL]?$
+    tokens.Add(new T_CONST_FLOAT(line, text.Substring(2), 16));
+$0[xX][0-9a-fA-F]+\.?[pP][\+\-]?[0-9]+[fFlL]?$
+    tokens.Add(new T_CONST_FLOAT(line, text.Substring(2), 16));
+
 $[ \n\r\t]+$
     
 %%
