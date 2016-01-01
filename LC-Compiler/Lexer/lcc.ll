@@ -74,97 +74,56 @@ $L?'([^'\\\r\n]|\\(.|[0-7][0-7]?[0-7]?|x[0-9a-fA-F]+))'$
 $L?"([^"\\\r\n]|\\(.|[0-7][0-7]?[0-7]?|x[0-9a-fA-F]+|\r\n))*"$
     tokens.Add(new T_STRING_LITERAL(line, text));
 
-$<:$    tokens.Add(new T_PUNC_SUBSCRIPTL(line));
-$:>$    tokens.Add(new T_PUNC_SUBSCRIPTR(line));
-$<%$    tokens.Add(new T_PUNC_BRACEL(line));
-$%>$    tokens.Add(new T_PUNC_BRACER(line));
-
-$\[$    tokens.Add(new T_PUNC_SUBSCRIPTL(line));
-$\]$    tokens.Add(new T_PUNC_SUBSCRIPTR(line));
-$\($    tokens.Add(new T_PUNC_PARENTL(line));
-$\)$    tokens.Add(new T_PUNC_PARENTR(line));
-$\{$    tokens.Add(new T_PUNC_BRACEL(line));
-$\}$    tokens.Add(new T_PUNC_BRACER(line));
-$\.$
-    tokens.Add(new T_PUNC_DOT(line));
-$\->$
-    tokens.Add(new T_PUNC_PTRSEL(line));
-$\+\+$
-    tokens.Add(new T_PUNC_INCRE(line));
-$\-\-$
-    tokens.Add(new T_PUNC_DECRE(line));
-$&$
-    tokens.Add(new T_PUNC_REF(line));
-$\*$
-    tokens.Add(new T_PUNC_STAR(line));
-$\+$
-    tokens.Add(new T_PUNC_PLUS(line));
-$\-$
-    tokens.Add(new T_PUNC_MINUS(line));
-$~$
-    tokens.Add(new T_PUNC_BITNOT(line));
-$!$
-    tokens.Add(new T_PUNC_LOGNOT(line));
-$/$
-    tokens.Add(new T_PUNC_SLASH(line));
-$%$
-    tokens.Add(new T_PUNC_MOD(line));
-$<<$
-    tokens.Add(new T_PUNC_SHIFTL(line));
-$>>$
-    tokens.Add(new T_PUNC_SHIFTR(line));
-$<$
-    tokens.Add(new T_PUNC_LT(line));
-$>$
-    tokens.Add(new T_PUNC_GT(line));
-$<=$
-    tokens.Add(new T_PUNC_LE(line));
-$>=$
-    tokens.Add(new T_PUNC_GE(line));
-$==$
-    tokens.Add(new T_PUNC_EQ(line));
-$!=$
-    tokens.Add(new T_PUNC_NEQ(line));
-$\^$
-    tokens.Add(new T_PUNC_BITXOR(line));
-$\|$
-    tokens.Add(new T_PUNC_BITOR(line));
-$&&$
-    tokens.Add(new T_PUNC_LOGAND(line));
-$\|\|$
-    tokens.Add(new T_PUNC_LOGOR(line));
-$\?$
-    tokens.Add(new T_PUNC_QUESTION(line));
-$:$
-    tokens.Add(new T_PUNC_COLON(line));
-$;$
-    tokens.Add(new T_PUNC_SEMICOLON(line));
-$\.\.\.$
-    tokens.Add(new T_PUNC_ELLIPSIS(line));
-$=$
-    tokens.Add(new T_PUNC_ASSIGN(line));
-$\*=$
-    tokens.Add(new T_PUNC_MULEQ(line));
-$/=$
-    tokens.Add(new T_PUNC_DIVEQ(line));
-$%=$
-    tokens.Add(new T_PUNC_MODEQ(line));
-$\+=$
-    tokens.Add(new T_PUNC_PLUSEQ(line));
-$\-=$
-    tokens.Add(new T_PUNC_MINUSEQ(line));
-$<<=$
-    tokens.Add(new T_PUNC_SHIFTLEQ(line));
-$>>=$
-    tokens.Add(new T_PUNC_SHIFTREQ(line));
-$&=$
-    tokens.Add(new T_PUNC_BITANDEQ(line));
-$\^=$
-    tokens.Add(new T_PUNC_BITXOREQ(line));
-$\|=$
-    tokens.Add(new T_PUNC_BITOREQ(line));
-$,$
-    tokens.Add(new T_PUNC_COMMA(line));
+$<:$        tokens.Add(new T_PUNC_SUBSCRIPTL(line));
+$:>$        tokens.Add(new T_PUNC_SUBSCRIPTR(line));
+$<%$        tokens.Add(new T_PUNC_BRACEL(line));
+$%>$        tokens.Add(new T_PUNC_BRACER(line));
+$\[$        tokens.Add(new T_PUNC_SUBSCRIPTL(line));
+$\]$        tokens.Add(new T_PUNC_SUBSCRIPTR(line));
+$\($        tokens.Add(new T_PUNC_PARENTL(line));
+$\)$        tokens.Add(new T_PUNC_PARENTR(line));
+$\{$        tokens.Add(new T_PUNC_BRACEL(line));
+$\}$        tokens.Add(new T_PUNC_BRACER(line));
+$\.$        tokens.Add(new T_PUNC_DOT(line));
+$\->$       tokens.Add(new T_PUNC_PTRSEL(line));
+$\+\+$      tokens.Add(new T_PUNC_INCRE(line));
+$\-\-$      tokens.Add(new T_PUNC_DECRE(line));
+$&$         tokens.Add(new T_PUNC_REF(line));
+$\*$        tokens.Add(new T_PUNC_STAR(line));
+$\+$        tokens.Add(new T_PUNC_PLUS(line));
+$\-$        tokens.Add(new T_PUNC_MINUS(line));
+$~$         tokens.Add(new T_PUNC_BITNOT(line));
+$!$         tokens.Add(new T_PUNC_LOGNOT(line));
+$/$         tokens.Add(new T_PUNC_SLASH(line));
+$%$         tokens.Add(new T_PUNC_MOD(line));
+$<<$        tokens.Add(new T_PUNC_SHIFTL(line));
+$>>$        tokens.Add(new T_PUNC_SHIFTR(line));
+$<$         tokens.Add(new T_PUNC_LT(line));
+$>$         tokens.Add(new T_PUNC_GT(line));
+$<=$        tokens.Add(new T_PUNC_LE(line));
+$>=$        tokens.Add(new T_PUNC_GE(line));
+$==$        tokens.Add(new T_PUNC_EQ(line));
+$!=$        tokens.Add(new T_PUNC_NEQ(line));
+$\^$        tokens.Add(new T_PUNC_BITXOR(line));
+$\|$        tokens.Add(new T_PUNC_BITOR(line));
+$&&$        tokens.Add(new T_PUNC_LOGAND(line));
+$\|\|$      tokens.Add(new T_PUNC_LOGOR(line));
+$\?$        tokens.Add(new T_PUNC_QUESTION(line));
+$:$         tokens.Add(new T_PUNC_COLON(line));
+$;$         tokens.Add(new T_PUNC_SEMICOLON(line));
+$\.\.\.$    tokens.Add(new T_PUNC_ELLIPSIS(line));
+$=$         tokens.Add(new T_PUNC_ASSIGN(line));
+$\*=$       tokens.Add(new T_PUNC_MULEQ(line));
+$/=$        tokens.Add(new T_PUNC_DIVEQ(line));
+$%=$        tokens.Add(new T_PUNC_MODEQ(line));
+$\+=$       tokens.Add(new T_PUNC_PLUSEQ(line));
+$\-=$       tokens.Add(new T_PUNC_MINUSEQ(line));
+$<<=$       tokens.Add(new T_PUNC_SHIFTLEQ(line));
+$>>=$       tokens.Add(new T_PUNC_SHIFTREQ(line));
+$&=$        tokens.Add(new T_PUNC_BITANDEQ(line));
+$\^=$       tokens.Add(new T_PUNC_BITXOREQ(line));
+$\|=$       tokens.Add(new T_PUNC_BITOREQ(line));
+$,$         tokens.Add(new T_PUNC_COMMA(line));
 
 $[ \n\r\t]+$
 $//[^\n]*$
