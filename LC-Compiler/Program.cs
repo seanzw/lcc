@@ -13,6 +13,7 @@ namespace lcc {
             TestLexer.TestIdentifier();
             TestLexer.TestConstantInt();
             TestLexer.TestConstantFloat();
+            TestLexer.TestConstantChar();
         }
     }
 }

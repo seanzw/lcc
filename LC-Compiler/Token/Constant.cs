@@ -20,13 +20,14 @@ namespace lcc.Token {
         }
 
         public T_CONST_INT(int line, string text, int n) : base(line) {
+
+            text = text.ToUpper();
             this.n = n;
 
-            int tail = 0;
-            for (tail = 0; tail < text.Length; ++tail) {
-                if ((text[tail] < '0' || text[tail] > '7') &&
-                    (text[tail] < 'a' || text[tail] > 'f') &&
-                    (text[tail] < 'A' || text[tail] > 'F')) {
+            int tail = text.Length - 1;
+            for (tail = text.Length - 1; tail >=0; --tail) {
+                if (text[tail] != 'U' && text[tail] != 'L') {
+                    tail++;
                     break;
                 }
             }
@@ -34,7 +35,7 @@ namespace lcc.Token {
             if (tail == text.Length) {
                 suffix = Suffix.NONE;
             } else {
-                string suffix_text = text.Substring(tail).ToUpper();
+                string suffix_text = text.Substring(tail);
                 switch (suffix_text) {
                     case "L":
                         suffix = Suffix.L;
@@ -96,5 +97,23 @@ namespace lcc.Token {
         public readonly Suffix suffix;
         public readonly int n;
         public readonly string text;
+    }
+
+    sealed class T_CONST_CHAR : T_CONST {
+        public enum Prefix {
+            L,
+            NONE
+        }
+        public T_CONST_CHAR(int line, string text) : base(line) {
+            if (text[0] == 'L') {
+                this.prefix = Prefix.L;
+                this.text = text.Substring(2, text.Length - 3);
+            } else {
+                this.prefix = Prefix.NONE;
+                this.text = text.Substring(1, text.Length - 2);
+            }
+        }
+        public readonly string text;
+        public readonly Prefix prefix;
     }
 }

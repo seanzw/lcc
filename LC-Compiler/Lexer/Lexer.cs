@@ -120,7 +120,7 @@ namespace LLexer {
         }
         private Lexer() {
             _text = new StringBuilder();
-            _dfas = new List<DFA>(50);
+            _dfas = new List<DFA>(51);
             #region RULE 0
             {
                 bool[] final = new bool[5] {
@@ -1225,6 +1225,31 @@ namespace LLexer {
             #endregion
             #region RULE 49
             {
+                bool[] final = new bool[9] {
+                    false, false, false, true, false, false, false, false, false, 
+                };
+                int[,] table = new int[,] {
+                    { 4, 5, -1, -1, -1, -1, -1, -1, },
+                    { 2, 2, 8, 6, 2, 2, 2, 2, },
+                    { -1, 3, -1, -1, -1, -1, -1, -1, },
+                    { -1, -1, -1, -1, -1, -1, -1, -1, },
+                    { -1, 5, -1, -1, -1, -1, -1, -1, },
+                    { 2, -1, 2, 2, 2, 2, 1, -1, },
+                    { -1, 3, 6, -1, 6, -1, -1, -1, },
+                    { -1, 3, 2, -1, -1, -1, -1, -1, },
+                    { -1, 3, 7, -1, -1, -1, -1, -1, },
+                };
+                int[] range = new int[21] {
+                    0, 9, 10, 12, 13, 38, 39, 47, 55, 57, 64, 70, 75, 76, 91, 92, 96, 102, 119, 120, 65535, 
+                };
+                int[] value = new int[21] {
+                    -1, 5, 7, 5, 7, 5, 1, 5, 2, 4, 5, 4, 5, 0, 5, 6, 5, 4, 5, 3, 5, 
+                };
+                _dfas.Add(new DFA(table, final, range, value));
+            }
+            #endregion
+            #region RULE 50
+            {
                 bool[] final = new bool[2] {
                     false, true, 
                 };
@@ -1392,6 +1417,9 @@ namespace LLexer {
                     tokens.Add(new T_CONST_FLOAT(line, text.Substring(2), 16));
                     break;
                 case 49:
+                    tokens.Add(new T_CONST_CHAR(line, text));
+                    break;
+                case 50:
                     break;
                 default:
                     Error("UNKNOWN RULE: THIS SHOULD NEVER HAPPEN!");

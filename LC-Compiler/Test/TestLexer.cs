@@ -37,6 +37,12 @@ namespace lcc.Test {
                             if (i1.n == i2.n && i1.suffix == i2.suffix && i1.text == i2.text) {
                                 continue;
                             }
+                        } else if ((tokens[i] as T_CONST_CHAR) != null && (truth[i] as T_CONST_CHAR) != null) {
+                            var i1 = truth[i] as T_CONST_CHAR;
+                            var i2 = tokens[i] as T_CONST_CHAR;
+                            if (i1.text == i2.text && i1.prefix == i2.prefix) {
+                                continue;
+                            }
                         } else {
                             continue;
                         }
@@ -137,6 +143,23 @@ int a char b double _a int a0 what c_0_CA_0
                 new T_CONST_FLOAT(2, "2e4l", 10),
                 new T_CONST_FLOAT(3, "1f.34p12f", 16),
                 new T_CONST_FLOAT(3, "23p28l", 16)
+            };
+            Aux(src, truth);
+        }
+
+        public static void TestConstantChar() {
+            string src = @"
+'\'' 'a' '\""' '""' '\76' '\xABC' '\n' L'\n'
+            ";
+            List<Token.Token> truth = new List<Token.Token> {
+                new T_CONST_CHAR(2, @"'\''"),
+                new T_CONST_CHAR(2, @"'a'"),
+                new T_CONST_CHAR(2, @"'\""'"),
+                new T_CONST_CHAR(2, @"'""'"),
+                new T_CONST_CHAR(2, @"'\76'"),
+                new T_CONST_CHAR(2, @"'\xABC'"),
+                new T_CONST_CHAR(2, @"'\n'"),
+                new T_CONST_CHAR(2, @"L'\n'")
             };
             Aux(src, truth);
         }

@@ -68,6 +68,10 @@ $0[xX]([0-9a-fA-F]+)?\.[0-9a-fA-F]+[pP][\+\-]?[0-9]+[fFlL]?$
 $0[xX][0-9a-fA-F]+\.?[pP][\+\-]?[0-9]+[fFlL]?$
     tokens.Add(new T_CONST_FLOAT(line, text.Substring(2), 16));
 
+$L?'([^'\\\r\n]|\\(.|([0-7][0-7]?[0-7]?)|(x[0-9a-fA-F]+)))'$
+    tokens.Add(new T_CONST_CHAR(line, text));
+
+
 $[ \n\r\t]+$
     
 %%
