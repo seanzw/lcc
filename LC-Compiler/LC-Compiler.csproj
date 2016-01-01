@@ -50,6 +50,7 @@
     <Compile Include="Token\Constant.cs" />
     <Compile Include="Token\Identifier.cs" />
     <Compile Include="Token\Keywords.cs" />
+    <Compile Include="Token\Punctuator.cs" />
     <Compile Include="Token\StringLiteral.cs" />
     <Compile Include="Token\Token.cs" />
   </ItemGroup>

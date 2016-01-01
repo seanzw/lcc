@@ -123,12 +123,12 @@ int a char b double _a int a0 what c_0_CA_0
 123u
             ";
             List<Token.Token> truth = new List<Token.Token> {
-                new T_CONST_INT(2, "123", 8),
-                new T_CONST_INT(2, "12u", 8),
-                new T_CONST_INT(2, "43l", 8),
-                new T_CONST_INT(2, "76ll", 8),
-                new T_CONST_INT(2, "54Ull", 8),
-                new T_CONST_INT(2, "45Lu", 8),
+                new T_CONST_INT(2, "0123", 8),
+                new T_CONST_INT(2, "012u", 8),
+                new T_CONST_INT(2, "043l", 8),
+                new T_CONST_INT(2, "076ll", 8),
+                new T_CONST_INT(2, "054Ull", 8),
+                new T_CONST_INT(2, "045Lu", 8),
                 new T_CONST_INT(3, "123u", 16),
                 new T_CONST_INT(3, "234l", 16),
                 new T_CONST_INT(3, "FELL", 16),
@@ -189,6 +189,82 @@ L""\xABCD""
                 new T_STRING_LITERAL(6, @"""\\"""),
                 new T_STRING_LITERAL(7, "\"\\\r\n\""),
                 new T_STRING_LITERAL(9, @"""\\n""")
+            };
+            Aux(src, truth);
+        }
+
+        public static void TestPunctuator() {
+            string src = @"
+++ -- + - [ ] { ) > < <= >>=
+            ";
+            List<Token.Token> truth = new List<Token.Token> {
+                new T_PUNC_INCRE(2),
+                new T_PUNC_DECRE(2),
+                new T_PUNC_PLUS(2),
+                new T_PUNC_MINUS(2),
+                new T_PUNC_SUBSCRIPTL(2),
+                new T_PUNC_SUBSCRIPTR(2),
+                new T_PUNC_BRACEL(2),
+                new T_PUNC_PARENTR(2),
+                new T_PUNC_GT(2),
+                new T_PUNC_LT(2),
+                new T_PUNC_LE(2),
+                new T_PUNC_SHIFTREQ(2)
+            };
+            Aux(src, truth);
+        }
+
+        public static void TestComment() {
+            string src = @"
+//++ -- + - [ ] { ) > < <= >>=
+/* what ****************/
+/*  
+
+*/
+            ";
+            List<Token.Token> truth = new List<Token.Token>();
+            Aux(src, truth);
+        }
+
+        public static void TestHelloWorld() {
+            string src = @"
+
+/**************************************************
+ Hello World!
+***************************************************/
+int main(int argc, char* argv[]) {
+
+    // Print hello world!
+    printf(""Hello world from %s!\n"", ""Sean"");
+    return 0;
+
+}
+            ";
+            List<Token.Token> truth = new List<Token.Token> {
+                new T_KEY_INT(6),
+                new T_IDENTIFIER(6, "main"),
+                new T_PUNC_PARENTL(6),
+                new T_KEY_INT(6),
+                new T_IDENTIFIER(6, "argc"),
+                new T_PUNC_COMMA(6),
+                new T_KEY_CHAR(6),
+                new T_PUNC_STAR(6),
+                new T_IDENTIFIER(6, "argv"),
+                new T_PUNC_SUBSCRIPTL(6),
+                new T_PUNC_SUBSCRIPTR(6),
+                new T_PUNC_PARENTR(6),
+                new T_PUNC_BRACEL(6),
+                new T_IDENTIFIER(9, "printf"),
+                new T_PUNC_PARENTL(9),
+                new T_STRING_LITERAL(9, "\"Hello world from %s!\\n\""),
+                new T_PUNC_COMMA(9),
+                new T_STRING_LITERAL(9, "\"Sean\""),
+                new T_PUNC_PARENTR(9),
+                new T_PUNC_SEMICOLON(9),
+                new T_KEY_RETURN(10),
+                new T_CONST_INT(10, "0", 8),
+                new T_PUNC_SEMICOLON(10),
+                new T_PUNC_BRACER(12)
             };
             Aux(src, truth);
         }

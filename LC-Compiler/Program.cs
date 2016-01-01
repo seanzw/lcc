@@ -15,6 +15,9 @@ namespace lcc {
             TestLexer.TestConstantFloat();
             TestLexer.TestConstantChar();
             TestLexer.TestStringLiteral();
+            TestLexer.TestPunctuator();
+            TestLexer.TestComment();
+            TestLexer.TestHelloWorld();
         }
     }
 }
