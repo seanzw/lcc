@@ -120,7 +120,7 @@ namespace LLexer {
         }
         private Lexer() {
             _text = new StringBuilder();
-            _dfas = new List<DFA>(51);
+            _dfas = new List<DFA>(52);
             #region RULE 0
             {
                 bool[] final = new bool[5] {
@@ -1250,6 +1250,28 @@ namespace LLexer {
             #endregion
             #region RULE 50
             {
+                bool[] final = new bool[6] {
+                    false, false, false, true, false, false, 
+                };
+                int[,] table = new int[,] {
+                    { 1, 2, -1, -1, -1, -1, -1, -1, -1, },
+                    { -1, 2, -1, -1, -1, -1, -1, -1, -1, },
+                    { 2, 3, 2, 2, 2, 2, 4, -1, -1, },
+                    { -1, -1, -1, -1, -1, -1, -1, -1, -1, },
+                    { 2, 2, 2, 2, 2, 2, 2, 5, 2, },
+                    { 2, 3, 2, 2, 2, 2, 4, -1, 2, },
+                };
+                int[] range = new int[21] {
+                    0, 9, 10, 12, 13, 33, 34, 47, 55, 57, 64, 70, 75, 76, 91, 92, 96, 102, 119, 120, 65535, 
+                };
+                int[] value = new int[21] {
+                    -1, 5, 8, 5, 7, 5, 1, 5, 2, 4, 5, 4, 5, 0, 5, 6, 5, 4, 5, 3, 5, 
+                };
+                _dfas.Add(new DFA(table, final, range, value));
+            }
+            #endregion
+            #region RULE 51
+            {
                 bool[] final = new bool[2] {
                     false, true, 
                 };
@@ -1420,6 +1442,9 @@ namespace LLexer {
                     tokens.Add(new T_CONST_CHAR(line, text));
                     break;
                 case 50:
+                    tokens.Add(new T_STRING_LITERAL(line, text));
+                    break;
+                case 51:
                     break;
                 default:
                     Error("UNKNOWN RULE: THIS SHOULD NEVER HAPPEN!");

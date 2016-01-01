@@ -14,6 +14,7 @@ namespace lcc {
             TestLexer.TestConstantInt();
             TestLexer.TestConstantFloat();
             TestLexer.TestConstantChar();
+            TestLexer.TestStringLiteral();
         }
     }
 }

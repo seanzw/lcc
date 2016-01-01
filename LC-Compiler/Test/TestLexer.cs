@@ -43,6 +43,12 @@ namespace lcc.Test {
                             if (i1.text == i2.text && i1.prefix == i2.prefix) {
                                 continue;
                             }
+                        } else if ((tokens[i] as T_STRING_LITERAL) != null && (truth[i] as T_STRING_LITERAL) != null) {
+                            var i1 = truth[i] as T_STRING_LITERAL;
+                            var i2 = tokens[i] as T_STRING_LITERAL;
+                            if (i1.text == i2.text && i1.prefix == i2.prefix) {
+                                continue;
+                            }
                         } else {
                             continue;
                         }
@@ -164,5 +170,27 @@ int a char b double _a int a0 what c_0_CA_0
             Aux(src, truth);
         }
 
+        public static void TestStringLiteral() {
+            string src = @"
+""abc""
+""\n""
+""""
+L""\xABCD""
+""\\""
+""\
+""
+""\\n""
+            ";
+            List<Token.Token> truth = new List<Token.Token> {
+                new T_STRING_LITERAL(2, @"""abc"""),
+                new T_STRING_LITERAL(3, @"""\n"""),
+                new T_STRING_LITERAL(4, @""""""),
+                new T_STRING_LITERAL(5, @"L""\xABCD"""),
+                new T_STRING_LITERAL(6, @"""\\"""),
+                new T_STRING_LITERAL(7, "\"\\\r\n\""),
+                new T_STRING_LITERAL(9, @"""\\n""")
+            };
+            Aux(src, truth);
+        }
     }
 }
