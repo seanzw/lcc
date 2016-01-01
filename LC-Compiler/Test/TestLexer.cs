@@ -268,5 +268,26 @@ int main(int argc, char* argv[]) {
             };
             Aux(src, truth);
         }
+
+        static public void TestIllegal() {
+            List<string> srcs = new List<string> {
+                "'\n'",
+                "'a",
+                "'\\1234'",
+                "\"abc",
+                "abc\"",
+                "\"\n\"",
+                "$"
+            };
+            foreach (var src in srcs) {
+                try {
+                    var tokens = Lexer.Instance.Scan(src);
+                    throw new InvalidOperationException("This should never happen!");
+                } catch (ArgumentException e) {
+                    // Do nothing since we are waiting for exception.
+                }
+            }
+            Console.WriteLine("perfect!");
+        }
     }
 }

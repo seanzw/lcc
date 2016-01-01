@@ -18,6 +18,7 @@ namespace lcc {
             TestLexer.TestPunctuator();
             TestLexer.TestComment();
             TestLexer.TestHelloWorld();
+            TestLexer.TestIllegal();
         }
     }
 }
