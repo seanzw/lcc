@@ -43,7 +43,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AST\ASTNode.cs" />
+    <Compile Include="AST\Expression\ASTAssignExpr.cs" />
+    <Compile Include="AST\Expression\ASTCommaExpr.cs" />
+    <Compile Include="AST\Expression\ASTConditionalExpr.cs" />
+    <Compile Include="AST\Expression\ASTExpr.cs" />
+    <Compile Include="AST\Expression\ASTPostfixExpr.cs" />
+    <Compile Include="AST\Expression\ASTPrimExpr.cs" />
+    <Compile Include="AST\Expression\ASTUnaryExpr.cs" />
     <Compile Include="Lexer\Lexer.cs" />
+    <Compile Include="AST\Expression\ASTBinaryExpr.cs" />
+    <Compile Include="Parser\Expression.cs" />
+    <Compile Include="Parser\Utility.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Test\TestLexer.cs" />
@@ -57,13 +68,15 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="AST\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="Lexer\lcc.ll" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Parserc\Parserc.csproj">
+      <Project>{1e1d1782-3fbb-406b-8c1a-1cf5b8cce76a}</Project>
+      <Name>Parserc</Name>
+    </ProjectReference>
     <ProjectReference Include="..\RegEx\RegEx.csproj">
       <Project>{fa842d39-6335-4f80-9a4a-ede9669f36b1}</Project>
       <Name>RegEx</Name>
