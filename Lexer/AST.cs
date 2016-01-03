@@ -25,7 +25,8 @@ namespace Lexer {
     }
 
     public class ASTLex : ASTNode {
-        public ASTLex(LinkedList<string> headers, LinkedList<ASTRule> rules, LinkedList<string> codes) {
+        public ASTLex(LinkedList<ASTAlias> aliases, LinkedList<string> headers, LinkedList<ASTRule> rules, LinkedList<string> codes) {
+            this.aliases = aliases;
             this.headers = headers;
             this.rules = rules;
             this.codes = codes;
@@ -34,6 +35,9 @@ namespace Lexer {
         public override string ToString(int level) {
             string str = Tab(level);
             str += "Lex: \n";
+            foreach (var alias in aliases) {
+                str += alias.ToString(level + 1);
+            }
             foreach (var rule in rules) {
                 str += rule.ToString(level + 1);
                 str += '\n';
@@ -263,13 +267,16 @@ namespace Lexer {
             {
                 int i = 0;
                 foreach (var rule in rules) {
+
+                    DFA dfa = rule.GenDFA(aliases);
+
                     src.AppendLine(Tab(3) + "#region RULE " + i);
                     src.AppendLine(Tab(3) + "{");
 
-                    WriteBoolArrayInitializer(4, "final", rule.dfa.final);
-                    WriteIntMatInitializer(4, "table", rule.dfa.table);
+                    WriteBoolArrayInitializer(4, "final", dfa.final);
+                    WriteIntMatInitializer(4, "table", dfa.table);
 
-                    var compressed = rule.dfa.CompressMap();
+                    var compressed = dfa.CompressMap();
                     WriteIntArrayInitializer(4, "range", compressed.Item1);
                     WriteIntArrayInitializer(4, "value", compressed.Item2);
 
@@ -318,19 +325,47 @@ namespace Lexer {
 
         }
 
+        public readonly LinkedList<ASTAlias> aliases;
         public readonly LinkedList<string> headers;
         public readonly LinkedList<ASTRule> rules;
         public readonly LinkedList<string> codes;
+    }
+
+    public sealed class ASTAlias : ASTNode {
+
+        public ASTAlias(string alias, string regex_literal) {
+            this.alias = alias;
+            this.regex_literal = regex_literal;
+            this.matcher = new RegEx.RegEx("{" + alias + "}");
+        }
+
+        public override string ToString(int level) {
+            string str = Tab(level);
+            str += "Alias : " + alias;
+            str += " " + regex_literal + "\n";
+            return str;
+        }
+
+        public readonly RegEx.RegEx matcher;
+        public readonly string alias;
+        public readonly string regex_literal;
     }
 
     public class ASTRule : ASTNode {
         public ASTRule(string regex_literal, LinkedList<string> codes) {
             this.regex_literal = regex_literal;
             this.codes = codes;
+        }
 
-            // Construct the DFA.
-            RegEx.RegEx regex = new RegEx.RegEx(regex_literal);
-            dfa = regex.dfa;
+        public DFA GenDFA(LinkedList<ASTAlias> aliases) {
+
+            string replaced = regex_literal;
+            foreach (var alias in aliases) {
+                replaced = alias.matcher.Replace(replaced, "(" + alias.regex_literal + ")");
+            }
+
+            RegEx.RegEx regex = new RegEx.RegEx(replaced);
+            return regex.dfa;
         }
 
         public override string ToString(int level) {
@@ -344,7 +379,6 @@ namespace Lexer {
             return str;
         }
 
-        public readonly DFA dfa;
         public readonly string regex_literal;
         public readonly LinkedList<string> codes;
     }

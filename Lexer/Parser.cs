@@ -12,7 +12,16 @@ namespace Parser {
     /**************************************************
 
     lex
-        : codes SPLITER rules SPLITER codes
+        : aliases SPLITER codes SPLITER rules SPLITER codes
+        ;
+
+    aliases
+        : alias aliaes
+        | epsilon
+        ;
+    
+    alias
+        : ALIAS REGEX_LITERAL
         ;
 
     rules
@@ -46,12 +55,21 @@ namespace Parser {
         }
 
         static Parserc.Parser<Token, ASTLex> Lex() {
-            return Code().Many()
+            return Alias().Many()
+                .Bind(aliases => Match<T_SPLITER>()
+                .Then(Code().Many()
                 .Bind(headers => Match<T_SPLITER>()
                 .Then(Rule().Plus()
                 .Bind(rules => Match<T_SPLITER>()
                 .Then(Code().Many()
-                .Select(codes => new ASTLex(headers, rules, codes))))));
+                .Select(codes => new ASTLex(aliases, headers, rules, codes))))))));
+        }
+
+        static Parserc.Parser<Token, ASTAlias> Alias() {
+            return Match<T_ALIAS>()
+                .Select(t => t.src)
+                .Bind(alias => RegExLiteral()
+                    .Select(regex_literal => new ASTAlias(alias, regex_literal)));
         }
 
         static Parserc.Parser<Token, ASTRule> Rule() {

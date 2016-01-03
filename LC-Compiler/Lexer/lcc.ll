@@ -1,4 +1,11 @@
 ﻿
+%L $[a-zA-Z_]$
+%D $[0-9]$
+%O $[0-7]$
+%H $[0-9a-fA-F]$
+
+%%
+
 using lcc.Token;
 
 %%
@@ -41,37 +48,37 @@ $_Bool$         tokens.Add(new T_KEY__BOOL(line));
 $_Complex$      tokens.Add(new T_KEY__COMPLEX(line));
 $_Imaginary$    tokens.Add(new T_KEY__IMAGINARY(line));
 
-$[_a-zA-Z][_a-zA-Z0-9]*$
+${L}({L}|{D})*$
     tokens.Add(new T_IDENTIFIER(line, text));
 
-$0[xX][0-9a-fA-F]*[uU]?(l|L|ll|LL)?$
+$0[xX]{H}*[uU]?(l|L|ll|LL)?$
     tokens.Add(new T_CONST_INT(line, text.Substring(2), 16));
-$0[xX][0-9a-fA-F]*(l|L|ll|LL)[uU]$
+$0[xX]{H}*(l|L|ll|LL)[uU]$
     tokens.Add(new T_CONST_INT(line, text.Substring(2), 16));
-$0[0-7]*[uU]?(l|L|ll|LL)?$
+$0{O}*[uU]?(l|L|ll|LL)?$
     tokens.Add(new T_CONST_INT(line, text, 8));
-$0[0-7]*(l|L|ll|LL)[uU]$
+$0{O}*(l|L|ll|LL)[uU]$
     tokens.Add(new T_CONST_INT(line, text, 8));
-$[1-9][0-9]*[uU]?(l|L|ll|LL)?$
+$[1-9]{D}*[uU]?(l|L|ll|LL)?$
     tokens.Add(new T_CONST_INT(line, text, 10));
-$[1-9][0-9]*(l|L|ll|LL)[uU]$
+$[1-9]{D}*(l|L|ll|LL)[uU]$
     tokens.Add(new T_CONST_INT(line, text, 10));
 
-$([0-9]+)?\.[0-9]+([eE][\+\-]?[0-9]+)?[fFlL]?$
+$({D}+)?\.[0-9]+([eE][\+\-]?{D}+)?[fFlL]?$
     tokens.Add(new T_CONST_FLOAT(line, text, 10));
-$([0-9]+)\.([eE][\+\-]?[0-9]+)?[fFlL]?$
+$({D}+)\.([eE][\+\-]?{D}+)?[fFlL]?$
     tokens.Add(new T_CONST_FLOAT(line, text, 10));
-$([0-9]+)[eE][\+\-]?[0-9]+[fFlL]?$
+$({D}+)[eE][\+\-]?{D}+[fFlL]?$
     tokens.Add(new T_CONST_FLOAT(line, text, 10));
-$0[xX]([0-9a-fA-F]+)?\.[0-9a-fA-F]+[pP][\+\-]?[0-9]+[fFlL]?$
+$0[xX]({H}+)?\.{H}+[pP][\+\-]?[0-9]+[fFlL]?$
     tokens.Add(new T_CONST_FLOAT(line, text.Substring(2), 16));
-$0[xX][0-9a-fA-F]+\.?[pP][\+\-]?[0-9]+[fFlL]?$
+$0[xX]{H}+\.?[pP][\+\-]?{D}+[fFlL]?$
     tokens.Add(new T_CONST_FLOAT(line, text.Substring(2), 16));
 
-$L?'([^'\\\r\n]|\\(.|[0-7][0-7]?[0-7]?|x[0-9a-fA-F]+))'$
+$L?'([^'\\\r\n]|\\(.|{O}{O}?{O}?|x{H}+))'$
     tokens.Add(new T_CONST_CHAR(line, text));
 
-$L?"([^"\\\r\n]|\\(.|[0-7][0-7]?[0-7]?|x[0-9a-fA-F]+|\r\n))*"$
+$L?"([^"\\\r\n]|\\(.|{O}{O}?{O}?|x{H}+|\r\n))*"$
     tokens.Add(new T_STRING_LITERAL(line, text));
 
 $<:$        tokens.Add(new T_PUNC_SUBSCRIPTL(line));

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using RegEx;
 using Lexer;
 namespace LLexer {
-    public sealed class Lexer {
+    sealed class Lexer {
         private int _idx;
         private int _line;
         private int _lineInc;
@@ -25,6 +25,7 @@ namespace LLexer {
 
             _idx = 0;
             _line = 1;
+            _lineInc = 0;
             _src = src;
 
             List<Token> tokens = new List<Token>();
@@ -119,7 +120,7 @@ namespace LLexer {
         }
         private Lexer() {
             _text = new StringBuilder();
-            _dfas = new List<DFA>(4);
+            _dfas = new List<DFA>(5);
             #region RULE 0
             {
                 bool[] final = new bool[4] {
@@ -160,6 +161,25 @@ namespace LLexer {
             #endregion
             #region RULE 2
             {
+                bool[] final = new bool[3] {
+                    false, true, false, 
+                };
+                int[,] table = new int[,] {
+                    { 2, -1, },
+                    { -1, 1, },
+                    { -1, 1, },
+                };
+                int[] range = new int[7] {
+                    36, 37, 64, 90, 94, 95, 65535, 
+                };
+                int[] value = new int[7] {
+                    -1, 0, -1, 1, -1, 1, -1, 
+                };
+                _dfas.Add(new DFA(table, final, range, value));
+            }
+            #endregion
+            #region RULE 3
+            {
                 bool[] final = new bool[2] {
                     false, true, 
                 };
@@ -176,7 +196,7 @@ namespace LLexer {
                 _dfas.Add(new DFA(table, final, range, value));
             }
             #endregion
-            #region RULE 3
+            #region RULE 4
             {
                 bool[] final = new bool[3] {
                     false, true, false, 
@@ -205,8 +225,11 @@ namespace LLexer {
                     tokens.Add(new T_CODE(text));
                     break;
                 case 2:
+                    tokens.Add(new T_ALIAS(text.Substring(1)));
                     break;
                 case 3:
+                    break;
+                case 4:
                     tokens.Add(new T_SPLITER());
                     break;
                 default:

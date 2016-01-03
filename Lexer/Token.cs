@@ -13,7 +13,8 @@ namespace Lexer {
             CODE_LINE,
             LBRACKET,
             RBRACKET,
-            SPLITER
+            SPLITER,
+            ALIAS         
         }
 
         protected Token(TYPE type) {
@@ -49,6 +50,10 @@ namespace Lexer {
 
     public sealed class T_CODE : TokenSymbol {
         public T_CODE(string src) : base(src, TYPE.CODE_LINE) { }
+    }
+
+    public sealed class T_ALIAS : TokenSymbol {
+        public T_ALIAS(string src) : base(src, TYPE.ALIAS) { }
     }
 
 
