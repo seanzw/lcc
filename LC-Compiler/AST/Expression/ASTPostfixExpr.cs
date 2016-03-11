@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using lcc.Token;
 
 namespace lcc.AST {
-    sealed class ASTArrSub : ASTExpr {
+    public sealed class ASTArrSub : ASTExpr {
 
         public ASTArrSub(ASTExpr arr, ASTExpr idx) {
             this.arr = arr;

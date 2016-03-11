@@ -1,73 +1,34 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Collections.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using lcc.AST;
 using lcc.Token;
+using lcc.Parser;
 using LLexer;
 
-namespace lcc.Test {
-    static class TestLexer {
+namespace LC_CompilerTests {
+    [TestClass]
+    public class LexerTest {
 
-        private static void Aux(string src, List<Token.Token> truth) {
+        private static void Aux(string src, List<Token> truth) {
             var tokens = Lexer.Instance.Scan(src);
-            if (tokens.Count != truth.Count) {
-                Console.WriteLine("Unmatched numbers!");
-                return;
-            }
+            Assert.AreEqual(tokens.Count, truth.Count);
             for (int i = 0; i < tokens.Count; ++i) {
-                if (truth[i].GetType().Equals(tokens[i].GetType())) {
-                    if (truth[i].line == tokens[i].line) {
-                        if ((tokens[i] as T_IDENTIFIER) != null && (truth[i] as T_IDENTIFIER) != null) {
-                            var i1 = truth[i] as T_IDENTIFIER;
-                            var i2 = tokens[i] as T_IDENTIFIER;
-                            if (i1.name == i2.name) {
-                                continue;
-                            }
-                        } else if ((tokens[i] as T_CONST_INT) != null && (truth[i] as T_CONST_INT) != null) {
-                            var i1 = truth[i] as T_CONST_INT;
-                            var i2 = tokens[i] as T_CONST_INT;
-                            if (i1.n == i2.n && i1.suffix == i2.suffix && i1.text == i2.text) {
-                                continue;
-                            }
-                        } else if ((tokens[i] as T_CONST_FLOAT) != null && (truth[i] as T_CONST_FLOAT) != null) {
-                            var i1 = truth[i] as T_CONST_FLOAT;
-                            var i2 = tokens[i] as T_CONST_FLOAT;
-                            if (i1.n == i2.n && i1.suffix == i2.suffix && i1.text == i2.text) {
-                                continue;
-                            }
-                        } else if ((tokens[i] as T_CONST_CHAR) != null && (truth[i] as T_CONST_CHAR) != null) {
-                            var i1 = truth[i] as T_CONST_CHAR;
-                            var i2 = tokens[i] as T_CONST_CHAR;
-                            if (i1.text == i2.text && i1.prefix == i2.prefix) {
-                                continue;
-                            }
-                        } else if ((tokens[i] as T_STRING_LITERAL) != null && (truth[i] as T_STRING_LITERAL) != null) {
-                            var i1 = truth[i] as T_STRING_LITERAL;
-                            var i2 = tokens[i] as T_STRING_LITERAL;
-                            if (i1.text == i2.text && i1.prefix == i2.prefix) {
-                                continue;
-                            }
-                        } else {
-                            continue;
-                        }
-                    }
-                }
-                Console.WriteLine("Wrong token!");
-                return;
+                Assert.AreEqual(tokens[i], truth[i]);
             }
-            Console.WriteLine("Perfect!");
         }
 
-        public static void TestKeyword() {
+        [TestMethod]
+        public void LCCLexerKeyword() {
             string src = @"
 auto auto break char const 
 double enum do inline int long goto 
 restrict short volatile register signed unsigned
 union struct void typedef switch _Complex _Imaginary
             ";
-            List<Token.Token> truth = new List<Token.Token> {
+            List<Token> truth = new List<Token> {
                 new T_KEY_AUTO(2),
                 new T_KEY_AUTO(2),
                 new T_KEY_BREAK(2),
@@ -97,11 +58,12 @@ union struct void typedef switch _Complex _Imaginary
             Aux(src, truth);
         }
 
-        public static void TestIdentifier() {
+        [TestMethod]
+        public void LCCLexerIdentifier() {
             string src = @"
 int a char b double _a int a0 what c_0_CA_0
             ";
-            List<Token.Token> truth = new List<Token.Token> {
+            List<Token> truth = new List<Token> {
                 new T_KEY_INT(2),
                 new T_IDENTIFIER(2, "a"),
                 new T_KEY_CHAR(2),
@@ -116,13 +78,14 @@ int a char b double _a int a0 what c_0_CA_0
             Aux(src, truth);
         }
 
-        public static void TestConstantInt() {
+        [TestMethod]
+        public void LCCLexerConstantInt() {
             string src = @"
 0123 012u 043l 076ll 054Ull 045Lu
 0x123u 0x234l 0XFELL
 123u
             ";
-            List<Token.Token> truth = new List<Token.Token> {
+            List<Token> truth = new List<Token> {
                 new T_CONST_INT(2, "0123", 8),
                 new T_CONST_INT(2, "012u", 8),
                 new T_CONST_INT(2, "043l", 8),
@@ -136,12 +99,14 @@ int a char b double _a int a0 what c_0_CA_0
             };
             Aux(src, truth);
         }
-        public static void TestConstantFloat() {
+
+        [TestMethod]
+        public void LCCLexerConstantFloat() {
             string src = @"
 1.23e+4f .34f 1.23 .45 2e4l
 0x1f.34p12f 0X23p28l
             ";
-            List<Token.Token> truth = new List<Token.Token> {
+            List<Token> truth = new List<Token> {
                 new T_CONST_FLOAT(2, "1.23e+4f", 10),
                 new T_CONST_FLOAT(2, ".34f", 10),
                 new T_CONST_FLOAT(2, "1.23", 10),
@@ -153,11 +118,12 @@ int a char b double _a int a0 what c_0_CA_0
             Aux(src, truth);
         }
 
-        public static void TestConstantChar() {
+        [TestMethod]
+        public void LCCLexerConstantChar() {
             string src = @"
 '\'' 'a' '\""' '""' '\76' '\xABC' '\n' L'\n'
             ";
-            List<Token.Token> truth = new List<Token.Token> {
+            List<Token> truth = new List<Token> {
                 new T_CONST_CHAR(2, @"'\''"),
                 new T_CONST_CHAR(2, @"'a'"),
                 new T_CONST_CHAR(2, @"'\""'"),
@@ -170,7 +136,8 @@ int a char b double _a int a0 what c_0_CA_0
             Aux(src, truth);
         }
 
-        public static void TestStringLiteral() {
+        [TestMethod]
+        public void LCCLexerStringLiteral() {
             string src = @"
 ""abc""
 ""\n""
@@ -181,7 +148,7 @@ L""\xABCD""
 ""
 ""\\n""
             ";
-            List<Token.Token> truth = new List<Token.Token> {
+            List<Token> truth = new List<Token> {
                 new T_STRING_LITERAL(2, @"""abc"""),
                 new T_STRING_LITERAL(3, @"""\n"""),
                 new T_STRING_LITERAL(4, @""""""),
@@ -193,11 +160,12 @@ L""\xABCD""
             Aux(src, truth);
         }
 
-        public static void TestPunctuator() {
+        [TestMethod]
+        public void LCCLexerPunctuator() {
             string src = @"
 ++ -- + - [ ] { ) > < <= >>=
             ";
-            List<Token.Token> truth = new List<Token.Token> {
+            List<Token> truth = new List<Token> {
                 new T_PUNC_INCRE(2),
                 new T_PUNC_DECRE(2),
                 new T_PUNC_PLUS(2),
@@ -214,7 +182,8 @@ L""\xABCD""
             Aux(src, truth);
         }
 
-        public static void TestComment() {
+        [TestMethod]
+        public void LCCLexerComment() {
             string src = @"
 //++ -- + - [ ] { ) > < <= >>=
 /* what ****************/
@@ -222,11 +191,12 @@ L""\xABCD""
 
 */
             ";
-            List<Token.Token> truth = new List<Token.Token>();
+            List<Token> truth = new List<Token>();
             Aux(src, truth);
         }
 
-        public static void TestHelloWorld() {
+        [TestMethod]
+        public void LCCLexerHelloWorld() {
             string src = @"
 
 /**************************************************
@@ -240,7 +210,7 @@ int main(int argc, char* argv[]) {
 
 }
             ";
-            List<Token.Token> truth = new List<Token.Token> {
+            List<Token> truth = new List<Token> {
                 new T_KEY_INT(6),
                 new T_IDENTIFIER(6, "main"),
                 new T_PUNC_PARENTL(6),
@@ -269,25 +239,54 @@ int main(int argc, char* argv[]) {
             Aux(src, truth);
         }
 
-        static public void TestIllegal() {
-            List<string> srcs = new List<string> {
-                "'\n'",
-                "'a",
-                "'\\1234'",
-                "\"abc",
-                "abc\"",
-                "\"\n\"",
-                "$"
-            };
-            foreach (var src in srcs) {
-                try {
-                    var tokens = Lexer.Instance.Scan(src);
-                    throw new InvalidOperationException("This should never happen!");
-                } catch (ArgumentException e) {
-                    // Do nothing since we are waiting for exception.
-                }
-            }
-            Console.WriteLine("perfect!");
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException), "Unmatched quote.")]
+        public void LCCLexerIllegal1() {
+            string src = "'\n'";
+            var tokens = Lexer.Instance.Scan(src);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException), "Unmatched quote.")]
+        public void LCCLexerIllegal2() {
+            string src = "'a";
+            var tokens = Lexer.Instance.Scan(src);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException), "Long char.")]
+        public void LCCLexerIllegal3() {
+            string src = "'\\1234'";
+            var tokens = Lexer.Instance.Scan(src);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException), "Unmatched double quote.")]
+        public void LCCLexerIllegal4() {
+            string src = "\"abc";
+            var tokens = Lexer.Instance.Scan(src);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException), "Unmatched double quote.")]
+        public void LCCLexerIllegal5() {
+            string src = "abc\"";
+            var tokens = Lexer.Instance.Scan(src);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException), "Illegal new line inside string.")]
+        public void LCCLexerIllegal6() {
+            string src = "\"\n\"";
+            var tokens = Lexer.Instance.Scan(src);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException), "Illegal character.")]
+        public void LCCLexerIllegal7() {
+            string src = "$";
+            var tokens = Lexer.Instance.Scan(src);
         }
     }
 }

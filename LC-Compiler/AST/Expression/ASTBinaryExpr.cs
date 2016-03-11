@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    sealed class ASTBinaryExpr : ASTExpr {
+    public sealed class ASTBinaryExpr : ASTExpr {
 
         public enum Op {
             MULT,

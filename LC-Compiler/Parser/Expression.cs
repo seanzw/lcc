@@ -9,7 +9,7 @@ using lcc.Token;
 using lcc.AST;
 
 namespace lcc.Parser {
-    static partial class Parser {
+    public static partial class Parser {
 
         /// <summary>
         /// constant-expression

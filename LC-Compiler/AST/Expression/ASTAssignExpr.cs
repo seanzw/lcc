@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    sealed class ASTAssignExpr : ASTExpr {
+    public sealed class ASTAssignExpr : ASTExpr {
 
         public enum Op {
             ASSIGN,

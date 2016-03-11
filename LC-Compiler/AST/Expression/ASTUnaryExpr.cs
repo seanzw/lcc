@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    sealed class ASTPreInc : ASTExpr {
+    public sealed class ASTPreInc : ASTExpr {
 
         public ASTPreInc(ASTExpr expr) {
             this.expr = expr;
@@ -18,7 +18,7 @@ namespace lcc.AST {
         public readonly ASTExpr expr;
     }
 
-    sealed class ASTPreDec : ASTExpr {
+    public sealed class ASTPreDec : ASTExpr {
 
         public ASTPreDec(ASTExpr expr) {
             this.expr = expr;
@@ -31,7 +31,7 @@ namespace lcc.AST {
         public readonly ASTExpr expr;
     }
 
-    sealed class ASTUnaryOp : ASTExpr {
+    public sealed class ASTUnaryOp : ASTExpr {
 
         public enum Op {
             REF,

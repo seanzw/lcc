@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using RegEx;
 using lcc.Token;
 namespace LLexer {
-    sealed class Lexer {
+    public sealed class Lexer {
         private int _idx;
         private int _line;
         private int _lineInc;

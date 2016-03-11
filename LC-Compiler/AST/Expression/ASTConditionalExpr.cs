@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    sealed class ASTConditionalExpr : ASTExpr {
+    public sealed class ASTConditionalExpr : ASTExpr {
 
         public ASTConditionalExpr(ASTExpr predicator, ASTExpr trueExpr, ASTExpr falseExpr) {
             this.predicator = predicator;

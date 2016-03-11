@@ -5,11 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.Token {
-    abstract class T_CONST : Token {
+    public abstract class T_CONST : Token {
         protected T_CONST(int line) : base(line) { }
     }
 
-    sealed class T_CONST_INT : T_CONST {
+    public sealed class T_CONST_INT : T_CONST {
         public enum Suffix {
             U,
             L,
@@ -19,6 +19,12 @@ namespace lcc.Token {
             NONE
         }
 
+        /// <summary>
+        /// Token for const integer.
+        /// </summary>
+        /// <param name="line"> Line number. </param>
+        /// <param name="text"> Text from the source. </param>
+        /// <param name="n"> Base. </param>
         public T_CONST_INT(int line, string text, int n) : base(line) {
 
             text = text.ToUpper();
@@ -60,12 +66,24 @@ namespace lcc.Token {
             }
         }
 
+        public override bool Equals(object obj) {
+            T_CONST_INT i = obj as T_CONST_INT;
+            return i == null ? false : base.Equals(obj)
+                && i.suffix == suffix
+                && i.n == n
+                && i.text.Equals(text);
+        }
+
+        public override int GetHashCode() {
+            return line ^ n;
+        }
+
         public readonly Suffix suffix;
         public readonly int n;
         public readonly string text;
     }
 
-    sealed class T_CONST_FLOAT : T_CONST {
+    public sealed class T_CONST_FLOAT : T_CONST {
 
         public enum Suffix {
             F,
@@ -94,12 +112,24 @@ namespace lcc.Token {
             
         }
 
+        public override bool Equals(object obj) {
+            T_CONST_FLOAT i = obj as T_CONST_FLOAT;
+            return i == null ? false : base.Equals(obj)
+                && i.suffix == suffix
+                && i.n == n
+                && i.text.Equals(text);
+        }
+
+        public override int GetHashCode() {
+            return line ^ n;
+        }
+
         public readonly Suffix suffix;
         public readonly int n;
         public readonly string text;
     }
 
-    sealed class T_CONST_CHAR : T_CONST {
+    public sealed class T_CONST_CHAR : T_CONST {
         public enum Prefix {
             L,
             NONE
@@ -113,6 +143,18 @@ namespace lcc.Token {
                 this.text = text.Substring(1, text.Length - 2);
             }
         }
+
+        public override bool Equals(object obj) {
+            T_CONST_CHAR i = obj as T_CONST_CHAR;
+            return i == null ? false : base.Equals(obj)
+                && i.prefix == prefix
+                && i.text.Equals(text);
+        }
+
+        public override int GetHashCode() {
+            return line;
+        }
+
         public readonly string text;
         public readonly Prefix prefix;
     }

@@ -116,7 +116,7 @@ namespace Lexer {
 
             #region LexerBody.
             src.AppendLine("namespace LLexer {");
-            src.AppendLine(Tab(1) + "sealed class Lexer {");
+            src.AppendLine(Tab(1) + "public sealed class Lexer {");
 
             #region Attributes.
             List<string> attributes = new List<string> {

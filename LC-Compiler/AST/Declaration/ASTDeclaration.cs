@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace lcc {
-    class Program {
-        static void Main(string[] args) {
+namespace lcc.AST {
+    public abstract class ASTDeclaration : ASTNode {
 
-        }
+        public abstract override int GetLine();
     }
 }

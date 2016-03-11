@@ -44,6 +44,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AST\ASTNode.cs" />
+    <Compile Include="AST\Declaration\ASTDeclaration.cs" />
+    <Compile Include="AST\Declaration\ASTInitializer.cs" />
     <Compile Include="AST\Expression\ASTAssignExpr.cs" />
     <Compile Include="AST\Expression\ASTCommaExpr.cs" />
     <Compile Include="AST\Expression\ASTConditionalExpr.cs" />
@@ -53,11 +55,11 @@
     <Compile Include="AST\Expression\ASTUnaryExpr.cs" />
     <Compile Include="Lexer\Lexer.cs" />
     <Compile Include="AST\Expression\ASTBinaryExpr.cs" />
+    <Compile Include="Parser\Declaration.cs" />
     <Compile Include="Parser\Expression.cs" />
     <Compile Include="Parser\Utility.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Test\TestLexer.cs" />
     <Compile Include="Token\Constant.cs" />
     <Compile Include="Token\Identifier.cs" />
     <Compile Include="Token\Keywords.cs" />

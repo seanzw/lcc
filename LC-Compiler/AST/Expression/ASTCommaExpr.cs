@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    sealed class ASTCommaExpr : ASTExpr {
+    public sealed class ASTCommaExpr : ASTExpr {
 
         public ASTCommaExpr(LinkedList<ASTExpr> exprs) {
             this.exprs = exprs;

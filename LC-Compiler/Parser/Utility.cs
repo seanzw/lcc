@@ -8,7 +8,7 @@ using static Parserc.Parserc;
 using lcc.AST;
 
 namespace lcc.Parser {
-    static partial class Parser {
+    public static partial class Parser {
 
         /// <summary>
         /// Match a specific kind of token.

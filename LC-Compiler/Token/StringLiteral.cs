@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.Token {
-    sealed class T_STRING_LITERAL : Token {
+    public sealed class T_STRING_LITERAL : Token {
 
         public enum Prefix {
             L,
@@ -20,6 +20,17 @@ namespace lcc.Token {
                 this.text = text.Substring(1, text.Length - 2);
                 this.prefix = Prefix.NONE;
             }
+        }
+
+        public override bool Equals(object obj) {
+            T_STRING_LITERAL i = obj as T_STRING_LITERAL;
+            return i == null ? false : base.Equals(obj)
+                && i.prefix == prefix
+                && i.text.Equals(text);
+        }
+
+        public override int GetHashCode() {
+            return line;
         }
 
         public readonly string text;
