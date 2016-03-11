@@ -17,63 +17,102 @@ namespace lcc.AST {
             return arr.GetLine();
         }
 
+        public override bool Equals(object obj) {
+            ASTArrSub x = obj as ASTArrSub;
+            return x == null ? false : base.Equals(x)
+                && x.arr.Equals(arr)
+                && x.idx.Equals(idx);
+        }
+
+        public bool Equals(ASTArrSub x) {
+            return base.Equals(x)
+                && x.arr.Equals(arr)
+                && x.idx.Equals(idx);
+        }
+
+        public override int GetHashCode() {
+            return arr.GetHashCode() ^ idx.GetHashCode();
+        }
+
         public readonly ASTExpr arr;
         public readonly ASTExpr idx;
     }
 
-    sealed class ASTDotAccess : ASTExpr {
+    public sealed class ASTAccess : ASTExpr {
 
-        public ASTDotAccess(ASTExpr aggregation, T_IDENTIFIER token) {
+        public enum Type {
+            DOT,
+            PTR
+        }
+
+        public ASTAccess(ASTExpr aggregation, T_IDENTIFIER token, Type type) {
             this.aggregation = aggregation;
             this.field = token.name;
+            this.type = type;
         }
 
         public override int GetLine() {
             return aggregation.GetLine();
         }
 
-        public readonly ASTExpr aggregation;
-        public readonly string field;
-    }
-
-    sealed class ASTPtrAccess : ASTExpr {
-
-        public ASTPtrAccess(ASTExpr aggregation, T_IDENTIFIER token) {
-            this.aggregation = aggregation;
-            this.field = token.name;
+        public override bool Equals(object obj) {
+            ASTAccess x = obj as ASTAccess;
+            return x == null ? false : base.Equals(x)
+                && x.aggregation.Equals(aggregation)
+                && x.field.Equals(field)
+                && x.type == type;
         }
 
-        public override int GetLine() {
-            return aggregation.GetLine();
+        public bool Equals(ASTAccess x) {
+            return base.Equals(x)
+                && x.aggregation.Equals(aggregation)
+                && x.field.Equals(field)
+                && x.type == type;
+        }
+
+        public override int GetHashCode() {
+            return aggregation.GetHashCode() ^ field.GetHashCode();
         }
 
         public readonly ASTExpr aggregation;
         public readonly string field;
+        public readonly Type type;
     }
 
-    sealed class ASTPostInc : ASTExpr {
+    public sealed class ASTPostStep : ASTExpr {
 
-        public ASTPostInc(ASTExpr expr) {
+        public enum Type {
+            INC,
+            DEC
+        }
+
+        public ASTPostStep(ASTExpr expr, Type type) {
             this.expr = expr;
+            this.type = type;
         }
 
         public override int GetLine() {
             return expr.GetLine();
         }
 
-        public readonly ASTExpr expr;
-    }
-
-    sealed class ASTPostDec : ASTExpr {
-
-        public ASTPostDec(ASTExpr expr) {
-            this.expr = expr;
+        public override bool Equals(object obj) {
+            ASTPostStep x = obj as ASTPostStep;
+            return x == null ? false : base.Equals(x)
+                && x.expr.Equals(expr)
+                && x.type == type;
         }
 
-        public override int GetLine() {
-            return expr.GetLine();
+        public bool Equals(ASTPostStep x) {
+            return base.Equals(x)
+                && x.expr.Equals(expr)
+                && x.type == type;
+        }
+
+        public override int GetHashCode() {
+            return expr.GetHashCode();
         }
 
         public readonly ASTExpr expr;
+        public readonly Type type;
     }
 }

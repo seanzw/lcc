@@ -316,8 +316,8 @@ namespace lcc.Parser {
         /// <summary>
         /// postfix-expression
         ///     : primary-expression postfix-expression-tail
-        ///     | ( type-name ) { initializer-list } postfix-expression-tail
-        ///     | ( type-name ) { initializer-list , } postfix-expression-tail
+        ///     // TODO | ( type-name ) { initializer-list } postfix-expression-tail
+        ///     // TODO | ( type-name ) { initializer-list , } postfix-expression-tail
         ///     ;
         /// </summary>
         /// <returns></returns>
@@ -328,13 +328,19 @@ namespace lcc.Parser {
         /// <summary>
         /// postfix-expression-tail
         ///     : [ expression ] postfix-expression-tail
-        ///     | ( argunemt-expression-list_opt ) postfix-expression-tail
+        ///     // TODO | ( argunemt-expression-list_opt ) postfix-expression-tail
         ///     | . identifier postfix-expression-tail
         ///     | -> identifier postfix-expression-tail
         ///     | ++ postfix-expression-tail
         ///     | -- postfix-expression-tail
         ///     | epsilon
         ///     ;
+        ///     
+        /// NOTE:
+        /// The trickest part is to implement ++/-- postfix-expression-tail.
+        /// Although we don't need the result from previous Match parser,
+        /// we have to use Bind here instead of Then because we have to use lambda expression to avoid circular referrence.
+        /// Ref won't work here because PostfixExpressionTail takes one argument.
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<Token.Token, ASTExpr> PostfixExpressionTail(ASTExpr expr) {
@@ -343,16 +349,15 @@ namespace lcc.Parser {
                     .Bind(idx => PostfixExpressionTail(new ASTArrSub(expr, idx)))
                 .Else(Match<T_PUNC_DOT>()
                     .Then(Get<T_IDENTIFIER>()
-                    .Bind(identifier => PostfixExpressionTail(new ASTDotAccess(expr, identifier)))))
+                    .Bind(id => PostfixExpressionTail(new ASTAccess(expr, id, ASTAccess.Type.DOT)))))
                 .Else(Match<T_PUNC_PTRSEL>()
                     .Then(Get<T_IDENTIFIER>()
-                    .Bind(identifier => PostfixExpressionTail(new ASTDotAccess(expr, identifier)))))
+                    .Bind(id => PostfixExpressionTail(new ASTAccess(expr, id, ASTAccess.Type.PTR)))))
                 .Else(Match<T_PUNC_INCRE>()
-                    .Then(PostfixExpressionTail(new ASTPostInc(expr))))
+                    .Bind(_ => PostfixExpressionTail(new ASTPostStep(expr, ASTPostStep.Type.INC))))
                 .Else(Match<T_PUNC_DECRE>()
-                    .Then(PostfixExpressionTail(new ASTPostDec(expr))))
-                .Else(Result<Token.Token, ASTExpr>(expr))
-                ;
+                    .Bind(_ => PostfixExpressionTail(new ASTPostStep(expr, ASTPostStep.Type.DEC))))
+                .Else(Result<Token.Token, ASTExpr>(expr));
         }
 
         /// <summary>

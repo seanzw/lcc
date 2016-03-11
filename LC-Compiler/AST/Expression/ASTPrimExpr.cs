@@ -89,7 +89,7 @@ namespace lcc.AST {
                 && ci.value == value
                 && ci.suffix == suffix;
         }
-
+        
         public bool Equals(ASTConstInt ci) {
             return base.Equals(ci)
                 && ci.value == value
@@ -100,6 +100,11 @@ namespace lcc.AST {
             return line;
         }
 
+        /// <summary>
+        /// TODO: Evaluate the text and get the value.
+        /// </summary>
+        /// <param name="token"> Token to be evaluated. </param>
+        /// <returns> Long. </returns>
         private long Evaluate(T_CONST_INT token) {
             return 0;
         }
@@ -134,8 +139,8 @@ namespace lcc.AST {
         /// <summary>
         /// TODO: Evaluate the text and get the char.
         /// </summary>
-        /// <param name="token"></param>
-        /// <returns></returns>
+        /// <param name="token"> Token to be evaluated. </param>
+        /// <returns> Char. </returns>
         private char Evaluate(T_CONST_CHAR token) {
             return 'a';
         }
@@ -163,6 +168,11 @@ namespace lcc.AST {
                 && cf.suffix == suffix;
         }
 
+        /// <summary>
+        /// TODO: Evaluate the text and get the value.
+        /// </summary>
+        /// <param name="token"></param>
+        /// <returns></returns>
         private float Evaluate(T_CONST_FLOAT token) {
             return 0.0f;
         }

@@ -20,8 +20,8 @@ namespace LC_CompilerTests {
             var tokens = new ReadOnlyCollection<Token>(Lexer.Instance.Scan(src));
             var stream = new Parserc.TokenStream<Token>(tokens);
             var result = parser(stream);
-            Assert.AreEqual(result.Count, 1);
-            Assert.AreEqual(result[0].value, truth);
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(truth, result[0].value);
             Assert.IsFalse(result[0].remain.More());
         }
 
@@ -53,6 +53,58 @@ namespace LC_CompilerTests {
             foreach (var test in dict) {
                 Aux(test.Key, Parser.PrimaryExpression(), test.Value);
             }
+        }
+
+        [TestMethod]
+        public void LCCParserPostfixExpression() {
+            Dictionary<string, ASTExpr> dict = new Dictionary<string, ASTExpr> {
+                {
+                    "abc[123]",
+                    new ASTArrSub(
+                        new ASTIdentifier(new T_IDENTIFIER(1, "abc")),
+                        new ASTConstInt(new T_CONST_INT(1, "123", 10))
+                    )
+                },
+                {
+                    "abc.x",
+                    new ASTAccess(
+                        new ASTIdentifier(new T_IDENTIFIER(1, "abc")),
+                        new T_IDENTIFIER(1, "x"),
+                        ASTAccess.Type.DOT
+                    )
+                },
+                {
+                    "abc->x",
+                    new ASTAccess(
+                        new ASTIdentifier(new T_IDENTIFIER(1, "abc")),
+                        new T_IDENTIFIER(1, "x"),
+                        ASTAccess.Type.PTR
+                    )
+                },
+                {
+                    "x++",
+                    new ASTPostStep(
+                        new ASTIdentifier(new T_IDENTIFIER(1, "x")),
+                        ASTPostStep.Type.INC
+                    )
+                },
+                {
+                    "x--",
+                    new ASTPostStep(
+                        new ASTIdentifier(new T_IDENTIFIER(1, "x")),
+                        ASTPostStep.Type.DEC
+                    )
+                }
+            };
+
+            foreach (var test in dict) {
+                Aux(test.Key, Parser.PostfixExpression(), test.Value);
+            }
+        }
+
+        [TestMethod]
+        public void LCCParserUnaryExpression() {
+
         }
     }
 }

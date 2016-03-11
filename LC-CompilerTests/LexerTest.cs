@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using lcc.AST;
 using lcc.Token;
-using lcc.Parser;
 using LLexer;
 
 namespace LC_CompilerTests {
