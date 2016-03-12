@@ -8,24 +8,24 @@ namespace lcc.AST {
     public sealed class ASTBinaryExpr : ASTExpr {
 
         public enum Op {
-            MULT,
-            DIV,
-            MOD,
-            PLUS,
-            MINUS,
-            LEFT,
-            RIGHT,
-            LT,
-            GT,
-            LE,
-            GE,
-            EQ,
-            NEQ,
-            AND,
-            XOR,
-            OR,
-            LOGAND,
-            LOGOR
+            MULT,   // *
+            DIV,    // /
+            MOD,    // %
+            PLUS,   // +
+            MINUS,  // -
+            LEFT,   // <<
+            RIGHT,  // >>
+            LT,     // <
+            GT,     // >
+            LE,     // <=
+            GE,     // >=
+            EQ,     // ==
+            NEQ,    // !=
+            AND,    // &
+            XOR,    // ^
+            OR,     // |
+            LOGAND, // &&
+            LOGOR   // ||
         }
 
         public ASTBinaryExpr(ASTExpr lhs, ASTExpr rhs, Op op) {
@@ -36,6 +36,25 @@ namespace lcc.AST {
 
         public override int GetLine() {
             return lhs.GetLine();
+        }
+
+        public override bool Equals(object obj) {
+            ASTBinaryExpr expr = obj as ASTBinaryExpr;
+            return expr == null ? false : base.Equals(expr)
+                && expr.lhs.Equals(lhs)
+                && expr.rhs.Equals(rhs)
+                && expr.op.Equals(op);
+        }
+
+        public bool Equals(ASTBinaryExpr expr) {
+            return base.Equals(expr)
+                && expr.lhs.Equals(lhs)
+                && expr.rhs.Equals(rhs)
+                && expr.op.Equals(op);
+        }
+
+        public override int GetHashCode() {
+            return lhs.GetHashCode() ^ rhs.GetHashCode() ^ op.GetHashCode();
         }
 
         public readonly ASTExpr lhs;

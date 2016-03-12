@@ -44,7 +44,7 @@ namespace lcc.Parser {
             return ConditionalExpression()
                 .Or(UnaryExpression()
                     .Bind(lexpr => AssgnmentOperator()
-                    .Bind(op => Ref(AssignmentExpression)
+                    .Bind(op => AssignmentExpression()
                     .Select(rexpr => new ASTAssignExpr(lexpr, rexpr, op) as ASTExpr))));
         }
 
@@ -155,7 +155,7 @@ namespace lcc.Parser {
         }
 
         /// <summary>
-        /// relational-operator
+        /// equality-operator
         ///     : one of == !=
         /// </summary>
         /// <returns></returns>
@@ -168,10 +168,7 @@ namespace lcc.Parser {
         /// <summary>
         /// relational-expression
         ///     : shift-expression
-        ///     | relational-expression &lt shift-expression
-        ///     | relational-expression &gt shift-expression
-        ///     | relational-expression &lt= shift-expression
-        ///     | relational-expression &gt= shift-expression
+        ///     | relational-expression relational-operator shift-expression
         ///     ;
         /// </summary>
         /// <returns></returns>
@@ -246,7 +243,7 @@ namespace lcc.Parser {
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<Token.Token, ASTExpr> MultiplicativeExpression() {
-            return CastExpression().ChainBinaryExpr(MultiplicativOperator());
+            return CastExpression().ChainBinaryExpr(MultiplicativeOperator());
         }
 
         /// <summary>
@@ -255,7 +252,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, ASTBinaryExpr.Op> MultiplicativOperator() {
+        public static Parserc.Parser<Token.Token, ASTBinaryExpr.Op> MultiplicativeOperator() {
             return Match<T_PUNC_STAR>().Return(ASTBinaryExpr.Op.MULT)
                 .Else(Match<T_PUNC_SLASH>().Return(ASTBinaryExpr.Op.DIV))
                 .Else(Match<T_PUNC_MOD>().Return(ASTBinaryExpr.Op.MOD))
@@ -265,7 +262,7 @@ namespace lcc.Parser {
         /// <summary>
         /// cast-expression
         ///     : unary-expression
-        ///     | ( type-name ) cast-expression
+        ///     // TODO | ( type-name ) cast-expression
         ///     ;
         /// </summary>
         /// <returns></returns>
@@ -279,8 +276,8 @@ namespace lcc.Parser {
         ///     | ++ unary-expression
         ///     | -- unary-expression
         ///     | unary-operator cast-expression
-        ///     | sizeof unary-expression
-        ///     | sizeof ( type-name )
+        ///     // TODO | sizeof unary-expression
+        ///     // TODO | sizeof ( type-name )
         ///     ;
         /// </summary>
         /// <returns></returns>
@@ -288,10 +285,10 @@ namespace lcc.Parser {
             return PostfixExpression()
                 .Else(Match<T_PUNC_INCRE>()
                     .Then(Ref(UnaryExpression))
-                    .Select(x => new ASTPreInc(x) as ASTExpr))
+                    .Select(x => new ASTPreStep(x, ASTPreStep.Type.INC) as ASTExpr))
                 .Else(Match<T_PUNC_DECRE>()
                     .Then(Ref(UnaryExpression))
-                    .Select(x => new ASTPreDec(x) as ASTExpr))
+                    .Select(x => new ASTPreStep(x, ASTPreStep.Type.DEC) as ASTExpr))
                 .Else(UnaryOperator()
                     .Bind(op => Ref(CastExpression)
                     .Select(expr => new ASTUnaryOp(expr, op) as ASTExpr)))
@@ -339,7 +336,8 @@ namespace lcc.Parser {
         /// NOTE:
         /// The trickest part is to implement ++/-- postfix-expression-tail.
         /// Although we don't need the result from previous Match parser,
-        /// we have to use Bind here instead of Then because we have to use lambda expression to avoid circular referrence.
+        /// we have to use Bind here instead of Then,
+        /// because we have to use lambda expression to avoid circular referrence.
         /// Ref won't work here because PostfixExpressionTail takes one argument.
         /// </summary>
         /// <returns></returns>
