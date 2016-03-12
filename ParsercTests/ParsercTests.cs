@@ -44,7 +44,7 @@ namespace ParsercTests {
                 var result = parser(tokens);
                 Assert.AreEqual(result.Count, 1);
                 Assert.AreEqual(result[0].value, 'o');
-                Assert.AreEqual(result[0].remain.Copy().Next(), 'a');
+                Assert.AreEqual(result[0].remain.Head(), 'a');
                 tokens = result[0].remain;
             }
         }
@@ -65,13 +65,13 @@ namespace ParsercTests {
             Parser<char, char> parser = Sat<char>(c => c == 'b');
             string src = "bbbabc";
             ITokenStream<char> tokens = new CharStream(src);
-            for (int i = 0; i < src.Length; ++i, tokens.Next()) {
+            for (int i = 0; i < src.Length; ++i, tokens = tokens.Tail()) {
                 var result = parser(tokens);
                 if (src[i] != 'b') {
-                    Assert.AreEqual(result.Count, 0);
+                    Assert.AreEqual(0, result.Count);
                 } else {
-                    Assert.AreEqual(result.Count, 1);
-                    Assert.AreEqual(result[0].value, 'b');
+                    Assert.AreEqual(1, result.Count);
+                    Assert.AreEqual('b', result[0].value);
                 }
             }
         }
@@ -89,7 +89,7 @@ namespace ParsercTests {
             Assert.AreEqual(result[0].value.Length, 2);
             Assert.AreEqual(result[0].value[0], 'a');
             Assert.AreEqual(result[0].value[1], 'b');
-            Assert.AreEqual(result[0].remain.Next(), 'c');
+            Assert.AreEqual(result[0].remain.Head(), 'c');
         }
 
         [TestMethod]

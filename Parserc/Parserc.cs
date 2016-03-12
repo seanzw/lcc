@@ -17,9 +17,8 @@ namespace Parserc {
         /// <returns> A result parser. </returns>
         public static Parser<I, V> Result<I, V>(V value) {
             return tokens => {
-                var tokensNew = tokens.Copy();
                 return new List<ParserResult<I, V>> {
-                    new ParserResult<I, V>(value, tokensNew)
+                    new ParserResult<I, V>(value, tokens)
                 };
             };
         }
@@ -41,10 +40,9 @@ namespace Parserc {
         /// <returns></returns>
         public static Parser<I, I> Item<I>() {
             return tokens => {
-                var tokensNew = tokens.Copy();
                 if (tokens.More()) {
                     return new List<ParserResult<I, I>> {
-                        new ParserResult<I, I>(tokensNew.Next(), tokensNew)
+                        new ParserResult<I, I>(tokens.Head(), tokens.Tail())
                     };
                 } else {
                     return new List<ParserResult<I, I>>();
@@ -61,9 +59,8 @@ namespace Parserc {
                 if (tokens.More()) {
                     return new List<ParserResult<I, V>>();
                 } else {
-                    var tokensNew = tokens.Copy();
                     return new List<ParserResult<I, V>> {
-                        new ParserResult<I, V>(value, tokensNew)
+                        new ParserResult<I, V>(value, tokens)
                     };
                 }
             };

@@ -8,14 +8,22 @@ namespace Parserc {
     public interface ITokenStream<T> {
 
         /// <summary>
-        /// Generate a copy of this stream.
-        /// This is used for backup.
+        /// Return true if this stream is not empty.
         /// </summary>
-        /// <returns></returns>
-        ITokenStream<T> Copy();
-
+        /// <returns> Boolean. </returns>
         bool More();
 
-        T Next();
+        /// <summary>
+        /// Get the next element in the stream.
+        /// </summary>
+        /// <returns> T. </returns>
+        T Head();
+
+        /// <summary>
+        /// Get the rest of the stream, without head.
+        /// This will make a new stream.
+        /// </summary>
+        /// <returns> ITokenStream. </returns>
+        ITokenStream<T> Tail();
     }
 }

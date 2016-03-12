@@ -10,25 +10,30 @@
             idx = 0;
         }
 
+        /// <summary>
+        /// Used for tail.
+        /// Notice the idx of the new stream is incremented with one.
+        /// </summary>
+        /// <param name="other"></param>
         private CharStream(CharStream other) {
             src = other.src;
-            idx = other.idx;
-        }
-
-        public ITokenStream<char> Copy() {
-            return new CharStream(this);
+            idx = other.idx + 1;
         }
 
         public bool More() {
             return idx < src.Length;
         }
 
-        public char Next() { 
+        public char Head() { 
             if (More()) {
-                return src[idx++];
+                return src[idx];
             } else {
                 return default(char);
             }
+        }
+
+        public ITokenStream<char> Tail() {
+            return new CharStream(this);
         }
 
         private int idx;

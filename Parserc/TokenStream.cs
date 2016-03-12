@@ -19,10 +19,10 @@ namespace Parserc {
         /// <param name="other"></param>
         private TokenStream(TokenStream<T> other) {
             tokens = other.tokens;
-            idx = other.idx;
+            idx = other.idx + 1;
         }
 
-        public ITokenStream<T> Copy() {
+        public ITokenStream<T> Tail() {
             return new TokenStream<T>(this);
         }
 
@@ -30,9 +30,9 @@ namespace Parserc {
             return idx < tokens.Count();
         }
 
-        public T Next() {
+        public T Head() {
             if (More()) {
-                return tokens[idx++];
+                return tokens[idx];
             } else {
                 return default(T);
             }
