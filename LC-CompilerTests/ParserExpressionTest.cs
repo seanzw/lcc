@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -11,11 +12,18 @@ using Parserc;
 
 namespace LC_CompilerTests {
     [TestClass]
-    public class ParserExpressionTest {
+    public partial class ParserTests {
 
+        /// <summary>
+        /// Parse the string and check if two AST are equal.
+        /// </summary>
+        /// <typeparam name="R"> Result type. </typeparam>
+        /// <param name="src"> Source string. </param>
+        /// <param name="parser"></param>
+        /// <param name="truth"></param>
         private static void Aux<R>(
             string src,
-            Parserc.Parser<Token, R> parser,
+            Parser<Token, R> parser,
             R truth
             ) {
             var tokens = new ReadOnlyCollection<Token>(Lexer.Instance.Scan(src));
@@ -25,6 +33,29 @@ namespace LC_CompilerTests {
             // Check the first result.
             Assert.AreEqual(1, result.Count);
             Assert.AreEqual(truth, result[0].value);
+            Assert.IsFalse(result[0].remain.More());
+        }
+
+        /// <summary>
+        /// Parse the string and check if the two result are the same.
+        /// Used for linked list.
+        /// </summary>
+        /// <typeparam name="R"> LinkedList element type. </typeparam>
+        /// <param name="src"></param>
+        /// <param name="parser"></param>
+        /// <param name="truth"></param>
+        private static void Aux<R>(
+            string src,
+            Parser<Token, LinkedList<R>> parser,
+            LinkedList<R> truth
+            ) {
+            var tokens = new ReadOnlyCollection<Token>(Lexer.Instance.Scan(src));
+            var stream = new Parserc.TokenStream<Token>(tokens);
+            var result = parser(stream);
+
+            // Check the first result.
+            Assert.AreEqual(1, result.Count);
+            Assert.IsTrue(truth.SequenceEqual(result[0].value));
             Assert.IsFalse(result[0].remain.More());
         }
 

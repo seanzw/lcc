@@ -5,24 +5,20 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-
-    /// <summary>
-    /// The base class for all expression.
-    /// </summary>
-    public abstract class ASTExpr : ASTNode {
+    public abstract class ASTDecl : ASTNode {
 
         public abstract override int GetLine();
 
         public override bool Equals(object obj) {
-            return obj is ASTExpr;
+            return obj is ASTDecl;
         }
 
-        public bool Equals(ASTExpr expr) {
+        public bool Equals(ASTDecl decl) {
             return true;
         }
 
         public override int GetHashCode() {
-            return GetLine();
+            return 0;
         }
     }
 }

@@ -50,6 +50,32 @@ namespace Parserc {
             };
         }
 
+        /// <summary>
+        /// Cast from V2 to V1.
+        /// </summary>
+        /// <typeparam name="V1"></typeparam>
+        /// <typeparam name="V2"></typeparam>
+        /// <param name="parser"></param>
+        /// <returns></returns>
+        public static Parser<I, V1> Cast<I, V1, V2>(this Parser<I, V2> parser)
+            where V2 : V1
+            where V1 : class {
+            return parser.Select(x => x as V1);
+        }
+
+        /// <summary>
+        /// Take one parser as an option.
+        /// </summary>
+        /// <typeparam name="I"></typeparam>
+        /// <typeparam name="V1"></typeparam>
+        /// <typeparam name="V2"></typeparam>
+        /// <param name="parser"></param>
+        /// <param name="option"></param>
+        /// <returns></returns>
+        public static Parser<I, V1> Option<I, V1, V2>(this Parser<I, V1> parser, Parser<I, V2> option) {
+            return parser.Or(parser.Bind(v => option.Return(v)));
+        }
+
         public static Parser<I, V> End<I, V>(this Parser<I, V> parser) {
             return parser.Bind(x => End<I, V>(x));
         }

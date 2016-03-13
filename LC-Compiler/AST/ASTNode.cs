@@ -9,5 +9,17 @@ namespace lcc.AST {
         protected ASTNode() { }
 
         public abstract int GetLine();
+
+        public override bool Equals(object obj) {
+            return obj is ASTNode;
+        }
+
+        public bool Equals(ASTNode node) {
+            return true;
+        }
+
+        public override int GetHashCode() {
+            return base.GetHashCode();
+        }
     }
 }
