@@ -5,15 +5,15 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    public abstract class ASTDecl : ASTNode {
+    public abstract class ASTDeclaration : ASTNode {
 
         public abstract override int GetLine();
 
         public override bool Equals(object obj) {
-            return obj is ASTDecl;
+            return obj is ASTDeclaration;
         }
 
-        public bool Equals(ASTDecl decl) {
+        public bool Equals(ASTDeclaration decl) {
             return true;
         }
 

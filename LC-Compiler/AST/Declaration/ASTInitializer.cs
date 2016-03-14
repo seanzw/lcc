@@ -8,7 +8,7 @@ using lcc.Token;
 
 namespace lcc.AST {
 
-    public abstract class ASTDesignator : ASTDecl {
+    public abstract class ASTDesignator : ASTDeclaration {
 
     }
 

@@ -8,9 +8,9 @@ using lcc.Token;
 
 namespace lcc.AST {
 
-    public sealed class ASTDeclEnumerator : ASTNode {
+    public sealed class ASTEnumerator : ASTNode {
 
-        public ASTDeclEnumerator(ASTIdentifier identifier, ASTExpr expr = null) {
+        public ASTEnumerator(ASTIdentifier identifier, ASTExpr expr) {
             this.identifier = identifier;
             this.expr = expr;
         }
@@ -20,13 +20,13 @@ namespace lcc.AST {
         }
 
         public override bool Equals(object obj) {
-            ASTDeclEnumerator enumerator = obj as ASTDeclEnumerator;
+            ASTEnumerator enumerator = obj as ASTEnumerator;
             return enumerator == null ? false : base.Equals(enumerator)
                 && enumerator.identifier.Equals(identifier)
                 && (enumerator.expr == null ? expr == null : enumerator.expr.Equals(expr));
         }
 
-        public bool Equals(ASTDeclEnumerator enumerator) {
+        public bool Equals(ASTEnumerator enumerator) {
             return base.Equals(enumerator)
                 && enumerator.identifier.Equals(identifier)
                 && enumerator.expr.Equals(expr);
@@ -40,40 +40,37 @@ namespace lcc.AST {
         public readonly ASTExpr expr;
     }
 
-    public sealed class ASTDeclEnumSpec : ASTDeclTypeSpec {
+    public sealed class ASTEnumSpecifier : ASTTypeSpecifier {
 
-        public ASTDeclEnumSpec(ASTIdentifier identifier, LinkedList<ASTDeclEnumerator> enumerators = null) {
+        public ASTEnumSpecifier(int line, ASTIdentifier identifier, LinkedList<ASTEnumerator> enumerators) {
+            this.line = line;
             this.identifier = identifier;
             this.enumerators = enumerators;
         }
 
-        public ASTDeclEnumSpec(LinkedList<ASTDeclEnumerator> enumerators) {
-            this.identifier = null;
-            this.enumerators = enumerators;
-        }
-
         public override int GetLine() {
-            return identifier.GetLine();
+            return line;
         }
 
         public override bool Equals(object obj) {
-            ASTDeclEnumSpec e = obj as ASTDeclEnumSpec;
+            ASTEnumSpecifier e = obj as ASTEnumSpecifier;
             return e == null ? false : base.Equals(e)
                 && (e.identifier == null ? identifier == null : e.identifier.Equals(identifier))
                 && (e.enumerators == null ? enumerators == null : e.enumerators.SequenceEqual(enumerators));
         }
 
-        public bool Equals(ASTDeclEnumSpec e) {
+        public bool Equals(ASTEnumSpecifier e) {
             return base.Equals(e)
-                && e.identifier.Equals(identifier)
-                && e.enumerators.SequenceEqual(enumerators);
+                && (e.identifier == null ? identifier == null : e.identifier.Equals(identifier))
+                && (e.enumerators == null ? enumerators == null : e.enumerators.SequenceEqual(enumerators));
         }
 
         public override int GetHashCode() {
-            return identifier.GetHashCode() | enumerators.GetHashCode();
+            return line;
         }
 
+        public readonly int line;
         public readonly ASTIdentifier identifier;
-        public readonly LinkedList<ASTDeclEnumerator> enumerators;
+        public readonly LinkedList<ASTEnumerator> enumerators;
     }
 }

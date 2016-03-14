@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 using lcc.Token;
 
 namespace lcc.AST {
-    public abstract class ASTDeclSpec : ASTNode {
+    public abstract class ASTDeclarationSpecifier : ASTNode {
 
         public abstract override int GetLine();
 
         public override bool Equals(object obj) {
-            return obj is ASTDeclSpec;
+            return obj is ASTDeclarationSpecifier;
         }
 
-        public bool Equals(ASTDeclSpec spec) {
+        public bool Equals(ASTDeclarationSpecifier spec) {
             return true;
         }
 
@@ -24,7 +24,7 @@ namespace lcc.AST {
         }
     }
 
-    public sealed class ASTDeclStroageSpec : ASTDeclSpec {
+    public sealed class ASTStorageSpecifier : ASTDeclarationSpecifier {
 
         public enum Type {
             TYPEDEF,
@@ -34,7 +34,7 @@ namespace lcc.AST {
             REGISTER
         }
 
-        public ASTDeclStroageSpec(int line, Type type) {
+        public ASTStorageSpecifier(int line, Type type) {
             this.line = line;
             this.type = type;
         }
@@ -44,13 +44,13 @@ namespace lcc.AST {
         }
 
         public override bool Equals(object obj) {
-            ASTDeclStroageSpec spec = obj as ASTDeclStroageSpec;
+            ASTStorageSpecifier spec = obj as ASTStorageSpecifier;
             return spec == null ? false : base.Equals(spec)
                 && spec.line == line
                 && spec.type == type;
         }
 
-        public bool Equals(ASTDeclStroageSpec spec) {
+        public bool Equals(ASTStorageSpecifier spec) {
             return base.Equals(spec)
                 && spec.line == line
                 && spec.type == type;
@@ -64,14 +64,14 @@ namespace lcc.AST {
         public readonly int line;
     }
 
-    public abstract class ASTDeclTypeSpec : ASTDeclSpec {
+    public abstract class ASTTypeSpecifierQualifier : ASTDeclarationSpecifier {
         public abstract override int GetLine();
 
         public override bool Equals(object obj) {
-            return obj is ASTDeclTypeSpec;
+            return obj is ASTTypeSpecifierQualifier;
         }
 
-        public bool Equals(ASTDeclTypeSpec spec) {
+        public bool Equals(ASTTypeSpecifierQualifier spec) {
             return true;
         }
 
@@ -80,7 +80,23 @@ namespace lcc.AST {
         }
     }
 
-    public sealed class ASTDeclTypeKeySpec : ASTDeclTypeSpec {
+    public abstract class ASTTypeSpecifier : ASTTypeSpecifierQualifier {
+        public abstract override int GetLine();
+
+        public override bool Equals(object obj) {
+            return obj is ASTTypeSpecifier;
+        }
+
+        public bool Equals(ASTTypeSpecifier spec) {
+            return true;
+        }
+
+        public override int GetHashCode() {
+            return GetLine();
+        }
+    }
+
+    public sealed class ASTTypeKeySpecifier : ASTTypeSpecifier {
 
         public enum Type {
             VOID,
@@ -94,7 +110,7 @@ namespace lcc.AST {
             UNSIGNED
         }
 
-        public ASTDeclTypeKeySpec(int line, Type type) {
+        public ASTTypeKeySpecifier(int line, Type type) {
             this.line = line;
             this.type = type;
         }
@@ -104,13 +120,13 @@ namespace lcc.AST {
         }
 
         public override bool Equals(object obj) {
-            ASTDeclTypeKeySpec spec = obj as ASTDeclTypeKeySpec;
+            ASTTypeKeySpecifier spec = obj as ASTTypeKeySpecifier;
             return spec == null ? false : base.Equals(spec)
                 && spec.line == line
                 && spec.type == type;
         }
 
-        public bool Equals(ASTDeclTypeKeySpec spec) {
+        public bool Equals(ASTTypeKeySpecifier spec) {
             return base.Equals(spec)
                 && spec.line == line
                 && spec.type == type;
@@ -124,7 +140,7 @@ namespace lcc.AST {
         public readonly int line;
     }
 
-    public sealed class ASTDeclTypeQual : ASTDeclSpec {
+    public sealed class ASTTypeQualifier : ASTTypeSpecifierQualifier {
 
         public enum Type {
             CONST,
@@ -132,7 +148,7 @@ namespace lcc.AST {
             VOLATILE
         }
 
-        public ASTDeclTypeQual(int line, Type type) {
+        public ASTTypeQualifier(int line, Type type) {
             this.line = line;
             this.type = type;
         }
@@ -142,13 +158,13 @@ namespace lcc.AST {
         }
 
         public override bool Equals(object obj) {
-            ASTDeclTypeQual spec = obj as ASTDeclTypeQual;
+            ASTTypeQualifier spec = obj as ASTTypeQualifier;
             return spec == null ? false : base.Equals(spec)
                 && spec.line == line
                 && spec.type == type;
         }
 
-        public bool Equals(ASTDeclTypeQual spec) {
+        public bool Equals(ASTTypeQualifier spec) {
             return base.Equals(spec)
                 && spec.line == line
                 && spec.type == type;
@@ -162,13 +178,13 @@ namespace lcc.AST {
         public readonly int line;
     }
 
-    public sealed class ASTDeclFuncSpec : ASTDeclSpec {
+    public sealed class ASTFunctionSpecifier : ASTDeclarationSpecifier {
 
         public enum Type {
             INLINE
         }
 
-        public ASTDeclFuncSpec(int line, Type type) {
+        public ASTFunctionSpecifier(int line, Type type) {
             this.line = line;
             this.type = type;
         }
@@ -178,13 +194,13 @@ namespace lcc.AST {
         }
 
         public override bool Equals(object obj) {
-            ASTDeclFuncSpec spec = obj as ASTDeclFuncSpec;
+            ASTFunctionSpecifier spec = obj as ASTFunctionSpecifier;
             return spec == null ? false : base.Equals(spec)
                 && spec.line == line
                 && spec.type == type;
         }
 
-        public bool Equals(ASTDeclFuncSpec spec) {
+        public bool Equals(ASTFunctionSpecifier spec) {
             return base.Equals(spec)
                 && spec.line == line
                 && spec.type == type;

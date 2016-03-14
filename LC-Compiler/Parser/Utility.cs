@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using static Parserc.Parserc;
 using lcc.AST;
+using lcc.Token;
 
 namespace lcc.Parser {
     public static partial class Parser {
@@ -46,5 +47,14 @@ namespace lcc.Parser {
             }));
         }
 
+        /// <summary>
+        /// identifier
+        ///     : T_IDENTIFIER
+        ///     ;
+        /// </summary>
+        /// <returns></returns>
+        public static Parserc.Parser<Token.Token, ASTIdentifier> Identifier() {
+            return Get<T_IDENTIFIER>().Select(t => new ASTIdentifier(t));
+        }
     }
 }

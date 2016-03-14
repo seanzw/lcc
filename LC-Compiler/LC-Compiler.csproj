@@ -44,9 +44,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AST\ASTNode.cs" />
-    <Compile Include="AST\Declaration\ASTDecl.cs" />
-    <Compile Include="AST\Declaration\ASTDeclEnumSpec.cs" />
-    <Compile Include="AST\Declaration\ASTDeclSpec.cs" />
+    <Compile Include="AST\Declaration\ASTDeclaration.cs" />
+    <Compile Include="AST\Declaration\ASTDeclarator.cs" />
+    <Compile Include="AST\Declaration\ASTEnumSpecifier.cs" />
+    <Compile Include="AST\Declaration\ASTDeclarationSpecifier.cs" />
+    <Compile Include="AST\Declaration\ASTStructUnionSpecifier.cs" />
     <Compile Include="AST\Declaration\ASTInitializer.cs" />
     <Compile Include="AST\Expression\ASTAssignExpr.cs" />
     <Compile Include="AST\Expression\ASTCommaExpr.cs" />
