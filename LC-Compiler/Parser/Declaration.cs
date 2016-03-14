@@ -17,7 +17,9 @@ namespace lcc.Parser {
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<Token.Token, ASTDeclaration> Declaration() {
-            return Zero<Token.Token, ASTDeclaration>();
+            return DeclarationSpecifiers()
+                .Bind(specifiers => InitDeclaratorList()
+                .Select(declarators => new ASTDeclaration(specifiers, declarators)));
         }
 
         /// <summary>
@@ -44,6 +46,28 @@ namespace lcc.Parser {
                 .Or(TypeSpecifier().Cast<Token.Token, ASTDeclarationSpecifier, ASTTypeSpecifier>())
                 .Or(TypeQualifier().Cast<Token.Token, ASTDeclarationSpecifier, ASTTypeQualifier>())
                 .Or(FunctionSpecifier().Cast<Token.Token, ASTDeclarationSpecifier, ASTFunctionSpecifier>());
+        }
+
+        /// <summary>
+        /// init-declarator-list
+        ///     : init-declarator
+        ///     | init-declarator-list , init-declarator
+        ///     ;
+        /// </summary>
+        /// <returns></returns>
+        public static Parserc.Parser<Token.Token, LinkedList<ASTDeclarator>> InitDeclaratorList() {
+            return InitDeclarator().PlusSeperatedBy(Match<T_PUNC_COMMA>());
+        }
+
+        /// <summary>
+        /// init-declarator
+        ///     : declarator
+        ///     // TODO | declarator = initializer
+        ///     ;
+        /// </summary>
+        /// <returns></returns>
+        public static Parserc.Parser<Token.Token, ASTDeclarator> InitDeclarator() {
+            return Declarator();
         }
 
         /// <summary>
@@ -135,10 +159,10 @@ namespace lcc.Parser {
                     ? new ASTStructSpecifier(line, identifier, declarations) as ASTStructUnionSpecifier
                     : new ASTUnionSpecifier(line, identifier, declarations) as ASTStructUnionSpecifier;
             return Identifier()
-                    .Bind(identifier => StructDeclarationList().Bracket(Match<T_PUNC_BRACEL>(), Match<T_PUNC_BRACER>())
+                    .Bind(identifier => StructDeclarationList().BracelLR()
                     .Select(declarations => aux(identifier, declarations))
                     .Or(Result<Token.Token, ASTStructUnionSpecifier>(aux(identifier, null))))
-                .Or(StructDeclarationList().Bracket(Match<T_PUNC_BRACEL>(), Match<T_PUNC_BRACER>())
+                .Or(StructDeclarationList().BracelLR()
                     .Select(declarations => aux(null, declarations)));
         }
 
@@ -220,9 +244,8 @@ namespace lcc.Parser {
         public static Parserc.Parser<Token.Token, ASTEnumSpecifier> EnumSpecifier() {
             return Get<T_KEY_ENUM>().Bind(e =>
                 Identifier().Bind(identifier =>
-                    EnumeratorList().Option(Match<T_PUNC_COMMA>()).Bracket(
-                        Match<T_PUNC_BRACEL>(),
-                        Match<T_PUNC_BRACER>()).Select(enumerators => new ASTEnumSpecifier(e.line, identifier, enumerators))
+                    EnumeratorList().Option(Match<T_PUNC_COMMA>()).BracelLR()
+                        .Select(enumerators => new ASTEnumSpecifier(e.line, identifier, enumerators))
                     .Or(Result<Token.Token, ASTEnumSpecifier>(new ASTEnumSpecifier(e.line, identifier, null))))
                 .Or(EnumeratorList().Option(Match<T_PUNC_COMMA>()).Bracket(
                         Match<T_PUNC_BRACEL>(),
@@ -292,19 +315,70 @@ namespace lcc.Parser {
 
         /// <summary>
         /// direct-declarator
-        ///     : identifier
-        ///     | ( declarator )
+        ///     : identifier direct-declarator-prime
+        ///     | ( declarator ) direct-declarator-prime
         ///     ;
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<Token.Token, ASTDeclarator> DirectDeclarator() {
-            return Identifier().Select(identifier => new ASTDeclaratorIdentifier(identifier) as ASTDeclarator)
-                .Or(Ref(Declarator).Bracket(Match<T_PUNC_PARENTL>(), Match<T_PUNC_PARENTR>()));
+            return Identifier().Bind(identifier => DirectDeclaratorPrime(new ASTDeclaratorIdentifier(identifier)))
+                .Else(Ref(Declarator).ParentLR().Bind(declarator => DirectDeclaratorPrime(declarator)));
+        }
+
+        /// <summary>
+        /// direct-declarator-prime
+        ///     : ( parameter-type-list ) direct-declarator-prime
+        ///     | epsilon
+        ///     ;
+        /// </summary>
+        /// <returns></returns>
+        public static Parserc.Parser<Token.Token, ASTDeclarator> DirectDeclaratorPrime(ASTDeclarator declarator) {
+            return ParameterTypeList().ParentLR()
+                    .Select(parameterType => new ASTFunctionParameter(declarator, parameterType) as ASTDeclarator)
+                .Or(Result<Token.Token, ASTDeclarator>(declarator));
         }
 
         public static Parserc.Parser<Token.Token, ASTDeclarator> Pointer() {
             return Zero<Token.Token, ASTDeclarator>();
         }
 
+        /// <summary>
+        /// parameter-type-list
+        ///     : parameter-list
+        ///     | parameter-list , ...
+        ///     ;
+        /// </summary>
+        /// <returns></returns>
+        public static Parserc.Parser<Token.Token, ASTParameterType> ParameterTypeList() {
+            return ParameterList()
+                .Bind(parameters => Match<T_PUNC_COMMA>()
+                    .Then(Match<T_PUNC_ELLIPSIS>())
+                    .Return(new ASTParameterType(parameters, true))
+                    .Or(Result<Token.Token, ASTParameterType>(new ASTParameterType(parameters, false))));
+        }
+
+        /// <summary>
+        /// parameter-list
+        ///     : parameter-declaration
+        ///     | parameter-list , parameter-declaration
+        ///     ;
+        /// </summary>
+        /// <returns></returns>
+        public static Parserc.Parser<Token.Token, LinkedList<ASTParameter>> ParameterList() {
+            return ParameterDeclaration().PlusSeperatedBy(Match<T_PUNC_COMMA>());
+        }
+
+        /// <summary>
+        /// parameter-declaration
+        ///     : declaration-specifiers declarator
+        ///     // TODO | declaration-specifiers abstract-declarator_opt
+        ///     ;
+        /// </summary>
+        /// <returns></returns>
+        public static Parserc.Parser<Token.Token, ASTParameter> ParameterDeclaration() {
+            return Ref(DeclarationSpecifiers)
+                .Bind(specifiers => Ref(Declarator)
+                .Select(declarator => new ASTParameterDeclarator(specifiers, declarator) as ASTParameter));
+        }
     }
 }

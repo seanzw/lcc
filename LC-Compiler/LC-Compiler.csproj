@@ -48,6 +48,8 @@
     <Compile Include="AST\Declaration\ASTDeclarator.cs" />
     <Compile Include="AST\Declaration\ASTEnumSpecifier.cs" />
     <Compile Include="AST\Declaration\ASTDeclarationSpecifier.cs" />
+    <Compile Include="AST\Declaration\ASTFunctionDeclarator.cs" />
+    <Compile Include="AST\Declaration\ASTParameterType.cs" />
     <Compile Include="AST\Declaration\ASTStructUnionSpecifier.cs" />
     <Compile Include="AST\Declaration\ASTInitializer.cs" />
     <Compile Include="AST\Expression\ASTAssignExpr.cs" />

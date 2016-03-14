@@ -22,7 +22,6 @@ namespace lcc.AST {
 
     public sealed class ASTDeclaratorIdentifier : ASTDeclarator {
 
-
         public ASTDeclaratorIdentifier(ASTIdentifier identifier) {
             this.identifier = identifier;
         }

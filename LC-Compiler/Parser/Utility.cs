@@ -48,6 +48,26 @@ namespace lcc.Parser {
         }
 
         /// <summary>
+        /// Match ( parser ).
+        /// </summary>
+        /// <typeparam name="V"></typeparam>
+        /// <param name="parser"></param>
+        /// <returns></returns>
+        public static Parserc.Parser<Token.Token, V> ParentLR<V>(this Parserc.Parser<Token.Token, V> parser) {
+            return parser.Bracket(Match<T_PUNC_PARENTL>(), Match<T_PUNC_PARENTR>());
+        }
+
+        /// <summary>
+        /// Match { parser }.
+        /// </summary>
+        /// <typeparam name="V"></typeparam>
+        /// <param name="parser"></param>
+        /// <returns></returns>
+        public static Parserc.Parser<Token.Token, V> BracelLR<V>(this Parserc.Parser<Token.Token, V> parser) {
+            return parser.Bracket(Match<T_PUNC_BRACEL>(), Match<T_PUNC_BRACER>());
+        }
+
+        /// <summary>
         /// identifier
         ///     : T_IDENTIFIER
         ///     ;

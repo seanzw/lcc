@@ -273,6 +273,29 @@ enum {
                     "( X )",
                     new ASTDeclaratorIdentifier(new ASTIdentifier(new T_IDENTIFIER(1, "X")))
                 },
+                {
+                    @"
+foo(int a, int b, double c, ...)
+",
+                    new ASTFunctionParameter(
+                        new ASTDeclaratorIdentifier(new ASTIdentifier(new T_IDENTIFIER(2, "foo"))),
+                        new ASTParameterType(
+                            new LinkedList<ASTParameter>(new List<ASTParameter> {
+                                new ASTParameterDeclarator(
+                                    new LinkedList<ASTDeclarationSpecifier>(new List<ASTDeclarationSpecifier> {
+                                        new ASTTypeKeySpecifier(2, ASTTypeKeySpecifier.Type.INT)}),
+                                    new ASTDeclaratorIdentifier(new ASTIdentifier(new T_IDENTIFIER(2, "a")))),
+                                new ASTParameterDeclarator(
+                                    new LinkedList<ASTDeclarationSpecifier>(new List<ASTDeclarationSpecifier> {
+                                        new ASTTypeKeySpecifier(2, ASTTypeKeySpecifier.Type.INT)}),
+                                    new ASTDeclaratorIdentifier(new ASTIdentifier(new T_IDENTIFIER(2, "b")))),
+                                new ASTParameterDeclarator(
+                                    new LinkedList<ASTDeclarationSpecifier>(new List<ASTDeclarationSpecifier> {
+                                        new ASTTypeKeySpecifier(2, ASTTypeKeySpecifier.Type.DOUBLE)}),
+                                    new ASTDeclaratorIdentifier(new ASTIdentifier(new T_IDENTIFIER(2, "c")))),
+                            }),
+                            true))
+                }
             };
 
             foreach (var test in dict) {
@@ -433,6 +456,76 @@ struct ss {
 
             foreach (var test in dict) {
                 Aux(test.Key, Parser.StructUnionSpecifier().End(), test.Value);
+            }
+        }
+
+        [TestMethod]
+        public void LCCParserParameterTypeList() {
+            var dict = new Dictionary<string, ASTParameterType> {
+                {
+                    @"
+int a, int b, double c, ...
+",
+                    new ASTParameterType(
+                        new LinkedList<ASTParameter>(new List<ASTParameter> {
+                            new ASTParameterDeclarator(
+                                new LinkedList<ASTDeclarationSpecifier>(new List<ASTDeclarationSpecifier> {
+                                    new ASTTypeKeySpecifier(2, ASTTypeKeySpecifier.Type.INT)}),
+                                new ASTDeclaratorIdentifier(new ASTIdentifier(new T_IDENTIFIER(2, "a")))),
+                            new ASTParameterDeclarator(
+                                new LinkedList<ASTDeclarationSpecifier>(new List<ASTDeclarationSpecifier> {
+                                    new ASTTypeKeySpecifier(2, ASTTypeKeySpecifier.Type.INT)}),
+                                new ASTDeclaratorIdentifier(new ASTIdentifier(new T_IDENTIFIER(2, "b")))),
+                            new ASTParameterDeclarator(
+                                new LinkedList<ASTDeclarationSpecifier>(new List<ASTDeclarationSpecifier> {
+                                    new ASTTypeKeySpecifier(2, ASTTypeKeySpecifier.Type.DOUBLE)}),
+                                new ASTDeclaratorIdentifier(new ASTIdentifier(new T_IDENTIFIER(2, "c")))),
+                        }),
+                        true)
+                },
+            };
+
+            foreach (var test in dict) {
+                Aux(test.Key, Parser.ParameterTypeList().End(), test.Value);
+            }
+        }
+
+        [TestMethod]
+        public void LCCParserDeclaration() {
+            var dict = new Dictionary<string, ASTDeclaration> {
+                {
+                    @"
+int foo(int a, int b, double c, ...)
+",
+                    new ASTDeclaration(
+                        new LinkedList<ASTDeclarationSpecifier>(new List<ASTDeclarationSpecifier> {
+                            new ASTTypeKeySpecifier(2, ASTTypeKeySpecifier.Type.INT)
+                        }),
+                        new LinkedList<ASTDeclarator>(new List<ASTDeclarator> {
+                            new ASTFunctionParameter(
+                                new ASTDeclaratorIdentifier(new ASTIdentifier(new T_IDENTIFIER(2, "foo"))),
+                                new ASTParameterType(
+                                    new LinkedList<ASTParameter>(new List<ASTParameter> {
+                                        new ASTParameterDeclarator(
+                                            new LinkedList<ASTDeclarationSpecifier>(new List<ASTDeclarationSpecifier> {
+                                                new ASTTypeKeySpecifier(2, ASTTypeKeySpecifier.Type.INT)}),
+                                            new ASTDeclaratorIdentifier(new ASTIdentifier(new T_IDENTIFIER(2, "a")))),
+                                        new ASTParameterDeclarator(
+                                            new LinkedList<ASTDeclarationSpecifier>(new List<ASTDeclarationSpecifier> {
+                                                new ASTTypeKeySpecifier(2, ASTTypeKeySpecifier.Type.INT)}),
+                                            new ASTDeclaratorIdentifier(new ASTIdentifier(new T_IDENTIFIER(2, "b")))),
+                                        new ASTParameterDeclarator(
+                                            new LinkedList<ASTDeclarationSpecifier>(new List<ASTDeclarationSpecifier> {
+                                                new ASTTypeKeySpecifier(2, ASTTypeKeySpecifier.Type.DOUBLE)}),
+                                            new ASTDeclaratorIdentifier(new ASTIdentifier(new T_IDENTIFIER(2, "c")))),
+                                    }),
+                                    true))
+                        }))
+                }
+            };
+
+            foreach (var test in dict) {
+                Aux(test.Key, Parser.Declaration().End(), test.Value);
             }
         }
     }
