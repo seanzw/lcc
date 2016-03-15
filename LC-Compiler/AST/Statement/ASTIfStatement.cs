@@ -32,8 +32,8 @@ namespace lcc.AST {
         public bool Equals(ASTIfStatement x) {
             return x == null ? false : base.Equals(x)
                 && x.line == line
-                && x.expr == null ? expr == null : x.expr.Equals(expr)
-                && x.then == null ? then == null : x.then.Equals(then)
+                && x.expr.Equals(expr)
+                && x.then.Equals(then)
                 && x.other == null ? other == null : x.other.Equals(other);
         }
 

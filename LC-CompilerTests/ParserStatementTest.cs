@@ -261,5 +261,31 @@ for (;1;) ;",
                 Aux(test.Key, Parser.ForStatement(), test.Value);
             }
         }
+
+        [TestMethod]
+        public void LCCParserJumpStatement() {
+            var tests = new Dictionary<string, ASTStatement> {
+                {
+                    "continue;",
+                    new ASTContinueStatement(1)
+                },
+                {
+                    "break;",
+                    new ASTBreakStatement(1)
+                },
+                {
+                    "goto foo;",
+                    new ASTGotoStatement(1, new ASTIdentifier(new T_IDENTIFIER(1, "foo")))
+                },
+                {
+                    "return 0;",
+                    new ASTReturnStatement(1, new ASTConstInt(new T_CONST_INT(1, "0", 8)))
+                }
+            };
+
+            foreach (var test in tests) {
+                Aux(test.Key, Parser.JumpStatement(), test.Value);
+            }
+        }
     }
 }

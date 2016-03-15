@@ -23,6 +23,7 @@ namespace lcc.Parser {
         ///     | while-statement
         ///     | do-statement
         ///     | for-statement
+        ///     | jump-statement
         ///     ;
         /// </summary>
         /// <returns></returns>
@@ -37,6 +38,7 @@ namespace lcc.Parser {
                 .Or(WhileStatement().Cast<Token.Token, ASTStatement, ASTWhileStatement>())
                 .Or(DoStatement().Cast<Token.Token, ASTStatement, ASTDoStatement>())
                 .Or(ForStatement().Cast<Token.Token, ASTStatement, ASTForStatement>())
+                .Or(JumpStatement())
                 ;
         }
 
@@ -188,6 +190,32 @@ namespace lcc.Parser {
                 .Bind(iter => Match<T_PUNC_PARENTR>()
                 .Then(Ref(Statement))
                 .Select(statement => new ASTForStatement(t.line, init, pred, iter, statement))))));
+        }
+
+        /// <summary>
+        /// jump-statement
+        ///     : goto identifier ;
+        ///     | continue ;
+        ///     | break ;
+        ///     | return expression_opt
+        ///     ;
+        /// </summary>
+        /// <returns></returns>
+        public static Parserc.Parser<Token.Token, ASTStatement> JumpStatement() {
+            return Get<T_KEY_GOTO>()
+                    .Bind(t => Identifier()
+                    .Bind(label => Match<T_PUNC_SEMICOLON>()
+                    .Return(new ASTGotoStatement(t.line, label) as ASTStatement)))
+                .Else(Get<T_KEY_CONTINUE>()
+                    .Bind(t => Match<T_PUNC_SEMICOLON>()
+                    .Return(new ASTContinueStatement(t.line) as ASTStatement)))
+                .Else(Get<T_KEY_BREAK>()
+                    .Bind(t => Match<T_PUNC_SEMICOLON>()
+                    .Return(new ASTBreakStatement(t.line) as ASTStatement)))
+                .Else(Get<T_KEY_RETURN>()
+                    .Bind(t => Expression().ElseNull()
+                    .Bind(expr => Match<T_PUNC_SEMICOLON>()
+                    .Return(new ASTReturnStatement(t.line, expr) as ASTStatement))));
         }
 
     }

@@ -59,6 +59,7 @@
     <Compile Include="AST\Expression\ASTPostfixExpr.cs" />
     <Compile Include="AST\Expression\ASTPrimExpr.cs" />
     <Compile Include="AST\Expression\ASTUnaryExpr.cs" />
+    <Compile Include="AST\Statement\ASTJumpStatement.cs" />
     <Compile Include="AST\Statement\ASTDoStatement.cs" />
     <Compile Include="AST\Statement\ASTForStatement.cs" />
     <Compile Include="AST\Statement\ASTIfStatement.cs" />
