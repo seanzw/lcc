@@ -495,7 +495,7 @@ int a, int b, double c, ...
             var dict = new Dictionary<string, ASTDeclaration> {
                 {
                     @"
-int foo(int a, int b, double c, ...)
+int foo(int a, int b, double c, ...);
 ",
                     new ASTDeclaration(
                         new LinkedList<ASTDeclarationSpecifier>(new List<ASTDeclarationSpecifier> {

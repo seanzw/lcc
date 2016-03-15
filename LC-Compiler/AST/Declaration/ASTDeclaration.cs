@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    public sealed class ASTDeclaration : ASTNode {
+    public sealed class ASTDeclaration : ASTStatement {
 
         public ASTDeclaration(
             LinkedList<ASTDeclarationSpecifier> specifiers,

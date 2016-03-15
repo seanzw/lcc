@@ -12,14 +12,15 @@ namespace lcc.Parser {
 
         /// <summary>
         /// declaration
-        ///     : declaration-specifiers init-declarator-list_opt
+        ///     : declaration-specifiers init-declarator-list_opt ;
         ///     ;
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<Token.Token, ASTDeclaration> Declaration() {
             return DeclarationSpecifiers()
                 .Bind(specifiers => InitDeclaratorList()
-                .Select(declarators => new ASTDeclaration(specifiers, declarators)));
+                .Bind(declarators => Match<T_PUNC_SEMICOLON>()
+                .Return(new ASTDeclaration(specifiers, declarators))));
         }
 
         /// <summary>

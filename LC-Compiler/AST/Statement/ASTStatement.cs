@@ -5,17 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-
-    /// <summary>
-    /// The base class for all expression.
-    /// </summary>
-    public abstract class ASTExpr : ASTStatement {
+    public abstract class ASTStatement : ASTNode {
 
         public override bool Equals(object obj) {
-            return obj is ASTExpr;
+            return obj is ASTStatement;
         }
 
-        public bool Equals(ASTExpr expr) {
+        public bool Equals(ASTStatement expr) {
             return true;
         }
 

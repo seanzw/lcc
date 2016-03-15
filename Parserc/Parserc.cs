@@ -65,6 +65,7 @@ namespace Parserc {
 
         /// <summary>
         /// Take one parser as an option.
+        /// Return the result from the original parser.
         /// </summary>
         /// <typeparam name="I"></typeparam>
         /// <typeparam name="V1"></typeparam>
@@ -76,6 +77,25 @@ namespace Parserc {
             return parser.Or(parser.Bind(v => option.Return(v)));
         }
 
+        /// <summary>
+        /// Apply the parser, returns null if the parser failed.
+        /// </summary>
+        /// <typeparam name="I"></typeparam>
+        /// <typeparam name="V"></typeparam>
+        /// <param name="parser"></param>
+        /// <returns></returns>
+        public static Parser<I, V> ElseNull<I, V>(this Parser<I, V> parser)
+            where V : class {
+            return parser.Else(Result<I, V>(null));
+        }
+
+        /// <summary>
+        /// Match the end of the token stream.
+        /// </summary>
+        /// <typeparam name="I"></typeparam>
+        /// <typeparam name="V"></typeparam>
+        /// <param name="parser"></param>
+        /// <returns></returns>
         public static Parser<I, V> End<I, V>(this Parser<I, V> parser) {
             return parser.Bind(x => End<I, V>(x));
         }
