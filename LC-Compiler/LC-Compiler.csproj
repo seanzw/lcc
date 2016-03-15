@@ -61,6 +61,8 @@
     <Compile Include="AST\Expression\ASTUnaryExpr.cs" />
     <Compile Include="AST\Statement\ASTDoStatement.cs" />
     <Compile Include="AST\Statement\ASTForStatement.cs" />
+    <Compile Include="AST\Statement\ASTIfStatement.cs" />
+    <Compile Include="AST\Statement\ASTSwitchStatement.cs" />
     <Compile Include="AST\Statement\ASTVoidStatement.cs" />
     <Compile Include="AST\Statement\ASTCompoundStatement.cs" />
     <Compile Include="AST\Statement\ASTLabeledStatement.cs" />

@@ -53,6 +53,7 @@
     <Compile Include="LexerTest.cs" />
     <Compile Include="ParserDeclarationTest.cs" />
     <Compile Include="ParserExpressionTest.cs" />
+    <Compile Include="ParserStatementTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

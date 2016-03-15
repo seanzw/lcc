@@ -18,6 +18,8 @@ namespace lcc.Parser {
         ///     | default-statment
         ///     | compound-statement
         ///     | expression-statement
+        ///     | if-statement
+        ///     | switch-statement
         ///     | while-statement
         ///     | do-statement
         ///     | for-statement
@@ -29,6 +31,12 @@ namespace lcc.Parser {
                 .Or(CaseStatement().Cast<Token.Token, ASTStatement, ASTCaseStatement>())
                 .Or(DefaultStatement().Cast<Token.Token, ASTStatement, ASTDefaultStatement>())
                 .Or(CompoundStatement().Cast<Token.Token, ASTStatement, ASTCompoundStatement>())
+                .Or(ExpressionStatement())
+                .Or(IfStatement().Cast<Token.Token, ASTStatement, ASTIfStatement>())
+                .Or(SwitchStatement().Cast<Token.Token, ASTStatement, ASTSwitchStatement>())
+                .Or(WhileStatement().Cast<Token.Token, ASTStatement, ASTWhileStatement>())
+                .Or(DoStatement().Cast<Token.Token, ASTStatement, ASTDoStatement>())
+                .Or(ForStatement().Cast<Token.Token, ASTStatement, ASTForStatement>())
                 ;
         }
 
@@ -109,6 +117,35 @@ namespace lcc.Parser {
         }
 
         /// <summary>
+        /// if-statement
+        ///     : if ( expression ) statement
+        ///     | if ( expression ) statement else statement
+        ///     ;
+        /// </summary>
+        /// <returns></returns>
+        public static Parserc.Parser<Token.Token, ASTIfStatement> IfStatement() {
+            return Get<T_KEY_IF>()
+                .Bind(t => Expression().ParentLR()
+                .Bind(expr => Ref(Statement)
+                .Bind(then => Match<T_KEY_ELSE>()
+                .Then(Ref(Statement)).ElseNull()
+                .Select(other => new ASTIfStatement(t.line, expr, then, other)))));
+        }
+
+        /// <summary>
+        /// switch-statement
+        ///     : switch ( expression ) statement
+        ///     ;
+        /// </summary>
+        /// <returns></returns>
+        public static Parserc.Parser<Token.Token, ASTSwitchStatement> SwitchStatement() {
+            return Get<T_KEY_SWITCH>()
+                .Bind(t => Expression().ParentLR()
+                .Bind(expr => Ref(Statement)
+                .Select(statement => new ASTSwitchStatement(t.line, expr, statement))));
+        }
+
+        /// <summary>
         /// while-statement
         ///     : while ( expression ) statement
         ///     ;
@@ -152,5 +189,6 @@ namespace lcc.Parser {
                 .Then(Ref(Statement))
                 .Select(statement => new ASTForStatement(t.line, init, pred, iter, statement))))));
         }
+
     }
 }

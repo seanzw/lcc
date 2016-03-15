@@ -27,7 +27,7 @@ namespace LC_CompilerTests {
             R truth
             ) {
             var tokens = new ReadOnlyCollection<Token>(Lexer.Instance.Scan(src));
-            var stream = new Parserc.TokenStream<Token>(tokens);
+            var stream = new TokenStream<Token>(tokens);
             var result = parser(stream);
 
             // Check the first result.
@@ -50,7 +50,7 @@ namespace LC_CompilerTests {
             LinkedList<R> truth
             ) {
             var tokens = new ReadOnlyCollection<Token>(Lexer.Instance.Scan(src));
-            var stream = new Parserc.TokenStream<Token>(tokens);
+            var stream = new TokenStream<Token>(tokens);
             var result = parser(stream);
 
             // Check the first result.
