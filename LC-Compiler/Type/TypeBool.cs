@@ -5,32 +5,31 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.Type {
-    public sealed class TypeVoid : TypeBuiltIn {
+    public sealed class TypeBool : TypeBuiltIn {
 
-        private static readonly TypeVoid Const = new TypeVoid(true);
-        private static readonly TypeVoid Var = new TypeVoid(false);
+        private static readonly TypeBool Const = new TypeBool(true);
+        private static readonly TypeBool Var = new TypeBool(false);
 
-        public static TypeVoid Constant {
+        public static TypeBool Constant {
             get {
                 return Const;
             }
         }
 
-        public static TypeVoid Variable {
+        public static TypeBool Variable {
             get {
                 return Var;
             }
         }
 
-        private TypeVoid(bool isConstant)
-            : base(isConstant, 1) { }
+        private TypeBool(bool isConstant) : base(isConstant, 1) { }
 
         public override Type Composite(Type other) {
             throw new NotImplementedException();
         }
 
         public override string ToString() {
-            return base.ToString() + "void ";
+            return base.ToString() + "_Bool ";
         }
     }
 }

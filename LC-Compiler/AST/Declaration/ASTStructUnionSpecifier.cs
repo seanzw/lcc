@@ -78,8 +78,9 @@ namespace lcc.AST {
         public ASTStructUnionSpecifier(
             int line,
             ASTIdentifier identifier,
-            LinkedList<ASTStructDeclaration> declarations
-            ) {
+            LinkedList<ASTStructDeclaration> declarations,
+            Type type
+            ) : base(type) {
             this.line = line;
             this.identifier = identifier;
             this.declarations = declarations;
@@ -117,7 +118,7 @@ namespace lcc.AST {
             int line,
             ASTIdentifier identifier,
             LinkedList<ASTStructDeclaration> declarations = null
-            ) : base(line, identifier, declarations) { }
+            ) : base(line, identifier, declarations, Type.STRUCT) { }
 
     }
 
@@ -127,7 +128,7 @@ namespace lcc.AST {
             int line,
             ASTIdentifier identifier,
             LinkedList<ASTStructDeclaration> declarations = null
-            ) : base(line, identifier, declarations) { }
+            ) : base(line, identifier, declarations, Type.UNION) { }
 
     }
 }

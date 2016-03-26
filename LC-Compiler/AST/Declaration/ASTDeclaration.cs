@@ -38,5 +38,31 @@ namespace lcc.AST {
 
         public readonly LinkedList<ASTDeclarationSpecifier> specifiers;
         public readonly LinkedList<ASTDeclarator> declarators;
+
+        public Type.Type TypeCheck() {
+
+            // Process the specifier list.
+            var typeSpecifiers = 
+                from s in specifiers
+                where s is ASTTypeSpecifier
+                select s as ASTTypeSpecifier;
+
+            var storageSpecifiers =
+                from s in specifiers
+                where s is ASTStorageSpecifier
+                select s as ASTStorageSpecifier;
+
+            var typeQualifiers =
+                from s in specifiers
+                where s is ASTTypeQualifier
+                select s as ASTTypeQualifier;
+
+            var funcSpecifiers =
+                from s in specifiers
+                where s is ASTFunctionSpecifier
+                select s as ASTFunctionSpecifier;
+
+            return new Type.TypeError("Unimplemented");
+        }
     }
 }

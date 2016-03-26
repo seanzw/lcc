@@ -87,12 +87,16 @@
     <Compile Include="Token\StringLiteral.cs" />
     <Compile Include="Token\Token.cs" />
     <Compile Include="Type\Type.cs" />
+    <Compile Include="Type\TypeBool.cs" />
     <Compile Include="Type\TypeChar.cs" />
+    <Compile Include="Type\TypeError.cs" />
+    <Compile Include="Type\TypeFloat.cs" />
     <Compile Include="Type\TypeInt.cs" />
     <Compile Include="Type\TypeLong.cs" />
     <Compile Include="Type\TypeLongLong.cs" />
     <Compile Include="Type\TypeShort.cs" />
     <Compile Include="Type\TypeVoid.cs" />
+    <Compile Include="Type\Utility.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

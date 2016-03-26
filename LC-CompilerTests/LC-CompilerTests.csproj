@@ -57,7 +57,9 @@
     <Compile Include="ParserExpressionTest.cs" />
     <Compile Include="ParserStatementTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TypeSpecifierTest.cs" />
     <Compile Include="TypeToStringTest.cs" />
+    <Compile Include="Utility.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LC-Compiler\LC-Compiler.csproj">

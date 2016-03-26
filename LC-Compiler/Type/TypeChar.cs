@@ -10,7 +10,23 @@ namespace lcc.Type {
     /// Built-in type char.
     /// </summary>
     public sealed class TypeChar : TypeBuiltIn {
-        public TypeChar(bool isConstant)
+
+        private static readonly TypeChar Var = new TypeChar(false);
+        private static readonly TypeChar Const = new TypeChar(true);
+
+        public static TypeChar Variable {
+            get {
+                return Var;
+            }
+        }
+
+        public static TypeChar Constant {
+            get {
+                return Const;
+            }
+        }
+
+        private TypeChar(bool isConstant)
             : base(isConstant, 1) {
         }
 
@@ -30,7 +46,22 @@ namespace lcc.Type {
 
     public sealed class TypeUnsignedChar : TypeBuiltIn {
 
-        public TypeUnsignedChar(bool isConstant)
+        private static readonly TypeUnsignedChar Var = new TypeUnsignedChar(false);
+        private static readonly TypeUnsignedChar Const = new TypeUnsignedChar(true);
+
+        public static TypeUnsignedChar Variable {
+            get {
+                return Var;
+            }
+        }
+
+        public static TypeUnsignedChar Constant {
+            get {
+                return Const;
+            }
+        }
+
+        private TypeUnsignedChar(bool isConstant)
             : base(isConstant, 1) {
         }
 
@@ -45,7 +76,22 @@ namespace lcc.Type {
 
     public sealed class TypeSignedChar : TypeBuiltIn {
 
-        public TypeSignedChar(bool isConstant)
+        private static readonly TypeSignedChar Var = new TypeSignedChar(false);
+        private static readonly TypeSignedChar Const = new TypeSignedChar(true);
+
+        public static TypeSignedChar Variable {
+            get {
+                return Var;
+            }
+        }
+
+        public static TypeSignedChar Constant {
+            get {
+                return Const;
+            }
+        }
+
+        private TypeSignedChar(bool isConstant)
             : base(isConstant, 1) {
         }
 

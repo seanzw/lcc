@@ -42,7 +42,8 @@ namespace lcc.AST {
 
     public sealed class ASTEnumSpecifier : ASTTypeSpecifier {
 
-        public ASTEnumSpecifier(int line, ASTIdentifier identifier, LinkedList<ASTEnumerator> enumerators) {
+        public ASTEnumSpecifier(int line, ASTIdentifier identifier, LinkedList<ASTEnumerator> enumerators)
+            : base(Type.ENUM) {
             this.line = line;
             this.identifier = identifier;
             this.enumerators = enumerators;

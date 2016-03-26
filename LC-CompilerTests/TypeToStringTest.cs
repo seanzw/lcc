@@ -11,53 +11,65 @@ namespace LC_CompilerTests {
 
             var tests = new Dictionary<Type, string> {
                 {
-                    new TypeChar(false),
+                    TypeChar.Variable,
                     "char "
                 },
                 {
-                    new TypeSignedChar(true),
+                    TypeSignedChar.Constant,
                     "const signed char "
                 },
                 {
-                    new TypeUnsignedChar(false),
+                    TypeUnsignedChar.Variable,
                     "unsigned char "
                 },
                 {
-                    new TypeVoid(false),
+                    TypeVoid.Variable,
                     "void "
                 },
                 {
-                    new TypeShort(false),
+                    TypeShort.Variable,
                     "short "
                 },
                 {
-                    new TypeUnsignedShort(true),
+                    TypeUnsignedShort.Constant,
                     "const unsigned short "
                 },
                 {
-                    new TypeInt(true),
+                    TypeInt.Constant,
                     "const int "
                 },
                 {
-                    new TypeUnsignedInt(false),
+                    TypeUnsignedInt.Variable,
                     "unsigned int "
                 },
                 {
-                    new TypeLong(true),
+                    TypeLong.Constant,
                     "const long "
                 },
                 {
-                    new TypeUnsignedLong(false),
+                    TypeUnsignedLong.Variable,
                     "unsigned long "
                 },
                 {
-                    new TypeLongLong(true),
+                    TypeLongLong.Constant,
                     "const long long "
                 },
                 {
-                    new TypeUnsignedLongLong(false),
+                    TypeUnsignedLongLong.Variable,
                     "unsigned long long "
                 },
+                {
+                    TypeFloat.Variable,
+                    "float "
+                },
+                {
+                    TypeDouble.Constant,
+                    "const double "
+                },
+                {
+                    TypeBool.Constant,
+                    "const _Bool "
+                }
             };
 
             foreach (var test in tests) {

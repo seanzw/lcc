@@ -81,6 +81,27 @@ namespace lcc.AST {
     }
 
     public abstract class ASTTypeSpecifier : ASTTypeSpecifierQualifier {
+
+        public enum Type {
+            VOID,
+            CHAR,
+            SHORT,
+            INT,
+            LONG,
+            FLOAT,
+            DOUBLE,
+            SIGNED,
+            UNSIGNED,
+            BOOL,
+            STRUCT,
+            UNION,
+            ENUM
+        }
+
+        public ASTTypeSpecifier(Type type) {
+            this.type = type;
+        }
+
         public abstract override int GetLine();
 
         public override bool Equals(object obj) {
@@ -94,25 +115,14 @@ namespace lcc.AST {
         public override int GetHashCode() {
             return GetLine();
         }
+
+        public readonly Type type;
     }
 
     public sealed class ASTTypeKeySpecifier : ASTTypeSpecifier {
 
-        public enum Type {
-            VOID,
-            CHAR,
-            SHORT,
-            INT,
-            LONG,
-            FLOAT,
-            DOUBLE,
-            SIGNED,
-            UNSIGNED
-        }
-
-        public ASTTypeKeySpecifier(int line, Type type) {
+        public ASTTypeKeySpecifier(int line, Type type) : base(type) {
             this.line = line;
-            this.type = type;
         }
 
         public override int GetLine() {
@@ -136,7 +146,6 @@ namespace lcc.AST {
             return line;
         }
 
-        public readonly Type type;
         public readonly int line;
     }
 

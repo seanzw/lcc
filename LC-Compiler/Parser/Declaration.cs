@@ -115,21 +115,22 @@ namespace lcc.Parser {
         ///     | double
         ///     | signed
         ///     | unsigned
-        ///     // TODO | _Bool
+        ///     | _Bool
         ///     // TODO | _Complex
         ///     ;
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<Token.Token, ASTTypeKeySpecifier> TypeKeySpecifier() {
-            return Get<T_KEY_VOID>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeKeySpecifier.Type.VOID))
-                .Else(Get<T_KEY_CHAR>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeKeySpecifier.Type.CHAR)))
-                .Else(Get<T_KEY_SHORT>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeKeySpecifier.Type.SHORT)))
-                .Else(Get<T_KEY_INT>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeKeySpecifier.Type.INT)))
-                .Else(Get<T_KEY_LONG>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeKeySpecifier.Type.LONG)))
-                .Else(Get<T_KEY_FLOAT>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeKeySpecifier.Type.FLOAT)))
-                .Else(Get<T_KEY_DOUBLE>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeKeySpecifier.Type.DOUBLE)))
-                .Else(Get<T_KEY_SIGNED>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeKeySpecifier.Type.SIGNED)))
-                .Else(Get<T_KEY_UNSIGNED>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeKeySpecifier.Type.UNSIGNED)));
+            return Get<T_KEY_VOID>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpecifier.Type.VOID))
+                .Else(Get<T_KEY_CHAR>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpecifier.Type.CHAR)))
+                .Else(Get<T_KEY_SHORT>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpecifier.Type.SHORT)))
+                .Else(Get<T_KEY_INT>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpecifier.Type.INT)))
+                .Else(Get<T_KEY_LONG>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpecifier.Type.LONG)))
+                .Else(Get<T_KEY_FLOAT>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpecifier.Type.FLOAT)))
+                .Else(Get<T_KEY_DOUBLE>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpecifier.Type.DOUBLE)))
+                .Else(Get<T_KEY_SIGNED>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpecifier.Type.SIGNED)))
+                .Else(Get<T_KEY_UNSIGNED>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpecifier.Type.UNSIGNED)))
+                .Else(Get<T_KEY__BOOL>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpecifier.Type.BOOL)));
         }
 
         /// <summary>

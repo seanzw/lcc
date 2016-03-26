@@ -7,7 +7,22 @@ using System.Threading.Tasks;
 namespace lcc.Type {
     public sealed class TypeShort : TypeBuiltIn {
 
-        public TypeShort(bool isConstant) : base(isConstant, 2) { }
+        private static readonly TypeShort Const = new TypeShort(true);
+        private static readonly TypeShort Var = new TypeShort(false);
+
+        public static TypeShort Constant {
+            get {
+                return Const;
+            }
+        }
+
+        public static TypeShort Variable {
+            get {
+                return Var;
+            }
+        }
+
+        private TypeShort(bool isConstant) : base(isConstant, 2) { }
 
         public override Type Composite(Type other) {
             throw new NotImplementedException();
@@ -20,7 +35,22 @@ namespace lcc.Type {
 
     public sealed class TypeUnsignedShort : TypeBuiltIn {
 
-        public TypeUnsignedShort(bool isConstant) : base(isConstant, 2) { }
+        private static readonly TypeUnsignedShort Const = new TypeUnsignedShort(true);
+        private static readonly TypeUnsignedShort Var = new TypeUnsignedShort(false);
+
+        public static TypeUnsignedShort Constant {
+            get {
+                return Const;
+            }
+        }
+
+        public static TypeUnsignedShort Variable {
+            get {
+                return Var;
+            }
+        }
+
+        private TypeUnsignedShort(bool isConstant) : base(isConstant, 2) { }
 
         public override Type Composite(Type other) {
             throw new NotImplementedException();

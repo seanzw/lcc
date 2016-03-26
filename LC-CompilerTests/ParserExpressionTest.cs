@@ -26,9 +26,7 @@ namespace LC_CompilerTests {
             Parser<Token, R> parser,
             R truth
             ) {
-            var tokens = new ReadOnlyCollection<Token>(Lexer.Instance.Scan(src));
-            var stream = new TokenStream<Token>(tokens);
-            var result = parser(stream);
+            var result = Utility.parse(src, parser);
 
             // Check the first result.
             Assert.AreEqual(1, result.Count);
