@@ -5,13 +5,17 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.Type {
-    public sealed class TypeError : Type {
+    public sealed class TypeError : UnqualifiedType {
 
-        public TypeError(string msg) : base(true, true, 0) {
+        public TypeError(string msg) {
             this.msg = msg;
         }
 
-        public override Type Composite(Type other) {
+        public override UnqualifiedType Composite(UnqualifiedType other) {
+            throw new NotImplementedException();
+        }
+
+        public override bool isCompleted() {
             throw new NotImplementedException();
         }
 

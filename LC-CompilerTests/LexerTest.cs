@@ -246,6 +246,13 @@ int main(int argc, char* argv[]) {
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentException), "Unmatched quote.")]
+        public void LCCLexerIllegalEscaped() {
+            string src = "'\\'";
+            var tokens = Lexer.Instance.Scan(src);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException), "Unmatched quote.")]
         public void LCCLexerIllegal2() {
             string src = "'a";
             var tokens = Lexer.Instance.Scan(src);

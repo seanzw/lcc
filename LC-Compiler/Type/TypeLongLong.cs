@@ -5,59 +5,43 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.Type {
-    public sealed class TypeLongLong : TypeBuiltIn {
+    public sealed class TypeLongLong : ArithmeticType {
 
-        private static readonly TypeLongLong Const = new TypeLongLong(true);
-        private static readonly TypeLongLong Var = new TypeLongLong(false);
+        private static readonly TypeLongLong instance = new TypeLongLong();
 
-        public static TypeLongLong Constant {
+        public static TypeLongLong Instance {
             get {
-                return Const;
+                return instance;
             }
         }
+        private TypeLongLong() : base(8) { }
 
-        public static TypeLongLong Variable {
-            get {
-                return Var;
-            }
-        }
-
-        private TypeLongLong(bool isConstant) : base(isConstant, 8) { }
-
-        public override Type Composite(Type other) {
+        public override UnqualifiedType Composite(UnqualifiedType other) {
             throw new NotImplementedException();
         }
 
         public override string ToString() {
-            return base.ToString() + "long long ";
+            return "long long ";
         }
     }
 
-    public sealed class TypeUnsignedLongLong : TypeBuiltIn {
+    public sealed class TypeUnsignedLongLong : ArithmeticType {
 
-        private static readonly TypeUnsignedLongLong Const = new TypeUnsignedLongLong(true);
-        private static readonly TypeUnsignedLongLong Var = new TypeUnsignedLongLong(false);
+        private static readonly TypeUnsignedLongLong instance = new TypeUnsignedLongLong();
 
-        public static TypeUnsignedLongLong Constant {
+        public static TypeUnsignedLongLong Instance {
             get {
-                return Const;
+                return instance;
             }
         }
+        private TypeUnsignedLongLong() : base(4) { }
 
-        public static TypeUnsignedLongLong Variable {
-            get {
-                return Var;
-            }
-        }
-
-        private TypeUnsignedLongLong(bool isConstant) : base(isConstant, 4) { }
-
-        public override Type Composite(Type other) {
+        public override UnqualifiedType Composite(UnqualifiedType other) {
             throw new NotImplementedException();
         }
 
         public override string ToString() {
-            return base.ToString() + "unsigned long long ";
+            return "unsigned long long ";
         }
     }
 }

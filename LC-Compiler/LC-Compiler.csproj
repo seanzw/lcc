@@ -35,6 +35,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -43,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AST\ASTException.cs" />
     <Compile Include="AST\ASTNode.cs" />
     <Compile Include="AST\Declaration\ASTDeclaration.cs" />
     <Compile Include="AST\Declaration\ASTDeclarator.cs" />
@@ -89,6 +91,8 @@
     <Compile Include="Type\Type.cs" />
     <Compile Include="Type\TypeBool.cs" />
     <Compile Include="Type\TypeChar.cs" />
+    <Compile Include="AST\ASTEnv.cs" />
+    <Compile Include="Type\TypeEnum.cs" />
     <Compile Include="Type\TypeError.cs" />
     <Compile Include="Type\TypeFloat.cs" />
     <Compile Include="Type\TypeInt.cs" />
@@ -96,12 +100,13 @@
     <Compile Include="Type\TypeLongLong.cs" />
     <Compile Include="Type\TypeShort.cs" />
     <Compile Include="Type\TypeVoid.cs" />
-    <Compile Include="Type\Utility.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="TypeChecker\" />
+  </ItemGroup>
   <ItemGroup>
     <None Include="Lexer\lcc.ll" />
   </ItemGroup>

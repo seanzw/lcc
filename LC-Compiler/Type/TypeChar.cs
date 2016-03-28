@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,25 +10,18 @@ namespace lcc.Type {
     /// <summary>
     /// Built-in type char.
     /// </summary>
-    public sealed class TypeChar : TypeBuiltIn {
+    public sealed class TypeChar : ArithmeticType {
 
-        private static readonly TypeChar Var = new TypeChar(false);
-        private static readonly TypeChar Const = new TypeChar(true);
+        private static readonly TypeChar instance = new TypeChar();
 
-        public static TypeChar Variable {
+        public static TypeChar Instance {
             get {
-                return Var;
+                return instance;
             }
         }
 
-        public static TypeChar Constant {
-            get {
-                return Const;
-            }
-        }
-
-        private TypeChar(bool isConstant)
-            : base(isConstant, 1) {
+        private TypeChar()
+            : base(1) {
         }
 
         /// <summary>
@@ -35,72 +29,61 @@ namespace lcc.Type {
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
-        public override Type Composite(Type other) {
+        public override UnqualifiedType Composite(UnqualifiedType other) {
             throw new NotImplementedException();
         }
 
         public override string ToString() {
-            return base.ToString() + "char ";
+            return "char ";
         }
+
+        public static BigInteger MAX = 127;
+        public static BigInteger MIN = -128;
     }
 
-    public sealed class TypeUnsignedChar : TypeBuiltIn {
+    public sealed class TypeUnsignedChar : ArithmeticType {
 
-        private static readonly TypeUnsignedChar Var = new TypeUnsignedChar(false);
-        private static readonly TypeUnsignedChar Const = new TypeUnsignedChar(true);
+        private static readonly TypeUnsignedChar instance = new TypeUnsignedChar(false);
 
-        public static TypeUnsignedChar Variable {
+        public static TypeUnsignedChar Instance {
             get {
-                return Var;
+                return instance;
             }
         }
+        private TypeUnsignedChar(bool isConstant) : base(1) { }
 
-        public static TypeUnsignedChar Constant {
-            get {
-                return Const;
-            }
-        }
-
-        private TypeUnsignedChar(bool isConstant)
-            : base(isConstant, 1) {
-        }
-
-        public override Type Composite(Type other) {
+        public override UnqualifiedType Composite(UnqualifiedType other) {
             throw new NotImplementedException();
         }
 
         public override string ToString() {
-            return base.ToString() + "unsigned char ";
+            return "unsigned char ";
         }
+
+        public static BigInteger MIN = 0;
+        public static BigInteger MAX = 255;
     }
 
-    public sealed class TypeSignedChar : TypeBuiltIn {
+    public sealed class TypeSignedChar : ArithmeticType {
 
-        private static readonly TypeSignedChar Var = new TypeSignedChar(false);
-        private static readonly TypeSignedChar Const = new TypeSignedChar(true);
+        private static readonly TypeSignedChar instance = new TypeSignedChar();
 
-        public static TypeSignedChar Variable {
+        public static TypeSignedChar Instance {
             get {
-                return Var;
+                return instance;
             }
         }
 
-        public static TypeSignedChar Constant {
-            get {
-                return Const;
-            }
+        private TypeSignedChar()
+            : base(1) {
         }
 
-        private TypeSignedChar(bool isConstant)
-            : base(isConstant, 1) {
-        }
-
-        public override Type Composite(Type other) {
+        public override UnqualifiedType Composite(UnqualifiedType other) {
             throw new NotImplementedException();
         }
 
         public override string ToString() {
-            return base.ToString() + "signed char ";
+            return "signed char ";
         }
     }
 }

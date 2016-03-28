@@ -5,31 +5,24 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.Type {
-    public sealed class TypeBool : TypeBuiltIn {
+    public sealed class TypeBool : ArithmeticType {
 
-        private static readonly TypeBool Const = new TypeBool(true);
-        private static readonly TypeBool Var = new TypeBool(false);
+        private static readonly TypeBool instance = new TypeBool();
 
-        public static TypeBool Constant {
+        public static TypeBool Instance {
             get {
-                return Const;
+                return instance;
             }
         }
 
-        public static TypeBool Variable {
-            get {
-                return Var;
-            }
-        }
+        private TypeBool() : base(1) { }
 
-        private TypeBool(bool isConstant) : base(isConstant, 1) { }
-
-        public override Type Composite(Type other) {
+        public override UnqualifiedType Composite(UnqualifiedType other) {
             throw new NotImplementedException();
         }
 
         public override string ToString() {
-            return base.ToString() + "_Bool ";
+            return "_Bool ";
         }
     }
 }

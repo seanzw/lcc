@@ -5,87 +5,64 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.Type {
-    public sealed class TypeFloat : TypeBuiltIn {
+    public sealed class TypeFloat : ArithmeticType {
 
-        private static readonly TypeFloat Const = new TypeFloat(true);
-        private static readonly TypeFloat Var = new TypeFloat(false);
+        private static readonly TypeFloat instance = new TypeFloat();
 
-        public static TypeFloat Constant {
+        public static TypeFloat Instance {
             get {
-                return Const;
+                return instance;
             }
         }
 
-        public static TypeFloat Variable {
-            get {
-                return Var;
-            }
-        }
+        private TypeFloat() : base(4) { }
 
-        private TypeFloat(bool isConstant) : base(isConstant, 4) { }
-
-        public override Type Composite(Type other) {
+        public override UnqualifiedType Composite(UnqualifiedType other) {
             throw new NotImplementedException();
         }
 
         public override string ToString() {
-            return base.ToString() + "float ";
+            return "float ";
         }
     }
 
-    public sealed class TypeDouble : TypeBuiltIn {
+    public sealed class TypeDouble : ArithmeticType {
 
-        private static readonly TypeDouble Const = new TypeDouble(true);
-        private static readonly TypeDouble Var = new TypeDouble(false);
+        private static readonly TypeDouble instance = new TypeDouble();
 
-        public static TypeDouble Constant {
+        public static TypeDouble Instance {
             get {
-                return Const;
+                return instance;
             }
         }
+        private TypeDouble() : base(8) { }
 
-        public static TypeDouble Variable {
-            get {
-                return Var;
-            }
-        }
-
-        private TypeDouble(bool isConstant) : base(isConstant, 8) { }
-
-        public override Type Composite(Type other) {
+        public override UnqualifiedType Composite(UnqualifiedType other) {
             throw new NotImplementedException();
         }
 
         public override string ToString() {
-            return base.ToString() + "double ";
+            return "double ";
         }
     }
 
-    public sealed class TypeLongDouble : TypeBuiltIn {
+    public sealed class TypeLongDouble : ArithmeticType {
 
-        private static readonly TypeLongDouble Const = new TypeLongDouble(true);
-        private static readonly TypeLongDouble Var = new TypeLongDouble(false);
+        private static readonly TypeLongDouble instance = new TypeLongDouble();
 
-        public static TypeLongDouble Constant {
+        public static TypeLongDouble Instance {
             get {
-                return Const;
+                return instance;
             }
         }
+        private TypeLongDouble() : base(8) { }
 
-        public static TypeLongDouble Variable {
-            get {
-                return Var;
-            }
-        }
-
-        private TypeLongDouble(bool isConstant) : base(isConstant, 8) { }
-
-        public override Type Composite(Type other) {
+        public override UnqualifiedType Composite(UnqualifiedType other) {
             throw new NotImplementedException();
         }
 
         public override string ToString() {
-            return base.ToString() + "long double ";
+            return "long double ";
         }
     }
 }

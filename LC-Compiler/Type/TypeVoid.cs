@@ -5,32 +5,24 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.Type {
-    public sealed class TypeVoid : TypeBuiltIn {
+    public sealed class TypeVoid : ArithmeticType {
 
-        private static readonly TypeVoid Const = new TypeVoid(true);
-        private static readonly TypeVoid Var = new TypeVoid(false);
+        private static readonly TypeVoid instance = new TypeVoid();
 
-        public static TypeVoid Constant {
+        public static TypeVoid Instance {
             get {
-                return Const;
+                return instance;
             }
         }
 
-        public static TypeVoid Variable {
-            get {
-                return Var;
-            }
-        }
+        private TypeVoid() : base(1) { }
 
-        private TypeVoid(bool isConstant)
-            : base(isConstant, 1) { }
-
-        public override Type Composite(Type other) {
+        public override UnqualifiedType Composite(UnqualifiedType other) {
             throw new NotImplementedException();
         }
 
         public override string ToString() {
-            return base.ToString() + "void ";
+            return "void ";
         }
     }
 }

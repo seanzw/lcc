@@ -5,59 +5,45 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.Type {
-    public sealed class TypeShort : TypeBuiltIn {
+    public sealed class TypeShort : ArithmeticType {
 
-        private static readonly TypeShort Const = new TypeShort(true);
-        private static readonly TypeShort Var = new TypeShort(false);
+        private static readonly TypeShort instance = new TypeShort();
 
-        public static TypeShort Constant {
+        public static TypeShort Instance {
             get {
-                return Const;
+                return instance;
             }
         }
 
-        public static TypeShort Variable {
-            get {
-                return Var;
-            }
-        }
+        private TypeShort() : base(2) { }
 
-        private TypeShort(bool isConstant) : base(isConstant, 2) { }
-
-        public override Type Composite(Type other) {
+        public override UnqualifiedType Composite(UnqualifiedType other) {
             throw new NotImplementedException();
         }
 
         public override string ToString() {
-            return base.ToString() + "short ";
+            return "short ";
         }
     }
 
-    public sealed class TypeUnsignedShort : TypeBuiltIn {
+    public sealed class TypeUnsignedShort : ArithmeticType {
 
-        private static readonly TypeUnsignedShort Const = new TypeUnsignedShort(true);
-        private static readonly TypeUnsignedShort Var = new TypeUnsignedShort(false);
+        private static readonly TypeUnsignedShort instance = new TypeUnsignedShort();
 
-        public static TypeUnsignedShort Constant {
+        public static TypeUnsignedShort Instance {
             get {
-                return Const;
+                return instance;
             }
         }
 
-        public static TypeUnsignedShort Variable {
-            get {
-                return Var;
-            }
-        }
+        private TypeUnsignedShort() : base(2) { }
 
-        private TypeUnsignedShort(bool isConstant) : base(isConstant, 2) { }
-
-        public override Type Composite(Type other) {
+        public override UnqualifiedType Composite(UnqualifiedType other) {
             throw new NotImplementedException();
         }
 
         public override string ToString() {
-            return base.ToString() + "unsigned short ";
+            return "unsigned short ";
         }
     }
 }

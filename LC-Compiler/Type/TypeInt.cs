@@ -5,59 +5,43 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.Type {
-    public sealed class TypeInt : TypeBuiltIn {
+    public sealed class TypeInt : ArithmeticType {
 
-        private static readonly TypeInt Const = new TypeInt(true);
-        private static readonly TypeInt Var = new TypeInt(false);
+        private static readonly TypeInt instance = new TypeInt();
 
-        public static TypeInt Constant {
+        public static TypeInt Instance {
             get {
-                return Const;
+                return instance;
             }
         }
+        private TypeInt() : base(4) { }
 
-        public static TypeInt Variable {
-            get {
-                return Var;
-            }
-        }
-
-        private TypeInt(bool isConstant) : base(isConstant, 4) { }
-
-        public override Type Composite(Type other) {
+        public override UnqualifiedType Composite(UnqualifiedType other) {
             throw new NotImplementedException();
         }
 
         public override string ToString() {
-            return base.ToString() + "int ";
+            return "int ";
         }
     }
 
-    public sealed class TypeUnsignedInt : TypeBuiltIn {
+    public sealed class TypeUnsignedInt : ArithmeticType {
 
-        private static readonly TypeUnsignedInt Const = new TypeUnsignedInt(true);
-        private static readonly TypeUnsignedInt Var = new TypeUnsignedInt(false);
+        private static readonly TypeUnsignedInt instance = new TypeUnsignedInt();
 
-        public static TypeUnsignedInt Constant {
+        public static TypeUnsignedInt Instance {
             get {
-                return Const;
+                return instance;
             }
         }
+        private TypeUnsignedInt() : base(4) { }
 
-        public static TypeUnsignedInt Variable {
-            get {
-                return Var;
-            }
-        }
-
-        private TypeUnsignedInt(bool isConstant) : base(isConstant, 4) { }
-
-        public override Type Composite(Type other) {
+        public override UnqualifiedType Composite(UnqualifiedType other) {
             throw new NotImplementedException();
         }
 
         public override string ToString() {
-            return base.ToString() + "unsigned int ";
+            return "unsigned int ";
         }
     }
 }

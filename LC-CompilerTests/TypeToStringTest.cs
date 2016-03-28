@@ -9,66 +9,66 @@ namespace LC_CompilerTests {
         [TestMethod]
         public void LCCTypeToChar() {
 
-            var tests = new Dictionary<Type, string> {
+            var tests = new Dictionary<UnqualifiedType, string> {
                 {
-                    TypeChar.Variable,
+                    TypeChar.Instance,
                     "char "
                 },
                 {
-                    TypeSignedChar.Constant,
-                    "const signed char "
+                    TypeSignedChar.Instance,
+                    "signed char "
                 },
                 {
-                    TypeUnsignedChar.Variable,
+                    TypeUnsignedChar.Instance,
                     "unsigned char "
                 },
                 {
-                    TypeVoid.Variable,
+                    TypeVoid.Instance,
                     "void "
                 },
                 {
-                    TypeShort.Variable,
+                    TypeShort.Instance,
                     "short "
                 },
                 {
-                    TypeUnsignedShort.Constant,
-                    "const unsigned short "
+                    TypeUnsignedShort.Instance,
+                    "unsigned short "
                 },
                 {
-                    TypeInt.Constant,
-                    "const int "
+                    TypeInt.Instance,
+                    "int "
                 },
                 {
-                    TypeUnsignedInt.Variable,
+                    TypeUnsignedInt.Instance,
                     "unsigned int "
                 },
                 {
-                    TypeLong.Constant,
-                    "const long "
+                    TypeLong.Instance,
+                    "long "
                 },
                 {
-                    TypeUnsignedLong.Variable,
+                    TypeUnsignedLong.Instance,
                     "unsigned long "
                 },
                 {
-                    TypeLongLong.Constant,
-                    "const long long "
+                    TypeLongLong.Instance,
+                    "long long "
                 },
                 {
-                    TypeUnsignedLongLong.Variable,
+                    TypeUnsignedLongLong.Instance,
                     "unsigned long long "
                 },
                 {
-                    TypeFloat.Variable,
+                    TypeFloat.Instance,
                     "float "
                 },
                 {
-                    TypeDouble.Constant,
-                    "const double "
+                    TypeDouble.Instance,
+                    "double "
                 },
                 {
-                    TypeBool.Constant,
-                    "const _Bool "
+                    TypeBool.Instance,
+                    "_Bool "
                 }
             };
 

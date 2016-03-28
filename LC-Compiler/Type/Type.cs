@@ -5,57 +5,77 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.Type {
-    public abstract class Type {
 
-        public Type(
-            bool isConstant,
-            bool isCompleted,
-            uint size
-            ) {
-            this.isConstant = isConstant;
-            this.isCompleted = isCompleted;
-            this.size = size;
-        }
+    /// <summary>
+    /// Base type is a type without type qualifier.
+    /// </summary>
+    public abstract class UnqualifiedType {
 
         /// <summary>
         /// Return a composite type of this and other.
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
-        public abstract Type Composite(Type other);
-
-        public override string ToString() {
-            string constStr = isConstant ? "const " : "";
-            return constStr;
-        }
-
-        /// <summary>
-        /// Whether this type is qualified with const.
-        /// </summary>
-        public readonly bool isConstant;
+        public abstract UnqualifiedType Composite(UnqualifiedType other);
 
         /// <summary>
         /// Whether this is a completed type.
         /// </summary>
-        public readonly bool isCompleted;
+        public abstract bool isCompleted();
+
+    }
+
+    public abstract class ArithmeticType : UnqualifiedType {
+
+        public ArithmeticType(uint size) {
+            this.size = size;
+        }
+
+        public override bool isCompleted() {
+            return true;
+        }
 
         /// <summary>
         /// The value returned by sizeof.
         /// </summary>
         public readonly uint size;
-
-        // Unsupported.
-        //public readonly bool isRestrict;
-        //public readonly bool isVolatile;
     }
 
-    public abstract class TypeBuiltIn : Type {
+    /// <summary>
+    /// A type is composed with an unqualified type and qualifiers.
+    /// </summary>
+    public sealed class Type {
 
-        public TypeBuiltIn(
-            bool isConstant,
-            uint size
-            ) : base(isConstant, true, size) {
+        public struct Qualifier {
+            public bool isConstant;
+            public bool isRestrict;
+            public bool isVolatile;
+            public Qualifier(bool isConstant, bool isRestrict, bool isVolatile) {
+                this.isConstant = isConstant;
+                this.isRestrict = isRestrict;
+                this.isVolatile = isVolatile;
+            }
+        }
 
+        public Type(UnqualifiedType baseType, Qualifier qualifiers) {
+            this.baseType = baseType;
+            this.qualifiers = qualifiers;
+        }
+
+        public override string ToString() {
+            string constantStr = qualifiers.isConstant ? "constant " : "";
+            string restrictStr = qualifiers.isRestrict ? "restrict " : "";
+            string volatileStr = qualifiers.isVolatile ? "volatile " : "";
+            return constantStr + restrictStr + volatileStr + baseType;
+        }
+
+        public UnqualifiedType baseType;
+        public Qualifier qualifiers;
+    }
+
+    public static class TypeExtension {
+        public static Type MakeConst(this UnqualifiedType type) {
+            return new Type(type, new Type.Qualifier(true, false, false));
         }
     }
 }
