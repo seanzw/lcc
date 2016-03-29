@@ -94,7 +94,7 @@ namespace lcc.AST {
             // Select the proper type for this constant.
             switch (token.suffix) {
                 case T_CONST_INT.Suffix.NONE:
-                    if (token.text[0] == '0')
+                    if (token.n != 10)
                         // Octal or hexadecimal constant.
                         type = FitInType(token.line, value,
                             TypeInt.Instance,
@@ -117,7 +117,7 @@ namespace lcc.AST {
                         TypeUnsignedLongLong.Instance);
                     break;
                 case T_CONST_INT.Suffix.L:
-                    if (token.text[0] == '0')
+                    if (token.n != 10)
                         type = FitInType(token.line, value,
                             TypeLong.Instance,
                             TypeUnsignedLong.Instance,
@@ -134,7 +134,7 @@ namespace lcc.AST {
                         TypeUnsignedLongLong.Instance);
                     break;
                 case T_CONST_INT.Suffix.LL:
-                    if (token.text[0] == '0')
+                    if (token.n != 10)
                         type = FitInType(token.line, value,
                             TypeLongLong.Instance,
                             TypeUnsignedLongLong.Instance);
@@ -176,33 +176,9 @@ namespace lcc.AST {
         private static BigInteger Evaluate(T_CONST_INT token) {
 
             BigInteger value = 0;
-
-            const int INITIAL = 0;
-            const int OCTAL = 1;
-            const int HEXADEC = 2;
-            const int DECIMAL = 3;
-
-            int state = 0;
+            
             foreach (var c in token.text) {
-                switch (state) {
-                    case INITIAL:
-                        if (c == '0') state = OCTAL;
-                        else {
-                            state = DECIMAL;
-                            value = c - '0';
-                        }
-                        break;
-                    case OCTAL:
-                        if (char.ToLower(c) == 'x') state = HEXADEC;
-                        else value = value * 8 + c - '0';
-                        break;
-                    case HEXADEC:
-                        value = value * 16 + GetHexadecimal(c);
-                        break;
-                    case DECIMAL:
-                        value = value * 10 + c - '0';
-                        break;
-                }
+                value = value * token.n + GetHexadecimal(c);
             }
 
             return value;

@@ -40,17 +40,6 @@ namespace lcc.Type {
             }
         }
 
-        /// <summary>
-        /// Equals test.
-        /// A little reflect to save code...
-        /// </summary>
-        /// <param name="obj"> Object to be compared. </param>
-        /// <returns> True if they are the same type. </returns>
-        public override bool Equals(object obj) {
-            ArithmeticType t = obj as ArithmeticType;
-            return t == null ? false : GetType().Equals(obj.GetType());
-        }
-
         public override int GetHashCode() {
             return (int)size;
         }
@@ -73,6 +62,8 @@ namespace lcc.Type {
             get;
         }
     }
+
+    
 
     /// <summary>
     /// A type is composed with an unqualified type and qualifiers.
@@ -123,11 +114,19 @@ namespace lcc.Type {
 
     public static class TypeExtension {
         public static Type MakeConst(this UnqualifiedType type) {
-            return new Type(type, new Type.Qualifier(true, false, false));
+            if (!ConstQualifierBuffer.ContainsKey(type))
+                ConstQualifierBuffer.Add(type, new Type(type, new Type.Qualifier(true, false, false)));
+            return ConstQualifierBuffer[type];
         }
 
         public static Type MakeType(this UnqualifiedType type) {
-            return new Type(type, new Type.Qualifier(false, false, false));
+            if (!NoneQualifierBuffer.ContainsKey(type))
+                NoneQualifierBuffer.Add(type, new Type(type, new Type.Qualifier(false, false, false)));
+            return NoneQualifierBuffer[type];
         }
+
+        // Use buffer to avoid creating a lot of types during type check.
+        private static Dictionary<UnqualifiedType, Type> NoneQualifierBuffer = new Dictionary<UnqualifiedType, Type>();
+        private static Dictionary<UnqualifiedType, Type> ConstQualifierBuffer = new Dictionary<UnqualifiedType, Type>();
     }
 }

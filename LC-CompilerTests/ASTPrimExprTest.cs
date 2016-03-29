@@ -106,5 +106,73 @@ namespace LC_CompilerTests {
             var ast = result[0].value as ASTString;
             Assert.IsTrue(truth.SequenceEqual(ast.Values));
         }
+
+        [TestMethod]
+        public void LCCTCConstIntValue() {
+            var tests = new Dictionary<string, BigInteger> {
+                {
+                    "123",
+                    123
+                },
+                {
+                    "0xffL",
+                    255
+                },
+                {
+                    "0",
+                    0
+                },
+                {
+                    "0377",
+                    255
+                },
+                {
+                    "0XF",
+                    15
+                }
+            };
+            foreach (var test in tests) {
+                var result = Utility.parse(test.Key, Parser.PrimaryExpression().End());
+                Assert.AreEqual(1, result.Count);
+                Assert.IsFalse(result[0].remain.More());
+                Assert.IsTrue(result[0].value is ASTConstInt);
+                var ast = result[0].value as ASTConstInt;
+                Assert.AreEqual(test.Value, ast.value);
+            }
+        }
+
+        [TestMethod]
+        public void LCCTCConstIntType() {
+            var tests = new Dictionary<string, Type> {
+                {
+                    "233",
+                    TypeInt.Instance.MakeConst()
+                },
+                {
+                    "4294967296",
+                    TypeLongLong.Instance.MakeConst()
+                },
+                {
+                    "0xFFFFFFFF",
+                    TypeUnsignedInt.Instance.MakeConst()
+                },
+                {
+                    "23u",
+                    TypeUnsignedInt.Instance.MakeConst()
+                },
+                {
+                    "0ull",
+                    TypeUnsignedLongLong.Instance.MakeConst()
+                }
+            };
+            foreach (var test in tests) {
+                var result = Utility.parse(test.Key, Parser.PrimaryExpression().End());
+                Assert.AreEqual(1, result.Count);
+                Assert.IsFalse(result[0].remain.More());
+                Assert.IsTrue(result[0].value is ASTConstInt);
+                var ast = result[0].value as ASTConstInt;
+                Assert.AreEqual(test.Value, ast.type);
+            }
+        }
     }
 }
