@@ -7,6 +7,41 @@ using System.Threading.Tasks;
 
 namespace lcc.Type {
 
+    /**
+    
+        A type is composed of an unqualified type and variable qualifiers.
+       
+        Qualifier
+            - const
+            - volatile
+            - restrict
+      
+        type
+            - incomplete
+            - void
+            - function
+            - unqualified
+                - aggregate
+                    - array
+                    - structure
+                    - union
+                - scalar
+                    - pointer
+                    - arithmetic
+                        - floating
+                            - float
+                            - double
+                            - long double
+                        - integer
+                            - enumerated
+                            - [signed/unsigned] short
+                            - [signed/unsigned] int
+                            - [signed/unsigned] long
+                            - [signed/unsigned] long long
+     */
+
+
+
     /// <summary>
     /// Base type is a type without type qualifier.
     /// </summary>
@@ -38,10 +73,6 @@ namespace lcc.Type {
             get {
                 return true;
             }
-        }
-
-        public override int GetHashCode() {
-            return (int)size;
         }
 
         /// <summary>

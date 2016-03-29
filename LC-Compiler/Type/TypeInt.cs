@@ -10,11 +10,7 @@ namespace lcc.Type {
 
         private static readonly TypeInt instance = new TypeInt();
 
-        public static TypeInt Instance {
-            get {
-                return instance;
-            }
-        }
+        public static TypeInt Instance => instance;
         private TypeInt() : base(4) { }
 
         public override UnqualifiedType Composite(UnqualifiedType other) {
@@ -25,23 +21,15 @@ namespace lcc.Type {
             return "int";
         }
 
-        public override BigInteger MAX {
-            get { return int.MaxValue; }
-        }
-        public override BigInteger MIN {
-            get { return int.MinValue; }
-        }
+        public override BigInteger MAX => int.MaxValue;
+        public override BigInteger MIN => int.MinValue;
     }
 
     public sealed class TypeUnsignedInt : IntegerType {
 
         private static readonly TypeUnsignedInt instance = new TypeUnsignedInt();
 
-        public static TypeUnsignedInt Instance {
-            get {
-                return instance;
-            }
-        }
+        public static TypeUnsignedInt Instance => instance;
         private TypeUnsignedInt() : base(4) { }
 
         public override UnqualifiedType Composite(UnqualifiedType other) {
@@ -52,11 +40,7 @@ namespace lcc.Type {
             return "unsigned int";
         }
 
-        public override BigInteger MAX {
-            get { return uint.MaxValue; }
-        }
-        public override BigInteger MIN {
-            get { return uint.MinValue; }
-        }
+        public override BigInteger MAX => uint.MaxValue;
+        public override BigInteger MIN => uint.MinValue;
     }
 }

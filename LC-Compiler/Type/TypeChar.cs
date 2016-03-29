@@ -37,27 +37,15 @@ namespace lcc.Type {
             return "char";
         }
 
-        public override BigInteger MAX {
-            get {
-                return TypeSignedChar.Instance.MAX;
-            }
-        }
-        public override BigInteger MIN {
-            get {
-                return TypeSignedChar.Instance.MIN;
-            }
-        }
+        public override BigInteger MAX => TypeSignedChar.Instance.MAX;
+        public override BigInteger MIN => TypeSignedChar.Instance.MIN;
     }
 
     public sealed class TypeUnsignedChar : IntegerType {
 
         private static readonly TypeUnsignedChar instance = new TypeUnsignedChar(false);
 
-        public static TypeUnsignedChar Instance {
-            get {
-                return instance;
-            }
-        }
+        public static TypeUnsignedChar Instance => instance;
         private TypeUnsignedChar(bool isConstant) : base(1) { }
 
         public override UnqualifiedType Composite(UnqualifiedType other) {
@@ -68,27 +56,17 @@ namespace lcc.Type {
             return "unsigned char";
         }
 
-        public override BigInteger MAX {
-            get { return 255; }
-        }
-        public override BigInteger MIN {
-            get { return 0; }
-        }
+        public override BigInteger MAX => 255;
+        public override BigInteger MIN => 0;
     }
 
     public sealed class TypeSignedChar : IntegerType {
 
         private static readonly TypeSignedChar instance = new TypeSignedChar();
 
-        public static TypeSignedChar Instance {
-            get {
-                return instance;
-            }
-        }
+        public static TypeSignedChar Instance => instance;
 
-        private TypeSignedChar()
-            : base(1) {
-        }
+        private TypeSignedChar() : base(1) { }
 
         public override UnqualifiedType Composite(UnqualifiedType other) {
             throw new NotImplementedException();
@@ -98,11 +76,7 @@ namespace lcc.Type {
             return "signed char";
         }
 
-        public override BigInteger MAX {
-            get { return 127; }
-        }
-        public override BigInteger MIN {
-            get { return -128; }
-        }
+        public override BigInteger MAX => 127;
+        public override BigInteger MIN => -128;
     }
 }

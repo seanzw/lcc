@@ -10,11 +10,7 @@ namespace lcc.Type {
 
         private static readonly TypeLongLong instance = new TypeLongLong();
 
-        public static TypeLongLong Instance {
-            get {
-                return instance;
-            }
-        }
+        public static TypeLongLong Instance => instance;
         private TypeLongLong() : base(8) { }
 
         public override UnqualifiedType Composite(UnqualifiedType other) {
@@ -25,23 +21,15 @@ namespace lcc.Type {
             return "long long";
         }
 
-        public override BigInteger MAX {
-            get { return long.MaxValue; }
-        }
-        public override BigInteger MIN {
-            get { return long.MinValue; }
-        }
+        public override BigInteger MAX => long.MaxValue;
+        public override BigInteger MIN => long.MinValue;
     }
 
     public sealed class TypeUnsignedLongLong : IntegerType {
 
         private static readonly TypeUnsignedLongLong instance = new TypeUnsignedLongLong();
 
-        public static TypeUnsignedLongLong Instance {
-            get {
-                return instance;
-            }
-        }
+        public static TypeUnsignedLongLong Instance => instance;
         private TypeUnsignedLongLong() : base(4) { }
 
         public override UnqualifiedType Composite(UnqualifiedType other) {
@@ -52,11 +40,7 @@ namespace lcc.Type {
             return "unsigned long long";
         }
 
-        public override BigInteger MAX {
-            get { return ulong.MaxValue; }
-        }
-        public override BigInteger MIN {
-            get { return ulong.MinValue; }
-        }
+        public override BigInteger MAX => ulong.MaxValue;
+        public override BigInteger MIN => ulong.MinValue;
     }
 }
