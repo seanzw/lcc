@@ -10,7 +10,7 @@ namespace lcc.Type {
     /// <summary>
     /// Built-in type char.
     /// </summary>
-    public sealed class TypeChar : ArithmeticType {
+    public sealed class TypeChar : IntegerType {
 
         private static readonly TypeChar instance = new TypeChar();
 
@@ -37,11 +37,19 @@ namespace lcc.Type {
             return "char";
         }
 
-        public static BigInteger MAX = 127;
-        public static BigInteger MIN = -128;
+        public override BigInteger MAX {
+            get {
+                return TypeSignedChar.Instance.MAX;
+            }
+        }
+        public override BigInteger MIN {
+            get {
+                return TypeSignedChar.Instance.MIN;
+            }
+        }
     }
 
-    public sealed class TypeUnsignedChar : ArithmeticType {
+    public sealed class TypeUnsignedChar : IntegerType {
 
         private static readonly TypeUnsignedChar instance = new TypeUnsignedChar(false);
 
@@ -60,11 +68,15 @@ namespace lcc.Type {
             return "unsigned char";
         }
 
-        public static BigInteger MIN = 0;
-        public static BigInteger MAX = 255;
+        public override BigInteger MAX {
+            get { return 255; }
+        }
+        public override BigInteger MIN {
+            get { return 0; }
+        }
     }
 
-    public sealed class TypeSignedChar : ArithmeticType {
+    public sealed class TypeSignedChar : IntegerType {
 
         private static readonly TypeSignedChar instance = new TypeSignedChar();
 
@@ -84,6 +96,13 @@ namespace lcc.Type {
 
         public override string ToString() {
             return "signed char";
+        }
+
+        public override BigInteger MAX {
+            get { return 127; }
+        }
+        public override BigInteger MIN {
+            get { return -128; }
         }
     }
 }

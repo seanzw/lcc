@@ -74,6 +74,14 @@ namespace lcc.AST {
             return line;
         }
 
+        protected static Func<char, bool> IsOctal = (char c) => c >= '0' && c <= '7';
+        protected static Func<char, bool> IsDecimal = (char c) => c >= '0' && c <= '9';
+        protected static Func<char, bool> IsHexadecimal = (char c) => IsDecimal(c) || char.ToLower(c) >= 'a' && char.ToLower(c) <= 'f';
+        protected static Func<char, int> GetHexadecimal = (char c) => {
+            if (IsDecimal(c)) return c - '0';
+            else return char.ToLower(c) - 'a' + 10;
+        };
+
         public readonly int line;
         public readonly string text;
     }
@@ -81,38 +89,136 @@ namespace lcc.AST {
     public sealed class ASTConstInt : ASTConstant {
 
         public ASTConstInt(T_CONST_INT token) : base(token.line, token.text) {
-            this.suffix = token.suffix;
-            this.value = Evaluate(token);
+            value = Evaluate(token);
+
+            // Select the proper type for this constant.
+            switch (token.suffix) {
+                case T_CONST_INT.Suffix.NONE:
+                    if (token.text[0] == '0')
+                        // Octal or hexadecimal constant.
+                        type = FitInType(token.line, value,
+                            TypeInt.Instance,
+                            TypeUnsignedInt.Instance,
+                            TypeLong.Instance,
+                            TypeUnsignedLong.Instance,
+                            TypeLongLong.Instance,
+                            TypeUnsignedLongLong.Instance);
+                    else
+                        // Decimal constant.
+                        type = FitInType(token.line, value,
+                            TypeInt.Instance,
+                            TypeLong.Instance,
+                            TypeLongLong.Instance);
+                    break;
+                case T_CONST_INT.Suffix.U:
+                    type = FitInType(token.line, value,
+                        TypeUnsignedInt.Instance,
+                        TypeUnsignedLong.Instance,
+                        TypeUnsignedLongLong.Instance);
+                    break;
+                case T_CONST_INT.Suffix.L:
+                    if (token.text[0] == '0')
+                        type = FitInType(token.line, value,
+                            TypeLong.Instance,
+                            TypeUnsignedLong.Instance,
+                            TypeLongLong.Instance,
+                            TypeUnsignedLongLong.Instance);
+                    else
+                        type = FitInType(token.line, value,
+                            TypeLong.Instance,
+                            TypeLongLong.Instance);
+                    break;
+                case T_CONST_INT.Suffix.UL:
+                    type = FitInType(token.line, value,
+                        TypeUnsignedLong.Instance,
+                        TypeUnsignedLongLong.Instance);
+                    break;
+                case T_CONST_INT.Suffix.LL:
+                    if (token.text[0] == '0')
+                        type = FitInType(token.line, value,
+                            TypeLongLong.Instance,
+                            TypeUnsignedLongLong.Instance);
+                    else
+                        type = FitInType(token.line, value, TypeLongLong.Instance);
+                    break;
+                case T_CONST_INT.Suffix.ULL:
+                    type = FitInType(token.line, value, TypeUnsignedLongLong.Instance);
+                    break;
+            }
         }
 
         public override bool Equals(object obj) {
             ASTConstInt ci = obj as ASTConstInt;
             return ci == null ? false : base.Equals(ci)
                 && ci.value == value
-                && ci.suffix == suffix;
+                && ci.type.Equals(type);
         }
         
         public bool Equals(ASTConstInt ci) {
             return base.Equals(ci)
                 && ci.value == value
-                && ci.suffix == suffix;
+                && ci.type.Equals(type);
         }
 
         public override int GetHashCode() {
             return line;
         }
 
-        /// <summary>
-        /// TODO: Evaluate the text and get the value.
-        /// </summary>
-        /// <param name="token"> Token to be evaluated. </param>
-        /// <returns> Long. </returns>
-        private long Evaluate(T_CONST_INT token) {
-            return 0;
+        public Type.Type TypeCheck(ASTEnv env) {
+            return type;
         }
 
-        public readonly long value;
-        public readonly T_CONST_INT.Suffix suffix;
+        /// <summary>
+        /// Evaluate the text and get the value.
+        /// </summary>
+        /// <param name="token"> Token to be evaluated. </param>
+        /// <returns> BigInteger. </returns>
+        private static BigInteger Evaluate(T_CONST_INT token) {
+
+            BigInteger value = 0;
+
+            const int INITIAL = 0;
+            const int OCTAL = 1;
+            const int HEXADEC = 2;
+            const int DECIMAL = 3;
+
+            int state = 0;
+            foreach (var c in token.text) {
+                switch (state) {
+                    case INITIAL:
+                        if (c == '0') state = OCTAL;
+                        else {
+                            state = DECIMAL;
+                            value = c - '0';
+                        }
+                        break;
+                    case OCTAL:
+                        if (char.ToLower(c) == 'x') state = HEXADEC;
+                        else value = value * 8 + c - '0';
+                        break;
+                    case HEXADEC:
+                        value = value * 16 + GetHexadecimal(c);
+                        break;
+                    case DECIMAL:
+                        value = value * 10 + c - '0';
+                        break;
+                }
+            }
+
+            return value;
+        }
+
+        private static Type.Type FitInType(int line, BigInteger value, params IntegerType[] types) { 
+            foreach (var type in types) {
+                if (value >= type.MIN && value <= type.MAX) {
+                    return type.MakeConst();
+                }
+            }
+            throw new ASTErrIntegerLiteralOutOfRange(line);
+        }
+
+        public readonly BigInteger value;
+        public readonly Type.Type type;
     }
 
     public sealed class ASTConstChar : ASTConstant {
@@ -162,13 +268,7 @@ namespace lcc.AST {
         /// <returns></returns>
         public static IEnumerable<ushort> Evaluate(int line, string text) {
 
-            Func<char, bool> IsOctal = (char c) => c >= '0' && c <= '7';
-            Func<char, bool> IsDecimal = (char c) => c >= '0' && c <= '9';
-            Func<char, bool> IsHexadecimal = (char c) => IsDecimal(c) || char.ToLower(c) >= 'a' && char.ToLower(c) <= 'f';
-            Func<char, int> GetHexadecimal = (char c) => {
-                if (IsDecimal(c)) return c - '0';
-                else return char.ToLower(c) - 'a' + 10;
-            };
+            
 
             BigInteger value = 0;
             LinkedList<ushort> values = new LinkedList<ushort>();
@@ -190,7 +290,7 @@ namespace lcc.AST {
             // Check the value is within the range of unsigned char
             // and push it into the list.
             Action<BigInteger> PushValue = v => {
-                if (v < TypeUnsignedChar.MIN || v > TypeUnsignedChar.MAX) {
+                if (v < TypeUnsignedChar.Instance.MIN || v > TypeUnsignedChar.Instance.MAX) {
                     throw new ASTErrEscapedSequenceOutOfRange(line, text);
                 }
                 values.AddLast((ushort)v);  // Store the current result.

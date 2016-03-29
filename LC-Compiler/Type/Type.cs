@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -40,9 +41,37 @@ namespace lcc.Type {
         }
 
         /// <summary>
+        /// Equals test.
+        /// A little reflect to save code...
+        /// </summary>
+        /// <param name="obj"> Object to be compared. </param>
+        /// <returns> True if they are the same type. </returns>
+        public override bool Equals(object obj) {
+            ArithmeticType t = obj as ArithmeticType;
+            return t == null ? false : GetType().Equals(obj.GetType());
+        }
+
+        public override int GetHashCode() {
+            return (int)size;
+        }
+
+        /// <summary>
         /// The value returned by sizeof.
         /// </summary>
         public readonly uint size;
+    }
+
+    public abstract class IntegerType : ArithmeticType {
+
+        public IntegerType(uint size) : base(size) { }
+
+        public abstract BigInteger MAX {
+            get;
+        }
+        
+        public abstract BigInteger MIN {
+            get;
+        }
     }
 
     /// <summary>
@@ -59,11 +88,26 @@ namespace lcc.Type {
                 this.isRestrict = isRestrict;
                 this.isVolatile = isVolatile;
             }
+            public bool Equals(Qualifier other) {
+                return other.isConstant == isConstant
+                    && other.isRestrict == isRestrict
+                    && other.isVolatile == isVolatile;
+            }
         }
 
         public Type(UnqualifiedType baseType, Qualifier qualifiers) {
             this.baseType = baseType;
             this.qualifiers = qualifiers;
+        }
+
+        public override bool Equals(object obj) {
+            Type t = obj as Type;
+            return t == null ? false : t.baseType.Equals(baseType)
+                && t.qualifiers.Equals(qualifiers);
+        }
+
+        public override int GetHashCode() {
+            return baseType.GetHashCode();
         }
 
         public override string ToString() {

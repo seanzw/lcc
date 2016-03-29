@@ -30,4 +30,9 @@ namespace lcc.AST {
         public ASTErrEscapedSequenceOutOfRange(int line, string sequence)
             : base(line, string.Format("escaped sequence out of range.\n\t{0}", sequence)) { }
     }
+
+    public sealed class ASTErrIntegerLiteralOutOfRange : ASTException {
+        public ASTErrIntegerLiteralOutOfRange(int line)
+            : base(line, "integer literal is too large to be represented in any integer type.") { }
+    }
 }
