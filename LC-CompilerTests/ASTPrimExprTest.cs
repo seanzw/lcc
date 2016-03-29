@@ -6,52 +6,62 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using lcc.Type;
 using lcc.Token;
 using lcc.AST;
+using lcc.Parser;
+using Parserc;
 
 namespace LC_CompilerTests {
     [TestClass]
     public partial class ASTTests {
-        [TestMethod]
-        public void LCCTCConstCharLegal() {
 
-            var tests = new Dictionary<string, BigInteger> {
+        [TestMethod]
+        public void LCCTCConstCharEvaluateLegal() {
+
+            var tests = new Dictionary<string, LinkedList<ushort>> {
                 {
                     "f",
-                    'f'
+                    new LinkedList<ushort>(new List<ushort> { 'f' })
                 },
                 {
                     "\\n",
-                    '\n'
+                    new LinkedList<ushort>(new List<ushort> { '\n' })
                 },
                 {
                     "\\'",
-                    '\''
+                    new LinkedList<ushort>(new List<ushort> { '\'' })
                 },
                 {
                     "\\c",
-                    'c'
+                    new LinkedList<ushort>(new List<ushort> { 'c' })
                 },
                 {
                     "\\377",
-                    255
+                    new LinkedList<ushort>(new List<ushort> { 255 })
                 },
                 {
                     "\\xff",
-                    255
+                    new LinkedList<ushort>(new List<ushort> { 255 })
                 },
                 {
                     "\\7",
-                    7
+                    new LinkedList<ushort>(new List<ushort> { 7 })
                 },
                 {
                     "\\76",
-                    7 * 8 + 6
+                    new LinkedList<ushort>(new List<ushort> { 7 * 8 + 6 })
+                },
+                {
+                    "\\0223",
+                    new LinkedList<ushort>(new List<ushort> { 0x12, '3' })
+                },
+                {
+                    "abcd",
+                    new LinkedList<ushort>(new List<ushort> { 'a', 'b', 'c', 'd' })
                 }
             };
 
             foreach (var test in tests) {
                 var values = ASTConstChar.Evaluate(1, test.Key);
-                Assert.AreEqual(1, values.Count);
-                Assert.AreEqual(test.Value, values.First());
+                Assert.IsTrue(values.SequenceEqual(test.Value));
             }
         }
 
@@ -83,6 +93,18 @@ namespace LC_CompilerTests {
             string src = "L'\\0223'";
             var ast = new ASTConstChar(new T_CONST_CHAR(1, src));
             ast.TypeCheck(new ASTEnv());
+        }
+
+        [TestMethod]
+        public void LCCTCStringConcat() {
+            string src = "\"a\" \"b\"";
+            var truth = new List<ushort> { 'a', 'b' };
+            var result = Utility.parse(src, Parser.PrimaryExpression().End());
+            Assert.AreEqual(1, result.Count);
+            Assert.IsFalse(result[0].remain.More());
+            Assert.IsTrue(result[0].value is ASTString);
+            var ast = result[0].value as ASTString;
+            Assert.IsTrue(truth.SequenceEqual(ast.Values));
         }
     }
 }

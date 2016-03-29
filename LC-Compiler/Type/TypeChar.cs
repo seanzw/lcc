@@ -34,7 +34,7 @@ namespace lcc.Type {
         }
 
         public override string ToString() {
-            return "char ";
+            return "char";
         }
 
         public static BigInteger MAX = 127;
@@ -57,7 +57,7 @@ namespace lcc.Type {
         }
 
         public override string ToString() {
-            return "unsigned char ";
+            return "unsigned char";
         }
 
         public static BigInteger MIN = 0;
@@ -83,7 +83,7 @@ namespace lcc.Type {
         }
 
         public override string ToString() {
-            return "signed char ";
+            return "signed char";
         }
     }
 }

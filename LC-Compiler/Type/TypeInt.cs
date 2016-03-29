@@ -21,7 +21,7 @@ namespace lcc.Type {
         }
 
         public override string ToString() {
-            return "int ";
+            return "int";
         }
     }
 
@@ -41,7 +41,7 @@ namespace lcc.Type {
         }
 
         public override string ToString() {
-            return "unsigned int ";
+            return "unsigned int";
         }
     }
 }

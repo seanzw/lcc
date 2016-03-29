@@ -22,7 +22,7 @@ namespace lcc.Type {
         }
 
         public override string ToString() {
-            return "short ";
+            return "short";
         }
     }
 
@@ -43,7 +43,7 @@ namespace lcc.Type {
         }
 
         public override string ToString() {
-            return "unsigned short ";
+            return "unsigned short";
         }
     }
 }

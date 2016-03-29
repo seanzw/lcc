@@ -21,7 +21,7 @@ namespace lcc.Type {
         }
 
         public override string ToString() {
-            return "long long ";
+            return "long long";
         }
     }
 
@@ -41,7 +41,7 @@ namespace lcc.Type {
         }
 
         public override string ToString() {
-            return "unsigned long long ";
+            return "unsigned long long";
         }
     }
 }

@@ -32,8 +32,10 @@ namespace lcc.Type {
         /// Notice that enum type is always complete.
         /// </summary>
         /// <returns></returns>
-        public override bool isCompleted() {
-            return true;
+        public override bool Completed {
+            get {
+                return true;
+            }
         }
 
         public override UnqualifiedType Composite(UnqualifiedType other) {

@@ -147,18 +147,12 @@ namespace lcc.AST {
                 throw new ASTErrUnknownType(line, "multi-character");
             }
 
-            LinkedList<BigInteger> values = Evaluate(line, text.Substring(1, text.Length - 2));
-
             // Do not support multi-character characer.
-            if (values.Count > 1) {
+            if (Values.Count() > 1) {
                 throw new ASTErrUnknownType(line, "multi-character");
             }
 
-            if (values.First() >= TypeUnsignedChar.MIN && values.First() <= TypeUnsignedChar.MAX) {
-                return TypeUnsignedChar.Instance.MakeConst();
-            }
-
-            throw new ASTErrUnknownType(line, "really big value");
+            return TypeUnsignedChar.Instance.MakeConst();
         }
 
         /// <summary>
@@ -166,7 +160,7 @@ namespace lcc.AST {
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
-        public static LinkedList<BigInteger> Evaluate(int line, string text) {
+        public static IEnumerable<ushort> Evaluate(int line, string text) {
 
             Func<char, bool> IsOctal = (char c) => c >= '0' && c <= '7';
             Func<char, bool> IsDecimal = (char c) => c >= '0' && c <= '9';
@@ -177,7 +171,7 @@ namespace lcc.AST {
             };
 
             BigInteger value = 0;
-            LinkedList<BigInteger> values = new LinkedList<BigInteger>();
+            LinkedList<ushort> values = new LinkedList<ushort>();
 
             // state 0: initial state.
             // state 1: \.
@@ -199,7 +193,7 @@ namespace lcc.AST {
                 if (v < TypeUnsignedChar.MIN || v > TypeUnsignedChar.MAX) {
                     throw new ASTErrEscapedSequenceOutOfRange(line, text);
                 }
-                values.AddLast(v);  // Store the current result.
+                values.AddLast((ushort)v);  // Store the current result.
             };
 
             for (int i = 0; i < text.Length; ++i) {
@@ -296,6 +290,21 @@ namespace lcc.AST {
         }
 
         public readonly T_CONST_CHAR.Prefix prefix;
+
+        /// <summary>
+        /// Store the values from Evaluate().
+        /// </summary>
+        private IEnumerable<ushort> values;
+
+        /// <summary>
+        /// Cache the result from Evaluate().
+        /// </summary>
+        public IEnumerable<ushort> Values {
+            get {
+                if (values == null) values = Evaluate(line, text);
+                return values;
+            }
+        }
     }
 
     public sealed class ASTConstFloat : ASTConstant {
@@ -335,33 +344,55 @@ namespace lcc.AST {
     }
 
     public sealed class ASTString : ASTExpr {
-        public ASTString(T_STRING_LITERAL token) {
-            line = token.line;
-            text = token.text;
+        public ASTString(LinkedList<T_STRING_LITERAL> tokens) {
+            this.tokens = tokens;
         }
 
         public override int GetLine() {
-            return line;
+            return tokens.First().line;
         }
 
         public override bool Equals(object obj) {
             ASTString s = obj as ASTString;
             return s == null ? false : base.Equals(s)
-                && s.line == line
-                && s.text.Equals(text);
+                && s.tokens.SequenceEqual(tokens);
         }
 
         public bool Equals(ASTString s) {
             return base.Equals(s)
-                && s.line == line
-                && s.text.Equals(text);
+                && s.tokens.SequenceEqual(tokens);
         }
 
         public override int GetHashCode() {
-            return line;
+            return tokens.First().line;
         }
 
-        public readonly int line;
-        public readonly string text;
+        public Type.Type TypeCheck(ASTEnv env) {
+            var type = new TypeArray(TypeChar.Instance.MakeType(), Values.Count());
+            return type.MakeType();
+        }
+
+        public readonly LinkedList<T_STRING_LITERAL> tokens;
+
+        public static IEnumerable<ushort> Evaluate(LinkedList<T_STRING_LITERAL> tokens) {
+
+            IEnumerable<ushort> values = new LinkedList<ushort>();
+
+            foreach (var t in tokens) {
+                if (t.prefix == T_STRING_LITERAL.Prefix.L) {
+                    throw new ASTErrUnknownType(t.line, "multi-character");
+                }
+                values = values.Concat(ASTConstChar.Evaluate(t.line, t.text));
+            }
+            return values;
+        }
+
+        private IEnumerable<ushort> values;
+        public IEnumerable<ushort> Values {
+            get {
+                if (values == null) values = Evaluate(tokens);
+                return values;
+            }
+        }
     }
 }

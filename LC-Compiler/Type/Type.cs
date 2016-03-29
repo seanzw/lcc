@@ -21,7 +21,9 @@ namespace lcc.Type {
         /// <summary>
         /// Whether this is a completed type.
         /// </summary>
-        public abstract bool isCompleted();
+        public abstract bool Completed {
+            get;
+        }
 
     }
 
@@ -31,8 +33,10 @@ namespace lcc.Type {
             this.size = size;
         }
 
-        public override bool isCompleted() {
-            return true;
+        public override bool Completed {
+            get {
+                return true;
+            }
         }
 
         /// <summary>
@@ -76,6 +80,10 @@ namespace lcc.Type {
     public static class TypeExtension {
         public static Type MakeConst(this UnqualifiedType type) {
             return new Type(type, new Type.Qualifier(true, false, false));
+        }
+
+        public static Type MakeType(this UnqualifiedType type) {
+            return new Type(type, new Type.Qualifier(false, false, false));
         }
     }
 }

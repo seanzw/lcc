@@ -22,7 +22,7 @@ namespace lcc.Type {
         }
 
         public override string ToString() {
-            return "void ";
+            return "void";
         }
     }
 }

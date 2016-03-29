@@ -12,69 +12,73 @@ namespace LC_CompilerTests {
             var tests = new Dictionary<UnqualifiedType, string> {
                 {
                     TypeChar.Instance,
-                    "char "
+                    "char"
                 },
                 {
                     TypeSignedChar.Instance,
-                    "signed char "
+                    "signed char"
                 },
                 {
                     TypeUnsignedChar.Instance,
-                    "unsigned char "
+                    "unsigned char"
                 },
                 {
                     TypeVoid.Instance,
-                    "void "
+                    "void"
                 },
                 {
                     TypeShort.Instance,
-                    "short "
+                    "short"
                 },
                 {
                     TypeUnsignedShort.Instance,
-                    "unsigned short "
+                    "unsigned short"
                 },
                 {
                     TypeInt.Instance,
-                    "int "
+                    "int"
                 },
                 {
                     TypeUnsignedInt.Instance,
-                    "unsigned int "
+                    "unsigned int"
                 },
                 {
                     TypeLong.Instance,
-                    "long "
+                    "long"
                 },
                 {
                     TypeUnsignedLong.Instance,
-                    "unsigned long "
+                    "unsigned long"
                 },
                 {
                     TypeLongLong.Instance,
-                    "long long "
+                    "long long"
                 },
                 {
                     TypeUnsignedLongLong.Instance,
-                    "unsigned long long "
+                    "unsigned long long"
                 },
                 {
                     TypeFloat.Instance,
-                    "float "
+                    "float"
                 },
                 {
                     TypeDouble.Instance,
-                    "double "
+                    "double"
                 },
                 {
                     TypeBool.Instance,
-                    "_Bool "
+                    "_Bool"
+                },
+                {
+                    new TypeArray(TypeChar.Instance.MakeType(), 3),
+                    "char[3]"
                 }
             };
 
             foreach (var test in tests) {
                 System.Console.WriteLine(test.Key);
-                Assert.AreEqual(test.Key.ToString(), test.Value);
+                Assert.AreEqual(test.Value, test.Key.ToString());
             }
         }
     }

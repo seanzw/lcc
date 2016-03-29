@@ -78,7 +78,9 @@ namespace LC_CompilerTests {
                 },
                 {
                     "\"what is this?\"",
-                    new ASTString(new T_STRING_LITERAL(1, "\"what is this?\""))
+                    new ASTString(new LinkedList<T_STRING_LITERAL>(new List<T_STRING_LITERAL> {
+                        new T_STRING_LITERAL(1, "\"what is this?\"")
+                    }))
                 },
             };
 

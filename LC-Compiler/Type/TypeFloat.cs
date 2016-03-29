@@ -22,7 +22,7 @@ namespace lcc.Type {
         }
 
         public override string ToString() {
-            return "float ";
+            return "float";
         }
     }
 
@@ -42,7 +42,7 @@ namespace lcc.Type {
         }
 
         public override string ToString() {
-            return "double ";
+            return "double";
         }
     }
 
@@ -62,7 +62,7 @@ namespace lcc.Type {
         }
 
         public override string ToString() {
-            return "long double ";
+            return "long double";
         }
     }
 }

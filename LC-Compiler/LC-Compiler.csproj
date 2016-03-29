@@ -89,11 +89,11 @@
     <Compile Include="Token\StringLiteral.cs" />
     <Compile Include="Token\Token.cs" />
     <Compile Include="Type\Type.cs" />
+    <Compile Include="Type\TypeArray.cs" />
     <Compile Include="Type\TypeBool.cs" />
     <Compile Include="Type\TypeChar.cs" />
     <Compile Include="AST\ASTEnv.cs" />
     <Compile Include="Type\TypeEnum.cs" />
-    <Compile Include="Type\TypeError.cs" />
     <Compile Include="Type\TypeFloat.cs" />
     <Compile Include="Type\TypeInt.cs" />
     <Compile Include="Type\TypeLong.cs" />

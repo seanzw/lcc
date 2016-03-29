@@ -362,7 +362,7 @@ namespace lcc.Parser {
         /// primary-expression
         ///     : identifier
         ///     | constant
-        ///     | string-literal
+        ///     | string-literal.Plus // Allow strings to be concated.
         ///     | ( expression )
         ///     ;
         /// </summary>
@@ -372,7 +372,7 @@ namespace lcc.Parser {
                 .Else(Get<T_CONST_CHAR>().Select(x => new ASTConstChar(x) as ASTExpr))
                 .Else(Get<T_CONST_INT>().Select(x => new ASTConstInt(x) as ASTExpr))
                 .Else(Get<T_CONST_FLOAT>().Select(x => new ASTConstFloat(x) as ASTExpr))
-                .Else(Get<T_STRING_LITERAL>().Select(x => new ASTString(x) as ASTExpr))
+                .Else(Get<T_STRING_LITERAL>().Plus().Select(x => new ASTString(x) as ASTExpr))
                 .Else(Ref(Expression)
                     .Bracket(Match<T_PUNC_PARENTL>(), Match<T_PUNC_PARENTR>())
                     );
