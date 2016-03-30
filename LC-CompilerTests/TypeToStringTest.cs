@@ -71,7 +71,7 @@ namespace LC_CompilerTests {
                     "_Bool"
                 },
                 {
-                    new TypeArray(TypeChar.Instance.MakeType(), 3),
+                    new TypeArray(TypeChar.Instance.MakeType(false), 3),
                     "char[3]"
                 }
             };

@@ -1,11 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using lcc.Token;
+using lcc.Type;
 
 namespace lcc.AST {
+    /// <summary>
+    /// arr[idx].
+    /// </summary>
     public sealed class ASTArrSub : ASTExpr {
 
         public ASTArrSub(ASTExpr arr, ASTExpr idx) {
@@ -34,21 +37,44 @@ namespace lcc.AST {
             return arr.GetHashCode() ^ idx.GetHashCode();
         }
 
+        /// <summary>
+        /// arr[idx] where
+        ///     - arr -> pointer to object T
+        ///     - idx -> integer type
+        /// 
+        /// Returns T
+        /// </summary>
+        /// <param name="env"></param>
+        /// <returns></returns>
+        public override Type.Type TypeCheck(ASTEnv env) {
+            Type.Type arrType = arr.TypeCheck(env);
+            if (!arrType.IsPointer) {
+                throw new ASTException(arr.GetLine(), "subscripting none pointer type");
+            }
+
+            Type.Type idxType = idx.TypeCheck(env);
+            if (!idxType.IsInteger) {
+                throw new ASTException(idx.GetLine(), "subscripting none integer type");
+            }
+
+            return (arrType.baseType as TypePointer).element;
+        }
+
         public readonly ASTExpr arr;
         public readonly ASTExpr idx;
     }
 
     public sealed class ASTAccess : ASTExpr {
 
-        public enum Type {
+        public enum Kind {
             DOT,
             PTR
         }
 
-        public ASTAccess(ASTExpr aggregation, T_IDENTIFIER token, Type type) {
+        public ASTAccess(ASTExpr aggregation, T_IDENTIFIER token, Kind type) {
             this.aggregation = aggregation;
             this.field = token.name;
-            this.type = type;
+            this.kind = type;
         }
 
         public override int GetLine() {
@@ -60,23 +86,32 @@ namespace lcc.AST {
             return x == null ? false : base.Equals(x)
                 && x.aggregation.Equals(aggregation)
                 && x.field.Equals(field)
-                && x.type == type;
+                && x.kind == kind;
         }
 
         public bool Equals(ASTAccess x) {
             return base.Equals(x)
                 && x.aggregation.Equals(aggregation)
                 && x.field.Equals(field)
-                && x.type == type;
+                && x.kind == kind;
         }
 
         public override int GetHashCode() {
             return aggregation.GetHashCode() ^ field.GetHashCode();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="env"></param>
+        /// <returns></returns>
+        //public override Type.Type TypeCheck(ASTEnv env) {
+            
+        //}
+
         public readonly ASTExpr aggregation;
         public readonly string field;
-        public readonly Type type;
+        public readonly Kind kind;
     }
 
     public sealed class ASTPostStep : ASTExpr {

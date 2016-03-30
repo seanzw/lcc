@@ -104,7 +104,7 @@ namespace LC_CompilerTests {
                     new ASTAccess(
                         new ASTIdentifier(new T_IDENTIFIER(1, "abc")),
                         new T_IDENTIFIER(1, "x"),
-                        ASTAccess.Type.DOT
+                        ASTAccess.Kind.DOT
                     )
                 },
                 {
@@ -115,7 +115,7 @@ namespace LC_CompilerTests {
                             new ASTConstInt(new T_CONST_INT(1, "2", 10))
                         ),
                         new T_IDENTIFIER(1, "value"),
-                        ASTAccess.Type.DOT
+                        ASTAccess.Kind.DOT
                     )
                 },
                 {
@@ -123,7 +123,7 @@ namespace LC_CompilerTests {
                     new ASTAccess(
                         new ASTIdentifier(new T_IDENTIFIER(1, "abc")),
                         new T_IDENTIFIER(1, "x"),
-                        ASTAccess.Type.PTR
+                        ASTAccess.Kind.PTR
                     )
                 },
                 {

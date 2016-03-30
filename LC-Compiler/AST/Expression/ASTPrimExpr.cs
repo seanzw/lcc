@@ -97,7 +97,7 @@ namespace lcc.AST {
     }
 
     /// <summary>
-    /// Represent an integer constant with its value and its type.
+    /// Represent an integer constant with its value and its type (rvalue).
     /// The type of an integer constant is the first of the corresponding list in which its value can be represented.
     /// 
     /// Sufix               Decimal Constant                Octal or Hexadecimal Constant
@@ -229,7 +229,7 @@ namespace lcc.AST {
         private static Type.Type FitInType(int line, BigInteger value, params IntegerType[] types) { 
             foreach (var type in types) {
                 if (value >= type.MIN && value <= type.MAX) {
-                    return type.MakeConst();
+                    return type.MakeConst(false);
                 }
             }
             throw new ASTErrIntegerLiteralOutOfRange(line);
@@ -259,7 +259,7 @@ namespace lcc.AST {
                 throw new ASTErrUnknownType(line, "multi-character");
             }
 
-            type = TypeUnsignedChar.Instance.MakeConst();
+            type = TypeUnsignedChar.Instance.MakeConst(false);
         }
 
         public override bool Equals(object obj) {
@@ -441,13 +441,13 @@ namespace lcc.AST {
             value = Evaluate(token);
             switch (token.suffix) {
                 case T_CONST_FLOAT.Suffix.NONE:
-                    type = TypeDouble.Instance.MakeConst();
+                    type = TypeDouble.Instance.MakeConst(false);
                     break;
                 case T_CONST_FLOAT.Suffix.F:
-                    type = TypeFloat.Instance.MakeConst();
+                    type = TypeFloat.Instance.MakeConst(false);
                     break;
                 case T_CONST_FLOAT.Suffix.L:
-                    type = TypeLongDouble.Instance.MakeConst();
+                    type = TypeLongDouble.Instance.MakeConst(false);
                     break;
             }
         }
@@ -520,15 +520,19 @@ namespace lcc.AST {
     }
 
     /// <summary>
-    /// A string is variable char.
+    /// A string is variable sequence of char.
+    /// Notice: string is array of char, lvalue. which means
+    ///     "what"[0] = 'c';
+    /// is totally legal.
+    /// 
     /// Each char is the same as in constant character integer defined in ASTConstChar.
     /// </summary>
     public sealed class ASTString : ASTExpr {
         public ASTString(LinkedList<T_STRING_LITERAL> tokens) {
             this.line = tokens.First().line;
             values = Evaluate(tokens);
-            var arrType = new TypeArray(TypeChar.Instance.MakeType(), values.Count());
-            this.type = arrType.MakeType();
+            var arrType = new TypeArray(TypeChar.Instance.MakeType(true), values.Count());
+            this.type = arrType.MakeType(true);
         }
 
         public override int GetLine() {

@@ -63,7 +63,9 @@ namespace lcc.Type {
 
     }
 
-    public abstract class ArithmeticType : UnqualifiedType {
+    public abstract class ObjectType : UnqualifiedType { }
+
+    public abstract class ArithmeticType : ObjectType {
 
         public ArithmeticType(uint size) {
             this.size = size;
@@ -117,15 +119,17 @@ namespace lcc.Type {
             }
         }
 
-        public Type(UnqualifiedType baseType, Qualifier qualifiers) {
+        public Type(UnqualifiedType baseType, Qualifier qualifiers, bool isLValue) {
             this.baseType = baseType;
             this.qualifiers = qualifiers;
+            this.isLValue = isLValue;
         }
 
         public override bool Equals(object obj) {
             Type t = obj as Type;
             return t == null ? false : t.baseType.Equals(baseType)
-                && t.qualifiers.Equals(qualifiers);
+                && t.qualifiers.Equals(qualifiers)
+                && t.isLValue == isLValue;
         }
 
         public override int GetHashCode() {
@@ -139,24 +143,44 @@ namespace lcc.Type {
             return constantStr + restrictStr + volatileStr + baseType;
         }
 
+        public bool IsObject => baseType is ObjectType;
+        public bool IsPointer => baseType is TypePointer;
+        public bool IsInteger => baseType is IntegerType;
+
         public UnqualifiedType baseType;
         public Qualifier qualifiers;
+        public readonly bool isLValue;
     }
 
     public static class TypeExtension {
-        public static Type MakeConst(this UnqualifiedType type) {
-            if (!ConstQualifierBuffer.ContainsKey(type))
-                ConstQualifierBuffer.Add(type, new Type(type, new Type.Qualifier(true, false, false)));
-            return ConstQualifierBuffer[type];
+
+        private class Repo {
+            public Type none;
+            public Type constant;
         }
 
-        public static Type MakeType(this UnqualifiedType type) {
-            if (!NoneQualifierBuffer.ContainsKey(type))
-                NoneQualifierBuffer.Add(type, new Type(type, new Type.Qualifier(false, false, false)));
-            return NoneQualifierBuffer[type];
+        public static Type MakeConst(this UnqualifiedType type, bool isLValue) {
+            var buffer = isLValue ? LValueBuffer : RValueBuffer;
+            if (!buffer.ContainsKey(type))
+                buffer.Add(type, new Repo());
+            if (buffer[type].constant == null)
+                buffer[type].constant = new Type(type, new Type.Qualifier(true, false, false), isLValue);
+            return buffer[type].constant;
+        }
+
+        public static Type MakeType(this UnqualifiedType type, bool isLValue) {
+            var buffer = isLValue ? LValueBuffer : RValueBuffer;
+            if (!buffer.ContainsKey(type))
+                buffer.Add(type, new Repo());
+            if (buffer[type].none == null)
+                buffer[type].none = new Type(type, new Type.Qualifier(false, false, false), isLValue);
+            return buffer[type].none;
         }
 
         // Use buffer to avoid creating a lot of types during type check.
+        private static Dictionary<UnqualifiedType, Repo> LValueBuffer = new Dictionary<UnqualifiedType, Repo>();
+        private static Dictionary<UnqualifiedType, Repo> RValueBuffer = new Dictionary<UnqualifiedType, Repo>();
+
         private static Dictionary<UnqualifiedType, Type> NoneQualifierBuffer = new Dictionary<UnqualifiedType, Type>();
         private static Dictionary<UnqualifiedType, Type> ConstQualifierBuffer = new Dictionary<UnqualifiedType, Type>();
     }

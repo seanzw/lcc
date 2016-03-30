@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    public abstract class ASTException : Exception {
+    public class ASTException : Exception {
 
         public ASTException(int line, string msg) {
             this.line = line;
@@ -40,4 +40,5 @@ namespace lcc.AST {
         public ASTErrUndefinedIdentifier(int line, string name)
             : base(line, string.Format("undefined identfifier {0}", name)) { }
     }
+
 }

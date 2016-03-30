@@ -146,23 +146,23 @@ namespace LC_CompilerTests {
             var tests = new Dictionary<string, Type> {
                 {
                     "233",
-                    TypeInt.Instance.MakeConst()
+                    TypeInt.Instance.MakeConst(false)
                 },
                 {
                     "4294967296",
-                    TypeLongLong.Instance.MakeConst()
+                    TypeLongLong.Instance.MakeConst(false)
                 },
                 {
                     "0xFFFFFFFF",
-                    TypeUnsignedInt.Instance.MakeConst()
+                    TypeUnsignedInt.Instance.MakeConst(false)
                 },
                 {
                     "23u",
-                    TypeUnsignedInt.Instance.MakeConst()
+                    TypeUnsignedInt.Instance.MakeConst(false)
                 },
                 {
                     "0ull",
-                    TypeUnsignedLongLong.Instance.MakeConst()
+                    TypeUnsignedLongLong.Instance.MakeConst(false)
                 }
             };
             foreach (var test in tests) {
