@@ -48,9 +48,8 @@ namespace lcc.AST {
 
     public abstract class ASTConstant : ASTExpr {
 
-        public ASTConstant(int line, string text) {
+        public ASTConstant(int line) {
             this.line = line;
-            this.text = text;
         }
 
         public override int GetLine() {
@@ -60,14 +59,12 @@ namespace lcc.AST {
         public override bool Equals(object obj) {
             ASTConstant c = obj as ASTConstant;
             return c == null ? false : base.Equals(c)
-                && c.line == line
-                && c.text.Equals(text);
+                && c.line == line;
         }
 
         public bool Equals(ASTConstant c) {
             return base.Equals(c)
-                && c.line == line
-                && c.text.Equals(text);
+                && c.line == line;
         }
 
         public override int GetHashCode() {
@@ -83,12 +80,43 @@ namespace lcc.AST {
         };
 
         public readonly int line;
-        public readonly string text;
     }
 
+    /// <summary>
+    /// Represent an integer constant with its value and its type.
+    /// The type of an integer constant is the first of the corresponding list in which its value can be represented.
+    /// 
+    /// Sufix               Decimal Constant                Octal or Hexadecimal Constant
+    /// ------------------------------------------------------------------------------------------
+    /// NONE                int                             int
+    ///                     long int                        unsigned int
+    ///                     long long int                   long int
+    ///                                                     unsigned long int
+    ///                                                     long long int
+    ///                                                     unsigned long long int
+    /// ------------------------------------------------------------------------------------------
+    /// U                   unsigned int                    unsigned int
+    ///                     unsigned long int               unsigned long int
+    ///                     unsigned long long int          unsigned long long int
+    /// ------------------------------------------------------------------------------------------
+    /// L                   long int                        long int
+    ///                     long long int                   unsigned long int
+    ///                                                     long long int
+    ///                                                     unsigned long long int
+    /// ------------------------------------------------------------------------------------------
+    /// UL                  unsigned long int               unsigned long int
+    ///                     unsigned long long int          unsigned long long int
+    /// ------------------------------------------------------------------------------------------
+    /// LL                  long long int                   long long int
+    ///                                                     unsigned long long int
+    /// ------------------------------------------------------------------------------------------
+    /// ULL                 unsigned long long int          unsigned long long int
+    /// ------------------------------------------------------------------------------------------
+    /// 
+    /// </summary>
     public sealed class ASTConstInt : ASTConstant {
 
-        public ASTConstInt(T_CONST_INT token) : base(token.line, token.text) {
+        public ASTConstInt(T_CONST_INT token) : base(token.line) {
             value = Evaluate(token);
 
             // Select the proper type for this constant.
@@ -197,20 +225,40 @@ namespace lcc.AST {
         public readonly Type.Type type;
     }
 
+    /// <summary>
+    /// A character is either an octal sequence, a hexadecimal sequence or an ascii character.
+    /// An octal sequence and a hexadecimal sequence shall be in the range of representable values for the type unsigned char.
+    /// </summary>
     public sealed class ASTConstChar : ASTConstant {
 
-        public ASTConstChar(T_CONST_CHAR token) : base(token.line, token.text) {
-            prefix = token.prefix;
+        public ASTConstChar(T_CONST_CHAR token) : base(token.line) {
+
+            // Do not support multi-character characer.
+            if (token.prefix == T_CONST_CHAR.Prefix.L) {
+                throw new ASTErrUnknownType(line, "multi-character");
+            }
+
+            values = Evaluate(line, token.text);
+
+            // Do not support multi-character characer.
+            if (values.Count() > 1) {
+                throw new ASTErrUnknownType(line, "multi-character");
+            }
+
+            type = TypeUnsignedChar.Instance.MakeConst();
         }
 
         public override bool Equals(object obj) {
             ASTConstChar cc = obj as ASTConstChar;
             return cc == null ? false : base.Equals(cc)
-                && cc.prefix == prefix;
+                && cc.values.SequenceEqual(values)
+                && cc.type.Equals(type);
         }
 
         public bool Equals(ASTConstChar cc) {
-            return base.Equals(cc) && cc.prefix == prefix;
+            return base.Equals(cc)
+                && cc.values.SequenceEqual(values)
+                && cc.type.Equals(type);
         }
 
         public override int GetHashCode() {
@@ -223,18 +271,7 @@ namespace lcc.AST {
         /// <param name="env"></param>
         /// <returns></returns>
         public Type.Type TypeCheck(ASTEnv env) {
-
-            // Do not support multi-character characer.
-            if (prefix == T_CONST_CHAR.Prefix.L) {
-                throw new ASTErrUnknownType(line, "multi-character");
-            }
-
-            // Do not support multi-character characer.
-            if (Values.Count() > 1) {
-                throw new ASTErrUnknownType(line, "multi-character");
-            }
-
-            return TypeUnsignedChar.Instance.MakeConst();
+            return type;
         }
 
         /// <summary>
@@ -243,8 +280,6 @@ namespace lcc.AST {
         /// <param name="text"></param>
         /// <returns></returns>
         public static IEnumerable<ushort> Evaluate(int line, string text) {
-
-            
 
             BigInteger value = 0;
             LinkedList<ushort> values = new LinkedList<ushort>();
@@ -365,90 +400,138 @@ namespace lcc.AST {
             return values;
         }
 
-        public readonly T_CONST_CHAR.Prefix prefix;
-
         /// <summary>
         /// Store the values from Evaluate().
         /// </summary>
-        private IEnumerable<ushort> values;
+        public readonly IEnumerable<ushort> values;
 
         /// <summary>
-        /// Cache the result from Evaluate().
+        /// Type of this constant.
         /// </summary>
-        public IEnumerable<ushort> Values {
-            get {
-                if (values == null) values = Evaluate(line, text);
-                return values;
-            }
-        }
+        public readonly Type.Type type;
     }
 
+
+    /// <summary>
+    /// A float constant is composed with
+    /// 
+    /// significant-part [eEpP] exponent-part
+    /// 
+    /// whole-part . fraction-part [eEpP] exponent-part.
+    /// 
+    /// Significant-part is processed as rational number with base 10 or 16.
+    /// Exponent-part is processes as a decimal integer, to which 10 or 2 will be raised.
+    /// 
+    /// </summary>
     public sealed class ASTConstFloat : ASTConstant {
-        public ASTConstFloat(T_CONST_FLOAT token) : base(token.line, token.text) {
-            suffix = token.suffix;
+        public ASTConstFloat(T_CONST_FLOAT token) : base(token.line) {
             value = Evaluate(token);
+            switch (token.suffix) {
+                case T_CONST_FLOAT.Suffix.NONE:
+                    type = TypeDouble.Instance.MakeConst();
+                    break;
+                case T_CONST_FLOAT.Suffix.F:
+                    type = TypeFloat.Instance.MakeConst();
+                    break;
+                case T_CONST_FLOAT.Suffix.L:
+                    type = TypeLongDouble.Instance.MakeConst();
+                    break;
+            }
         }
 
         public override bool Equals(object obj) {
             ASTConstFloat cf = obj as ASTConstFloat;
             return cf == null ? false : base.Equals(cf)
                 && cf.value == value
-                && cf.suffix == suffix;
+                && cf.type.Equals(type);
         }
 
         public bool Equals(ASTConstFloat cf) {
             return base.Equals(cf)
                 && cf.value == value
-                && cf.suffix == suffix;
+                && cf.type.Equals(type);
         }
 
-        /// <summary>
-        /// TODO: Evaluate the text and get the value.
-        /// </summary>
-        /// <param name="token"></param>
-        /// <returns></returns>
-        private float Evaluate(T_CONST_FLOAT token) {
-            return 0.0f;
+        private static double Evaluate(T_CONST_FLOAT token) {
+
+            const int WHOLE = 0;
+            const int FRACT = 1;
+            const int PEXPO = 2;
+            const int NEXPO = 3;
+
+            int state = WHOLE;
+
+            double value = 0;
+            int fractCount = -1;
+            int exponPart = 0;
+
+            Func<char, bool> IsExpon = c => char.ToLower(c) == 'p' || char.ToLower(c) == 'e';
+
+            foreach (var c in token.text) {
+                switch (state) {
+                    case WHOLE:
+                        if (c == '.') state = FRACT;
+                        else if (IsExpon(c)) state = PEXPO;
+                        else value = value * token.n + GetHexadecimal(c);
+                        break;
+                    case FRACT:
+                        if (IsExpon(c)) state = PEXPO;
+                        else value += GetHexadecimal(c) * Math.Pow(token.n, fractCount--);
+                        break;
+                    case PEXPO:
+                        if (c == '-') state = NEXPO;
+                        else if (c == '+') state = PEXPO;
+                        else exponPart = exponPart * 10 + c - '0';
+                        break;
+                    case NEXPO:
+                        exponPart = exponPart * 10 - (c - '0');
+                        break;
+                }
+            }
+
+            value *= Math.Pow(token.n == 10 ? 10 : 2, exponPart);
+
+            return value;
         }
 
         public override int GetHashCode() {
             return line;
         }
 
-        public readonly float value;
-        public readonly T_CONST_FLOAT.Suffix suffix;
+        public readonly double value;
+        public readonly Type.Type type;
     }
 
     public sealed class ASTString : ASTExpr {
         public ASTString(LinkedList<T_STRING_LITERAL> tokens) {
-            this.tokens = tokens;
+            this.line = tokens.First().line;
+            values = Evaluate(tokens);
+            var arrType = new TypeArray(TypeChar.Instance.MakeType(), values.Count());
+            this.type = arrType.MakeType();
         }
 
         public override int GetLine() {
-            return tokens.First().line;
+            return line;
         }
 
         public override bool Equals(object obj) {
             ASTString s = obj as ASTString;
             return s == null ? false : base.Equals(s)
-                && s.tokens.SequenceEqual(tokens);
+                && s.values.SequenceEqual(values);
         }
 
         public bool Equals(ASTString s) {
             return base.Equals(s)
-                && s.tokens.SequenceEqual(tokens);
+                && s.values.SequenceEqual(values);
         }
 
         public override int GetHashCode() {
-            return tokens.First().line;
+            return values.First();
         }
 
         public Type.Type TypeCheck(ASTEnv env) {
-            var type = new TypeArray(TypeChar.Instance.MakeType(), Values.Count());
-            return type.MakeType();
+            return type;
         }
-
-        public readonly LinkedList<T_STRING_LITERAL> tokens;
 
         public static IEnumerable<ushort> Evaluate(LinkedList<T_STRING_LITERAL> tokens) {
 
@@ -463,12 +546,8 @@ namespace lcc.AST {
             return values;
         }
 
-        private IEnumerable<ushort> values;
-        public IEnumerable<ushort> Values {
-            get {
-                if (values == null) values = Evaluate(tokens);
-                return values;
-            }
-        }
+        public readonly int line;
+        public readonly IEnumerable<ushort> values;
+        public readonly Type.Type type;
     }
 }

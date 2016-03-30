@@ -104,7 +104,7 @@ namespace LC_CompilerTests {
             Assert.IsFalse(result[0].remain.More());
             Assert.IsTrue(result[0].value is ASTString);
             var ast = result[0].value as ASTString;
-            Assert.IsTrue(truth.SequenceEqual(ast.Values));
+            Assert.IsTrue(truth.SequenceEqual(ast.values));
         }
 
         [TestMethod]
@@ -172,6 +172,53 @@ namespace LC_CompilerTests {
                 Assert.IsTrue(result[0].value is ASTConstInt);
                 var ast = result[0].value as ASTConstInt;
                 Assert.AreEqual(test.Value, ast.type);
+            }
+        }
+
+        [TestMethod]
+        public void LCCTCConstFloatValue() {
+            var tests = new Dictionary<string, double> {
+                {
+                    "1.0",
+                    1.0
+                },
+                {
+                    "1e2",
+                    100.0
+                },
+                {
+                    "1e+2",
+                    100.0
+                },
+                {
+                    "1e-2",
+                    0.01
+                },
+                {
+                    "1.56e3",
+                    1560.0
+                },
+                {
+                    "0xfp2",
+                    15 * 4.0
+                },
+                {
+                    "0X4p-2",
+                    4 * 0.25
+                },
+                {
+                    "0xf.fp-3",
+                    (15.0 + 15.0 / 16.0) * 0.125
+                }
+            };
+
+            foreach (var test in tests) {
+                var result = Utility.parse(test.Key, Parser.PrimaryExpression().End());
+                Assert.AreEqual(1, result.Count);
+                Assert.IsFalse(result[0].remain.More());
+                Assert.IsTrue(result[0].value is ASTConstFloat);
+                var ast = result[0].value as ASTConstFloat;
+                Assert.AreEqual(test.Value, ast.value, 0.0001);
             }
         }
     }
