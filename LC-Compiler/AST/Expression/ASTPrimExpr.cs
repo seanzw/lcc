@@ -10,6 +10,9 @@ using lcc.Type;
 
 namespace lcc.AST {
 
+    /// <summary>
+    /// Represents an identfier.
+    /// </summary>
     public sealed class ASTIdentifier : ASTExpr {
 
         public ASTIdentifier(T_IDENTIFIER token) {
@@ -40,6 +43,17 @@ namespace lcc.AST {
 
         public override int GetHashCode() {
             return line;
+        }
+
+        /// <summary>
+        /// Check that the identfifier is defined.
+        /// </summary>
+        /// <param name="env"></param>
+        /// <returns></returns>
+        public override Type.Type TypeCheck(ASTEnv env) {
+            Type.Type type = env.GetType(name);
+            if (type == null) throw new ASTErrUndefinedIdentifier(line, name);
+            else return type;
         }
 
         public readonly string name;
@@ -192,7 +206,7 @@ namespace lcc.AST {
             return line;
         }
 
-        public Type.Type TypeCheck(ASTEnv env) {
+        public override Type.Type TypeCheck(ASTEnv env) {
             return type;
         }
 
@@ -270,7 +284,7 @@ namespace lcc.AST {
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        public Type.Type TypeCheck(ASTEnv env) {
+        public override Type.Type TypeCheck(ASTEnv env) {
             return type;
         }
 
@@ -411,7 +425,6 @@ namespace lcc.AST {
         public readonly Type.Type type;
     }
 
-
     /// <summary>
     /// A float constant is composed with
     /// 
@@ -494,6 +507,10 @@ namespace lcc.AST {
             return value;
         }
 
+        public override Type.Type TypeCheck(ASTEnv env) {
+            return type;
+        }
+
         public override int GetHashCode() {
             return line;
         }
@@ -502,6 +519,10 @@ namespace lcc.AST {
         public readonly Type.Type type;
     }
 
+    /// <summary>
+    /// A string is variable char.
+    /// Each char is the same as in constant character integer defined in ASTConstChar.
+    /// </summary>
     public sealed class ASTString : ASTExpr {
         public ASTString(LinkedList<T_STRING_LITERAL> tokens) {
             this.line = tokens.First().line;
@@ -529,7 +550,7 @@ namespace lcc.AST {
             return values.First();
         }
 
-        public Type.Type TypeCheck(ASTEnv env) {
+        public override Type.Type TypeCheck(ASTEnv env) {
             return type;
         }
 

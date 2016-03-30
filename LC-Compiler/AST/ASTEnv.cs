@@ -106,6 +106,19 @@ namespace lcc.AST {
             return null;
         }
 
+        /// <summary>
+        /// Get the type of the symbol.
+        /// Return null if the symbol is undefined.
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <returns></returns>
+        public Type.Type GetType(string symbol) {
+            foreach (var scope in scopes) {
+                if (scope.ContainsKey(symbol)) return scope[symbol].type;
+            }
+            return null;
+        }
+
         private Stack<Dictionary<string, Signature>> scopes;
 
     }

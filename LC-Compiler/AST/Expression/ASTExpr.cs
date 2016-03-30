@@ -22,5 +22,9 @@ namespace lcc.AST {
         public override int GetHashCode() {
             return GetLine();
         }
+
+        public virtual Type.Type TypeCheck(ASTEnv env) {
+            throw new NotImplementedException();
+        }
     }
 }

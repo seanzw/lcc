@@ -35,4 +35,9 @@ namespace lcc.AST {
         public ASTErrIntegerLiteralOutOfRange(int line)
             : base(line, "integer literal is too large to be represented in any integer type.") { }
     }
+
+    public sealed class ASTErrUndefinedIdentifier : ASTException {
+        public ASTErrUndefinedIdentifier(int line, string name)
+            : base(line, string.Format("undefined identfifier {0}", name)) { }
+    }
 }
