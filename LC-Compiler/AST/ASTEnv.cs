@@ -13,6 +13,9 @@ namespace lcc.AST {
     /// </summary>
     public sealed class ASTEnv {
 
+        /// <summary>
+        /// Signature records the type of a symbol and where it is declared.
+        /// </summary>
         public struct Signature {
             public T type;
             public readonly int line;
@@ -23,10 +26,23 @@ namespace lcc.AST {
         }
 
         /// <summary>
+        /// Scope contains two dictionary.
+        /// One for symbols, another for tags.
+        /// </summary>
+        private sealed class Scope {
+            public Scope() {
+                symbols = new Dictionary<string, Signature>();
+                tags = new Dictionary<string, T>();
+            }
+            public readonly Dictionary<string, Signature> symbols;
+            public readonly Dictionary<string, T> tags;
+        }
+
+        /// <summary>
         /// Initialize the environment with the global scope.
         /// </summary>
         public ASTEnv() {
-            scopes = new Stack<Dictionary<string, Signature>>();
+            scopes = new Stack<Scope>();
             PushScope();
         }
 
@@ -34,7 +50,7 @@ namespace lcc.AST {
         /// Push a nested scope into the environment.
         /// </summary>
         public void PushScope() {
-            scopes.Push(new Dictionary<string, Signature>());
+            scopes.Push(new Scope());
         }
 
         /// <summary>
@@ -51,7 +67,7 @@ namespace lcc.AST {
         /// <returns></returns>
         public bool ContainsSymbol(string symbol) {
             foreach (var scope in scopes) {
-                if (scope.ContainsKey(symbol)) return true;
+                if (scope.symbols.ContainsKey(symbol)) return true;
             }
             return false;
         }
@@ -62,7 +78,7 @@ namespace lcc.AST {
         /// <param name="symbol"></param>
         /// <returns></returns>
         public bool ContainsSymbolInCurrentScope(string symbol) {
-            return scopes.Peek().ContainsKey(symbol);
+            return scopes.Peek().symbols.ContainsKey(symbol);
         }
 
         /// <summary>
@@ -72,8 +88,8 @@ namespace lcc.AST {
         /// <returns></returns>
         public int GetDeclaration(string symbol) {
             foreach (var scope in scopes) {
-                if (scope.ContainsKey(symbol)) {
-                    return scope[symbol].line;
+                if (scope.symbols.ContainsKey(symbol)) {
+                    return scope.symbols[symbol].line;
                 }
             }
             return -1;
@@ -90,7 +106,7 @@ namespace lcc.AST {
         /// <param name="type"></param>
         /// <param name="line"></param>
         public void AddSymbol(string symbol, T type, int line) {
-            scopes.Peek().Add(symbol, new Signature(type, line));
+            scopes.Peek().symbols.Add(symbol, new Signature(type, line));
         }
 
         /// <summary>
@@ -101,7 +117,7 @@ namespace lcc.AST {
         /// <returns></returns>
         public Signature? GetSymbol(string symbol) {
             foreach (var scope in scopes) {
-                if (scope.ContainsKey(symbol)) return scope[symbol];
+                if (scope.symbols.ContainsKey(symbol)) return scope.symbols[symbol];
             }
             return null;
         }
@@ -114,12 +130,11 @@ namespace lcc.AST {
         /// <returns></returns>
         public T GetType(string symbol) {
             foreach (var scope in scopes) {
-                if (scope.ContainsKey(symbol)) return scope[symbol].type;
+                if (scope.symbols.ContainsKey(symbol)) return scope.symbols[symbol].type;
             }
             return null;
         }
 
-        private Stack<Dictionary<string, Signature>> scopes;
-
+        private Stack<Scope> scopes;
     }
 }

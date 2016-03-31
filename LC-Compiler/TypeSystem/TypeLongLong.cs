@@ -11,6 +11,7 @@ namespace lcc.TypeSystem {
         private static readonly TLLong instance = new TLLong();
 
         public static TLLong Instance => instance;
+        public override int RANK => 5;
         private TLLong() : base(8) { }
 
         public override TUnqualified Composite(TUnqualified other) {
@@ -30,6 +31,7 @@ namespace lcc.TypeSystem {
         private static readonly TULLong instance = new TULLong();
 
         public static TULLong Instance => instance;
+        public override int RANK => 5;
         private TULLong() : base(4) { }
 
         public override TUnqualified Composite(TUnqualified other) {

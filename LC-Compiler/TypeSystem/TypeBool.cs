@@ -15,6 +15,8 @@ namespace lcc.TypeSystem {
             }
         }
 
+        public override int RANK => 0;
+
         private TBool() : base(1) { }
 
         public override TUnqualified Composite(TUnqualified other) {

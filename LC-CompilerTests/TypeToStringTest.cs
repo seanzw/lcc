@@ -71,7 +71,7 @@ namespace LC_CompilerTests {
                     "_Bool"
                 },
                 {
-                    new TArray(TChar.Instance.MakeType(T.LR.R), 3),
+                    new TArray(TChar.Instance.None(T.LR.R), 3),
                     "char[3]"
                 }
             };

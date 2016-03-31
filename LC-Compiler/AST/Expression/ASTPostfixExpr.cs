@@ -49,7 +49,7 @@ namespace lcc.AST {
         /// <returns></returns>
         public override T TypeCheck(ASTEnv env) {
             T arrType = arr.TypeCheck(env);
-            if (!arrType.IsPointer) {
+            if (!arrType.IsPointer && !arrType.IsArray) {
                 throw new ASTException(arr.GetLine(), "subscripting none pointer type");
             }
 
@@ -58,13 +58,20 @@ namespace lcc.AST {
                 throw new ASTException(idx.GetLine(), "subscripting none integer type");
             }
 
-            return (arrType.baseType as TPointer).element;
+            if (arrType.IsPointer)
+                return (arrType.baseType as TPointer).element;
+            else
+                return (arrType.baseType as TArray).element;
         }
 
         public readonly ASTExpr arr;
         public readonly ASTExpr idx;
     }
 
+    /// <summary>
+    /// s.i
+    /// p->i
+    /// </summary>
     public sealed class ASTAccess : ASTExpr {
 
         public enum Kind {
@@ -134,9 +141,9 @@ namespace lcc.AST {
             }
 
             if (kind == Kind.DOT) {
-                return aggType.MakeQualified(m, aggType.lr);
+                return aggType.Unnest(m, aggType.lr);
             } else {
-                return aggType.MakeQualified(m, T.LR.L);
+                return aggType.Unnest(m, T.LR.L);
             }
         }
 
@@ -145,16 +152,20 @@ namespace lcc.AST {
         public readonly Kind kind;
     }
 
+    /// <summary>
+    /// i++
+    /// i--
+    /// </summary>
     public sealed class ASTPostStep : ASTExpr {
 
-        public enum Type {
+        public enum Kind {
             INC,
             DEC
         }
 
-        public ASTPostStep(ASTExpr expr, Type type) {
+        public ASTPostStep(ASTExpr expr, Kind kind) {
             this.expr = expr;
-            this.type = type;
+            this.kind = kind;
         }
 
         public override int GetLine() {
@@ -165,20 +176,47 @@ namespace lcc.AST {
             ASTPostStep x = obj as ASTPostStep;
             return x == null ? false : base.Equals(x)
                 && x.expr.Equals(expr)
-                && x.type == type;
+                && x.kind == kind;
         }
 
         public bool Equals(ASTPostStep x) {
             return base.Equals(x)
                 && x.expr.Equals(expr)
-                && x.type == type;
+                && x.kind == kind;
         }
 
         public override int GetHashCode() {
             return expr.GetHashCode();
         }
 
+        /// <summary>
+        /// From C99 standard:
+        /// "
+        ///   The operand of the postfix increment or decrement operator shall have qualified
+        /// or unqualified real or pointer type and shall be a modifiable lvalue.
+        /// "
+        ///  
+        /// However test with clang and gcc shows that complex type can also be incremented.
+        /// 
+        /// Returns the same type but as rvalue.
+        /// </summary>
+        /// <param name="env"></param>
+        /// <returns></returns>
+        public override T TypeCheck(ASTEnv env) {
+
+            T t = expr.TypeCheck(env);
+            if (!t.IsPointer && !t.IsArithmetic) {
+                throw new ASTException(expr.GetLine(), string.Format("{0} on type {1}", kind, t));
+            }
+
+            if (!t.IsModifiable) {
+                throw new ASTException(expr.GetLine(), string.Format("cannot assign to type {0}", t));
+            }
+
+            return t.R();
+        }
+
         public readonly ASTExpr expr;
-        public readonly Type type;
+        public readonly Kind kind;
     }
 }

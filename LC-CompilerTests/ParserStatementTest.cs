@@ -116,7 +116,7 @@ if (i < length)
                             ASTBinaryExpr.Op.LT),
                         new ASTPostStep(
                             new ASTIdentifier(new T_IDENTIFIER(3, "x")),
-                            ASTPostStep.Type.INC),
+                            ASTPostStep.Kind.INC),
                         null)
                 },
                 {
@@ -133,10 +133,10 @@ else
                             ASTBinaryExpr.Op.LT),
                         new ASTPostStep(
                             new ASTIdentifier(new T_IDENTIFIER(3, "x")),
-                            ASTPostStep.Type.INC),
+                            ASTPostStep.Kind.INC),
                         new ASTPostStep(
                             new ASTIdentifier(new T_IDENTIFIER(5, "x")),
-                            ASTPostStep.Type.DEC))
+                            ASTPostStep.Kind.DEC))
                 }
             };
 
@@ -186,7 +186,7 @@ while (x < length) {
                             ASTBinaryExpr.Op.LT),
                         new ASTPostStep(
                             new ASTIdentifier(new T_IDENTIFIER(3, "x")),
-                            ASTPostStep.Type.INC))
+                            ASTPostStep.Kind.INC))
                 }
             };
 
@@ -210,7 +210,7 @@ do {
                             ASTBinaryExpr.Op.LT),
                         new ASTPostStep(
                             new ASTIdentifier(new T_IDENTIFIER(3, "x")),
-                            ASTPostStep.Type.INC))
+                            ASTPostStep.Kind.INC))
                 }
             };
 
@@ -239,7 +239,7 @@ for (i = 0; i < length; ++i) {
                             ASTBinaryExpr.Op.LT),
                         new ASTPreStep(
                             new ASTIdentifier(new T_IDENTIFIER(2, "i")),
-                            ASTPreStep.Type.INC),
+                            ASTPreStep.Kind.INC),
                         new ASTAssignExpr(
                             new ASTIdentifier(new T_IDENTIFIER(3, "x")),
                             new ASTIdentifier(new T_IDENTIFIER(3, "i")),

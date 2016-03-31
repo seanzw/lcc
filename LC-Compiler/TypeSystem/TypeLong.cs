@@ -11,6 +11,7 @@ namespace lcc.TypeSystem {
         private static readonly TLong instance = new TLong();
 
         public static TLong Instance => instance;
+        public override int RANK => 4;
 
         private TLong() : base(4) { }
 
@@ -31,6 +32,7 @@ namespace lcc.TypeSystem {
         private static readonly TULong instance = new TULong();
 
         public static TULong Instance => instance;
+        public override int RANK => 4;
 
         private TULong() : base(4) { }
 

@@ -54,6 +54,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="ASTPrimExprTest.cs" />
+    <Compile Include="ASTUnaryExprTest.cs" />
     <Compile Include="LexerTest.cs" />
     <Compile Include="ParserDeclarationTest.cs" />
     <Compile Include="ParserExpressionTest.cs" />

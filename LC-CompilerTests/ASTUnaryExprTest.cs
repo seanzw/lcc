@@ -11,43 +11,45 @@ namespace LC_CompilerTests {
 
     public partial class ASTTests {
         [TestMethod]
-        public void LCCTCArrSubTest() {
+        public void LCCTCPreStep() {
 
             // Environment:
             // const char carr[3];
+            // const char *pc;
             // char arr[4];
             ASTEnv env = new ASTEnv();
-            env.AddSymbol("carr", new TArray(TChar.Instance.Const(), 3).None(), 1);
-            env.AddSymbol("arr", new TArray(TChar.Instance.None(), 4).None(), 1);
+            env.AddSymbol("carr", TChar.Instance.Const().Arr(3), 1);
+            env.AddSymbol("pc", TChar.Instance.Const().Ptr(), 2);
+            env.AddSymbol("arr", TChar.Instance.None().Arr(4), 1);
 
             var tests = new Dictionary<string, T> {
                 {
-                    "carr[5]",
-                    TChar.Instance.Const()
+                    "++pc",
+                    TChar.Instance.Const().Ptr().R()
                 },
                 {
-                    "arr[2]",
-                    TChar.Instance.None()
+                    "--arr[2]",
+                    TChar.Instance.None(T.LR.R)
                 }
             };
 
             foreach (var test in tests) {
-                var result = Utility.parse(test.Key, Parser.PostfixExpression().End());
+                var result = Utility.parse(test.Key, Parser.UnaryExpression().End());
                 Assert.AreEqual(1, result.Count);
                 Assert.IsFalse(result[0].remain.More());
-                Assert.IsTrue(result[0].value is ASTArrSub);
-                var ast = result[0].value as ASTArrSub;
+                Assert.IsTrue(result[0].value is ASTPreStep);
+                var ast = result[0].value as ASTPreStep;
                 Assert.AreEqual(test.Value, ast.TypeCheck(env));
             }
         }
 
         [TestMethod]
-        public void LCCTCMemRef() {
+        public void LCCTCUnaryExpr() {
 
             // Environment:
             // struct s {
-            //     int i;
-            //     const int ci;
+            //     long long i;
+            //     const char ci;
             // } t;
             // struct s *p;
             // const struct s *cp;
@@ -56,8 +58,8 @@ namespace LC_CompilerTests {
             TStructUnion s = new TStructUnion(
                 "s",
                 new List<TStructUnion.Field> {
-                    new TStructUnion.Field("i", TInt.Instance.None(), 0),
-                    new TStructUnion.Field("ci", TInt.Instance.Const(), 4)
+                    new TStructUnion.Field("i", TLLong.Instance.None(), 0),
+                    new TStructUnion.Field("ci", TChar.Instance.Const(), 4)
                 },
                 TStructUnion.Kind.STRUCT);
 
@@ -70,29 +72,29 @@ namespace LC_CompilerTests {
 
             var tests = new Dictionary<string, T> {
                 {
-                    "t.i",
-                    TInt.Instance.None()
+                    "&t",
+                    p.None(T.LR.R)
                 },
                 {
-                    "p->i",
-                    TInt.Instance.None()
+                    "*p",
+                    s.None()
                 },
                 {
-                    "p->ci",
-                    TInt.Instance.Const()
+                    "+t.i",
+                    TLLong.Instance.None(T.LR.R)
                 },
                 {
-                    "cp->i",
-                    TInt.Instance.Const()
+                    "!p->i",
+                    TInt.Instance.None(T.LR.R)
                 }
             };
 
             foreach (var test in tests) {
-                var result = Utility.parse(test.Key, Parser.PostfixExpression().End());
+                var result = Utility.parse(test.Key, Parser.UnaryExpression().End());
                 Assert.AreEqual(1, result.Count);
                 Assert.IsFalse(result[0].remain.More());
-                Assert.IsTrue(result[0].value is ASTAccess);
-                var ast = result[0].value as ASTAccess;
+                Assert.IsTrue(result[0].value is ASTUnaryOp);
+                var ast = result[0].value as ASTUnaryOp;
                 Assert.AreEqual(test.Value, ast.TypeCheck(env));
             }
         }

@@ -11,6 +11,7 @@ namespace lcc.TypeSystem {
         private static readonly TShort instance = new TShort();
 
         public static TShort Instance => instance;
+        public override int RANK => 2;
 
         private TShort() : base(2) { }
 
@@ -31,6 +32,7 @@ namespace lcc.TypeSystem {
         private static readonly TUShort instance = new TUShort();
 
         public static TUShort Instance => instance;
+        public override int RANK => 2;
 
         private TUShort() : base(2) { }
 

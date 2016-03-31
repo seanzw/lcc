@@ -229,7 +229,7 @@ namespace lcc.AST {
         private static T FitInType(int line, BigInteger value, params TInteger[] types) { 
             foreach (var type in types) {
                 if (value >= type.MIN && value <= type.MAX) {
-                    return type.MakeConst(T.LR.R);
+                    return type.Const(T.LR.R);
                 }
             }
             throw new ASTErrIntegerLiteralOutOfRange(line);
@@ -259,7 +259,7 @@ namespace lcc.AST {
                 throw new ASTErrUnknownType(line, "multi-character");
             }
 
-            type = TUChar.Instance.MakeConst(T.LR.R);
+            type = TUChar.Instance.Const(T.LR.R);
         }
 
         public override bool Equals(object obj) {
@@ -441,13 +441,13 @@ namespace lcc.AST {
             value = Evaluate(token);
             switch (token.suffix) {
                 case T_CONST_FLOAT.Suffix.NONE:
-                    type = TDouble.Instance.MakeConst(T.LR.R);
+                    type = TDouble.Instance.Const(T.LR.R);
                     break;
                 case T_CONST_FLOAT.Suffix.F:
-                    type = TFloat.Instance.MakeConst(T.LR.R);
+                    type = TFloat.Instance.Const(T.LR.R);
                     break;
                 case T_CONST_FLOAT.Suffix.L:
-                    type = TLDouble.Instance.MakeConst(T.LR.R);
+                    type = TLDouble.Instance.Const(T.LR.R);
                     break;
             }
         }
@@ -531,8 +531,8 @@ namespace lcc.AST {
         public ASTString(LinkedList<T_STRING_LITERAL> tokens) {
             this.line = tokens.First().line;
             values = Evaluate(tokens);
-            var arrType = new TArray(TChar.Instance.MakeType(T.LR.L), values.Count());
-            this.type = arrType.MakeType(T.LR.L);
+            var arrType = new TArray(TChar.Instance.None(T.LR.L), values.Count());
+            this.type = arrType.None(T.LR.L);
         }
 
         public override int GetLine() {

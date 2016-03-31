@@ -14,21 +14,14 @@ namespace lcc.TypeSystem {
 
         private static readonly TChar instance = new TChar();
 
-        public static TChar Instance {
-            get {
-                return instance;
-            }
-        }
+        public static TChar Instance => instance;
+        public override int RANK => 1;
 
         private TChar()
             : base(1) {
         }
 
-        /// <summary>
-        /// TODO
-        /// </summary>
-        /// <param name="other"></param>
-        /// <returns></returns>
+
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
         }
@@ -46,6 +39,7 @@ namespace lcc.TypeSystem {
         private static readonly TUChar instance = new TUChar(false);
 
         public static TUChar Instance => instance;
+        public override int RANK => 1;
         private TUChar(bool isConstant) : base(1) { }
 
         public override TUnqualified Composite(TUnqualified other) {
@@ -65,6 +59,7 @@ namespace lcc.TypeSystem {
         private static readonly TSChar instance = new TSChar();
 
         public static TSChar Instance => instance;
+        public override int RANK => 1;
 
         private TSChar() : base(1) { }
 

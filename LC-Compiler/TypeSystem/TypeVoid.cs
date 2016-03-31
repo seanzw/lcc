@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.TypeSystem {
-    public sealed class TypeVoid : TArithmetic {
+    public sealed class TypeVoid : TUnqualified {
 
         private static readonly TypeVoid instance = new TypeVoid();
 
@@ -15,7 +15,9 @@ namespace lcc.TypeSystem {
             }
         }
 
-        private TypeVoid() : base(1) { }
+        public override bool Completed => false;
+
+        //private TypeVoid() : base(1) { }
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();

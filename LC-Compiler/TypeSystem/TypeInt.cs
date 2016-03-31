@@ -11,6 +11,7 @@ namespace lcc.TypeSystem {
         private static readonly TInt instance = new TInt();
 
         public static TInt Instance => instance;
+        public override int RANK => 3;
         private TInt() : base(4) { }
 
         public override TUnqualified Composite(TUnqualified other) {
@@ -30,6 +31,7 @@ namespace lcc.TypeSystem {
         private static readonly TUInt instance = new TUInt();
 
         public static TUInt Instance => instance;
+        public override int RANK => 3;
         private TUInt() : base(4) { }
 
         public override TUnqualified Composite(TUnqualified other) {

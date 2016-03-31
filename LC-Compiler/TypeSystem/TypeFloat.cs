@@ -9,11 +9,8 @@ namespace lcc.TypeSystem {
 
         private static readonly TFloat instance = new TFloat();
 
-        public static TFloat Instance {
-            get {
-                return instance;
-            }
-        }
+        public static TFloat Instance => instance;
+        public override int RANK => 6;
 
         private TFloat() : base(4) { }
 
@@ -30,11 +27,8 @@ namespace lcc.TypeSystem {
 
         private static readonly TDouble instance = new TDouble();
 
-        public static TDouble Instance {
-            get {
-                return instance;
-            }
-        }
+        public static TDouble Instance => instance;
+        public override int RANK => 6;
         private TDouble() : base(8) { }
 
         public override TUnqualified Composite(TUnqualified other) {
@@ -50,11 +44,8 @@ namespace lcc.TypeSystem {
 
         private static readonly TLDouble instance = new TLDouble();
 
-        public static TLDouble Instance {
-            get {
-                return instance;
-            }
-        }
+        public static TLDouble Instance => instance;
+        public override int RANK => 7;
         private TLDouble() : base(8) { }
 
         public override TUnqualified Composite(TUnqualified other) {

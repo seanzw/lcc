@@ -285,10 +285,10 @@ namespace lcc.Parser {
             return PostfixExpression()
                 .Else(Match<T_PUNC_INCRE>()
                     .Then(Ref(UnaryExpression))
-                    .Select(x => new ASTPreStep(x, ASTPreStep.Type.INC) as ASTExpr))
+                    .Select(x => new ASTPreStep(x, ASTPreStep.Kind.INC) as ASTExpr))
                 .Else(Match<T_PUNC_DECRE>()
                     .Then(Ref(UnaryExpression))
-                    .Select(x => new ASTPreStep(x, ASTPreStep.Type.DEC) as ASTExpr))
+                    .Select(x => new ASTPreStep(x, ASTPreStep.Kind.DEC) as ASTExpr))
                 .Else(UnaryOperator()
                     .Bind(op => Ref(CastExpression)
                     .Select(expr => new ASTUnaryOp(expr, op) as ASTExpr)))
@@ -352,9 +352,9 @@ namespace lcc.Parser {
                     .Then(Get<T_IDENTIFIER>()
                     .Bind(id => PostfixExpressionTail(new ASTAccess(expr, id, ASTAccess.Kind.PTR)))))
                 .Else(Match<T_PUNC_INCRE>()
-                    .Bind(_ => PostfixExpressionTail(new ASTPostStep(expr, ASTPostStep.Type.INC))))
+                    .Bind(_ => PostfixExpressionTail(new ASTPostStep(expr, ASTPostStep.Kind.INC))))
                 .Else(Match<T_PUNC_DECRE>()
-                    .Bind(_ => PostfixExpressionTail(new ASTPostStep(expr, ASTPostStep.Type.DEC))))
+                    .Bind(_ => PostfixExpressionTail(new ASTPostStep(expr, ASTPostStep.Kind.DEC))))
                 .Else(Result<Token.Token, ASTExpr>(expr));
         }
 

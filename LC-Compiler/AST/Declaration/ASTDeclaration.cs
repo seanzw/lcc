@@ -110,8 +110,8 @@ namespace lcc.AST {
             }
         }
 
-        private static Dictionary<IEnumerable<ASTTypeSpecifier.Type>, TArithmetic> dict =
-            new Dictionary<IEnumerable<ASTTypeSpecifier.Type>, TArithmetic>(new ListComparer()) {
+        private static Dictionary<IEnumerable<ASTTypeSpecifier.Type>, TUnqualified> dict =
+            new Dictionary<IEnumerable<ASTTypeSpecifier.Type>, TUnqualified>(new ListComparer()) {
                 {
                     // void
                     from s in new List<ASTTypeSpecifier.Type> {

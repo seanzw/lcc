@@ -94,6 +94,7 @@
     <Compile Include="TypeSystem\TypeChar.cs" />
     <Compile Include="TypeSystem\TypeEnum.cs" />
     <Compile Include="TypeSystem\TypeFloat.cs" />
+    <Compile Include="TypeSystem\TypeFunc.cs" />
     <Compile Include="TypeSystem\TypeInt.cs" />
     <Compile Include="TypeSystem\TypeLong.cs" />
     <Compile Include="TypeSystem\TypeLongLong.cs" />

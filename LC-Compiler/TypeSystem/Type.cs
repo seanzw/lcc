@@ -28,16 +28,18 @@ namespace lcc.TypeSystem {
                 - scalar
                     - pointer
                     - arithmetic
-                        - floating
-                            - float
-                            - double
-                            - long double
-                        - integer
-                            - enumerated
-                            - [signed/unsigned] short
-                            - [signed/unsigned] int
-                            - [signed/unsigned] long
-                            - [signed/unsigned] long long
+                        - real
+                            - floating
+                                - float
+                                - double
+                                - long double
+                            - integer
+                                - enumerated
+                                - [signed/unsigned] short
+                                - [signed/unsigned] int
+                                - [signed/unsigned] long
+                                - [signed/unsigned] long long
+                        - complex
      */
 
 
@@ -61,17 +63,38 @@ namespace lcc.TypeSystem {
             get;
         }
 
+        /// <summary>
+        /// Qualify this type.
+        /// </summary>
+        /// <param name="qualifiers"></param>
+        /// <param name="lr"></param>
+        /// <returns></returns>
+        public T Qualify(TQualifiers qualifiers, T.LR lr = T.LR.L) {
+            return new T(this, qualifiers, lr);
+        }
+
+        public T Const(T.LR lr = T.LR.L) {
+            return Qualify(TQualifiers.Const, lr);
+        }
+
+        public T None(T.LR lr = T.LR.L) {
+            return Qualify(TQualifiers.None, lr);
+        }
     }
 
     public abstract class TObject : TUnqualified {
         public override bool Completed => true;
     }
 
-    public abstract class TArithmetic : TObject {
+    public abstract class TScalar : TObject { }
+
+    public abstract class TArithmetic : TScalar {
 
         public TArithmetic(uint size) {
             this.size = size;
         }
+
+        public abstract int RANK { get; }
 
         /// <summary>
         /// The value returned by sizeof.
@@ -79,17 +102,46 @@ namespace lcc.TypeSystem {
         public readonly uint size;
     }
 
-    public abstract class TInteger : TArithmetic {
+    public abstract class TReal : TArithmetic {
+        public TReal(uint size) : base(size) { }
+    }
+
+    public abstract class TInteger : TReal {
 
         public TInteger(uint size) : base(size) { }
 
-        public abstract BigInteger MAX {
-            get;
-        }
+        public abstract BigInteger MAX { get; }
         
-        public abstract BigInteger MIN {
-            get;
+        public abstract BigInteger MIN { get; }
+    }
+
+    /// <summary>
+    /// Holds all the three qualifiers.
+    /// TODO: Support restrict and volatile.
+    /// </summary>
+    public class TQualifiers {
+        public bool isConstant;
+        private TQualifiers(bool isConstant, bool isRestrict, bool isVolatile) {
+            this.isConstant = isConstant;
         }
+
+        public bool Equals(TQualifiers other) {
+            return other.isConstant == isConstant;
+        }
+        public override string ToString() {
+            string str = isConstant ? "const " : "";
+            return str;
+        }
+        public static TQualifiers operator |(TQualifiers q1, TQualifiers q2) {
+            return new TQualifiers(
+                q1.isConstant || q2.isConstant,
+                false,
+                false
+                );
+        }
+
+        public static readonly TQualifiers None = new TQualifiers(false, false, false);
+        public static readonly TQualifiers Const = new TQualifiers(true, false, false);
     }
 
     /// <summary>
@@ -102,23 +154,7 @@ namespace lcc.TypeSystem {
             R
         }
 
-        public struct Qualifier {
-            public bool isConstant;
-            //public bool isRestrict;
-            //public bool isVolatile;
-            public Qualifier(bool isConstant, bool isRestrict, bool isVolatile) {
-                this.isConstant = isConstant;
-                //this.isRestrict = isRestrict;
-                //this.isVolatile = isVolatile;
-            }
-            public bool Equals(Qualifier other) {
-                return other.isConstant == isConstant;
-                    //&& other.isRestrict == isRestrict
-                    //&& other.isVolatile == isVolatile;
-            }
-        }
-
-        public T(TUnqualified baseType, Qualifier qualifiers, LR lr) {
+        public T(TUnqualified baseType, TQualifiers qualifiers, LR lr) {
             this.baseType = baseType;
             this.qualifiers = qualifiers;
             this.lr = lr;
@@ -139,47 +175,7 @@ namespace lcc.TypeSystem {
         }
 
         public override string ToString() {
-            string constantStr = qualifiers.isConstant ? "constant " : "";
-            //string restrictStr = qualifiers.isRestrict ? "restrict " : "";
-            //string volatileStr = qualifiers.isVolatile ? "volatile " : "";
-            //return constantStr + restrictStr + volatileStr + baseType;
-            return constantStr + baseType;
-        }
-
-        public bool IsObject => baseType is TObject;
-        public bool IsPointer => baseType is TPointer;
-        public bool IsInteger => baseType is TInteger;
-        public bool IsStructUnion => baseType is TStructUnion;
-        public bool IsLValue => lr == LR.L;
-
-        public readonly TUnqualified baseType;
-        public readonly Qualifier qualifiers;
-        public readonly LR lr;
-    }
-
-    public static class TypeExtension {
-
-        private class Repo {
-            public T none;
-            public T constant;
-        }
-
-        public static T MakeConst(this TUnqualified type, T.LR lr) {
-            var buffer = (lr == T.LR.L) ? LValueBuffer : RValueBuffer;
-            if (!buffer.ContainsKey(type))
-                buffer.Add(type, new Repo());
-            if (buffer[type].constant == null)
-                buffer[type].constant = new T(type, new T.Qualifier(true, false, false), lr);
-            return buffer[type].constant;
-        }
-
-        public static T MakeType(this TUnqualified type, T.LR lr) {
-            var buffer = (lr == T.LR.L) ? LValueBuffer : RValueBuffer;
-            if (!buffer.ContainsKey(type))
-                buffer.Add(type, new Repo());
-            if (buffer[type].none == null)
-                buffer[type].none = new T(type, new T.Qualifier(false, false, false), lr);
-            return buffer[type].none;
+            return qualifiers.ToString() + baseType.ToString();
         }
 
         /// <summary>
@@ -198,25 +194,82 @@ namespace lcc.TypeSystem {
         /// s.ci    -> const int;
         /// cs.i    -> const int;
         /// cs.ci   -> const int;
-        /// 
         /// </summary>
-        /// <param name="type"></param>
-        /// <param name="other"></param>
-        /// <param name="isLValue"></param>
-        /// <returns></returns>
-        public static T MakeQualified(this T type, T other, T.LR lr) {
-            var buffer = (lr == T.LR.L) ? LValueBuffer : RValueBuffer;
-            if (!buffer.ContainsKey(other.baseType))
-                buffer.Add(other.baseType, new Repo());
-            if (type.qualifiers.isConstant || other.qualifiers.isConstant) {
-                return other.baseType.MakeConst(lr);
-            } else {
-                return other.baseType.MakeType(lr);
-            }
+        /// <param name="nested"> Nested member type. </param>
+        /// <param name="lr"> LRValue. </param>
+        /// <returns> A new type. </returns>
+        public T Unnest(T nested, LR lr = LR.L) {
+            return new T(nested.baseType, qualifiers | nested.qualifiers, lr);
         }
 
-        // Use buffer to avoid creating a lot of types during type check.
-        private static Dictionary<TUnqualified, Repo> LValueBuffer = new Dictionary<TUnqualified, Repo>();
-        private static Dictionary<TUnqualified, Repo> RValueBuffer = new Dictionary<TUnqualified, Repo>();
+        /// <summary>
+        /// Return the save type but as an rvalue.
+        /// </summary>
+        /// <returns></returns>
+        public T R() {
+            return IsRValue ? this : new T(baseType, qualifiers, LR.R);
+        }
+
+        /// <summary>
+        /// Pointer derivation.
+        /// </summary>
+        /// <param name="qualifier"></param>
+        /// <param name="lr"></param>
+        /// <returns></returns>
+        public T Ptr(TQualifiers qualifiers = null) {
+            qualifiers = qualifiers ?? TQualifiers.None;
+            return new T(new TPointer(this), qualifiers, LR.L);
+        }
+
+        /// <summary>
+        /// Array derivation.
+        /// </summary>
+        /// <param name="qualifiers"></param>
+        /// <param name="lr"></param>
+        /// <returns></returns>
+        public T Arr(int n, TQualifiers qualifiers = null) {
+            qualifiers = qualifiers ?? TQualifiers.None;
+            return new T(new TArray(this, n), qualifiers, LR.L);
+        }
+
+        public bool IsObject => baseType is TObject;
+        public bool IsArray => baseType is TArray;
+        public bool IsScalar => baseType is TScalar;
+        public bool IsPointer => baseType is TPointer;
+        public bool IsArithmetic => baseType is TArithmetic;
+        public bool IsReal => baseType is TReal;
+        public bool IsInteger => baseType is TInteger;
+        
+        public bool IsStructUnion => baseType is TStructUnion;
+        public bool IsFunc => baseType is TFunc;
+
+
+        public bool IsLValue => lr == LR.L;
+        public bool IsRValue => lr == LR.R;
+        public bool IsModifiable => IsLValue && (!qualifiers.isConstant);
+
+        public readonly TUnqualified baseType;
+        public readonly TQualifiers qualifiers;
+        public readonly LR lr;
+
+    }
+
+    public static class TPromotion {
+
+        /// <summary>
+        /// Integer promotion.
+        /// Those type with rank less than int will be promoted to int.
+        /// </summary>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        public static T IntPromote(this T t) {
+            TArithmetic ta = t.baseType as TArithmetic;
+            if (ta.RANK < TInt.Instance.RANK) {
+                return new T(TInt.Instance, t.qualifiers, t.lr);
+            } else {
+                return t;
+            }
+        }
+     
     }
 }

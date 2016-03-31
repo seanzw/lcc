@@ -130,14 +130,14 @@ namespace LC_CompilerTests {
                     "x++",
                     new ASTPostStep(
                         new ASTIdentifier(new T_IDENTIFIER(1, "x")),
-                        ASTPostStep.Type.INC
+                        ASTPostStep.Kind.INC
                     )
                 },
                 {
                     "x--",
                     new ASTPostStep(
                         new ASTIdentifier(new T_IDENTIFIER(1, "x")),
-                        ASTPostStep.Type.DEC
+                        ASTPostStep.Kind.DEC
                     )
                 }
             };
@@ -156,8 +156,8 @@ namespace LC_CompilerTests {
                     new ASTPreStep(
                         new ASTPostStep(
                             new ASTIdentifier(new T_IDENTIFIER(1, "x")),
-                            ASTPostStep.Type.DEC),
-                        ASTPreStep.Type.INC
+                            ASTPostStep.Kind.DEC),
+                        ASTPreStep.Kind.INC
                     )
                 },
                 {
@@ -166,7 +166,7 @@ namespace LC_CompilerTests {
                         new ASTArrSub(
                             new ASTIdentifier(new T_IDENTIFIER(1, "x")),
                             new ASTConstInt(new T_CONST_INT(1, "2", 10))),
-                        ASTPreStep.Type.DEC
+                        ASTPreStep.Kind.DEC
                     )
                 },
                 {
@@ -238,8 +238,8 @@ namespace LC_CompilerTests {
                     new ASTPreStep(
                         new ASTPostStep(
                             new ASTIdentifier(new T_IDENTIFIER(1, "x")),
-                            ASTPostStep.Type.DEC),
-                        ASTPreStep.Type.INC
+                            ASTPostStep.Kind.DEC),
+                        ASTPreStep.Kind.INC
                     )
                 }
             };
