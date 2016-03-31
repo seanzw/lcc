@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace lcc.Type {
+namespace lcc.TypeSystem {
 
     /**
     
@@ -45,14 +45,14 @@ namespace lcc.Type {
     /// <summary>
     /// Base type is a type without type qualifier.
     /// </summary>
-    public abstract class UnqualifiedType {
+    public abstract class TUnqualified {
 
         /// <summary>
         /// Return a composite type of this and other.
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
-        public abstract UnqualifiedType Composite(UnqualifiedType other);
+        public abstract TUnqualified Composite(TUnqualified other);
 
         /// <summary>
         /// Whether this is a completed type.
@@ -63,13 +63,13 @@ namespace lcc.Type {
 
     }
 
-    public abstract class ObjectType : UnqualifiedType {
+    public abstract class TObject : TUnqualified {
         public override bool Completed => true;
     }
 
-    public abstract class ArithmeticType : ObjectType {
+    public abstract class TArithmetic : TObject {
 
-        public ArithmeticType(uint size) {
+        public TArithmetic(uint size) {
             this.size = size;
         }
 
@@ -79,9 +79,9 @@ namespace lcc.Type {
         public readonly uint size;
     }
 
-    public abstract class IntegerType : ArithmeticType {
+    public abstract class TInteger : TArithmetic {
 
-        public IntegerType(uint size) : base(size) { }
+        public TInteger(uint size) : base(size) { }
 
         public abstract BigInteger MAX {
             get;
@@ -92,12 +92,15 @@ namespace lcc.Type {
         }
     }
 
-    
-
     /// <summary>
     /// A type is composed with an unqualified type and qualifiers.
     /// </summary>
-    public sealed class Type {
+    public sealed class T {
+
+        public enum LR {
+            L,
+            R
+        }
 
         public struct Qualifier {
             public bool isConstant;
@@ -115,17 +118,20 @@ namespace lcc.Type {
             }
         }
 
-        public Type(UnqualifiedType baseType, Qualifier qualifiers, bool isLValue) {
+        public T(TUnqualified baseType, Qualifier qualifiers, LR lr) {
             this.baseType = baseType;
             this.qualifiers = qualifiers;
-            this.isLValue = isLValue;
+            this.lr = lr;
         }
 
         public override bool Equals(object obj) {
-            Type t = obj as Type;
+            return Equals(obj as T);
+        }
+
+        public bool Equals(T t) {
             return t == null ? false : t.baseType.Equals(baseType)
                 && t.qualifiers.Equals(qualifiers)
-                && t.isLValue == isLValue;
+                && t.lr == lr;
         }
 
         public override int GetHashCode() {
@@ -140,38 +146,39 @@ namespace lcc.Type {
             return constantStr + baseType;
         }
 
-        public bool IsObject => baseType is ObjectType;
-        public bool IsPointer => baseType is TypePointer;
-        public bool IsInteger => baseType is IntegerType;
-        public bool IsStructUnion => baseType is TypeStructUnion;
+        public bool IsObject => baseType is TObject;
+        public bool IsPointer => baseType is TPointer;
+        public bool IsInteger => baseType is TInteger;
+        public bool IsStructUnion => baseType is TStructUnion;
+        public bool IsLValue => lr == LR.L;
 
-        public UnqualifiedType baseType;
-        public Qualifier qualifiers;
-        public readonly bool isLValue;
+        public readonly TUnqualified baseType;
+        public readonly Qualifier qualifiers;
+        public readonly LR lr;
     }
 
     public static class TypeExtension {
 
         private class Repo {
-            public Type none;
-            public Type constant;
+            public T none;
+            public T constant;
         }
 
-        public static Type MakeConst(this UnqualifiedType type, bool isLValue) {
-            var buffer = isLValue ? LValueBuffer : RValueBuffer;
+        public static T MakeConst(this TUnqualified type, T.LR lr) {
+            var buffer = (lr == T.LR.L) ? LValueBuffer : RValueBuffer;
             if (!buffer.ContainsKey(type))
                 buffer.Add(type, new Repo());
             if (buffer[type].constant == null)
-                buffer[type].constant = new Type(type, new Type.Qualifier(true, false, false), isLValue);
+                buffer[type].constant = new T(type, new T.Qualifier(true, false, false), lr);
             return buffer[type].constant;
         }
 
-        public static Type MakeType(this UnqualifiedType type, bool isLValue) {
-            var buffer = isLValue ? LValueBuffer : RValueBuffer;
+        public static T MakeType(this TUnqualified type, T.LR lr) {
+            var buffer = (lr == T.LR.L) ? LValueBuffer : RValueBuffer;
             if (!buffer.ContainsKey(type))
                 buffer.Add(type, new Repo());
             if (buffer[type].none == null)
-                buffer[type].none = new Type(type, new Type.Qualifier(false, false, false), isLValue);
+                buffer[type].none = new T(type, new T.Qualifier(false, false, false), lr);
             return buffer[type].none;
         }
 
@@ -197,19 +204,19 @@ namespace lcc.Type {
         /// <param name="other"></param>
         /// <param name="isLValue"></param>
         /// <returns></returns>
-        public static Type MakeQualified(this Type type, Type other, bool isLValue) {
-            var buffer = isLValue ? LValueBuffer : RValueBuffer;
+        public static T MakeQualified(this T type, T other, T.LR lr) {
+            var buffer = (lr == T.LR.L) ? LValueBuffer : RValueBuffer;
             if (!buffer.ContainsKey(other.baseType))
                 buffer.Add(other.baseType, new Repo());
             if (type.qualifiers.isConstant || other.qualifiers.isConstant) {
-                return other.baseType.MakeConst(isLValue);
+                return other.baseType.MakeConst(lr);
             } else {
-                return other.baseType.MakeType(isLValue);
+                return other.baseType.MakeType(lr);
             }
         }
 
         // Use buffer to avoid creating a lot of types during type check.
-        private static Dictionary<UnqualifiedType, Repo> LValueBuffer = new Dictionary<UnqualifiedType, Repo>();
-        private static Dictionary<UnqualifiedType, Repo> RValueBuffer = new Dictionary<UnqualifiedType, Repo>();
+        private static Dictionary<TUnqualified, Repo> LValueBuffer = new Dictionary<TUnqualified, Repo>();
+        private static Dictionary<TUnqualified, Repo> RValueBuffer = new Dictionary<TUnqualified, Repo>();
     }
 }

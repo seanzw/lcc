@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using lcc.TypeSystem;
+
 namespace lcc.AST {
 
     /// <summary>
@@ -23,7 +25,7 @@ namespace lcc.AST {
             return GetLine();
         }
 
-        public virtual Type.Type TypeCheck(ASTEnv env) {
+        public virtual T TypeCheck(ASTEnv env) {
             throw new NotImplementedException();
         }
     }

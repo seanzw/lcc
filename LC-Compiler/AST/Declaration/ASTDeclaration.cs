@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using lcc.Type;
+using lcc.TypeSystem;
 
 namespace lcc.AST {
     public sealed class ASTDeclaration : ASTStatement {
@@ -41,7 +41,7 @@ namespace lcc.AST {
         public readonly LinkedList<ASTDeclarationSpecifier> specifiers;
         public readonly LinkedList<ASTDeclarator> declarators;
 
-        public Type.Type TypeCheck(ASTEnv env) {
+        public T TypeCheck(ASTEnv env) {
 
             // Process the specifier list.
             var typeSpecifiers = 
@@ -110,8 +110,8 @@ namespace lcc.AST {
             }
         }
 
-        private static Dictionary<IEnumerable<ASTTypeSpecifier.Type>, ArithmeticType> dict =
-            new Dictionary<IEnumerable<ASTTypeSpecifier.Type>, ArithmeticType>(new ListComparer()) {
+        private static Dictionary<IEnumerable<ASTTypeSpecifier.Type>, TArithmetic> dict =
+            new Dictionary<IEnumerable<ASTTypeSpecifier.Type>, TArithmetic>(new ListComparer()) {
                 {
                     // void
                     from s in new List<ASTTypeSpecifier.Type> {
@@ -124,7 +124,7 @@ namespace lcc.AST {
                     from s in new List<ASTTypeSpecifier.Type> {
                         ASTTypeSpecifier.Type.CHAR
                     } orderby s ascending select s,
-                    TypeChar.Instance
+                    TChar.Instance
                 },
                 {
                     // signed char
@@ -132,7 +132,7 @@ namespace lcc.AST {
                         ASTTypeSpecifier.Type.SIGNED,
                         ASTTypeSpecifier.Type.CHAR
                     } orderby s ascending select s,
-                    TypeSignedChar.Instance
+                    TSChar.Instance
                 },
                 {
                     // unsigned char
@@ -140,14 +140,14 @@ namespace lcc.AST {
                         ASTTypeSpecifier.Type.UNSIGNED,
                         ASTTypeSpecifier.Type.CHAR
                     } orderby s ascending select s,
-                    TypeUnsignedChar.Instance
+                    TUChar.Instance
                 },
                 {
                     // short
                     from s in new List<ASTTypeSpecifier.Type> {
                         ASTTypeSpecifier.Type.SHORT
                     } orderby s ascending select s,
-                    TypeShort.Instance
+                    TShort.Instance
                 },
                 {
                     // signed short
@@ -155,7 +155,7 @@ namespace lcc.AST {
                         ASTTypeSpecifier.Type.SIGNED,
                         ASTTypeSpecifier.Type.SHORT
                     } orderby s ascending select s,
-                    TypeShort.Instance
+                    TShort.Instance
                 },
                 {
                     // short int
@@ -163,7 +163,7 @@ namespace lcc.AST {
                         ASTTypeSpecifier.Type.SHORT,
                         ASTTypeSpecifier.Type.INT
                     } orderby s ascending select s,
-                    TypeShort.Instance
+                    TShort.Instance
                 },
                 {
                     // signed short int
@@ -172,7 +172,7 @@ namespace lcc.AST {
                         ASTTypeSpecifier.Type.SHORT,
                         ASTTypeSpecifier.Type.INT
                     } orderby s ascending select s,
-                    TypeShort.Instance
+                    TShort.Instance
                 },
                 {
                     // unsigned short
@@ -180,7 +180,7 @@ namespace lcc.AST {
                         ASTTypeSpecifier.Type.UNSIGNED,
                         ASTTypeSpecifier.Type.SHORT
                     } orderby s ascending select s,
-                    TypeUnsignedShort.Instance
+                    TUShort.Instance
                 },
                 {
                     // unsigned short int
@@ -189,21 +189,21 @@ namespace lcc.AST {
                         ASTTypeSpecifier.Type.SHORT,
                         ASTTypeSpecifier.Type.INT
                     } orderby s ascending select s,
-                    TypeUnsignedShort.Instance
+                    TUShort.Instance
                 },
                 {
                     // int
                     from s in new List<ASTTypeSpecifier.Type> {
                         ASTTypeSpecifier.Type.INT
                     } orderby s ascending select s,
-                    TypeInt.Instance
+                    TInt.Instance
                 },
                 {
                     // signed
                     from s in new List<ASTTypeSpecifier.Type> {
                         ASTTypeSpecifier.Type.SIGNED
                     } orderby s ascending select s,
-                    TypeInt.Instance
+                    TInt.Instance
                 },
                 {
                     // signed int
@@ -211,14 +211,14 @@ namespace lcc.AST {
                         ASTTypeSpecifier.Type.SIGNED,
                         ASTTypeSpecifier.Type.INT
                     } orderby s ascending select s,
-                    TypeInt.Instance
+                    TInt.Instance
                 },
                 {
                     // unsigned
                     from s in new List<ASTTypeSpecifier.Type> {
                         ASTTypeSpecifier.Type.UNSIGNED
                     } orderby s ascending select s,
-                    TypeUnsignedInt.Instance
+                    TUInt.Instance
                 },
                 {
                     // unsigned int
@@ -226,14 +226,14 @@ namespace lcc.AST {
                         ASTTypeSpecifier.Type.UNSIGNED,
                         ASTTypeSpecifier.Type.INT
                     } orderby s ascending select s,
-                    TypeUnsignedInt.Instance
+                    TUInt.Instance
                 },
                 {
                     // long
                     from s in new List<ASTTypeSpecifier.Type> {
                         ASTTypeSpecifier.Type.LONG
                     } orderby s ascending select s,
-                    TypeLong.Instance
+                    TLong.Instance
                 },
                 {
                     // signed long
@@ -241,7 +241,7 @@ namespace lcc.AST {
                         ASTTypeSpecifier.Type.SIGNED,
                         ASTTypeSpecifier.Type.LONG
                     } orderby s ascending select s,
-                    TypeLong.Instance
+                    TLong.Instance
                 },
                 {
                     // long int
@@ -249,7 +249,7 @@ namespace lcc.AST {
                         ASTTypeSpecifier.Type.LONG,
                         ASTTypeSpecifier.Type.INT
                     } orderby s ascending select s,
-                    TypeLong.Instance
+                    TLong.Instance
                 },
                 {
                     // signed long int
@@ -258,7 +258,7 @@ namespace lcc.AST {
                         ASTTypeSpecifier.Type.LONG,
                         ASTTypeSpecifier.Type.INT
                     } orderby s ascending select s,
-                    TypeLong.Instance
+                    TLong.Instance
                 },
                 {
                     // unsigned long
@@ -266,7 +266,7 @@ namespace lcc.AST {
                         ASTTypeSpecifier.Type.UNSIGNED,
                         ASTTypeSpecifier.Type.LONG
                     } orderby s ascending select s,
-                    TypeUnsignedLong.Instance
+                    TULong.Instance
                 },
                 {
                     // unsigned long int
@@ -275,7 +275,7 @@ namespace lcc.AST {
                         ASTTypeSpecifier.Type.LONG,
                         ASTTypeSpecifier.Type.INT
                     } orderby s ascending select s,
-                    TypeUnsignedLong.Instance
+                    TULong.Instance
                 },
                 {
                     // long long
@@ -283,7 +283,7 @@ namespace lcc.AST {
                         ASTTypeSpecifier.Type.LONG,
                         ASTTypeSpecifier.Type.LONG
                     } orderby s ascending select s,
-                    TypeLongLong.Instance
+                    TLLong.Instance
                 },
                 {
                     // signed long long
@@ -292,7 +292,7 @@ namespace lcc.AST {
                         ASTTypeSpecifier.Type.LONG,
                         ASTTypeSpecifier.Type.LONG
                     } orderby s ascending select s,
-                    TypeLongLong.Instance
+                    TLLong.Instance
                 },
                 {
                     // long long int
@@ -301,7 +301,7 @@ namespace lcc.AST {
                         ASTTypeSpecifier.Type.LONG,
                         ASTTypeSpecifier.Type.INT
                     } orderby s ascending select s,
-                    TypeLongLong.Instance
+                    TLLong.Instance
                 },
                 {
                     // signed long long int
@@ -311,7 +311,7 @@ namespace lcc.AST {
                         ASTTypeSpecifier.Type.LONG,
                         ASTTypeSpecifier.Type.INT
                     } orderby s ascending select s,
-                    TypeLongLong.Instance
+                    TLLong.Instance
                 },
                 {
                     // unsigned long long
@@ -320,7 +320,7 @@ namespace lcc.AST {
                         ASTTypeSpecifier.Type.LONG,
                         ASTTypeSpecifier.Type.LONG
                     } orderby s ascending select s,
-                    TypeUnsignedLongLong.Instance
+                    TULLong.Instance
                 },
                 {
                     // unsigned long long int
@@ -330,21 +330,21 @@ namespace lcc.AST {
                         ASTTypeSpecifier.Type.LONG,
                         ASTTypeSpecifier.Type.INT
                     } orderby s ascending select s,
-                    TypeUnsignedLongLong.Instance
+                    TULLong.Instance
                 },
                 {
                     // float
                     from s in new List<ASTTypeSpecifier.Type> {
                         ASTTypeSpecifier.Type.FLOAT
                     } orderby s ascending select s,
-                    TypeFloat.Instance
+                    TFloat.Instance
                 },
                 {
                     // double
                     from s in new List<ASTTypeSpecifier.Type> {
                         ASTTypeSpecifier.Type.DOUBLE
                     } orderby s ascending select s,
-                    TypeDouble.Instance
+                    TDouble.Instance
                 },
                 {
                     // long double
@@ -352,14 +352,14 @@ namespace lcc.AST {
                         ASTTypeSpecifier.Type.LONG,
                         ASTTypeSpecifier.Type.DOUBLE
                     } orderby s ascending select s,
-                    TypeLongDouble.Instance
+                    TLDouble.Instance
                 },
                 {
                     // double
                     from s in new List<ASTTypeSpecifier.Type> {
                         ASTTypeSpecifier.Type.BOOL
                     } orderby s ascending select s,
-                    TypeBool.Instance
+                    TBool.Instance
                 },
             };
         #endregion

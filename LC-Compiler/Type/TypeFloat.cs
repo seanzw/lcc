@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace lcc.Type {
+namespace lcc.TypeSystem {
     public sealed class TypeFloat : ArithmeticType {
 
         private static readonly TypeFloat instance = new TypeFloat();

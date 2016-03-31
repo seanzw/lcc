@@ -10,17 +10,17 @@ namespace lcc.TypeSystem {
     /// <summary>
     /// Built-in type char.
     /// </summary>
-    public sealed class TypeChar : IntegerType {
+    public sealed class TChar : TInteger {
 
-        private static readonly TypeChar instance = new TypeChar();
+        private static readonly TChar instance = new TChar();
 
-        public static TypeChar Instance {
+        public static TChar Instance {
             get {
                 return instance;
             }
         }
 
-        private TypeChar()
+        private TChar()
             : base(1) {
         }
 
@@ -29,7 +29,7 @@ namespace lcc.TypeSystem {
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
-        public override UnqualifiedType Composite(UnqualifiedType other) {
+        public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
         }
 
@@ -37,18 +37,18 @@ namespace lcc.TypeSystem {
             return "char";
         }
 
-        public override BigInteger MAX => TypeSignedChar.Instance.MAX;
-        public override BigInteger MIN => TypeSignedChar.Instance.MIN;
+        public override BigInteger MAX => TSChar.Instance.MAX;
+        public override BigInteger MIN => TSChar.Instance.MIN;
     }
 
-    public sealed class TypeUnsignedChar : IntegerType {
+    public sealed class TUChar : TInteger {
 
-        private static readonly TypeUnsignedChar instance = new TypeUnsignedChar(false);
+        private static readonly TUChar instance = new TUChar(false);
 
-        public static TypeUnsignedChar Instance => instance;
-        private TypeUnsignedChar(bool isConstant) : base(1) { }
+        public static TUChar Instance => instance;
+        private TUChar(bool isConstant) : base(1) { }
 
-        public override UnqualifiedType Composite(UnqualifiedType other) {
+        public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
         }
 
@@ -60,15 +60,15 @@ namespace lcc.TypeSystem {
         public override BigInteger MIN => 0;
     }
 
-    public sealed class TypeSignedChar : IntegerType {
+    public sealed class TSChar : TInteger {
 
-        private static readonly TypeSignedChar instance = new TypeSignedChar();
+        private static readonly TSChar instance = new TSChar();
 
-        public static TypeSignedChar Instance => instance;
+        public static TSChar Instance => instance;
 
-        private TypeSignedChar() : base(1) { }
+        private TSChar() : base(1) { }
 
-        public override UnqualifiedType Composite(UnqualifiedType other) {
+        public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
         }
 

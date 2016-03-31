@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using lcc.Type;
+using lcc.TypeSystem;
 
 namespace lcc.AST {
 
@@ -14,9 +14,9 @@ namespace lcc.AST {
     public sealed class ASTEnv {
 
         public struct Signature {
-            public Type.Type type;
+            public T type;
             public readonly int line;
-            public Signature(Type.Type type, int line) {
+            public Signature(T type, int line) {
                 this.type = type;
                 this.line = line;
             }
@@ -89,7 +89,7 @@ namespace lcc.AST {
         /// <param name="symbol"></param>
         /// <param name="type"></param>
         /// <param name="line"></param>
-        public void AddSymbol(string symbol, Type.Type type, int line) {
+        public void AddSymbol(string symbol, T type, int line) {
             scopes.Peek().Add(symbol, new Signature(type, line));
         }
 
@@ -112,7 +112,7 @@ namespace lcc.AST {
         /// </summary>
         /// <param name="symbol"></param>
         /// <returns></returns>
-        public Type.Type GetType(string symbol) {
+        public T GetType(string symbol) {
             foreach (var scope in scopes) {
                 if (scope.ContainsKey(symbol)) return scope[symbol].type;
             }

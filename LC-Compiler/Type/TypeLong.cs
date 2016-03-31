@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace lcc.Type {
+namespace lcc.TypeSystem {
     public sealed class TypeLong : IntegerType {
 
         private static readonly TypeLong instance = new TypeLong();

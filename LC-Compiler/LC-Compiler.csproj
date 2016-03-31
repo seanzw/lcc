@@ -88,25 +88,24 @@
     <Compile Include="Token\Punctuator.cs" />
     <Compile Include="Token\StringLiteral.cs" />
     <Compile Include="Token\Token.cs" />
-    <Compile Include="Type\Type.cs" />
-    <Compile Include="Type\TypeBool.cs" />
-    <Compile Include="Type\TypeChar.cs" />
     <Compile Include="AST\ASTEnv.cs" />
-    <Compile Include="Type\TypeEnum.cs" />
-    <Compile Include="Type\TypeFloat.cs" />
-    <Compile Include="Type\TypeInt.cs" />
-    <Compile Include="Type\TypeLong.cs" />
-    <Compile Include="Type\TypeLongLong.cs" />
-    <Compile Include="Type\TypePointer.cs" />
-    <Compile Include="Type\TypeShort.cs" />
-    <Compile Include="Type\TypeVoid.cs" />
+    <Compile Include="TypeSystem\Type.cs" />
+    <Compile Include="TypeSystem\TypeBool.cs" />
+    <Compile Include="TypeSystem\TypeChar.cs" />
+    <Compile Include="TypeSystem\TypeEnum.cs" />
+    <Compile Include="TypeSystem\TypeFloat.cs" />
+    <Compile Include="TypeSystem\TypeInt.cs" />
+    <Compile Include="TypeSystem\TypeLong.cs" />
+    <Compile Include="TypeSystem\TypeLongLong.cs" />
+    <Compile Include="TypeSystem\TypePointer.cs" />
+    <Compile Include="TypeSystem\TypeShort.cs" />
+    <Compile Include="TypeSystem\TypeStructUnion.cs" />
+    <Compile Include="TypeSystem\TypeVoid.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="TypeChecker\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="Lexer\lcc.ll" />
   </ItemGroup>

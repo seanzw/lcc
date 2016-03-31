@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using lcc.Type;
+using lcc.TypeSystem;
 
 namespace LC_CompilerTests {
     [TestClass]
@@ -9,17 +9,17 @@ namespace LC_CompilerTests {
         [TestMethod]
         public void LCCTypeToChar() {
 
-            var tests = new Dictionary<UnqualifiedType, string> {
+            var tests = new Dictionary<TUnqualified, string> {
                 {
-                    TypeChar.Instance,
+                    TChar.Instance,
                     "char"
                 },
                 {
-                    TypeSignedChar.Instance,
+                    TSChar.Instance,
                     "signed char"
                 },
                 {
-                    TypeUnsignedChar.Instance,
+                    TUChar.Instance,
                     "unsigned char"
                 },
                 {
@@ -27,51 +27,51 @@ namespace LC_CompilerTests {
                     "void"
                 },
                 {
-                    TypeShort.Instance,
+                    TShort.Instance,
                     "short"
                 },
                 {
-                    TypeUnsignedShort.Instance,
+                    TUShort.Instance,
                     "unsigned short"
                 },
                 {
-                    TypeInt.Instance,
+                    TInt.Instance,
                     "int"
                 },
                 {
-                    TypeUnsignedInt.Instance,
+                    TUInt.Instance,
                     "unsigned int"
                 },
                 {
-                    TypeLong.Instance,
+                    TLong.Instance,
                     "long"
                 },
                 {
-                    TypeUnsignedLong.Instance,
+                    TULong.Instance,
                     "unsigned long"
                 },
                 {
-                    TypeLongLong.Instance,
+                    TLLong.Instance,
                     "long long"
                 },
                 {
-                    TypeUnsignedLongLong.Instance,
+                    TULLong.Instance,
                     "unsigned long long"
                 },
                 {
-                    TypeFloat.Instance,
+                    TFloat.Instance,
                     "float"
                 },
                 {
-                    TypeDouble.Instance,
+                    TDouble.Instance,
                     "double"
                 },
                 {
-                    TypeBool.Instance,
+                    TBool.Instance,
                     "_Bool"
                 },
                 {
-                    new TypeArray(TypeChar.Instance.MakeType(false), 3),
+                    new TArray(TChar.Instance.MakeType(T.LR.R), 3),
                     "char[3]"
                 }
             };

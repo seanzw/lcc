@@ -6,14 +6,14 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.TypeSystem {
-    public sealed class TypeLongLong : IntegerType {
+    public sealed class TLLong : TInteger {
 
-        private static readonly TypeLongLong instance = new TypeLongLong();
+        private static readonly TLLong instance = new TLLong();
 
-        public static TypeLongLong Instance => instance;
-        private TypeLongLong() : base(8) { }
+        public static TLLong Instance => instance;
+        private TLLong() : base(8) { }
 
-        public override UnqualifiedType Composite(UnqualifiedType other) {
+        public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
         }
 
@@ -25,14 +25,14 @@ namespace lcc.TypeSystem {
         public override BigInteger MIN => long.MinValue;
     }
 
-    public sealed class TypeUnsignedLongLong : IntegerType {
+    public sealed class TULLong : TInteger {
 
-        private static readonly TypeUnsignedLongLong instance = new TypeUnsignedLongLong();
+        private static readonly TULLong instance = new TULLong();
 
-        public static TypeUnsignedLongLong Instance => instance;
-        private TypeUnsignedLongLong() : base(4) { }
+        public static TULLong Instance => instance;
+        private TULLong() : base(4) { }
 
-        public override UnqualifiedType Composite(UnqualifiedType other) {
+        public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
         }
 

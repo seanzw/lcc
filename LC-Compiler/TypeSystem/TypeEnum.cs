@@ -10,7 +10,7 @@ namespace lcc.TypeSystem {
     /// Enum type is represented as unsigned int.
     /// This is used for semantic analysis only.
     /// </summary>
-    public sealed class TypeEnum : UnqualifiedType {
+    public sealed class TypeEnum : TUnqualified {
 
         /// <summary>
         /// Initialize an incomplete enum type with a tag.
@@ -38,7 +38,7 @@ namespace lcc.TypeSystem {
             }
         }
 
-        public override UnqualifiedType Composite(UnqualifiedType other) {
+        public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
         }
 

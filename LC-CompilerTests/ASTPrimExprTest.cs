@@ -3,7 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using lcc.Type;
+using lcc.TypeSystem;
 using lcc.Token;
 using lcc.AST;
 using lcc.Parser;
@@ -143,26 +143,26 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCTCConstIntType() {
-            var tests = new Dictionary<string, Type> {
+            var tests = new Dictionary<string, T> {
                 {
                     "233",
-                    TypeInt.Instance.MakeConst(false)
+                    TInt.Instance.MakeConst(T.LR.R)
                 },
                 {
                     "4294967296",
-                    TypeLongLong.Instance.MakeConst(false)
+                    TLLong.Instance.MakeConst(T.LR.R)
                 },
                 {
                     "0xFFFFFFFF",
-                    TypeUnsignedInt.Instance.MakeConst(false)
+                    TUInt.Instance.MakeConst(T.LR.R)
                 },
                 {
                     "23u",
-                    TypeUnsignedInt.Instance.MakeConst(false)
+                    TUInt.Instance.MakeConst(T.LR.R)
                 },
                 {
                     "0ull",
-                    TypeUnsignedLongLong.Instance.MakeConst(false)
+                    TULLong.Instance.MakeConst(T.LR.R)
                 }
             };
             foreach (var test in tests) {

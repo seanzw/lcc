@@ -59,8 +59,8 @@
     <Compile Include="ParserExpressionTest.cs" />
     <Compile Include="ParserStatementTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TypeCheckerTest.cs" />
     <Compile Include="TypeToStringTest.cs" />
+    <Compile Include="ASTPostExprTest.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>
   <ItemGroup>

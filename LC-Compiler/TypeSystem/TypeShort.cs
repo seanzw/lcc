@@ -6,15 +6,15 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.TypeSystem {
-    public sealed class TypeShort : IntegerType {
+    public sealed class TShort : TInteger {
 
-        private static readonly TypeShort instance = new TypeShort();
+        private static readonly TShort instance = new TShort();
 
-        public static TypeShort Instance => instance;
+        public static TShort Instance => instance;
 
-        private TypeShort() : base(2) { }
+        private TShort() : base(2) { }
 
-        public override UnqualifiedType Composite(UnqualifiedType other) {
+        public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
         }
 
@@ -26,15 +26,15 @@ namespace lcc.TypeSystem {
         public override BigInteger MIN => short.MinValue;
     }
 
-    public sealed class TypeUnsignedShort : IntegerType {
+    public sealed class TUShort : TInteger {
 
-        private static readonly TypeUnsignedShort instance = new TypeUnsignedShort();
+        private static readonly TUShort instance = new TUShort();
 
-        public static TypeUnsignedShort Instance => instance;
+        public static TUShort Instance => instance;
 
-        private TypeUnsignedShort() : base(2) { }
+        private TUShort() : base(2) { }
 
-        public override UnqualifiedType Composite(UnqualifiedType other) {
+        public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
         }
 

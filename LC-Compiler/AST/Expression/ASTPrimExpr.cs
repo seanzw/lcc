@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using lcc.Token;
-using lcc.Type;
+using lcc.TypeSystem;
 
 namespace lcc.AST {
 
@@ -50,8 +50,8 @@ namespace lcc.AST {
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        public override Type.Type TypeCheck(ASTEnv env) {
-            Type.Type type = env.GetType(name);
+        public override T TypeCheck(ASTEnv env) {
+            T type = env.GetType(name);
             if (type == null) throw new ASTErrUndefinedIdentifier(line, name);
             else return type;
         }
@@ -139,52 +139,52 @@ namespace lcc.AST {
                     if (token.n != 10)
                         // Octal or hexadecimal constant.
                         type = FitInType(token.line, value,
-                            TypeInt.Instance,
-                            TypeUnsignedInt.Instance,
-                            TypeLong.Instance,
-                            TypeUnsignedLong.Instance,
-                            TypeLongLong.Instance,
-                            TypeUnsignedLongLong.Instance);
+                            TInt.Instance,
+                            TUInt.Instance,
+                            TLong.Instance,
+                            TULong.Instance,
+                            TLLong.Instance,
+                            TULLong.Instance);
                     else
                         // Decimal constant.
                         type = FitInType(token.line, value,
-                            TypeInt.Instance,
-                            TypeLong.Instance,
-                            TypeLongLong.Instance);
+                            TInt.Instance,
+                            TLong.Instance,
+                            TLLong.Instance);
                     break;
                 case T_CONST_INT.Suffix.U:
                     type = FitInType(token.line, value,
-                        TypeUnsignedInt.Instance,
-                        TypeUnsignedLong.Instance,
-                        TypeUnsignedLongLong.Instance);
+                        TUInt.Instance,
+                        TULong.Instance,
+                        TULLong.Instance);
                     break;
                 case T_CONST_INT.Suffix.L:
                     if (token.n != 10)
                         type = FitInType(token.line, value,
-                            TypeLong.Instance,
-                            TypeUnsignedLong.Instance,
-                            TypeLongLong.Instance,
-                            TypeUnsignedLongLong.Instance);
+                            TLong.Instance,
+                            TULong.Instance,
+                            TLLong.Instance,
+                            TULLong.Instance);
                     else
                         type = FitInType(token.line, value,
-                            TypeLong.Instance,
-                            TypeLongLong.Instance);
+                            TLong.Instance,
+                            TLLong.Instance);
                     break;
                 case T_CONST_INT.Suffix.UL:
                     type = FitInType(token.line, value,
-                        TypeUnsignedLong.Instance,
-                        TypeUnsignedLongLong.Instance);
+                        TULong.Instance,
+                        TULLong.Instance);
                     break;
                 case T_CONST_INT.Suffix.LL:
                     if (token.n != 10)
                         type = FitInType(token.line, value,
-                            TypeLongLong.Instance,
-                            TypeUnsignedLongLong.Instance);
+                            TLLong.Instance,
+                            TULLong.Instance);
                     else
-                        type = FitInType(token.line, value, TypeLongLong.Instance);
+                        type = FitInType(token.line, value, TLLong.Instance);
                     break;
                 case T_CONST_INT.Suffix.ULL:
-                    type = FitInType(token.line, value, TypeUnsignedLongLong.Instance);
+                    type = FitInType(token.line, value, TULLong.Instance);
                     break;
             }
         }
@@ -206,7 +206,7 @@ namespace lcc.AST {
             return line;
         }
 
-        public override Type.Type TypeCheck(ASTEnv env) {
+        public override T TypeCheck(ASTEnv env) {
             return type;
         }
 
@@ -226,17 +226,17 @@ namespace lcc.AST {
             return value;
         }
 
-        private static Type.Type FitInType(int line, BigInteger value, params IntegerType[] types) { 
+        private static T FitInType(int line, BigInteger value, params TInteger[] types) { 
             foreach (var type in types) {
                 if (value >= type.MIN && value <= type.MAX) {
-                    return type.MakeConst(false);
+                    return type.MakeConst(T.LR.R);
                 }
             }
             throw new ASTErrIntegerLiteralOutOfRange(line);
         }
 
         public readonly BigInteger value;
-        public readonly Type.Type type;
+        public readonly T type;
     }
 
     /// <summary>
@@ -259,7 +259,7 @@ namespace lcc.AST {
                 throw new ASTErrUnknownType(line, "multi-character");
             }
 
-            type = TypeUnsignedChar.Instance.MakeConst(false);
+            type = TUChar.Instance.MakeConst(T.LR.R);
         }
 
         public override bool Equals(object obj) {
@@ -284,7 +284,7 @@ namespace lcc.AST {
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        public override Type.Type TypeCheck(ASTEnv env) {
+        public override T TypeCheck(ASTEnv env) {
             return type;
         }
 
@@ -315,7 +315,7 @@ namespace lcc.AST {
             // Check the value is within the range of unsigned char
             // and push it into the list.
             Action<BigInteger> PushValue = v => {
-                if (v < TypeUnsignedChar.Instance.MIN || v > TypeUnsignedChar.Instance.MAX) {
+                if (v < TUChar.Instance.MIN || v > TUChar.Instance.MAX) {
                     throw new ASTErrEscapedSequenceOutOfRange(line, text);
                 }
                 values.AddLast((ushort)v);  // Store the current result.
@@ -422,7 +422,7 @@ namespace lcc.AST {
         /// <summary>
         /// Type of this constant.
         /// </summary>
-        public readonly Type.Type type;
+        public readonly T type;
     }
 
     /// <summary>
@@ -441,13 +441,13 @@ namespace lcc.AST {
             value = Evaluate(token);
             switch (token.suffix) {
                 case T_CONST_FLOAT.Suffix.NONE:
-                    type = TypeDouble.Instance.MakeConst(false);
+                    type = TDouble.Instance.MakeConst(T.LR.R);
                     break;
                 case T_CONST_FLOAT.Suffix.F:
-                    type = TypeFloat.Instance.MakeConst(false);
+                    type = TFloat.Instance.MakeConst(T.LR.R);
                     break;
                 case T_CONST_FLOAT.Suffix.L:
-                    type = TypeLongDouble.Instance.MakeConst(false);
+                    type = TLDouble.Instance.MakeConst(T.LR.R);
                     break;
             }
         }
@@ -507,7 +507,7 @@ namespace lcc.AST {
             return value;
         }
 
-        public override Type.Type TypeCheck(ASTEnv env) {
+        public override T TypeCheck(ASTEnv env) {
             return type;
         }
 
@@ -516,7 +516,7 @@ namespace lcc.AST {
         }
 
         public readonly double value;
-        public readonly Type.Type type;
+        public readonly T type;
     }
 
     /// <summary>
@@ -531,8 +531,8 @@ namespace lcc.AST {
         public ASTString(LinkedList<T_STRING_LITERAL> tokens) {
             this.line = tokens.First().line;
             values = Evaluate(tokens);
-            var arrType = new TypeArray(TypeChar.Instance.MakeType(true), values.Count());
-            this.type = arrType.MakeType(true);
+            var arrType = new TArray(TChar.Instance.MakeType(T.LR.L), values.Count());
+            this.type = arrType.MakeType(T.LR.L);
         }
 
         public override int GetLine() {
@@ -554,7 +554,7 @@ namespace lcc.AST {
             return values.First();
         }
 
-        public override Type.Type TypeCheck(ASTEnv env) {
+        public override T TypeCheck(ASTEnv env) {
             return type;
         }
 
@@ -573,6 +573,6 @@ namespace lcc.AST {
 
         public readonly int line;
         public readonly IEnumerable<ushort> values;
-        public readonly Type.Type type;
+        public readonly T type;
     }
 }

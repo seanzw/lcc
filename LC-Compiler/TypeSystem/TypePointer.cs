@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.TypeSystem {
-    public class TypePointer : ObjectType {
+    public class TPointer : TObject {
 
-        public TypePointer(Type element) {
+        public TPointer(T element) {
             this.element = element;
         }
 
@@ -15,20 +15,20 @@ namespace lcc.TypeSystem {
         public override string ToString() {
             return string.Format("pointer to ({0})", element.ToString());
         }
-        public override UnqualifiedType Composite(UnqualifiedType other) {
+        public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
         }
 
-        public readonly Type element;
+        public readonly T element;
     }
 
-    public sealed class TypeArray : TypePointer {
+    public sealed class TArray : TPointer {
 
-        public TypeArray(Type element, int n) : base(element) {
+        public TArray(T element, int n) : base(element) {
             this.n = n;
         }
 
-        public override UnqualifiedType Composite(UnqualifiedType other) {
+        public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
         }
 
