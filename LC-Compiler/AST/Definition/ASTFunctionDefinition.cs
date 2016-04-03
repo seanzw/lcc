@@ -8,9 +8,9 @@ namespace lcc.AST {
     public sealed class ASTFunctionDefinition : ASTNode {
 
         public ASTFunctionDefinition(
-            LinkedList<ASTDeclarationSpecifier> specifiers,
+            IEnumerable<ASTDeclarationSpecifier> specifiers,
             ASTDeclarator declarator,
-            LinkedList<ASTDeclaration> declarations,
+            IEnumerable<ASTDeclaration> declarations,
             ASTStatement statement
             ) {
             this.specifiers = specifiers;
@@ -40,9 +40,9 @@ namespace lcc.AST {
             return specifiers.GetHashCode();
         }
 
-        public readonly LinkedList<ASTDeclarationSpecifier> specifiers;
+        public readonly IEnumerable<ASTDeclarationSpecifier> specifiers;
         public readonly ASTDeclarator declarator;
-        public readonly LinkedList<ASTDeclaration> declarations;
+        public readonly IEnumerable<ASTDeclaration> declarations;
         public readonly ASTStatement statement;
     }
 }

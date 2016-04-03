@@ -47,29 +47,6 @@ namespace LC_CompilerTests {
             Assert.IsFalse(result.First().Remain.More());
         }
 
-        /// <summary>
-        /// Parse the string and check if the two result are the same.
-        /// Used for linked list.
-        /// </summary>
-        /// <typeparam name="R"> LinkedList element type. </typeparam>
-        /// <param name="src"></param>
-        /// <param name="parser"></param>
-        /// <param name="truth"></param>
-        private static void Aux<R>(
-            string src,
-            Parser<Token, LinkedList<R>> parser,
-            LinkedList<R> truth
-            ) {
-            var tokens = new ReadOnlyCollection<Token>(Lexer.Instance.Scan(src));
-            var stream = new TokenStream<Token>(tokens);
-            var result = parser(stream);
-
-            // Check the first result.
-            Assert.AreEqual(1, result.Count());
-            Assert.IsTrue(truth.SequenceEqual(result.First().Value));
-            Assert.IsFalse(result.First().Remain.More());
-        }
-
         [TestMethod]
         public void LCCParserPrimaryExpression() {
             Dictionary<string, ASTExpr> dict = new Dictionary<string, ASTExpr> {

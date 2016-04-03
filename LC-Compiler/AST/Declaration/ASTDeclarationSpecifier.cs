@@ -151,15 +151,15 @@ namespace lcc.AST {
 
     public sealed class ASTTypeQualifier : ASTTypeSpecifierQualifier {
 
-        public enum Type {
+        public enum Kind {
             CONST,
             RESTRICT,
             VOLATILE
         }
 
-        public ASTTypeQualifier(int line, Type type) {
+        public ASTTypeQualifier(int line, Kind kind) {
             this.line = line;
-            this.type = type;
+            this.kind = kind;
         }
 
         public override int GetLine() {
@@ -170,20 +170,20 @@ namespace lcc.AST {
             ASTTypeQualifier spec = obj as ASTTypeQualifier;
             return spec == null ? false : base.Equals(spec)
                 && spec.line == line
-                && spec.type == type;
+                && spec.kind == kind;
         }
 
         public bool Equals(ASTTypeQualifier spec) {
             return base.Equals(spec)
                 && spec.line == line
-                && spec.type == type;
+                && spec.kind == kind;
         }
 
         public override int GetHashCode() {
             return line;
         }
 
-        public readonly Type type;
+        public readonly Kind kind;
         public readonly int line;
     }
 

@@ -80,7 +80,9 @@ namespace LC_CompilerTests {
                                 },
                                 new List<ASTInitDeclarator> {
                                     new ASTInitDeclarator(
-                                        new ASTDeclaratorIdentifier(new ASTIdentifier(new T_IDENTIFIER(4, "x"))))
+                                        new ASTDeclarator(
+                                            new List<ASTPointer>(),
+                                            new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(4, "x")))))
                                 }),
                         })
                 }

@@ -78,6 +78,18 @@ namespace Parserc {
         }
 
         /// <summary>
+        /// Apply the parser, return the result if the parser failed.
+        /// </summary>
+        /// <typeparam name="I"></typeparam>
+        /// <typeparam name="V"></typeparam>
+        /// <param name="parser"></param>
+        /// <param name="r"></param>
+        /// <returns></returns>
+        public static Parser<I, V> ElseReturn<I, V>(this Parser<I, V> parser, V r) {
+            return parser.Else(Result<I, V>(r));
+        }
+
+        /// <summary>
         /// Apply the parser, returns null if the parser failed.
         /// </summary>
         /// <typeparam name="I"></typeparam>
@@ -86,7 +98,7 @@ namespace Parserc {
         /// <returns></returns>
         public static Parser<I, V> ElseNull<I, V>(this Parser<I, V> parser)
             where V : class {
-            return parser.Else(Result<I, V>(null));
+            return parser.ElseReturn(null);
         }
 
         /// <summary>
@@ -201,6 +213,14 @@ namespace Parserc {
             };
         }
 
+        /// <summary>
+        /// Applys the first parser, if it fails, try the second one.
+        /// </summary>
+        /// <typeparam name="I"></typeparam>
+        /// <typeparam name="V"></typeparam>
+        /// <param name="first"></param>
+        /// <param name="second"></param>
+        /// <returns></returns>
         public static Parser<I, V> Else<I, V>(this Parser<I, V> first, Parser<I, V> second) {
             return tokens => {
                 var r = first(tokens);

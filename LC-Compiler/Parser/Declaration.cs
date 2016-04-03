@@ -33,7 +33,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, LinkedList<ASTDeclarationSpecifier>> DeclarationSpecifiers() {
+        public static Parserc.Parser<T, IEnumerable<ASTDeclarationSpecifier>> DeclarationSpecifiers() {
             return DeclarationSpecifier().Plus();
         }
 
@@ -204,7 +204,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, LinkedList<ASTTypeSpecifierQualifier>> SpecifierQualifierList() {
+        public static Parserc.Parser<T, IEnumerable<ASTTypeSpecifierQualifier>> SpecifierQualifierList() {
             return Ref(TypeSpecifier).Cast<T, ASTTypeSpecifierQualifier, ASTTypeSpecifier>()
                 .Else(TypeQualifier())
                 .Plus();
@@ -266,7 +266,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, LinkedList<ASTEnumerator>> EnumeratorList() {
+        public static Parserc.Parser<T, IEnumerable<ASTEnumerator>> EnumeratorList() {
             return Enumerator().PlusSeperatedBy(Match<T_PUNC_COMMA>());
         }
 
@@ -291,9 +291,9 @@ namespace lcc.Parser {
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<T, ASTTypeQualifier> TypeQualifier() {
-            return Get<T_KEY_CONST>().Select(t => new ASTTypeQualifier(t.line, ASTTypeQualifier.Type.CONST))
-                .Else(Get<T_KEY_RESTRICT>().Select(t => new ASTTypeQualifier(t.line, ASTTypeQualifier.Type.RESTRICT)))
-                .Else(Get<T_KEY_VOLATILE>().Select(t => new ASTTypeQualifier(t.line, ASTTypeQualifier.Type.VOLATILE)));
+            return Get<T_KEY_CONST>().Select(t => new ASTTypeQualifier(t.line, ASTTypeQualifier.Kind.CONST))
+                .Else(Get<T_KEY_RESTRICT>().Select(t => new ASTTypeQualifier(t.line, ASTTypeQualifier.Kind.RESTRICT)))
+                .Else(Get<T_KEY_VOLATILE>().Select(t => new ASTTypeQualifier(t.line, ASTTypeQualifier.Kind.VOLATILE)));
         }
 
         /// <summary>
@@ -309,13 +309,13 @@ namespace lcc.Parser {
 
         /// <summary>
         /// declarator
-        ///     // TODO : pointer direct-declarator
-        ///     | direct-declarator
+        ///     : pointer-list_opt direct-declarator
         ///     ;
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<T, ASTDeclarator> Declarator() {
-            return DirectDeclarator();
+            return Pointer().Many().Bind(pointers => DirectDeclarator()
+                .Select(direct => new ASTDeclarator(pointers, direct)));
         }
 
         /// <summary>
@@ -325,26 +325,64 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTDeclarator> DirectDeclarator() {
-            return Identifier().Bind(identifier => DirectDeclaratorPrime(new ASTDeclaratorIdentifier(identifier)))
-                .Else(Ref(Declarator).ParentLR().Bind(declarator => DirectDeclaratorPrime(declarator)));
+        public static Parserc.Parser<T, ASTDirDeclarator> DirectDeclarator() {
+            return Identifier().Bind(identifier => DirectDeclaratorPrime(new ASTIdentifierDeclarator(identifier)))
+                .Else(Ref(Declarator).ParentLR().Bind(declarator => DirectDeclaratorPrime(new ASTParentDeclarator(declarator))));
         }
 
         /// <summary>
         /// direct-declarator-prime
         ///     : ( parameter-type-list ) direct-declarator-prime
+        ///     | ( identifier-list_opt ) direct-declarator-prime
+        ///     | [ type-qualifier-list_opt assignment-expression_opt ]
+        ///     | [ static type-qualifier-list_opt assignment-expression ]
+        ///     | [ type-qualifier-list static assignment-expression ]
+        ///     | [ type-qualifier-list_opt * ]
         ///     | epsilon
+        ///     ;
+        ///     
+        /// identfier-list
+        ///     : identifier
+        ///     | identifier , identifier-list
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTDeclarator> DirectDeclaratorPrime(ASTDeclarator declarator) {
+        public static Parserc.Parser<T, ASTDirDeclarator> DirectDeclaratorPrime(ASTDirDeclarator direct) {
             return ParameterTypeList().ParentLR()
-                    .Select(parameterType => new ASTFunctionParameter(declarator, parameterType) as ASTDeclarator)
-                .Or(Result<T, ASTDeclarator>(declarator));
+                    .Bind(tuple => DirectDeclaratorPrime(new ASTFuncDeclarator(direct, tuple.Item1, tuple.Item2)))
+                .Or(Identifier().ManySeperatedBy(Match<T_PUNC_COMMA>()).ParentLR()
+                    .Bind(identifiers => DirectDeclaratorPrime(new ASTFuncDeclarator(direct, identifiers))))
+                .Or(Match<T_PUNC_SUBSCRIPTL>().Then(TypeQualifier().Many())
+                    .Bind(qualifiers => AssignmentExpression().ElseNull()
+                    .Bind(expr => Match<T_PUNC_SUBSCRIPTR>()
+                    .Then(DirectDeclaratorPrime(new ASTArrDeclarator(direct, qualifiers, expr, false))))))
+                .Or(Match<T_PUNC_SUBSCRIPTL>().Then(Match<T_KEY_STATIC>())
+                    .Then(TypeQualifier().Many())
+                    .Bind(qualifiers => AssignmentExpression()
+                    .Bind(expr => Match<T_PUNC_SUBSCRIPTR>()
+                    .Then(DirectDeclaratorPrime(new ASTArrDeclarator(direct, qualifiers, expr, true))))))
+                .Or(Match<T_PUNC_SUBSCRIPTL>().Then(TypeQualifier().Plus())
+                    .Bind(qualifiers => Match<T_KEY_STATIC>()
+                    .Then(AssignmentExpression())
+                    .Bind(expr => Match<T_PUNC_SUBSCRIPTR>()
+                    .Then(DirectDeclaratorPrime(new ASTArrDeclarator(direct, qualifiers, expr, true))))))
+                .Or(Match<T_PUNC_SUBSCRIPTL>().Then(TypeQualifier().Many())
+                    .Bind(qualifiers => Match<T_PUNC_STAR>()
+                    .Then(Match<T_PUNC_SUBSCRIPTR>())
+                    .Then(DirectDeclaratorPrime(new ASTArrDeclarator(direct, qualifiers)))))
+                .ElseReturn(direct);
         }
 
-        public static Parserc.Parser<T, ASTDeclarator> Pointer() {
-            return Zero<T, ASTDeclarator>();
+        /// <summary>
+        /// pointer
+        ///     : * type-qualifier-list_opt
+        ///     | * type-qualifier-list_opt
+        ///     ;
+        /// </summary>
+        /// <returns></returns>
+        public static Parserc.Parser<T, ASTPointer> Pointer() {
+            return Get<T_PUNC_STAR>().Bind(t => TypeQualifier().Many()
+                .Select(qualifiers => new ASTPointer(t.line, qualifiers)));
         }
 
         /// <summary>
@@ -354,12 +392,10 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTParameterType> ParameterTypeList() {
-            return ParameterList()
-                .Bind(parameters => Match<T_PUNC_COMMA>()
-                    .Then(Match<T_PUNC_ELLIPSIS>())
-                    .Return(new ASTParameterType(parameters, true))
-                    .Or(Result<T, ASTParameterType>(new ASTParameterType(parameters, false))));
+        public static Parserc.Parser<T, Tuple<IEnumerable<ASTParameter>, bool>> ParameterTypeList() {
+            return ParameterList().Bind(parameters => Match<T_PUNC_COMMA>()
+                .Then(Match<T_PUNC_ELLIPSIS>()).Return(true).ElseReturn(false)
+                .Select(isEllipis => new Tuple<IEnumerable<ASTParameter>, bool>(parameters, isEllipis)));
         }
 
         /// <summary>
@@ -369,21 +405,96 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, LinkedList<ASTParameter>> ParameterList() {
+        public static Parserc.Parser<T, IEnumerable<ASTParameter>> ParameterList() {
             return ParameterDeclaration().PlusSeperatedBy(Match<T_PUNC_COMMA>());
         }
 
         /// <summary>
         /// parameter-declaration
         ///     : declaration-specifiers declarator
-        ///     // TODO | declaration-specifiers abstract-declarator_opt
+        ///     | declaration-specifiers abstract-declarator_opt
         ///     ;
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<T, ASTParameter> ParameterDeclaration() {
             return Ref(DeclarationSpecifiers)
                 .Bind(specifiers => Ref(Declarator)
-                .Select(declarator => new ASTParameterDeclarator(specifiers, declarator) as ASTParameter));
+                .Select(declarator => new ASTParameter(specifiers, declarator))
+                .Or(AbstractDeclarator().ElseNull().Select(absDeclarator => new ASTParameter(specifiers, absDeclarator))));
+        }
+
+        /// <summary>
+        /// type-name
+        ///     : specifier-qualifier-list abstract-declarator_opt
+        ///     ;
+        /// </summary>
+        /// <returns></returns>
+        public static Parserc.Parser<T, ASTTypeName> TypeName() {
+            return Ref(SpecifierQualifierList).Bind(specifiers => AbstractDeclarator().ElseNull()
+                .Select(declarator => new ASTTypeName(specifiers, declarator)));
+        }
+
+        /// <summary>
+        /// abstract-declarator
+        ///     : pointer-list
+        ///     | pointer-list_opt direct-abstract-declarator
+        ///     ;
+        /// </summary>
+        /// <returns></returns>
+        public static Parserc.Parser<T, ASTAbsDeclarator> AbstractDeclarator() {
+            return Pointer().Plus().Select(pointers => new ASTAbsDeclarator(pointers, null))
+                .Or(Pointer().Many().Bind(pointers => DirectAbstractDeclarator()
+                .Select(direct => new ASTAbsDeclarator(pointers, direct))));
+        }
+
+
+        /// <summary>
+        /// direct-abstract-declarator
+        ///     : ( abstract-declarator ) direct-abstract-declarator-prime
+        ///     | epsilon
+        ///     ;
+        /// </summary>
+        /// <returns></returns>
+        public static Parserc.Parser<T, ASTAbsDirDeclarator> DirectAbstractDeclarator() {
+            return Ref(AbstractDeclarator).ParentLR().Bind(declarator => DirectAbstractDeclaratorPrime(new ASTAbsParentDeclarator(declarator)))
+                .Else(DirectAbstractDeclaratorPrime(null));
+        }
+
+        /// <summary>
+        /// direct-abstract-declarator-prime
+        ///     : ( parameter-type-list_opt ) direct-abstract-declarator-prime
+        ///     | [ type-qualifier-list_opt assignment-expression_opt ] direct-abstract-declarator-prime
+        ///     | [ static type-qualifier-list_opt assignment-expression ] direct-abstract-declarator-prime
+        ///     | [ type-qualifer-list static assignment-expression ] direct-abstract-declarator-prime
+        ///     | [ * ] direct-abstract-declarator-prime
+        ///     | epsilon
+        ///     ;
+        /// </summary>
+        /// <param name="direct"></param>
+        /// <returns></returns>
+        public static Parserc.Parser<T, ASTAbsDirDeclarator> DirectAbstractDeclaratorPrime(ASTAbsDirDeclarator direct) {
+            return Ref(ParameterTypeList).ParentLR()
+                    .Bind(tuple => DirectAbstractDeclaratorPrime(new ASTAbsFuncDeclarator(direct, tuple.Item1, tuple.Item2)))
+                .Or(Match<T_PUNC_PARENTL>().Then(Match<T_PUNC_PARENTR>())
+                    .Bind(_ => DirectAbstractDeclaratorPrime(new ASTAbsFuncDeclarator(direct, null, false))))
+                .Or(Match<T_PUNC_SUBSCRIPTL>().Then(TypeQualifier().Many())
+                    .Bind(qualifiers => AssignmentExpression().ElseNull()
+                    .Bind(expr => Match<T_PUNC_SUBSCRIPTR>()
+                    .Then(DirectAbstractDeclaratorPrime(new ASTAbsArrDeclarator(direct, qualifiers, expr, false))))))
+                .Or(Match<T_PUNC_SUBSCRIPTL>().Then(Match<T_KEY_STATIC>())
+                    .Then(TypeQualifier().Many())
+                    .Bind(qualifiers => AssignmentExpression()
+                    .Bind(expr => Match<T_PUNC_SUBSCRIPTR>()
+                    .Then(DirectAbstractDeclaratorPrime(new ASTAbsArrDeclarator(direct, qualifiers, expr, true))))))
+                .Or(Match<T_PUNC_SUBSCRIPTL>().Then(TypeQualifier().Plus())
+                    .Bind(qualifiers => Match<T_KEY_STATIC>()
+                    .Then(AssignmentExpression())
+                    .Bind(expr => Match<T_PUNC_SUBSCRIPTR>()
+                    .Then(DirectAbstractDeclaratorPrime(new ASTAbsArrDeclarator(direct, qualifiers, expr, true))))))
+                .Or(Match<T_PUNC_SUBSCRIPTL>().Then(Match<T_PUNC_STAR>())
+                    .Then(Match<T_PUNC_SUBSCRIPTR>())
+                    .Bind(_ => DirectAbstractDeclaratorPrime(new ASTAbsArrDeclarator(direct))))
+                .Else(direct == null ? Zero<T, ASTAbsDirDeclarator>() : Result<T, ASTAbsDirDeclarator>(direct));
         }
 
         /// <summary>

@@ -41,8 +41,8 @@ namespace lcc.AST {
     public sealed class ASTStructDeclaration : ASTNode {
 
         public ASTStructDeclaration(
-            LinkedList<ASTTypeSpecifierQualifier> specifierQualifierList,
-            LinkedList<ASTStructDeclarator> declarators
+            IEnumerable<ASTTypeSpecifierQualifier> specifierQualifierList,
+            IEnumerable<ASTStructDeclarator> declarators
             ) {
             this.specifierQualifierList = specifierQualifierList;
             this.declarators = declarators;
@@ -69,8 +69,8 @@ namespace lcc.AST {
             return specifierQualifierList.GetHashCode();
         }
 
-        public readonly LinkedList<ASTTypeSpecifierQualifier> specifierQualifierList;
-        public readonly LinkedList<ASTStructDeclarator> declarators;
+        public readonly IEnumerable<ASTTypeSpecifierQualifier> specifierQualifierList;
+        public readonly IEnumerable<ASTStructDeclarator> declarators;
     }
 
     public abstract class ASTStructUnionSpecifier : ASTTypeSpecifier {
@@ -78,7 +78,7 @@ namespace lcc.AST {
         public ASTStructUnionSpecifier(
             int line,
             ASTIdentifier identifier,
-            LinkedList<ASTStructDeclaration> declarations,
+            IEnumerable<ASTStructDeclaration> declarations,
             Type type
             ) : base(type) {
             this.line = line;
@@ -109,7 +109,7 @@ namespace lcc.AST {
 
         public readonly int line;
         public readonly ASTIdentifier identifier;
-        public readonly LinkedList<ASTStructDeclaration> declarations;
+        public readonly IEnumerable<ASTStructDeclaration> declarations;
     }
 
     public sealed class ASTStructSpecifier : ASTStructUnionSpecifier {
@@ -117,7 +117,7 @@ namespace lcc.AST {
         public ASTStructSpecifier(
             int line,
             ASTIdentifier identifier,
-            LinkedList<ASTStructDeclaration> declarations = null
+            IEnumerable<ASTStructDeclaration> declarations = null
             ) : base(line, identifier, declarations, Type.STRUCT) { }
 
     }
