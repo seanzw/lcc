@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -33,10 +34,10 @@ namespace LC_CompilerTests {
 
             foreach (var test in tests) {
                 var result = Utility.parse(test.Key, Parser.PostfixExpression().End());
-                Assert.AreEqual(1, result.Count);
-                Assert.IsFalse(result[0].remain.More());
-                Assert.IsTrue(result[0].value is ASTArrSub);
-                var ast = result[0].value as ASTArrSub;
+                Assert.AreEqual(1, result.Count());
+                Assert.IsFalse(result.First().Remain.More());
+                Assert.IsTrue(result.First().Value is ASTArrSub);
+                var ast = result.First().Value as ASTArrSub;
                 Assert.AreEqual(test.Value, ast.TypeCheck(env));
             }
         }
@@ -89,10 +90,10 @@ namespace LC_CompilerTests {
 
             foreach (var test in tests) {
                 var result = Utility.parse(test.Key, Parser.PostfixExpression().End());
-                Assert.AreEqual(1, result.Count);
-                Assert.IsFalse(result[0].remain.More());
-                Assert.IsTrue(result[0].value is ASTAccess);
-                var ast = result[0].value as ASTAccess;
+                Assert.AreEqual(1, result.Count());
+                Assert.IsFalse(result.First().Remain.More());
+                Assert.IsTrue(result.First().Value is ASTAccess);
+                var ast = result.First().Value as ASTAccess;
                 Assert.AreEqual(test.Value, ast.TypeCheck(env));
             }
         }

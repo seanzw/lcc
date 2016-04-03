@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Parserc;
@@ -29,9 +30,9 @@ namespace ParsercTests {
             ITokenStream<char> tokens = new CharStream(src);
             for (int i = 0; i < src.Length; ++i) {
                 var result = parser(tokens);
-                Assert.AreEqual(result.Count, 1);
-                Assert.AreEqual(result[0].value, src[i]);
-                tokens = result[0].remain;
+                Assert.AreEqual(result.Count(), 1);
+                Assert.AreEqual(result.First().Value, src[i]);
+                tokens = result.First().Remain;
             }
         }
 
@@ -42,10 +43,10 @@ namespace ParsercTests {
             ITokenStream<char> tokens = new CharStream(src);
             for (int i = 0; i < src.Length; ++i) {
                 var result = parser(tokens);
-                Assert.AreEqual(result.Count, 1);
-                Assert.AreEqual(result[0].value, 'o');
-                Assert.AreEqual(result[0].remain.Head(), 'a');
-                tokens = result[0].remain;
+                Assert.AreEqual(result.Count(), 1);
+                Assert.AreEqual(result.First().Value, 'o');
+                Assert.AreEqual(result.First().Remain.Head(), 'a');
+                tokens = result.First().Remain;
             }
         }
 
@@ -56,7 +57,7 @@ namespace ParsercTests {
             ITokenStream<char> tokens = new CharStream(src);
             for (int i = 0; i < src.Length; ++i) {
                 var result = parser(tokens);
-                Assert.AreEqual(result.Count, 0);
+                Assert.AreEqual(result.Count(), 0);
             }
         }
 
@@ -68,10 +69,10 @@ namespace ParsercTests {
             for (int i = 0; i < src.Length; ++i, tokens = tokens.Tail()) {
                 var result = parser(tokens);
                 if (src[i] != 'b') {
-                    Assert.AreEqual(0, result.Count);
+                    Assert.AreEqual(0, result.Count());
                 } else {
-                    Assert.AreEqual(1, result.Count);
-                    Assert.AreEqual('b', result[0].value);
+                    Assert.AreEqual(1, result.Count());
+                    Assert.AreEqual('b', result.First().Value);
                 }
             }
         }
@@ -85,11 +86,11 @@ namespace ParsercTests {
             string src = "abc";
             ITokenStream<char> tokens = new CharStream(src);
             var result = parser(tokens);
-            Assert.AreEqual(result.Count, 1);
-            Assert.AreEqual(result[0].value.Length, 2);
-            Assert.AreEqual(result[0].value[0], 'a');
-            Assert.AreEqual(result[0].value[1], 'b');
-            Assert.AreEqual(result[0].remain.Head(), 'c');
+            Assert.AreEqual(result.Count(), 1);
+            Assert.AreEqual(result.First().Value.Length, 2);
+            Assert.AreEqual(result.First().Value.First(), 'a');
+            Assert.AreEqual(result.First().Value[1], 'b');
+            Assert.AreEqual(result.First().Remain.Head(), 'c');
         }
 
         [TestMethod]
@@ -98,11 +99,11 @@ namespace ParsercTests {
             string src = "abc";
             ITokenStream<char> tokens = new CharStream(src);
             var result = parser(tokens);
-            Assert.AreEqual(result.Count, 4);
-            Assert.AreEqual(result[0].value, "abc");
-            Assert.AreEqual(result[1].value, "ab");
-            Assert.AreEqual(result[2].value, "a");
-            Assert.AreEqual(result[3].value, "");
+            Assert.AreEqual(result.Count(), 4);
+            Assert.AreEqual(result.First().Value, "abc");
+            Assert.AreEqual(result.ElementAt(1).Value, "ab");
+            Assert.AreEqual(result.ElementAt(2).Value, "a");
+            Assert.AreEqual(result.ElementAt(3).Value, "");
         }
 
         [TestMethod]
@@ -111,10 +112,10 @@ namespace ParsercTests {
             string src = "629abc";
             ITokenStream<char> tokens = new CharStream(src);
             var result = parser(tokens);
-            Assert.AreEqual(result.Count, 3);
-            Assert.AreEqual(result[0].value, 629u);
-            Assert.AreEqual(result[1].value, 62u);
-            Assert.AreEqual(result[2].value, 6u);
+            Assert.AreEqual(result.Count(), 3);
+            Assert.AreEqual(result.First().Value, 629u);
+            Assert.AreEqual(result.ElementAt(1).Value, 62u);
+            Assert.AreEqual(result.ElementAt(2).Value, 6u);
         }
 
         [TestMethod]
@@ -123,10 +124,10 @@ namespace ParsercTests {
             string src = "-629abc";
             ITokenStream<char> tokens = new CharStream(src);
             var result = parser(tokens);
-            Assert.AreEqual(result.Count, 3);
-            Assert.AreEqual(result[0].value, -629);
-            Assert.AreEqual(result[1].value, -62);
-            Assert.AreEqual(result[2].value, -6);
+            Assert.AreEqual(result.Count(), 3);
+            Assert.AreEqual(result.First().Value, -629);
+            Assert.AreEqual(result.ElementAt(1).Value, -62);
+            Assert.AreEqual(result.ElementAt(2).Value, -6);
         }
 
         [TestMethod]
@@ -135,11 +136,11 @@ namespace ParsercTests {
             string src = "{1,2,3,4,5}";
             ITokenStream<char> tokens = new CharStream(src);
             var result = parser(tokens);
-            Assert.AreEqual(1, result.Count);
-            Assert.AreEqual(5, result[0].value.Count);
+            Assert.AreEqual(1, result.Count());
+            Assert.AreEqual(5, result.First().Value.Count());
             {
                 int i = 1;
-                foreach (int r in result[0].value) {
+                foreach (int r in result.First().Value) {
                     Assert.AreEqual(i, r);
                     i++;
                 }
@@ -148,8 +149,8 @@ namespace ParsercTests {
             string empty = "{}";
             tokens = new CharStream(empty);
             result = parser(tokens);
-            Assert.AreEqual(1, result.Count);
-            Assert.AreEqual(0, result[0].value.Count);
+            Assert.AreEqual(1, result.Count());
+            Assert.AreEqual(0, result.First().Value.Count());
         }
 
         [TestMethod]

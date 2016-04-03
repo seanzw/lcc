@@ -45,12 +45,12 @@ namespace Parser {
         public static ASTLex Parse(List<Token> tokens) {
             Parserc.TokenStream<Token> stream = new Parserc.TokenStream<Token>(tokens.AsReadOnly());
             var result = Lex().End()(stream);
-            if (result.Count == 0) {
+            if (result.Count() == 0) {
                 throw new ArgumentException("Syntax Error: failed parsing!");
-            } else if (result.Count > 1) {
+            } else if (result.Count() > 1) {
                 throw new ArgumentException("Syntax Error: ambiguous result!");
             } else {
-                return result.First().value;
+                return result.First().Value;
             }
         }
 

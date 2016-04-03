@@ -29,9 +29,22 @@ namespace LC_CompilerTests {
             var result = Utility.parse(src, parser);
 
             // Check the first result.
-            Assert.AreEqual(1, result.Count);
-            Assert.AreEqual(truth, result[0].value);
-            Assert.IsFalse(result[0].remain.More());
+            Assert.AreEqual(1, result.Count());
+            Assert.AreEqual(truth, result.First().Value);
+            Assert.IsFalse(result.First().Remain.More());
+        }
+
+        private static void Aux<R>(
+            string src,
+            Parser<Token, IEnumerable<R>> parser,
+            IEnumerable<R> truth
+            ) {
+            var result = Utility.parse(src, parser);
+
+            // Check the first result.
+            Assert.AreEqual(1, result.Count());
+            Assert.IsTrue(truth.SequenceEqual(result.First().Value));
+            Assert.IsFalse(result.First().Remain.More());
         }
 
         /// <summary>
@@ -52,9 +65,9 @@ namespace LC_CompilerTests {
             var result = parser(stream);
 
             // Check the first result.
-            Assert.AreEqual(1, result.Count);
-            Assert.IsTrue(truth.SequenceEqual(result[0].value));
-            Assert.IsFalse(result[0].remain.More());
+            Assert.AreEqual(1, result.Count());
+            Assert.IsTrue(truth.SequenceEqual(result.First().Value));
+            Assert.IsFalse(result.First().Remain.More());
         }
 
         [TestMethod]

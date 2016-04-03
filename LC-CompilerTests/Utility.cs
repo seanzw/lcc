@@ -14,7 +14,7 @@ using Parserc;
 namespace LC_CompilerTests {
     public class Utility {
 
-        public static List<ParserResult<Token, R>> parse<R>(
+        public static IEnumerable<IParserResult<Token, R>> parse<R>(
             string src,
             Parser<Token, R> parser
             ) {

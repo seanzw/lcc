@@ -100,10 +100,10 @@ namespace LC_CompilerTests {
             string src = "\"a\" \"b\"";
             var truth = new List<ushort> { 'a', 'b' };
             var result = Utility.parse(src, Parser.PrimaryExpression().End());
-            Assert.AreEqual(1, result.Count);
-            Assert.IsFalse(result[0].remain.More());
-            Assert.IsTrue(result[0].value is ASTString);
-            var ast = result[0].value as ASTString;
+            Assert.AreEqual(1, result.Count());
+            Assert.IsFalse(result.First().Remain.More());
+            Assert.IsTrue(result.First().Value is ASTString);
+            var ast = result.First().Value as ASTString;
             Assert.IsTrue(truth.SequenceEqual(ast.values));
         }
 
@@ -133,10 +133,10 @@ namespace LC_CompilerTests {
             };
             foreach (var test in tests) {
                 var result = Utility.parse(test.Key, Parser.PrimaryExpression().End());
-                Assert.AreEqual(1, result.Count);
-                Assert.IsFalse(result[0].remain.More());
-                Assert.IsTrue(result[0].value is ASTConstInt);
-                var ast = result[0].value as ASTConstInt;
+                Assert.AreEqual(1, result.Count());
+                Assert.IsFalse(result.First().Remain.More());
+                Assert.IsTrue(result.First().Value is ASTConstInt);
+                var ast = result.First().Value as ASTConstInt;
                 Assert.AreEqual(test.Value, ast.value);
             }
         }
@@ -167,10 +167,10 @@ namespace LC_CompilerTests {
             };
             foreach (var test in tests) {
                 var result = Utility.parse(test.Key, Parser.PrimaryExpression().End());
-                Assert.AreEqual(1, result.Count);
-                Assert.IsFalse(result[0].remain.More());
-                Assert.IsTrue(result[0].value is ASTConstInt);
-                var ast = result[0].value as ASTConstInt;
+                Assert.AreEqual(1, result.Count());
+                Assert.IsFalse(result.First().Remain.More());
+                Assert.IsTrue(result.First().Value is ASTConstInt);
+                var ast = result.First().Value as ASTConstInt;
                 Assert.AreEqual(test.Value, ast.type);
             }
         }
@@ -214,10 +214,10 @@ namespace LC_CompilerTests {
 
             foreach (var test in tests) {
                 var result = Utility.parse(test.Key, Parser.PrimaryExpression().End());
-                Assert.AreEqual(1, result.Count);
-                Assert.IsFalse(result[0].remain.More());
-                Assert.IsTrue(result[0].value is ASTConstFloat);
-                var ast = result[0].value as ASTConstFloat;
+                Assert.AreEqual(1, result.Count());
+                Assert.IsFalse(result.First().Remain.More());
+                Assert.IsTrue(result.First().Value is ASTConstFloat);
+                var ast = result.First().Value as ASTConstFloat;
                 Assert.AreEqual(test.Value, ast.value, 0.0001);
             }
         }

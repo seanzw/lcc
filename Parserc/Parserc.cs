@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Parserc {
 
-    public delegate List<ParserResult<I, V>> Parser<I, V>(ITokenStream<I> tokens);
+    public delegate IEnumerable<IParserResult<I, V>> Parser<I, out V>(ITokenStream<I> tokens);
 
     public static class Parserc {
 
@@ -17,7 +17,7 @@ namespace Parserc {
         /// <returns> A result parser. </returns>
         public static Parser<I, V> Result<I, V>(V value) {
             return tokens => {
-                return new List<ParserResult<I, V>> {
+                return new List<IParserResult<I, V>> {
                     new ParserResult<I, V>(value, tokens)
                 };
             };
@@ -29,7 +29,7 @@ namespace Parserc {
         /// <returns></returns>
         public static Parser<I, V> Zero<I, V>() {
             return tokens => {
-                return new List<ParserResult<I, V>>();
+                return new List<IParserResult<I, V>>();
             };
         }
 
@@ -41,11 +41,11 @@ namespace Parserc {
         public static Parser<I, I> Item<I>() {
             return tokens => {
                 if (tokens.More()) {
-                    return new List<ParserResult<I, I>> {
+                    return new List<IParserResult<I, I>> {
                         new ParserResult<I, I>(tokens.Head(), tokens.Tail())
                     };
                 } else {
-                    return new List<ParserResult<I, I>>();
+                    return new List<IParserResult<I, I>>();
                 }
             };
         }
@@ -103,9 +103,9 @@ namespace Parserc {
         public static Parser<I, V> End<I, V>(V value) {
             return tokens => {
                 if (tokens.More()) {
-                    return new List<ParserResult<I, V>>();
+                    return new List<IParserResult<I, V>>();
                 } else {
-                    return new List<ParserResult<I, V>> {
+                    return new List<IParserResult<I, V>> {
                         new ParserResult<I, V>(value, tokens)
                     };
                 }
@@ -123,9 +123,9 @@ namespace Parserc {
         /// <returns> A new parser. </returns>
         public static Parser<I, V2> Bind<I, V1, V2>(this Parser<I, V1> first, Func<V1, Parser<I, V2>> second) {
             return tokens => {
-                var ret = new List<ParserResult<I, V2>>();
+                var ret = new List<IParserResult<I, V2>>();
                 foreach (var r in first(tokens)) {
-                    foreach (var s in second(r.value)(r.remain)) {
+                    foreach (var s in second(r.Value)(r.Remain)) {
                         ret.Add(s);
                     }
                 }
@@ -197,14 +197,14 @@ namespace Parserc {
         /// <returns></returns>
         public static Parser<I, V> Or<I, V>(this Parser<I, V> first, Parser<I, V> second) {
             return tokens => {
-                return new List<ParserResult<I, V>>(first(tokens).Concat(second(tokens)));
+                return new List<IParserResult<I, V>>(first(tokens).Concat(second(tokens)));
             };
         }
 
         public static Parser<I, V> Else<I, V>(this Parser<I, V> first, Parser<I, V> second) {
             return tokens => {
                 var r = first(tokens);
-                if (r.Count == 0) {
+                if (r.Count() == 0) {
                     return second(tokens);
                 } else {
                     return r;

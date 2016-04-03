@@ -498,34 +498,83 @@ int a, int b, double c, ...
 int foo(int a, int b, double c, ...);
 ",
                     new ASTDeclaration(
-                        new LinkedList<ASTDeclarationSpecifier>(new List<ASTDeclarationSpecifier> {
-                            new ASTTypeKeySpecifier(2, ASTTypeKeySpecifier.Type.INT)
-                        }),
-                        new LinkedList<ASTDeclarator>(new List<ASTDeclarator> {
-                            new ASTFunctionParameter(
-                                new ASTDeclaratorIdentifier(new ASTIdentifier(new T_IDENTIFIER(2, "foo"))),
-                                new ASTParameterType(
-                                    new LinkedList<ASTParameter>(new List<ASTParameter> {
-                                        new ASTParameterDeclarator(
-                                            new LinkedList<ASTDeclarationSpecifier>(new List<ASTDeclarationSpecifier> {
-                                                new ASTTypeKeySpecifier(2, ASTTypeKeySpecifier.Type.INT)}),
-                                            new ASTDeclaratorIdentifier(new ASTIdentifier(new T_IDENTIFIER(2, "a")))),
-                                        new ASTParameterDeclarator(
-                                            new LinkedList<ASTDeclarationSpecifier>(new List<ASTDeclarationSpecifier> {
-                                                new ASTTypeKeySpecifier(2, ASTTypeKeySpecifier.Type.INT)}),
-                                            new ASTDeclaratorIdentifier(new ASTIdentifier(new T_IDENTIFIER(2, "b")))),
-                                        new ASTParameterDeclarator(
-                                            new LinkedList<ASTDeclarationSpecifier>(new List<ASTDeclarationSpecifier> {
-                                                new ASTTypeKeySpecifier(2, ASTTypeKeySpecifier.Type.DOUBLE)}),
-                                            new ASTDeclaratorIdentifier(new ASTIdentifier(new T_IDENTIFIER(2, "c")))),
-                                    }),
-                                    true))
-                        }))
+                        new List<ASTDeclarationSpecifier> {
+                            new ASTTypeKeySpecifier(2, ASTTypeSpecifier.Type.INT)
+                        },
+                        new List<ASTInitDeclarator> {
+                            new ASTInitDeclarator(
+                                new ASTFunctionParameter(
+                                    new ASTDeclaratorIdentifier(new ASTIdentifier(new T_IDENTIFIER(2, "foo"))),
+                                    new ASTParameterType(
+                                        new LinkedList<ASTParameter>(new List<ASTParameter> {
+                                            new ASTParameterDeclarator(
+                                                new LinkedList<ASTDeclarationSpecifier>(new List<ASTDeclarationSpecifier> {
+                                                    new ASTTypeKeySpecifier(2, ASTTypeSpecifier.Type.INT)}),
+                                                new ASTDeclaratorIdentifier(new ASTIdentifier(new T_IDENTIFIER(2, "a")))),
+                                            new ASTParameterDeclarator(
+                                                new LinkedList<ASTDeclarationSpecifier>(new List<ASTDeclarationSpecifier> {
+                                                    new ASTTypeKeySpecifier(2, ASTTypeSpecifier.Type.INT)}),
+                                                new ASTDeclaratorIdentifier(new ASTIdentifier(new T_IDENTIFIER(2, "b")))),
+                                            new ASTParameterDeclarator(
+                                                new LinkedList<ASTDeclarationSpecifier>(new List<ASTDeclarationSpecifier> {
+                                                    new ASTTypeKeySpecifier(2, ASTTypeSpecifier.Type.DOUBLE)}),
+                                                new ASTDeclaratorIdentifier(new ASTIdentifier(new T_IDENTIFIER(2, "c")))),
+                                        }),
+                                        true)),
+                                null)
+                        })
                 }
             };
 
             foreach (var test in dict) {
                 Aux(test.Key, Parser.Declaration().End(), test.Value);
+            }
+        }
+
+        [TestMethod]
+        public void LCCParserInitializer() {
+            var tests = new Dictionary<string, ASTInitializer> {
+                {
+                    "2 = 3",
+                    new ASTInitializer(new ASTAssignExpr(
+                        new ASTConstInt(new T_CONST_INT(1, "2", 10)),
+                        new ASTConstInt(new T_CONST_INT(1, "3", 10)),
+                        ASTAssignExpr.Op.ASSIGN))
+                },
+                {
+                    "{ .what = {1, 2, 3 }, }",
+                    new ASTInitializer(new List<ASTInitItem> {
+                        new ASTInitItem(new ASTInitializer(new List<ASTInitItem> {
+                            new ASTInitItem(new ASTInitializer(new ASTConstInt(new T_CONST_INT(1, "1", 10)))),
+                            new ASTInitItem(new ASTInitializer(new ASTConstInt(new T_CONST_INT(1, "2", 10)))),
+                            new ASTInitItem(new ASTInitializer(new ASTConstInt(new T_CONST_INT(1, "3", 10))))
+                        }),
+                        new List<ASTDesignator> {
+                            new ASTDesignator(new ASTIdentifier(new T_IDENTIFIER(1, "what")))
+                        })
+                    })
+                }
+            };
+
+            foreach (var test in tests) {
+                Aux(test.Key, Parser.Initializer().End(), test.Value);
+            }
+        }
+
+        [TestMethod]
+        public void LCCParserDesignation() {
+            var tests = new Dictionary<string, IEnumerable<ASTDesignator>> {
+                {
+                    ".ref[3].w = ",
+                    new List<ASTDesignator> {
+                        new ASTDesignator(new ASTIdentifier(new T_IDENTIFIER(1, "ref"))),
+                        new ASTDesignator(new ASTConstInt(new T_CONST_INT(1, "3", 10))),
+                        new ASTDesignator(new ASTIdentifier(new T_IDENTIFIER(1, "w")))
+                    }
+                }
+            };
+            foreach (var test in tests) {
+                Aux(test.Key, Parser.Designation().End().Select(x => x as IEnumerable<ASTDesignator>), test.Value);
             }
         }
     }

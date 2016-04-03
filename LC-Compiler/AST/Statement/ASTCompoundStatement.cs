@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace lcc.AST {
     public sealed class ASTCompoundStatement : ASTStatement {
 
-        public ASTCompoundStatement(LinkedList<ASTStatement> statements) {
+        public ASTCompoundStatement(IEnumerable<ASTStatement> statements) {
             this.statements = statements;
         }
 
@@ -28,6 +28,6 @@ namespace lcc.AST {
             return statements.GetHashCode();
         }
 
-        public readonly LinkedList<ASTStatement> statements;
+        public readonly IEnumerable<ASTStatement> statements;
     }
 }

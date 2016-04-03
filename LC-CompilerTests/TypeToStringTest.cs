@@ -6,6 +6,7 @@ using lcc.TypeSystem;
 namespace LC_CompilerTests {
     [TestClass]
     public class TypeToStringTest {
+
         [TestMethod]
         public void LCCTypeToChar() {
 

@@ -30,7 +30,7 @@ namespace lcc.Parser {
         /// <returns></returns>
         public static Parserc.Parser<Token.Token, ASTExpr> Expression() {
             return AssignmentExpression().PlusSeperatedBy(Match<T_PUNC_COMMA>())
-                .Select(exprs => exprs.Count == 1 ? exprs.First() : new ASTCommaExpr(exprs) as ASTExpr);
+                .Select(exprs => exprs.Count == 1 ? exprs.First() : new ASTCommaExpr(exprs));
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace lcc.Parser {
                 .Or(UnaryExpression()
                     .Bind(lexpr => AssgnmentOperator()
                     .Bind(op => AssignmentExpression()
-                    .Select(rexpr => new ASTAssignExpr(lexpr, rexpr, op) as ASTExpr))));
+                    .Select(rexpr => new ASTAssignExpr(lexpr, rexpr, op)))));
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace lcc.Parser {
                     .Then(Ref(Expression)
                     .Bind(trueExpr => Match<T_PUNC_COLON>()
                     .Then(Ref(ConditionalExpression)
-                    .Select(falseExpr => new ASTConditionalExpr(predicator, trueExpr, falseExpr) as ASTExpr))))
+                    .Select(falseExpr => new ASTConditionalExpr(predicator, trueExpr, falseExpr)))))
                     .Else(Result<Token.Token, ASTExpr>(predicator))
                 );
         }
@@ -285,13 +285,13 @@ namespace lcc.Parser {
             return PostfixExpression()
                 .Else(Match<T_PUNC_INCRE>()
                     .Then(Ref(UnaryExpression))
-                    .Select(x => new ASTPreStep(x, ASTPreStep.Kind.INC) as ASTExpr))
+                    .Select(x => new ASTPreStep(x, ASTPreStep.Kind.INC)))
                 .Else(Match<T_PUNC_DECRE>()
                     .Then(Ref(UnaryExpression))
-                    .Select(x => new ASTPreStep(x, ASTPreStep.Kind.DEC) as ASTExpr))
+                    .Select(x => new ASTPreStep(x, ASTPreStep.Kind.DEC)))
                 .Else(UnaryOperator()
                     .Bind(op => Ref(CastExpression)
-                    .Select(expr => new ASTUnaryOp(expr, op) as ASTExpr)))
+                    .Select(expr => new ASTUnaryOp(expr, op))))
                 ;
         }
 
@@ -369,13 +369,11 @@ namespace lcc.Parser {
         /// <returns></returns>
         public static Parserc.Parser<Token.Token, ASTExpr> PrimaryExpression() {
             return Get<T_IDENTIFIER>().Select(x => new ASTIdentifier(x) as ASTExpr)
-                .Else(Get<T_CONST_CHAR>().Select(x => new ASTConstChar(x) as ASTExpr))
-                .Else(Get<T_CONST_INT>().Select(x => new ASTConstInt(x) as ASTExpr))
-                .Else(Get<T_CONST_FLOAT>().Select(x => new ASTConstFloat(x) as ASTExpr))
-                .Else(Get<T_STRING_LITERAL>().Plus().Select(x => new ASTString(x) as ASTExpr))
-                .Else(Ref(Expression)
-                    .Bracket(Match<T_PUNC_PARENTL>(), Match<T_PUNC_PARENTR>())
-                    );
+                .Else(Get<T_CONST_CHAR>().Select(x => new ASTConstChar(x)))
+                .Else(Get<T_CONST_INT>().Select(x => new ASTConstInt(x)))
+                .Else(Get<T_CONST_FLOAT>().Select(x => new ASTConstFloat(x)))
+                .Else(Get<T_STRING_LITERAL>().Plus().Select(x => new ASTString(x)))
+                .Else(Ref(Expression).ParentLR());
         }
     }
 }

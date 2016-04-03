@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Parserc {
-    public interface ITokenStream<T> {
+    public interface ITokenStream<out T> {
 
         /// <summary>
         /// Return true if this stream is not empty.

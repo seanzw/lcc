@@ -1,25 +1,22 @@
 ﻿namespace Parserc {
-    public class ParserResult<I, V> {
 
-        public readonly V value;
+    public interface IParserResult<I, out V> {
+        V Value { get; }
+        ITokenStream<I> Remain { get; }
+    }
 
-        public readonly ITokenStream<I> remain;
+    public class ParserResult<I, V> : IParserResult<I, V> {
+
+        private readonly V value;
+
+        private readonly ITokenStream<I> remain;
 
         public ParserResult(V value, ITokenStream<I> remain) {
             this.value = value;
             this.remain = remain;
         }
-    }
 
-    public static class ResultAux {
-
-        public static bool Succeed<I, V>(ParserResult<I, V>[] result) {
-            return result.Length > 0;
-        }
-
-        public static ParserResult<I, V>[] Failure<I, V>() {
-            return new ParserResult<I, V>[] { };
-        }
-
+        public V Value => value;
+        public ITokenStream<I> Remain => remain;
     }
 }

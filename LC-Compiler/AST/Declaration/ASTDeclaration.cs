@@ -10,8 +10,8 @@ namespace lcc.AST {
     public sealed class ASTDeclaration : ASTStatement {
 
         public ASTDeclaration(
-            LinkedList<ASTDeclarationSpecifier> specifiers,
-            LinkedList<ASTDeclarator> declarators
+            IEnumerable<ASTDeclarationSpecifier> specifiers,
+            IEnumerable<ASTInitDeclarator> declarators
             ) {
             this.specifiers = specifiers;
             this.declarators = declarators;
@@ -38,8 +38,8 @@ namespace lcc.AST {
             return specifiers.GetHashCode();
         }
 
-        public readonly LinkedList<ASTDeclarationSpecifier> specifiers;
-        public readonly LinkedList<ASTDeclarator> declarators;
+        public readonly IEnumerable<ASTDeclarationSpecifier> specifiers;
+        public readonly IEnumerable<ASTInitDeclarator> declarators;
 
         public T TypeCheck(ASTEnv env) {
 

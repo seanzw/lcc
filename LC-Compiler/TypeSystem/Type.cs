@@ -203,7 +203,7 @@ namespace lcc.TypeSystem {
         }
 
         /// <summary>
-        /// Return the save type but as an rvalue.
+        /// Return the same type but as an rvalue.
         /// </summary>
         /// <returns></returns>
         public T R() {

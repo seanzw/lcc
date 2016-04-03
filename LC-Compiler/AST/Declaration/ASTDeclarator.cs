@@ -5,20 +5,35 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    public abstract class ASTDeclarator : ASTNode {
 
-        public override bool Equals(object obj) {
-            return obj is ASTDeclarator;
+    public sealed class ASTInitDeclarator : ASTNode {
+
+        public ASTInitDeclarator(ASTDeclarator declarator, ASTInitializer initializer = null) {
+            this.declarator = declarator;
+            this.initializer = initializer;
         }
 
-        public bool Equals(ASTDeclarator i) {
-            return true;
+        public bool Equals(ASTInitDeclarator x) {
+            return x != null && x.declarator.Equals(declarator) && NullableEquals(x.initializer, initializer);
+        }
+
+        public override bool Equals(object obj) {
+            return Equals(obj as ASTInitDeclarator);
         }
 
         public override int GetHashCode() {
-            return base.GetHashCode();
+            return declarator.GetHashCode();
         }
+
+        public override int GetLine() {
+            return declarator.GetLine();
+        }
+
+        public readonly ASTDeclarator declarator;
+        public readonly ASTInitializer initializer;
     }
+
+    public abstract class ASTDeclarator : ASTNode { }
 
     public sealed class ASTDeclaratorIdentifier : ASTDeclarator {
 
@@ -31,14 +46,11 @@ namespace lcc.AST {
         }
 
         public override bool Equals(object obj) {
-            ASTDeclaratorIdentifier i = obj as ASTDeclaratorIdentifier;
-            return i == null ? false : base.Equals(i)
-                && i.identifier.Equals(identifier);
+            return Equals(obj as ASTDeclaratorIdentifier);
         }
 
         public bool Equals(ASTDeclaratorIdentifier i) {
-            return i == null ? false : base.Equals(i)
-                && i.identifier.Equals(identifier);
+            return i != null && i.identifier.Equals(identifier);
         }
 
         public override int GetHashCode() {

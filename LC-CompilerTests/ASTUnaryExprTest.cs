@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -35,10 +36,10 @@ namespace LC_CompilerTests {
 
             foreach (var test in tests) {
                 var result = Utility.parse(test.Key, Parser.UnaryExpression().End());
-                Assert.AreEqual(1, result.Count);
-                Assert.IsFalse(result[0].remain.More());
-                Assert.IsTrue(result[0].value is ASTPreStep);
-                var ast = result[0].value as ASTPreStep;
+                Assert.AreEqual(1, result.Count());
+                Assert.IsFalse(result.First().Remain.More());
+                Assert.IsTrue(result.First().Value is ASTPreStep);
+                var ast = result.First().Value as ASTPreStep;
                 Assert.AreEqual(test.Value, ast.TypeCheck(env));
             }
         }
@@ -91,10 +92,10 @@ namespace LC_CompilerTests {
 
             foreach (var test in tests) {
                 var result = Utility.parse(test.Key, Parser.UnaryExpression().End());
-                Assert.AreEqual(1, result.Count);
-                Assert.IsFalse(result[0].remain.More());
-                Assert.IsTrue(result[0].value is ASTUnaryOp);
-                var ast = result[0].value as ASTUnaryOp;
+                Assert.AreEqual(1, result.Count());
+                Assert.IsFalse(result.First().Remain.More());
+                Assert.IsTrue(result.First().Value is ASTUnaryOp);
+                var ast = result.First().Value as ASTUnaryOp;
                 Assert.AreEqual(test.Value, ast.TypeCheck(env));
             }
         }

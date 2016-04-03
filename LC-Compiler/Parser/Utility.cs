@@ -8,6 +8,9 @@ using static Parserc.Parserc;
 using lcc.AST;
 using lcc.Token;
 
+// Simplify...
+using T = lcc.Token.Token;
+
 namespace lcc.Parser {
     public static partial class Parser {
 
@@ -16,9 +19,9 @@ namespace lcc.Parser {
         /// </summary>
         /// <typeparam name="I"></typeparam>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, Token.Token> Match<I>()
-            where I : Token.Token {
-            return Sat<Token.Token>(x => x is I);
+        public static Parserc.Parser<T, T> Match<I>()
+            where I : T {
+            return Sat<T>(x => x is I);
         }
 
         /// <summary>
@@ -26,8 +29,8 @@ namespace lcc.Parser {
         /// </summary>
         /// <typeparam name="I"></typeparam>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, I> Get<I>()
-            where I : Token.Token {
+        public static Parserc.Parser<T, I> Get<I>()
+            where I : T {
             return Match<I>().Select(x => (I)x);
         }
 
@@ -37,9 +40,9 @@ namespace lcc.Parser {
         /// <param name="parser"> Basic element parser. </param>
         /// <param name="sep"> Match the operator. </param>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, ASTExpr> ChainBinaryExpr(
-            this Parserc.Parser<Token.Token, ASTExpr> parser,
-            Parserc.Parser<Token.Token, ASTBinaryExpr.Op> sep
+        public static Parserc.Parser<T, ASTExpr> ChainBinaryExpr(
+            this Parserc.Parser<T, ASTExpr> parser,
+            Parserc.Parser<T, ASTBinaryExpr.Op> sep
             ) {
             return parser.ChainPlus(sep.Select(op => {
                 Func<ASTExpr, ASTExpr, ASTExpr> f = (lhs, rhs) => new ASTBinaryExpr(lhs, rhs, op);
@@ -53,7 +56,7 @@ namespace lcc.Parser {
         /// <typeparam name="V"></typeparam>
         /// <param name="parser"></param>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, V> ParentLR<V>(this Parserc.Parser<Token.Token, V> parser) {
+        public static Parserc.Parser<T, V> ParentLR<V>(this Parserc.Parser<T, V> parser) {
             return parser.Bracket(Match<T_PUNC_PARENTL>(), Match<T_PUNC_PARENTR>());
         }
 
@@ -63,8 +66,18 @@ namespace lcc.Parser {
         /// <typeparam name="V"></typeparam>
         /// <param name="parser"></param>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, V> BracelLR<V>(this Parserc.Parser<Token.Token, V> parser) {
+        public static Parserc.Parser<T, V> BracelLR<V>(this Parserc.Parser<T, V> parser) {
             return parser.Bracket(Match<T_PUNC_BRACEL>(), Match<T_PUNC_BRACER>());
+        }
+
+        /// <summary>
+        /// Match [ parser ].
+        /// </summary>
+        /// <typeparam name="V"></typeparam>
+        /// <param name="parser"></param>
+        /// <returns></returns>
+        public static Parserc.Parser<T, V> SubLR<V>(this Parserc.Parser<T, V> parser) {
+            return parser.Bracket(Match<T_PUNC_SUBSCRIPTL>(), Match<T_PUNC_SUBSCRIPTR>());
         }
 
         /// <summary>
@@ -73,7 +86,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, ASTIdentifier> Identifier() {
+        public static Parserc.Parser<T, ASTIdentifier> Identifier() {
             return Get<T_IDENTIFIER>().Select(t => new ASTIdentifier(t));
         }
     }

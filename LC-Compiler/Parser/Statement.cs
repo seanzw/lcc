@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using static Parserc.Parserc;
 using lcc.Token;
 using lcc.AST;
+using T = lcc.Token.Token;
 
 namespace lcc.Parser {
     public static partial class Parser {
@@ -27,17 +28,17 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, ASTStatement> Statement() {
-            return LabeledStatement().Cast<Token.Token, ASTStatement, ASTLabeledStatement>()
-                .Or(CaseStatement().Cast<Token.Token, ASTStatement, ASTCaseStatement>())
-                .Or(DefaultStatement().Cast<Token.Token, ASTStatement, ASTDefaultStatement>())
-                .Or(CompoundStatement().Cast<Token.Token, ASTStatement, ASTCompoundStatement>())
+        public static Parserc.Parser<T, ASTStatement> Statement() {
+            return LabeledStatement().Cast<T, ASTStatement, ASTLabeledStatement>()
+                .Or(CaseStatement())
+                .Or(DefaultStatement())
+                .Or(CompoundStatement())
                 .Or(ExpressionStatement())
-                .Or(IfStatement().Cast<Token.Token, ASTStatement, ASTIfStatement>())
-                .Or(SwitchStatement().Cast<Token.Token, ASTStatement, ASTSwitchStatement>())
-                .Or(WhileStatement().Cast<Token.Token, ASTStatement, ASTWhileStatement>())
-                .Or(DoStatement().Cast<Token.Token, ASTStatement, ASTDoStatement>())
-                .Or(ForStatement().Cast<Token.Token, ASTStatement, ASTForStatement>())
+                .Or(IfStatement())
+                .Or(SwitchStatement())
+                .Or(WhileStatement())
+                .Or(DoStatement())
+                .Or(ForStatement())
                 .Or(JumpStatement())
                 ;
         }
@@ -48,7 +49,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, ASTLabeledStatement> LabeledStatement() {
+        public static Parserc.Parser<T, ASTLabeledStatement> LabeledStatement() {
             return Identifier()
                 .Bind(identifier => Match<T_PUNC_COLON>()
                 .Then(Ref(Statement))
@@ -61,7 +62,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, ASTCaseStatement> CaseStatement() {
+        public static Parserc.Parser<T, ASTCaseStatement> CaseStatement() {
             return Match<T_KEY_CASE>()
                 .Then(ConstantExpression())
                 .Bind(expr => Match<T_PUNC_COLON>()
@@ -75,7 +76,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, ASTDefaultStatement> DefaultStatement() {
+        public static Parserc.Parser<T, ASTDefaultStatement> DefaultStatement() {
             return Match<T_KEY_DEFAULT>()
                 .Then(Match<T_PUNC_COLON>())
                 .Then(Ref(Statement))
@@ -98,9 +99,9 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, ASTCompoundStatement> CompoundStatement() {
+        public static Parserc.Parser<T, ASTCompoundStatement> CompoundStatement() {
             return Declaration()
-                .Cast<Token.Token, ASTStatement, ASTDeclaration>()
+                .Cast<T, ASTStatement, ASTDeclaration>()
                 .Or(Ref(Statement))
                 .Many()
                 .BracelLR()
@@ -113,9 +114,9 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, ASTStatement> ExpressionStatement() {
+        public static Parserc.Parser<T, ASTStatement> ExpressionStatement() {
             return Expression().Bind(expr => Match<T_PUNC_SEMICOLON>().Return(expr as ASTStatement))
-                .Or(Get<T_PUNC_SEMICOLON>().Select(t => new ASTVoidStatement(t.line) as ASTStatement));
+                .Or(Get<T_PUNC_SEMICOLON>().Select(t => new ASTVoidStatement(t.line)));
         }
 
         /// <summary>
@@ -125,7 +126,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, ASTIfStatement> IfStatement() {
+        public static Parserc.Parser<T, ASTIfStatement> IfStatement() {
             return Get<T_KEY_IF>()
                 .Bind(t => Expression().ParentLR()
                 .Bind(expr => Ref(Statement)
@@ -140,7 +141,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, ASTSwitchStatement> SwitchStatement() {
+        public static Parserc.Parser<T, ASTSwitchStatement> SwitchStatement() {
             return Get<T_KEY_SWITCH>()
                 .Bind(t => Expression().ParentLR()
                 .Bind(expr => Ref(Statement)
@@ -153,7 +154,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, ASTWhileStatement> WhileStatement() {
+        public static Parserc.Parser<T, ASTWhileStatement> WhileStatement() {
             return Match<T_KEY_WHILE>()
                 .Then(Expression().ParentLR())
                 .Bind(expr => Ref(Statement)
@@ -165,7 +166,7 @@ namespace lcc.Parser {
         ///     : do statement while ( expression ) ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, ASTDoStatement> DoStatement() {
+        public static Parserc.Parser<T, ASTDoStatement> DoStatement() {
             return Match<T_KEY_DO>()
                 .Then(Ref(Statement))
                 .Bind(statement => Match<T_KEY_WHILE>()
@@ -179,7 +180,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, ASTForStatement> ForStatement() {
+        public static Parserc.Parser<T, ASTForStatement> ForStatement() {
             return Get<T_KEY_FOR>()
                 .Bind(t => Match<T_PUNC_PARENTL>()
                 .Then(Expression().ElseNull())
@@ -201,7 +202,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, ASTStatement> JumpStatement() {
+        public static Parserc.Parser<T, ASTStatement> JumpStatement() {
             return Get<T_KEY_GOTO>()
                     .Bind(t => Identifier()
                     .Bind(label => Match<T_PUNC_SEMICOLON>()

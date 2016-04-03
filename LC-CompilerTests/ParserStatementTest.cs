@@ -71,14 +71,18 @@ namespace LC_CompilerTests {
     a;
     int x;
 }",
-                    new ASTCompoundStatement(new LinkedList<ASTStatement>(new List<ASTStatement> {
-                        new ASTIdentifier(new T_IDENTIFIER(3, "a")),
-                        new ASTDeclaration(
-                            new LinkedList<ASTDeclarationSpecifier>(new List<ASTDeclarationSpecifier> {
-                                new ASTTypeKeySpecifier(4, ASTTypeKeySpecifier.Type.INT)}),
-                            new LinkedList<ASTDeclarator>(new List<ASTDeclarator> {
-                                new ASTDeclaratorIdentifier(
-                                    new ASTIdentifier(new T_IDENTIFIER(4, "x")))})) }))
+                    new ASTCompoundStatement(
+                        new List<ASTStatement> {
+                            new ASTIdentifier(new T_IDENTIFIER(3, "a")),
+                            new ASTDeclaration(
+                                new List<ASTDeclarationSpecifier> {
+                                    new ASTTypeKeySpecifier(4, ASTTypeSpecifier.Type.INT)
+                                },
+                                new List<ASTInitDeclarator> {
+                                    new ASTInitDeclarator(
+                                        new ASTDeclaratorIdentifier(new ASTIdentifier(new T_IDENTIFIER(4, "x"))))
+                                }),
+                        })
                 }
             };
 

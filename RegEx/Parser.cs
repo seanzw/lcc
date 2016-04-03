@@ -64,12 +64,12 @@ namespace RegEx {
         public static ASTExpr Parse(string src) {
             Parserc.CharStream tokens = new Parserc.CharStream(src);
             var results = Expression().End()(tokens);
-            if (results.Count == 0) {
+            if (results.Count() == 0) {
                 throw new ArgumentException("Syntax Error: failed parsing!");
-            } else if (results.Count > 1) {
+            } else if (results.Count() > 1) {
                 throw new ArgumentException("Syntax Error: ambiguous result!");
             } else {
-                return results.First().value;
+                return results.First().Value;
             }
         }
 
