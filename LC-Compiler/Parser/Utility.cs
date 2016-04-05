@@ -61,13 +61,20 @@ namespace lcc.Parser {
         }
 
         /// <summary>
-        /// Match { parser }.
+        /// Match { parser }
+        /// Notice this will handle all the scope.
         /// </summary>
         /// <typeparam name="V"></typeparam>
         /// <param name="parser"></param>
         /// <returns></returns>
         public static Parserc.Parser<T, V> BracelLR<V>(this Parserc.Parser<T, V> parser) {
-            return parser.Bracket(Match<T_PUNC_BRACEL>(), Match<T_PUNC_BRACER>());
+            return Match<T_PUNC_BRACEL>().Bind(_ => {
+                Env.PushScope();
+                return parser;
+            }).Bind(result => Match<T_PUNC_BRACER>().Bind(_ => {
+                Env.PopScope();
+                return Result<T, V>(result);
+            }));
         }
 
         /// <summary>
@@ -89,5 +96,19 @@ namespace lcc.Parser {
         public static Parserc.Parser<T, ASTIdentifier> Identifier() {
             return Get<T_IDENTIFIER>().Select(t => new ASTIdentifier(t));
         }
+    }
+
+    public class TypedefRedefined : Exception {
+        public TypedefRedefined(int line, string name) {
+            this.line = line;
+            this.name = name;
+        }
+
+        public override string ToString() {
+            return string.Format("ParserError: line {0} typedef {1} is redefined", line, name);
+        }
+
+        private readonly int line;
+        private readonly string name;
     }
 }

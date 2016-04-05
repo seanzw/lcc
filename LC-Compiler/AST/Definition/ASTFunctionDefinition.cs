@@ -5,10 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    public sealed class ASTFunctionDefinition : ASTNode {
+    public sealed class ASTFuncDefinition : ASTNode {
 
-        public ASTFunctionDefinition(
-            IEnumerable<ASTDeclarationSpecifier> specifiers,
+        public ASTFuncDefinition(
+            ASTDeclSpecs specifiers,
             ASTDeclarator declarator,
             IEnumerable<ASTDeclaration> declarations,
             ASTStatement statement
@@ -24,13 +24,13 @@ namespace lcc.AST {
         }
 
         public override bool Equals(object obj) {
-            ASTFunctionDefinition x = obj as ASTFunctionDefinition;
+            ASTFuncDefinition x = obj as ASTFuncDefinition;
             return Equals(x);
         }
 
-        public bool Equals(ASTFunctionDefinition x) {
+        public bool Equals(ASTFuncDefinition x) {
             return x == null ? false : base.Equals(x)
-                && x.specifiers.SequenceEqual(specifiers)
+                && x.specifiers.Equals(specifiers)
                 && x.declarator.Equals(declarator)
                 && x.declarations == null ? declarations == null : x.declarations.SequenceEqual(declarations)
                 && x.statement.Equals(statement);
@@ -40,7 +40,7 @@ namespace lcc.AST {
             return specifiers.GetHashCode();
         }
 
-        public readonly IEnumerable<ASTDeclarationSpecifier> specifiers;
+        public readonly ASTDeclSpecs specifiers;
         public readonly ASTDeclarator declarator;
         public readonly IEnumerable<ASTDeclaration> declarations;
         public readonly ASTStatement statement;

@@ -18,23 +18,49 @@ namespace lcc.Parser {
         /// declaration
         ///     : declaration-specifiers init-declarator-list_opt ;
         ///     ;
+        ///     
+        /// If the declaration is a typedef, add the name into the environment.
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<T, ASTDeclaration> Declaration() {
             return DeclarationSpecifiers()
                 .Bind(specifiers => InitDeclaratorList()
                 .Bind(declarators => Match<T_PUNC_SEMICOLON>()
-                .Return(new ASTDeclaration(specifiers, declarators))));
+                .Bind(_ => {
+                    var decl = new ASTDeclaration(specifiers, declarators);
+                    if (decl.IsTypedef)
+                        foreach (var name in decl.DeclNames)
+                            Env.AddTypedefName(decl.GetLine(), name);
+                    return Result<T, ASTDeclaration>(decl);
+                })));
         }
 
         /// <summary>
         /// declaration-specifiers
         ///     : declaration-specifier declaration-specifiers_opt
         ///     ;
+        ///     
+        /// Notice this parser will do some semantic analysis to solve typedef and variable ambiguity.
+        /// Make sure that struct/union/enum/typedef type specifier appear only once.
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, IEnumerable<ASTDeclarationSpecifier>> DeclarationSpecifiers() {
-            return DeclarationSpecifier().Plus();
+        public static Parserc.Parser<T, ASTDeclSpecs> DeclarationSpecifiers() {
+            return DeclarationSpecifier().Plus().Bind(ss => {
+
+                var specs = ss.OfType<ASTTypeSpec>();
+
+                foreach (var spec in specs) {
+                    if (spec.kind == ASTTypeSpec.Kind.TYPEDEF ||
+                        spec.kind == ASTTypeSpec.Kind.STRUCT ||
+                        spec.kind == ASTTypeSpec.Kind.UNION ||
+                        spec.kind == ASTTypeSpec.Kind.ENUM)
+                        if (specs.Count() != 1) return Zero<T, ASTDeclSpecs>();
+                        else return Result<T, ASTDeclSpecs>(new ASTDeclSpecs(ss, spec));
+                }
+
+                var keys = from s in specs select s.kind;
+                return Result<T, ASTDeclSpecs>(new ASTDeclSpecs(ss, keys));
+            });
         }
 
         /// <summary>
@@ -46,8 +72,8 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTDeclarationSpecifier> DeclarationSpecifier() {
-            return StorageClassSpecifier().Cast<T, ASTDeclarationSpecifier, ASTStorageSpecifier>()
+        public static Parserc.Parser<T, ASTDeclSpec> DeclarationSpecifier() {
+            return StorageClassSpecifier().Cast<T, ASTDeclSpec, ASTStorageSpecifier>()
                 .Or(TypeSpecifier())
                 .Or(TypeQualifier())
                 .Or(FunctionSpecifier());
@@ -87,11 +113,11 @@ namespace lcc.Parser {
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<T, ASTStorageSpecifier> StorageClassSpecifier() {
-            return Get<T_KEY_TYPEDEF>().Select(t => new ASTStorageSpecifier(t.line, ASTStorageSpecifier.Type.TYPEDEF))
-                .Else(Get<T_KEY_EXTERN>().Select(t => new ASTStorageSpecifier(t.line, ASTStorageSpecifier.Type.EXTERN)))
-                .Else(Get<T_KEY_STATIC>().Select(t => new ASTStorageSpecifier(t.line, ASTStorageSpecifier.Type.STATIC)))
-                .Else(Get<T_KEY_AUTO>().Select(t => new ASTStorageSpecifier(t.line, ASTStorageSpecifier.Type.AUTO)))
-                .Else(Get<T_KEY_REGISTER>().Select(t => new ASTStorageSpecifier(t.line, ASTStorageSpecifier.Type.REGISTER)));
+            return Get<T_KEY_TYPEDEF>().Select(t => new ASTStorageSpecifier(t.line, ASTStorageSpecifier.Kind.TYPEDEF))
+                .Else(Get<T_KEY_EXTERN>().Select(t => new ASTStorageSpecifier(t.line, ASTStorageSpecifier.Kind.EXTERN)))
+                .Else(Get<T_KEY_STATIC>().Select(t => new ASTStorageSpecifier(t.line, ASTStorageSpecifier.Kind.STATIC)))
+                .Else(Get<T_KEY_AUTO>().Select(t => new ASTStorageSpecifier(t.line, ASTStorageSpecifier.Kind.AUTO)))
+                .Else(Get<T_KEY_REGISTER>().Select(t => new ASTStorageSpecifier(t.line, ASTStorageSpecifier.Kind.REGISTER)));
         }
 
         /// <summary>
@@ -99,14 +125,22 @@ namespace lcc.Parser {
         ///     : type-key-specifier
         ///     | struct-or-union-specifier
         ///     | enum-specifier
-        ///     // TODO | typedef-name
+        ///     | typedef-name
+        ///     ;
+        ///     
+        /// typedef-name
+        ///     : identifier
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTTypeSpecifier> TypeSpecifier() {
-            return TypeKeySpecifier().Cast<T, ASTTypeSpecifier, ASTTypeKeySpecifier>()
-                .Or(StructUnionSpecifier())
-                .Or(EnumSpecifier());
+        public static Parserc.Parser<T, ASTTypeSpec> TypeSpecifier() {
+            return TypeKeySpecifier().Cast<T, ASTTypeSpec, ASTTypeKeySpecifier>()
+                .Else(StructUnionSpecifier())
+                .Else(EnumSpecifier())
+                .Else(Identifier().Bind(identifier => {
+                    return Env.IsTypedefName(identifier.name) ? Result<T, ASTTypeSpec>(new ASTTypedefName(identifier))
+                        : Zero<T, ASTTypeSpec>();
+                }));
         }
 
         /// <summary>
@@ -121,21 +155,22 @@ namespace lcc.Parser {
         ///     | signed
         ///     | unsigned
         ///     | _Bool
-        ///     // TODO | _Complex
+        ///     | _Complex
         ///     ;
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<T, ASTTypeKeySpecifier> TypeKeySpecifier() {
-            return Get<T_KEY_VOID>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpecifier.Type.VOID))
-                .Else(Get<T_KEY_CHAR>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpecifier.Type.CHAR)))
-                .Else(Get<T_KEY_SHORT>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpecifier.Type.SHORT)))
-                .Else(Get<T_KEY_INT>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpecifier.Type.INT)))
-                .Else(Get<T_KEY_LONG>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpecifier.Type.LONG)))
-                .Else(Get<T_KEY_FLOAT>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpecifier.Type.FLOAT)))
-                .Else(Get<T_KEY_DOUBLE>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpecifier.Type.DOUBLE)))
-                .Else(Get<T_KEY_SIGNED>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpecifier.Type.SIGNED)))
-                .Else(Get<T_KEY_UNSIGNED>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpecifier.Type.UNSIGNED)))
-                .Else(Get<T_KEY__BOOL>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpecifier.Type.BOOL)));
+            return Get<T_KEY_VOID>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpec.Kind.VOID))
+                .Else(Get<T_KEY_CHAR>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpec.Kind.CHAR)))
+                .Else(Get<T_KEY_SHORT>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpec.Kind.SHORT)))
+                .Else(Get<T_KEY_INT>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpec.Kind.INT)))
+                .Else(Get<T_KEY_LONG>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpec.Kind.LONG)))
+                .Else(Get<T_KEY_FLOAT>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpec.Kind.FLOAT)))
+                .Else(Get<T_KEY_DOUBLE>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpec.Kind.DOUBLE)))
+                .Else(Get<T_KEY_SIGNED>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpec.Kind.SIGNED)))
+                .Else(Get<T_KEY_UNSIGNED>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpec.Kind.UNSIGNED)))
+                .Else(Get<T_KEY__BOOL>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpec.Kind.BOOL)))
+                .Else(Get<T_KEY__COMPLEX>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpec.Kind.COMPLEX)));
         }
 
         /// <summary>
@@ -146,8 +181,8 @@ namespace lcc.Parser {
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<T, ASTStructUnionSpecifier> StructUnionSpecifier() {
-            return Get<T_KEY_STRUCT>().Bind(t => StructUnionSpecifierTail(true, t.line))
-                .Else(Get<T_KEY_UNION>().Bind(t => StructUnionSpecifierTail(false, t.line)));
+            return Get<T_KEY_STRUCT>().Bind(t => StructUnionSpecifierTail(ASTTypeSpec.Kind.STRUCT, t.line))
+                .Else(Get<T_KEY_UNION>().Bind(t => StructUnionSpecifierTail(ASTTypeSpec.Kind.UNION, t.line)));
         }
 
         /// <summary>
@@ -160,17 +195,12 @@ namespace lcc.Parser {
         /// <param name="structOrUnion"></param>
         /// <param name="line"></param>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTStructUnionSpecifier> StructUnionSpecifierTail(bool structOrUnion, int line) {
-            Func<ASTIdentifier, LinkedList<ASTStructDeclaration>, ASTStructUnionSpecifier> aux =
-                (identifier, declarations) => structOrUnion
-                    ? new ASTStructSpecifier(line, identifier, declarations) as ASTStructUnionSpecifier
-                    : new ASTUnionSpecifier(line, identifier, declarations) as ASTStructUnionSpecifier;
+        public static Parserc.Parser<T, ASTStructUnionSpecifier> StructUnionSpecifierTail(ASTTypeSpec.Kind kind, int line) {
             return Identifier()
-                    .Bind(identifier => StructDeclarationList().BracelLR()
-                    .Select(declarations => aux(identifier, declarations))
-                    .Or(Result<T, ASTStructUnionSpecifier>(aux(identifier, null))))
+                    .Bind(identifier => StructDeclarationList().BracelLR().ElseNull()
+                    .Select(declarations => new ASTStructUnionSpecifier(line, identifier, declarations, kind)))
                 .Or(StructDeclarationList().BracelLR()
-                    .Select(declarations => aux(null, declarations)));
+                    .Select(declarations => new ASTStructUnionSpecifier(line, null, declarations, kind)));
         }
 
         /// <summary>
@@ -205,7 +235,7 @@ namespace lcc.Parser {
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<T, IEnumerable<ASTTypeSpecifierQualifier>> SpecifierQualifierList() {
-            return Ref(TypeSpecifier).Cast<T, ASTTypeSpecifierQualifier, ASTTypeSpecifier>()
+            return Ref(TypeSpecifier).Cast<T, ASTTypeSpecifierQualifier, ASTTypeSpec>()
                 .Else(TypeQualifier())
                 .Plus();
         }
@@ -303,7 +333,7 @@ namespace lcc.Parser {
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<T, ASTFunctionSpecifier> FunctionSpecifier() {
-            return Get<T_KEY_INLINE>().Select(t => new ASTFunctionSpecifier(t.line, ASTFunctionSpecifier.Type.INLINE));
+            return Get<T_KEY_INLINE>().Select(t => new ASTFunctionSpecifier(t.line, ASTFunctionSpecifier.Kind.INLINE));
         }
 
 
@@ -420,7 +450,7 @@ namespace lcc.Parser {
             return Ref(DeclarationSpecifiers)
                 .Bind(specifiers => Ref(Declarator)
                 .Select(declarator => new ASTParameter(specifiers, declarator))
-                .Or(AbstractDeclarator().ElseNull().Select(absDeclarator => new ASTParameter(specifiers, absDeclarator))));
+                .Else(AbstractDeclarator().ElseNull().Select(absDeclarator => new ASTParameter(specifiers, absDeclarator))));
         }
 
         /// <summary>

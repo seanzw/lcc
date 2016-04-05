@@ -75,9 +75,13 @@ namespace LC_CompilerTests {
                         new List<ASTStatement> {
                             new ASTIdentifier(new T_IDENTIFIER(3, "a")),
                             new ASTDeclaration(
-                                new List<ASTDeclarationSpecifier> {
-                                    new ASTTypeKeySpecifier(4, ASTTypeSpecifier.Type.INT)
-                                },
+                                new ASTDeclSpecs(
+                                    new List<ASTDeclSpec> {
+                                        new ASTTypeKeySpecifier(4, ASTTypeSpec.Kind.INT)
+                                    },
+                                    new List<ASTTypeSpec.Kind> {
+                                        ASTTypeSpec.Kind.INT
+                                    }),
                                 new List<ASTInitDeclarator> {
                                     new ASTInitDeclarator(
                                         new ASTDeclarator(

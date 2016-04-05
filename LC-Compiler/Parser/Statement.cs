@@ -100,12 +100,7 @@ namespace lcc.Parser {
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<T, ASTCompoundStatement> CompoundStatement() {
-            return Declaration()
-                .Cast<T, ASTStatement, ASTDeclaration>()
-                .Or(Ref(Statement))
-                .Many()
-                .BracelLR()
-                .Select(statements => new ASTCompoundStatement(statements));
+            return Ref(Statement).Or(Declaration()).Many().BracelLR().Select(ss => new ASTCompoundStatement(ss));
         }
 
         /// <summary>

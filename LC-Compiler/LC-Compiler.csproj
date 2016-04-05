@@ -75,6 +75,7 @@
     <Compile Include="AST\Expression\ASTBinaryExpr.cs" />
     <Compile Include="Parser\Declaration.cs" />
     <Compile Include="Parser\Definition.cs" />
+    <Compile Include="Parser\Environment.cs" />
     <Compile Include="Parser\Expression.cs" />
     <Compile Include="Parser\Statement.cs" />
     <Compile Include="Parser\Utility.cs" />

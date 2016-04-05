@@ -87,13 +87,17 @@ namespace lcc.AST {
         public ASTDirDeclarator direct;
     }
 
-    public abstract class ASTDirDeclarator : ASTNode {}
+    public abstract class ASTDirDeclarator : ASTNode {
+        public abstract string Name { get; }
+    }
 
     public sealed class ASTIdentifierDeclarator : ASTDirDeclarator {
 
         public ASTIdentifierDeclarator(ASTIdentifier identifier) {
             this.identifier = identifier;
         }
+
+        public override string Name => identifier.name;
 
         public override int GetLine() {
             return identifier.GetLine();
@@ -120,6 +124,8 @@ namespace lcc.AST {
             this.declarator = declarator;
         }
 
+        public override string Name => declarator.direct.Name;
+
         public bool Equals(ASTParentDeclarator x) {
             return x != null && x.declarator.Equals(declarator);
         }
@@ -141,18 +147,18 @@ namespace lcc.AST {
 
     public sealed class ASTParameter : ASTNode {
 
-        public ASTParameter(IEnumerable<ASTDeclarationSpecifier> specifiers, ASTDeclarator declarator) {
+        public ASTParameter(ASTDeclSpecs specifiers, ASTDeclarator declarator) {
             this.specifiers = specifiers;
             this.declarator = declarator;
         }
 
-        public ASTParameter(IEnumerable<ASTDeclarationSpecifier> specifiers, ASTAbsDeclarator absDeclarator = null) {
+        public ASTParameter(ASTDeclSpecs specifiers, ASTAbsDeclarator absDeclarator = null) {
             this.specifiers = specifiers;
             this.absDeclarator = absDeclarator;
         }
 
         public override int GetLine() {
-            return specifiers.First().GetLine();
+            return specifiers.GetLine();
         }
 
         public override bool Equals(object obj) {
@@ -160,7 +166,7 @@ namespace lcc.AST {
         }
 
         public bool Equals(ASTParameter x) {
-            return x != null && specifiers.SequenceEqual(x.specifiers) && NullableEquals(x.declarator, declarator)
+            return x != null && specifiers.Equals(x.specifiers) && NullableEquals(x.declarator, declarator)
                 && NullableEquals(x.absDeclarator, absDeclarator);
         }
 
@@ -168,7 +174,7 @@ namespace lcc.AST {
             return specifiers.GetHashCode();
         }
 
-        public readonly IEnumerable<ASTDeclarationSpecifier> specifiers;
+        public readonly ASTDeclSpecs specifiers;
         public readonly ASTDeclarator declarator;
         public readonly ASTAbsDeclarator absDeclarator;
     }
@@ -189,6 +195,8 @@ namespace lcc.AST {
             this.direct = direct;
             this.identifiers = identifiers;
         }
+
+        public override string Name => direct.Name;
 
         public override int GetLine() {
             return direct.GetLine();
@@ -241,6 +249,8 @@ namespace lcc.AST {
             this.isStar = true;
             this.isStatic = false;
         }
+
+        public override string Name => direct.Name;
 
         public bool Equals(ASTArrDeclarator x) {
             return x != null && x.direct.Equals(direct)

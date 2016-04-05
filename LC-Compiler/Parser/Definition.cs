@@ -23,7 +23,7 @@ namespace lcc.Parser {
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<Token.Token, ASTProgram> TranslationUnit() {
-            return FunctionDefintion().Cast<Token.Token, ASTNode, ASTFunctionDefinition>()
+            return FunctionDefintion().Cast<Token.Token, ASTNode, ASTFuncDefinition>()
                 .Or(Declaration().Cast<Token.Token, ASTNode, ASTDeclaration>()).Plus()
                 .Select(nodes => new ASTProgram(nodes));
         }
@@ -39,12 +39,12 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, ASTFunctionDefinition> FunctionDefintion() {
+        public static Parserc.Parser<Token.Token, ASTFuncDefinition> FunctionDefintion() {
             return DeclarationSpecifiers()
                 .Bind(specifiers => Declarator()
                 .Bind(declarator => Declaration().Plus().ElseNull()
                 .Bind(declarations => CompoundStatement()
-                .Select(statement => new ASTFunctionDefinition(specifiers, declarator, declarations, statement)))));
+                .Select(statement => new ASTFuncDefinition(specifiers, declarator, declarations, statement)))));
         }
     }
 }

@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 using lcc.Token;
 
 namespace lcc.AST {
-    public abstract class ASTDeclarationSpecifier : ASTNode {
+    public abstract class ASTDeclSpec : ASTNode {
 
         public abstract override int GetLine();
 
         public override bool Equals(object obj) {
-            return obj is ASTDeclarationSpecifier;
+            return obj is ASTDeclSpec;
         }
 
-        public bool Equals(ASTDeclarationSpecifier spec) {
+        public bool Equals(ASTDeclSpec spec) {
             return true;
         }
 
@@ -24,9 +24,9 @@ namespace lcc.AST {
         }
     }
 
-    public sealed class ASTStorageSpecifier : ASTDeclarationSpecifier {
+    public sealed class ASTStorageSpecifier : ASTDeclSpec {
 
-        public enum Type {
+        public enum Kind {
             TYPEDEF,
             EXTERN,
             STATIC,
@@ -34,9 +34,9 @@ namespace lcc.AST {
             REGISTER
         }
 
-        public ASTStorageSpecifier(int line, Type type) {
+        public ASTStorageSpecifier(int line, Kind type) {
             this.line = line;
-            this.type = type;
+            this.kind = type;
         }
 
         public override int GetLine() {
@@ -47,24 +47,24 @@ namespace lcc.AST {
             ASTStorageSpecifier spec = obj as ASTStorageSpecifier;
             return spec == null ? false : base.Equals(spec)
                 && spec.line == line
-                && spec.type == type;
+                && spec.kind == kind;
         }
 
         public bool Equals(ASTStorageSpecifier spec) {
             return base.Equals(spec)
                 && spec.line == line
-                && spec.type == type;
+                && spec.kind == kind;
         }
 
         public override int GetHashCode() {
             return line;
         }
 
-        public readonly Type type;
+        public readonly Kind kind;
         public readonly int line;
     }
 
-    public abstract class ASTTypeSpecifierQualifier : ASTDeclarationSpecifier {
+    public abstract class ASTTypeSpecifierQualifier : ASTDeclSpec {
         public abstract override int GetLine();
 
         public override bool Equals(object obj) {
@@ -80,9 +80,9 @@ namespace lcc.AST {
         }
     }
 
-    public abstract class ASTTypeSpecifier : ASTTypeSpecifierQualifier {
+    public abstract class ASTTypeSpec : ASTTypeSpecifierQualifier {
 
-        public enum Type {
+        public enum Kind {
             VOID,
             CHAR,
             SHORT,
@@ -93,22 +93,24 @@ namespace lcc.AST {
             SIGNED,
             UNSIGNED,
             BOOL,
+            COMPLEX,
             STRUCT,
             UNION,
-            ENUM
+            ENUM,
+            TYPEDEF
         }
 
-        public ASTTypeSpecifier(Type type) {
-            this.type = type;
+        public ASTTypeSpec(Kind kind) {
+            this.kind = kind;
         }
 
         public abstract override int GetLine();
 
         public override bool Equals(object obj) {
-            return obj is ASTTypeSpecifier;
+            return obj is ASTTypeSpec;
         }
 
-        public bool Equals(ASTTypeSpecifier spec) {
+        public bool Equals(ASTTypeSpec spec) {
             return true;
         }
 
@@ -116,12 +118,12 @@ namespace lcc.AST {
             return GetLine();
         }
 
-        public readonly Type type;
+        public readonly Kind kind;
     }
 
-    public sealed class ASTTypeKeySpecifier : ASTTypeSpecifier {
+    public sealed class ASTTypeKeySpecifier : ASTTypeSpec {
 
-        public ASTTypeKeySpecifier(int line, Type type) : base(type) {
+        public ASTTypeKeySpecifier(int line, Kind kind) : base(kind) {
             this.line = line;
         }
 
@@ -133,13 +135,13 @@ namespace lcc.AST {
             ASTTypeKeySpecifier spec = obj as ASTTypeKeySpecifier;
             return spec == null ? false : base.Equals(spec)
                 && spec.line == line
-                && spec.type == type;
+                && spec.kind == kind;
         }
 
         public bool Equals(ASTTypeKeySpecifier spec) {
             return base.Equals(spec)
                 && spec.line == line
-                && spec.type == type;
+                && spec.kind == kind;
         }
 
         public override int GetHashCode() {
@@ -147,6 +149,31 @@ namespace lcc.AST {
         }
 
         public readonly int line;
+    }
+
+    public sealed class ASTTypedefName : ASTTypeSpec {
+
+        public ASTTypedefName(ASTIdentifier identifier) : base(Kind.TYPEDEF) {
+            this.identifier = identifier;
+        }
+
+        public bool Equals(ASTTypedefName x) {
+            return x != null && x.identifier.Equals(identifier);
+        }
+
+        public override bool Equals(object obj) {
+            return Equals(obj as ASTTypedefName);
+        }
+
+        public override int GetHashCode() {
+            return identifier.GetHashCode();
+        }
+
+        public override int GetLine() {
+            return identifier.GetLine();
+        }
+
+        public readonly ASTIdentifier identifier;
     }
 
     public sealed class ASTTypeQualifier : ASTTypeSpecifierQualifier {
@@ -187,15 +214,15 @@ namespace lcc.AST {
         public readonly int line;
     }
 
-    public sealed class ASTFunctionSpecifier : ASTDeclarationSpecifier {
+    public sealed class ASTFunctionSpecifier : ASTDeclSpec {
 
-        public enum Type {
+        public enum Kind {
             INLINE
         }
 
-        public ASTFunctionSpecifier(int line, Type type) {
+        public ASTFunctionSpecifier(int line, Kind type) {
             this.line = line;
-            this.type = type;
+            this.kind = type;
         }
 
         public override int GetLine() {
@@ -206,20 +233,20 @@ namespace lcc.AST {
             ASTFunctionSpecifier spec = obj as ASTFunctionSpecifier;
             return spec == null ? false : base.Equals(spec)
                 && spec.line == line
-                && spec.type == type;
+                && spec.kind == kind;
         }
 
         public bool Equals(ASTFunctionSpecifier spec) {
             return base.Equals(spec)
                 && spec.line == line
-                && spec.type == type;
+                && spec.kind == kind;
         }
 
         public override int GetHashCode() {
             return line;
         }
 
-        public readonly Type type;
+        public readonly Kind kind;
         public readonly int line;
 
     }

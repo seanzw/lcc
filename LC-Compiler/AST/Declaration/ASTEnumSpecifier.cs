@@ -40,10 +40,10 @@ namespace lcc.AST {
         public readonly ASTExpr expr;
     }
 
-    public sealed class ASTEnumSpecifier : ASTTypeSpecifier {
+    public sealed class ASTEnumSpecifier : ASTTypeSpec {
 
         public ASTEnumSpecifier(int line, ASTIdentifier identifier, IEnumerable<ASTEnumerator> enumerators)
-            : base(Type.ENUM) {
+            : base(Kind.ENUM) {
             this.line = line;
             this.identifier = identifier;
             this.enumerators = enumerators;

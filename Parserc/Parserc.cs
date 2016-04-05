@@ -232,6 +232,8 @@ namespace Parserc {
             };
         }
 
+        //public static Parser<I, V> Pri<I, V>(this Parser<I, V> first, Parser)
+
         /// <summary>
         /// Apply the parser one or more times.
         /// Result is stored in a linked list.

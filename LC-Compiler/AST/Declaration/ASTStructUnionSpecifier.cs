@@ -73,14 +73,14 @@ namespace lcc.AST {
         public readonly IEnumerable<ASTStructDeclarator> declarators;
     }
 
-    public abstract class ASTStructUnionSpecifier : ASTTypeSpecifier {
+    public sealed class ASTStructUnionSpecifier : ASTTypeSpec {
 
         public ASTStructUnionSpecifier(
             int line,
             ASTIdentifier identifier,
             IEnumerable<ASTStructDeclaration> declarations,
-            Type type
-            ) : base(type) {
+            Kind kind
+            ) : base(kind) {
             this.line = line;
             this.identifier = identifier;
             this.declarations = declarations;
@@ -91,16 +91,13 @@ namespace lcc.AST {
         }
 
         public override bool Equals(object obj) {
-            ASTStructUnionSpecifier x = obj as ASTStructUnionSpecifier;
-            return x == null ? false : base.Equals(x)
-                && (x.identifier == null ? identifier == null : x.identifier.Equals(identifier))
-                && (x.declarations == null ? declarations == null : x.declarations.SequenceEqual(declarations));
+            return Equals(obj as ASTStructUnionSpecifier);
         }
 
         public bool Equals(ASTStructUnionSpecifier x) {
-            return base.Equals(x)
-                && (x.identifier == null ? identifier == null : x.identifier.Equals(identifier))
-                && (x.declarations == null ? declarations == null : x.declarations.SequenceEqual(declarations));
+            return x != null && base.Equals(x)
+                && NullableEquals(x.identifier, identifier)
+                && NullableEquals(x.declarations, declarations);
         }
 
         public override int GetHashCode() {
@@ -108,27 +105,15 @@ namespace lcc.AST {
         }
 
         public readonly int line;
+
+        /// <summary>
+        /// Nullable.
+        /// </summary>
         public readonly ASTIdentifier identifier;
+        /// <summary>
+        /// Nullable.
+        /// </summary>
         public readonly IEnumerable<ASTStructDeclaration> declarations;
     }
-
-    public sealed class ASTStructSpecifier : ASTStructUnionSpecifier {
-
-        public ASTStructSpecifier(
-            int line,
-            ASTIdentifier identifier,
-            IEnumerable<ASTStructDeclaration> declarations = null
-            ) : base(line, identifier, declarations, Type.STRUCT) { }
-
-    }
-
-    public sealed class ASTUnionSpecifier : ASTStructUnionSpecifier {
-
-        public ASTUnionSpecifier(
-            int line,
-            ASTIdentifier identifier,
-            LinkedList<ASTStructDeclaration> declarations = null
-            ) : base(line, identifier, declarations, Type.UNION) { }
-
-    }
+    
 }
