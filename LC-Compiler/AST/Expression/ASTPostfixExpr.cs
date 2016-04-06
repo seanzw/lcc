@@ -200,15 +200,18 @@ namespace lcc.AST {
         public readonly Kind kind;
     }
 
+    /// <summary>
+    /// ( type-name ) { initializer-list [,] }
+    /// </summary>
     public sealed class ASTCompound : ASTExpr, IEquatable<ASTCompound> {
 
-        public ASTCompound(ASTTypeName name, IEnumerable<ASTInitItem> initializers) {
+        public ASTCompound(ASTTypeName name, IEnumerable<ASTInitItem> inits) {
             this.name = name;
-            this.initializers = initializers;
+            this.inits = inits;
         }
 
         public bool Equals(ASTCompound x) {
-            return x != null && x.name.Equals(name) && x.initializers.SequenceEqual(initializers);
+            return x != null && x.name.Equals(name) && x.inits.SequenceEqual(inits);
         }
 
         public override bool Equals(object obj) {
@@ -222,6 +225,31 @@ namespace lcc.AST {
         public override Position Pos => name.Pos;
 
         public readonly ASTTypeName name;
-        public readonly IEnumerable<ASTInitItem> initializers; 
+        public readonly IEnumerable<ASTInitItem> inits; 
+    }
+
+    public sealed class ASTFuncCall : ASTExpr, IEquatable<ASTFuncCall> {
+
+        public ASTFuncCall(ASTExpr expr, IEnumerable<ASTExpr> args) {
+            this.expr = expr;
+            this.args = args;
+        }
+
+        public override Position Pos => expr.Pos;
+
+        public bool Equals(ASTFuncCall x) {
+            return x != null && x.expr.Equals(expr) && x.args.SequenceEqual(args);
+        }
+
+        public override bool Equals(object obj) {
+            return Equals(obj as ASTFuncCall);
+        }
+
+        public override int GetHashCode() {
+            return expr.GetHashCode();
+        }
+
+        public readonly ASTExpr expr;
+        public readonly IEnumerable<ASTExpr> args;
     }
 }

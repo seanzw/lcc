@@ -55,6 +55,7 @@
     <Compile Include="AST\Definition\ASTFunctionDefinition.cs" />
     <Compile Include="AST\Definition\ASTProgram.cs" />
     <Compile Include="AST\Expression\ASTAssignExpr.cs" />
+    <Compile Include="AST\Expression\ASTCastExpr.cs" />
     <Compile Include="AST\Expression\ASTCommaExpr.cs" />
     <Compile Include="AST\Expression\ASTConditionalExpr.cs" />
     <Compile Include="AST\Expression\ASTExpr.cs" />

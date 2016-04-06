@@ -129,6 +129,33 @@ namespace LC_CompilerTests {
                         new ASTId(new T_IDENTIFIER(1, "x")),
                         ASTPostStep.Kind.DEC
                     )
+                },
+                {
+                    "printf(x)",
+                    new ASTFuncCall(
+                        new ASTId(new T_IDENTIFIER(1, "printf")),
+                        new List<ASTExpr> {
+                            new ASTId(new T_IDENTIFIER(1, "x"))
+                        }
+                    )
+                },
+                {
+                    "printf()",
+                    new ASTFuncCall(
+                        new ASTId(new T_IDENTIFIER(1, "printf")),
+                        new List<ASTExpr> {
+                        }
+                    )
+                },
+                {
+                    "(int) { 1 }",
+                    new ASTCompound(
+                        new ASTTypeName(
+                            new List<ASTTypeSpecQual> { new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT) }
+                        ),
+                        new List<ASTInitItem> {
+                            new ASTInitItem(new ASTInitializer(new ASTConstInt(new T_CONST_INT(1, "1", 10))))
+                        })
                 }
             };
 
@@ -213,6 +240,17 @@ namespace LC_CompilerTests {
                         ASTUnaryOp.Op.NOT
                     )
                 },
+                {
+                    "sizeof a",
+                    new ASTSizeOf(new ASTId(new T_IDENTIFIER(1, "a")))
+                },
+                {
+                    "sizeof (int)",
+                    new ASTSizeOf(
+                        new ASTTypeName(
+                            new List<ASTTypeSpecQual> { new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT) }
+                        ))
+                }
             };
 
             foreach (var test in dict) {
@@ -231,6 +269,14 @@ namespace LC_CompilerTests {
                             ASTPostStep.Kind.DEC),
                         ASTPreStep.Kind.INC
                     )
+                },
+                {
+                    "(int)what",
+                    new ASTCast(
+                        new ASTTypeName(
+                            new List<ASTTypeSpecQual> { new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT) }
+                        ),
+                        new ASTId(new T_IDENTIFIER(1, "what")))
                 }
             };
 

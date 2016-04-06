@@ -136,4 +136,44 @@ namespace lcc.AST {
         public readonly Op op;
     }
 
+
+    /// <summary>
+    /// sizeof unary-expression
+    /// sizeof ( type-name )
+    /// </summary>
+    public sealed class ASTSizeOf : ASTExpr, IEquatable<ASTSizeOf> {
+
+        public ASTSizeOf(ASTExpr expr) {
+            this.expr = expr;
+        }
+
+        public ASTSizeOf(ASTTypeName name) {
+            this.name = name;
+        }
+
+        public override Position Pos => expr == null ? name.Pos : expr.Pos;
+
+
+        public bool Equals(ASTSizeOf x) {
+            return x != null && NullableEquals(x.name, name) && NullableEquals(x.expr, expr);
+        }
+
+        public override bool Equals(object obj) {
+            return Equals(obj as ASTSizeOf);
+        }
+
+        public override int GetHashCode() {
+            return Pos.GetHashCode();
+        }
+
+        /// <summary>
+        /// Nullable.
+        /// </summary>
+        public readonly ASTExpr expr;
+
+        /// <summary>
+        /// Nullable.
+        /// </summary>
+        public readonly ASTTypeName name;
+    }
 }

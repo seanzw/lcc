@@ -262,12 +262,14 @@ namespace lcc.Parser {
         /// <summary>
         /// cast-expression
         ///     : unary-expression
-        ///     // TODO | ( type-name ) cast-expression
+        ///     | ( type-name ) cast-expression
         ///     ;
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<Token.Token, ASTExpr> CastExpression() {
-            return UnaryExpression();
+            return UnaryExpression()
+                .Else(Ref(TypeName).ParentLR().Bind(name => Ref(CastExpression)
+                .Select(expr => new ASTCast(name, expr))));
         }
 
         /// <summary>
@@ -276,8 +278,8 @@ namespace lcc.Parser {
         ///     | ++ unary-expression
         ///     | -- unary-expression
         ///     | unary-operator cast-expression
-        ///     // TODO | sizeof unary-expression
-        ///     // TODO | sizeof ( type-name )
+        ///     | sizeof unary-expression
+        ///     | sizeof ( type-name )
         ///     ;
         /// </summary>
         /// <returns></returns>
@@ -292,7 +294,8 @@ namespace lcc.Parser {
                 .Else(UnaryOperator()
                     .Bind(op => Ref(CastExpression)
                     .Select(expr => new ASTUnaryOp(expr, op))))
-                ;
+                .Else(Match<T_KEY_SIZEOF>().Then(Ref(UnaryExpression)).Select(expr => new ASTSizeOf(expr)))
+                .Else(Match<T_KEY_SIZEOF>().Then(Ref(TypeName).ParentLR()).Select(name => new ASTSizeOf(name)));
         }
 
         /// <summary>
@@ -313,19 +316,23 @@ namespace lcc.Parser {
         /// <summary>
         /// postfix-expression
         ///     : primary-expression postfix-expression-tail
-        ///     // TODO | ( type-name ) { initializer-list } postfix-expression-tail
-        ///     // TODO | ( type-name ) { initializer-list , } postfix-expression-tail
+        ///     | ( type-name ) { initializer-list } postfix-expression-tail
+        ///     | ( type-name ) { initializer-list , } postfix-expression-tail
         ///     ;
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<Token.Token, ASTExpr> PostfixExpression() {
-            return PrimaryExpression().Bind(x => PostfixExpressionTail(x));
+            return PrimaryExpression().Bind(x => PostfixExpressionTail(x))
+                .Else(Ref(TypeName).ParentLR()
+                    .Bind(name => Ref(InitItem)
+                        .PlusSeperatedBy(Match<T_PUNC_COMMA>()).Option(Match<T_PUNC_COMMA>()).BracelLR()
+                    .Bind(inits => PostfixExpressionTail(new ASTCompound(name, inits)))));
         }
 
         /// <summary>
         /// postfix-expression-tail
         ///     : [ expression ] postfix-expression-tail
-        ///     // TODO | ( argunemt-expression-list_opt ) postfix-expression-tail
+        ///     | ( argunemt-expression-list_opt ) postfix-expression-tail
         ///     | . identifier postfix-expression-tail
         ///     | -> identifier postfix-expression-tail
         ///     | ++ postfix-expression-tail
@@ -333,6 +340,10 @@ namespace lcc.Parser {
         ///     | epsilon
         ///     ;
         ///     
+        /// argument-expression-list
+        ///     : assignment-expression
+        ///     | argument-expression , assignment-expression
+        ///     ;
         /// NOTE:
         /// The trickest part is to implement ++/-- postfix-expression-tail.
         /// Although we don't need the result from previous Match parser,
@@ -345,6 +356,8 @@ namespace lcc.Parser {
             return Ref(Expression)
                     .Bracket(Match<T_PUNC_SUBSCRIPTL>(), Match<T_PUNC_SUBSCRIPTR>())
                     .Bind(idx => PostfixExpressionTail(new ASTArrSub(expr, idx)))
+                .Else(Ref(AssignmentExpression).ManySeperatedBy(Match<T_PUNC_COMMA>()).ParentLR()
+                    .Bind(args => PostfixExpressionTail(new ASTFuncCall(expr, args))))
                 .Else(Match<T_PUNC_DOT>()
                     .Then(Get<T_IDENTIFIER>()
                     .Bind(id => PostfixExpressionTail(new ASTAccess(expr, id, ASTAccess.Kind.DOT)))))
@@ -357,6 +370,7 @@ namespace lcc.Parser {
                     .Bind(_ => PostfixExpressionTail(new ASTPostStep(expr, ASTPostStep.Kind.DEC))))
                 .Else(Result<Token.Token, ASTExpr>(expr));
         }
+
 
         /// <summary>
         /// primary-expression
