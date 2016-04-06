@@ -8,50 +8,43 @@ using lcc.TypeSystem;
 
 namespace lcc.AST {
 
-    public sealed class ASTEnumerator : ASTNode {
+    public sealed class ASTEnum : ASTNode, IEquatable<ASTEnum> {
 
-        public ASTEnumerator(ASTIdentifier identifier, ASTExpr expr) {
+        public ASTEnum(ASTId identifier, ASTExpr expr) {
             this.identifier = identifier;
             this.expr = expr;
         }
 
-        public override int GetLine() {
-            return identifier.GetLine();
-        }
+        public override Position Pos => identifier.Pos;
 
         public override bool Equals(object obj) {
-            ASTEnumerator enumerator = obj as ASTEnumerator;
-            return enumerator == null ? false : base.Equals(enumerator)
-                && enumerator.identifier.Equals(identifier)
-                && (enumerator.expr == null ? expr == null : enumerator.expr.Equals(expr));
+            return Equals(obj as ASTEnum);
         }
 
-        public bool Equals(ASTEnumerator enumerator) {
-            return base.Equals(enumerator)
-                && enumerator.identifier.Equals(identifier)
-                && enumerator.expr.Equals(expr);
+        public bool Equals(ASTEnum x) {
+            return x != null
+                && x.identifier.Equals(identifier)
+                && NullableEquals(expr, x.expr);
         }
 
         public override int GetHashCode() {
             return identifier.GetHashCode();
         }
 
-        public readonly ASTIdentifier identifier;
+        public readonly ASTId identifier;
         public readonly ASTExpr expr;
     }
 
-    public sealed class ASTEnumSpecifier : ASTTypeSpec {
+    public sealed class ASTEnumSpec : ASTTypeSpec, IEquatable<ASTEnumSpec> {
 
-        public ASTEnumSpecifier(int line, ASTIdentifier identifier, IEnumerable<ASTEnumerator> enumerators)
+        public ASTEnumSpec(int line, ASTId identifier, IEnumerable<ASTEnum> enumerators)
             : base(Kind.ENUM) {
-            this.line = line;
-            this.identifier = identifier;
-            this.enumerators = enumerators;
+            this.pos = new Position { line = line };
+            this.id = identifier;
+            this.enums = enumerators;
         }
 
-        public override int GetLine() {
-            return line;
-        }
+        public override Position Pos => pos;
 
         //public TypeEnum TypeCheck(ASTEnv env) {
         //    if (enumerators == null) {
@@ -93,24 +86,21 @@ namespace lcc.AST {
         //}
 
         public override bool Equals(object obj) {
-            ASTEnumSpecifier e = obj as ASTEnumSpecifier;
-            return e == null ? false : base.Equals(e)
-                && (e.identifier == null ? identifier == null : e.identifier.Equals(identifier))
-                && (e.enumerators == null ? enumerators == null : e.enumerators.SequenceEqual(enumerators));
+            return Equals(obj as ASTEnumSpec);
         }
 
-        public bool Equals(ASTEnumSpecifier e) {
-            return base.Equals(e)
-                && (e.identifier == null ? identifier == null : e.identifier.Equals(identifier))
-                && (e.enumerators == null ? enumerators == null : e.enumerators.SequenceEqual(enumerators));
+        public bool Equals(ASTEnumSpec x) {
+            return x != null
+                && NullableEquals(x.id, id)
+                && NullableEquals(x.enums, enums);
         }
 
         public override int GetHashCode() {
-            return line;
+            return Pos.GetHashCode();
         }
 
-        public readonly int line;
-        public readonly ASTIdentifier identifier;
-        public readonly IEnumerable<ASTEnumerator> enumerators;
+        private readonly Position pos;
+        public readonly ASTId id;
+        public readonly IEnumerable<ASTEnum> enums;
     }
 }

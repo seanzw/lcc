@@ -337,7 +337,7 @@ namespace lcc.Parser {
         /// The trickest part is to implement ++/-- postfix-expression-tail.
         /// Although we don't need the result from previous Match parser,
         /// we have to use Bind here instead of Then,
-        /// because we have to use lambda expression to avoid circular referrence.
+        /// because we have to use lambda expression to avoid circular reference of itself.
         /// Ref won't work here because PostfixExpressionTail takes one argument.
         /// </summary>
         /// <returns></returns>
@@ -368,7 +368,7 @@ namespace lcc.Parser {
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<Token.Token, ASTExpr> PrimaryExpression() {
-            return Get<T_IDENTIFIER>().Select(x => new ASTIdentifier(x) as ASTExpr)
+            return Get<T_IDENTIFIER>().Select(x => new ASTId(x) as ASTExpr)
                 .Else(Get<T_CONST_CHAR>().Select(x => new ASTConstChar(x)))
                 .Else(Get<T_CONST_INT>().Select(x => new ASTConstInt(x)))
                 .Else(Get<T_CONST_FLOAT>().Select(x => new ASTConstFloat(x)))

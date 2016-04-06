@@ -5,24 +5,21 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    public sealed class ASTLabeledStatement : ASTStatement {
+    public sealed class ASTLabeled : ASTStmt, IEquatable<ASTLabeled> {
 
-        public ASTLabeledStatement(ASTIdentifier identifier, ASTStatement statement) {
+        public ASTLabeled(ASTId identifier, ASTStmt statement) {
             this.identifier = identifier;
             this.statement = statement;
         }
 
-        public override int GetLine() {
-            return identifier.GetLine();
-        }
+        public override Position Pos => identifier.Pos;
 
         public override bool Equals(object obj) {
-            ASTLabeledStatement x = obj as ASTLabeledStatement;
-            return Equals(x);
+            return Equals(obj as ASTLabeled);
         }
 
-        public bool Equals(ASTLabeledStatement x) {
-            return x == null ? false : base.Equals(x)
+        public bool Equals(ASTLabeled x) {
+            return x != null
                 && x.identifier.Equals(identifier)
                 && x.statement.Equals(statement);
         }
@@ -31,28 +28,25 @@ namespace lcc.AST {
             return identifier.GetHashCode();
         }
 
-        public readonly ASTIdentifier identifier;
-        public readonly ASTStatement statement;
+        public readonly ASTId identifier;
+        public readonly ASTStmt statement;
     }
 
-    public sealed class ASTCaseStatement : ASTStatement {
+    public sealed class ASTCase : ASTStmt, IEquatable<ASTCase> {
 
-        public ASTCaseStatement(ASTExpr expr, ASTStatement statement) {
+        public ASTCase(ASTExpr expr, ASTStmt statement) {
             this.expr = expr;
             this.statement = statement;
         }
 
-        public override int GetLine() {
-            return expr.GetLine();
-        }
+        public override Position Pos => expr.Pos;
 
         public override bool Equals(object obj) {
-            ASTCaseStatement x = obj as ASTCaseStatement;
-            return Equals(x);
+            return Equals(obj as ASTCase);
         }
 
-        public bool Equals(ASTCaseStatement x) {
-            return x == null ? false : base.Equals(x)
+        public bool Equals(ASTCase x) {
+            return x != null
                 && x.expr.Equals(expr)
                 && x.statement.Equals(statement);
         }
@@ -62,33 +56,29 @@ namespace lcc.AST {
         }
 
         public readonly ASTExpr expr;
-        public readonly ASTStatement statement;
+        public readonly ASTStmt statement;
     }
 
-    public sealed class ASTDefaultStatement : ASTStatement {
+    public sealed class ASTDefault : ASTStmt, IEquatable<ASTDefault> {
 
-        public ASTDefaultStatement(ASTStatement statement) {
+        public ASTDefault(ASTStmt statement) {
             this.statement = statement;
         }
 
-        public override int GetLine() {
-            return statement.GetLine();
-        }
+        public override Position Pos => statement.Pos;
 
         public override bool Equals(object obj) {
-            ASTDefaultStatement x = obj as ASTDefaultStatement;
-            return Equals(x);
+            return Equals(obj as ASTDefault);
         }
 
-        public bool Equals(ASTDefaultStatement x) {
-            return x == null ? false : base.Equals(x)
-                && x.statement.Equals(statement);
+        public bool Equals(ASTDefault x) {
+            return x != null && x.statement.Equals(statement);
         }
 
         public override int GetHashCode() {
             return statement.GetHashCode();
         }
 
-        public readonly ASTStatement statement;
+        public readonly ASTStmt statement;
     }
 }

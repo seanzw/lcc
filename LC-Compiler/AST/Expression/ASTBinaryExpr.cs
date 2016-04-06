@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    public sealed class ASTBinaryExpr : ASTExpr {
+    public sealed class ASTBinaryExpr : ASTExpr, IEquatable<ASTBinaryExpr> {
 
         public enum Op {
             MULT,   // *
@@ -34,23 +34,17 @@ namespace lcc.AST {
             this.op = op;
         }
 
-        public override int GetLine() {
-            return lhs.GetLine();
-        }
+        public override Position Pos => lhs.Pos;
 
         public override bool Equals(object obj) {
-            ASTBinaryExpr expr = obj as ASTBinaryExpr;
-            return expr == null ? false : base.Equals(expr)
-                && expr.lhs.Equals(lhs)
-                && expr.rhs.Equals(rhs)
-                && expr.op.Equals(op);
+            return Equals(obj as ASTBinaryExpr);
         }
 
-        public bool Equals(ASTBinaryExpr expr) {
-            return base.Equals(expr)
-                && expr.lhs.Equals(lhs)
-                && expr.rhs.Equals(rhs)
-                && expr.op.Equals(op);
+        public bool Equals(ASTBinaryExpr x) {
+            return x != null
+                && x.lhs.Equals(lhs)
+                && x.rhs.Equals(rhs)
+                && x.op.Equals(op);
         }
 
         public override int GetHashCode() {

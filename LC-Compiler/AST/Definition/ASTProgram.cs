@@ -5,15 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    public sealed class ASTProgram : ASTNode {
+    public sealed class ASTProgram : ASTNode, IEquatable<ASTProgram> {
 
-        public ASTProgram(LinkedList<ASTNode> nodes) {
+        public ASTProgram(IEnumerable<ASTNode> nodes) {
             this.nodes = nodes;
         }
 
-        public override int GetLine() {
-            return 1;
-        }
+        public override Position Pos => nodes.First().Pos;
 
         public override bool Equals(object obj) {
             return Equals(obj as ASTProgram);
@@ -24,9 +22,9 @@ namespace lcc.AST {
         }
 
         public override int GetHashCode() {
-            return nodes.GetHashCode();
+            return nodes.Aggregate(0, (hash, node) => hash ^ node.GetHashCode());
         }
 
-        public readonly LinkedList<ASTNode> nodes;
+        public readonly IEnumerable<ASTNode> nodes;
     }
 }

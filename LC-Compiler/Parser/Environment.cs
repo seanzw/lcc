@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using lcc.AST;
+
 namespace lcc.Parser {
     /// <summary>
     /// Tiny environment to sovle typedef / variable ambiguity during parsing.

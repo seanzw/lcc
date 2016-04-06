@@ -12,14 +12,12 @@ namespace lcc.AST {
     /// [ constant-expression ]
     /// .identfier
     /// </summary>
-    public sealed class ASTDesignator : ASTNode {
+    public sealed class ASTDesignator : ASTNode, IEquatable<ASTDesignator> {
 
         public ASTDesignator(ASTExpr expr) { this.expr = expr; }
-        public ASTDesignator(ASTIdentifier identifier) { this.identifier = identifier; }
+        public ASTDesignator(ASTId id) { this.id = id; }
 
-        public override int GetLine() {
-            return expr != null ? expr.GetLine() : identifier.GetLine();
-        }
+        public override Position Pos => expr != null ? expr.Pos : id.Pos;
 
         public override bool Equals(object obj) {
             return Equals(obj as ASTDesignator);
@@ -28,21 +26,21 @@ namespace lcc.AST {
         public bool Equals(ASTDesignator x) {
             return x != null
                 && NullableEquals(x.expr, expr)
-                && NullableEquals(x.identifier, identifier);
+                && NullableEquals(x.id, id);
         }
 
         public override int GetHashCode() {
-            return GetLine();
+            return Pos.GetHashCode();
         }
 
         public readonly ASTExpr expr;
-        public readonly ASTIdentifier identifier;
+        public readonly ASTId id;
     }
 
     /// <summary>
     /// init-item : designation_opt initializer;
     /// </summary>
-    public sealed class ASTInitItem : ASTNode {
+    public sealed class ASTInitItem : ASTNode, IEquatable<ASTInitItem> {
 
         public ASTInitItem(ASTInitializer initializer, IEnumerable<ASTDesignator> designators = null) {
             this.initializer = initializer;
@@ -63,9 +61,7 @@ namespace lcc.AST {
             return initializer.GetHashCode();
         }
 
-        public override int GetLine() {
-            return designators == null ? initializer.GetLine() : designators.First().GetLine();
-        }
+        public override Position Pos => designators == null ? initializer.Pos : designators.First().Pos;
 
         public readonly ASTInitializer initializer;
         public readonly IEnumerable<ASTDesignator> designators;
@@ -78,7 +74,7 @@ namespace lcc.AST {
     ///     | { initializer-list , }
     ///     ;
     /// </summary>
-    public sealed class ASTInitializer : ASTNode {
+    public sealed class ASTInitializer : ASTNode, IEquatable<ASTInitializer> {
 
         /// <summary>
         /// initializer : assignment-expression;
@@ -101,9 +97,7 @@ namespace lcc.AST {
             return expr != null ? expr.GetHashCode() : items.First().GetHashCode();
         }
 
-        public override int GetLine() {
-            return expr != null ? expr.GetLine() : items.First().GetLine();
-        }
+        public override Position Pos => expr != null ? expr.Pos : items.First().Pos;
 
         public readonly ASTExpr expr;
         public readonly IEnumerable<ASTInitItem> items;

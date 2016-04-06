@@ -13,36 +13,25 @@ namespace lcc.AST {
     /// <summary>
     /// Represents an identfier.
     /// </summary>
-    public sealed class ASTIdentifier : ASTExpr {
+    public sealed class ASTId : ASTExpr, IEquatable<ASTId> {
 
-        public ASTIdentifier(T_IDENTIFIER token) {
-            line = token.line;
+        public ASTId(T_IDENTIFIER token) {
+            pos = new Position { line = token.line };
             name = token.name;
         }
 
-        public override int GetLine() {
-            return line;
-        }
+        public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            ASTIdentifier id = obj as ASTIdentifier;
-            if (id == null) {
-                return false;
-            } else {
-                return base.Equals(obj)
-                    && id.name.Equals(name)
-                    && id.line == line;
-            }
+            return Equals(obj as ASTId);
         }
 
-        public bool Equals(ASTIdentifier id) {
-            return base.Equals(id)
-                && id.name.Equals(name)
-                && id.line == line;
+        public bool Equals(ASTId x) {
+            return x != null && x.name.Equals(name) && x.pos.Equals(pos);
         }
 
         public override int GetHashCode() {
-            return line;
+            return pos.GetHashCode();
         }
 
         /// <summary>
@@ -52,38 +41,22 @@ namespace lcc.AST {
         /// <returns></returns>
         public override T TypeCheck(ASTEnv env) {
             T type = env.GetType(name);
-            if (type == null) throw new ASTErrUndefinedIdentifier(line, name);
+            if (type == null) throw new ASTErrUndefinedIdentifier(pos, name);
             else return type;
         }
 
         public readonly string name;
-        public readonly int line;
+
+        private readonly Position pos;
     }
 
     public abstract class ASTConstant : ASTExpr {
 
-        public ASTConstant(int line) {
-            this.line = line;
+        public ASTConstant(Position pos) {
+            this.pos = pos;
         }
 
-        public override int GetLine() {
-            return line;
-        }
-
-        public override bool Equals(object obj) {
-            ASTConstant c = obj as ASTConstant;
-            return c == null ? false : base.Equals(c)
-                && c.line == line;
-        }
-
-        public bool Equals(ASTConstant c) {
-            return base.Equals(c)
-                && c.line == line;
-        }
-
-        public override int GetHashCode() {
-            return line;
-        }
+        public override Position Pos => pos;
 
         protected static Func<char, bool> IsOctal = (char c) => c >= '0' && c <= '7';
         protected static Func<char, bool> IsDecimal = (char c) => c >= '0' && c <= '9';
@@ -93,7 +66,7 @@ namespace lcc.AST {
             else return char.ToLower(c) - 'a' + 10;
         };
 
-        public readonly int line;
+        protected readonly Position pos;
     }
 
     /// <summary>
@@ -128,9 +101,9 @@ namespace lcc.AST {
     /// ------------------------------------------------------------------------------------------
     /// 
     /// </summary>
-    public sealed class ASTConstInt : ASTConstant {
+    public sealed class ASTConstInt : ASTConstant, IEquatable<ASTConstInt> {
 
-        public ASTConstInt(T_CONST_INT token) : base(token.line) {
+        public ASTConstInt(T_CONST_INT token) : base(new Position { line = token.line }) {
             value = Evaluate(token);
 
             // Select the proper type for this constant.
@@ -138,7 +111,7 @@ namespace lcc.AST {
                 case T_CONST_INT.Suffix.NONE:
                     if (token.n != 10)
                         // Octal or hexadecimal constant.
-                        type = FitInType(token.line, value,
+                        type = FitInType(pos, value,
                             TInt.Instance,
                             TUInt.Instance,
                             TLong.Instance,
@@ -147,63 +120,60 @@ namespace lcc.AST {
                             TULLong.Instance);
                     else
                         // Decimal constant.
-                        type = FitInType(token.line, value,
+                        type = FitInType(pos, value,
                             TInt.Instance,
                             TLong.Instance,
                             TLLong.Instance);
                     break;
                 case T_CONST_INT.Suffix.U:
-                    type = FitInType(token.line, value,
+                    type = FitInType(pos, value,
                         TUInt.Instance,
                         TULong.Instance,
                         TULLong.Instance);
                     break;
                 case T_CONST_INT.Suffix.L:
                     if (token.n != 10)
-                        type = FitInType(token.line, value,
+                        type = FitInType(pos, value,
                             TLong.Instance,
                             TULong.Instance,
                             TLLong.Instance,
                             TULLong.Instance);
                     else
-                        type = FitInType(token.line, value,
+                        type = FitInType(pos, value,
                             TLong.Instance,
                             TLLong.Instance);
                     break;
                 case T_CONST_INT.Suffix.UL:
-                    type = FitInType(token.line, value,
+                    type = FitInType(pos, value,
                         TULong.Instance,
                         TULLong.Instance);
                     break;
                 case T_CONST_INT.Suffix.LL:
                     if (token.n != 10)
-                        type = FitInType(token.line, value,
+                        type = FitInType(pos, value,
                             TLLong.Instance,
                             TULLong.Instance);
                     else
-                        type = FitInType(token.line, value, TLLong.Instance);
+                        type = FitInType(pos, value, TLLong.Instance);
                     break;
                 case T_CONST_INT.Suffix.ULL:
-                    type = FitInType(token.line, value, TULLong.Instance);
+                    type = FitInType(pos, value, TULLong.Instance);
                     break;
             }
         }
 
         public override bool Equals(object obj) {
-            ASTConstInt ci = obj as ASTConstInt;
-            return ci == null ? false : base.Equals(ci)
-                && ci.value == value
-                && ci.type.Equals(type);
+            return Equals(obj as ASTConstInt);
         }
         
-        public bool Equals(ASTConstInt ci) {
-            return base.Equals(ci)
-                && ci.value == value
-                && ci.type.Equals(type);
+        public bool Equals(ASTConstInt x) {
+            return x != null && x.pos.Equals(pos)
+                && x.value == value
+                && x.type.Equals(type);
         }
 
         public override int GetHashCode() {
-            return line;
+            return pos.GetHashCode();
         }
 
         public override T TypeCheck(ASTEnv env) {
@@ -226,13 +196,13 @@ namespace lcc.AST {
             return value;
         }
 
-        private static T FitInType(int line, BigInteger value, params TInteger[] types) { 
+        private static T FitInType(Position pos, BigInteger value, params TInteger[] types) { 
             foreach (var type in types) {
                 if (value >= type.MIN && value <= type.MAX) {
                     return type.Const(T.LR.R);
                 }
             }
-            throw new ASTErrIntegerLiteralOutOfRange(line);
+            throw new ASTErrIntegerLiteralOutOfRange(pos);
         }
 
         public readonly BigInteger value;
@@ -245,38 +215,35 @@ namespace lcc.AST {
     /// </summary>
     public sealed class ASTConstChar : ASTConstant {
 
-        public ASTConstChar(T_CONST_CHAR token) : base(token.line) {
+        public ASTConstChar(T_CONST_CHAR token) : base(new Position { line = token.line }) {
 
             // Do not support multi-character characer.
             if (token.prefix == T_CONST_CHAR.Prefix.L) {
-                throw new ASTErrUnknownType(line, "multi-character");
+                throw new ASTErrUnknownType(pos, "multi-character");
             }
 
-            values = Evaluate(line, token.text);
+            values = Evaluate(pos, token.text);
 
             // Do not support multi-character characer.
             if (values.Count() > 1) {
-                throw new ASTErrUnknownType(line, "multi-character");
+                throw new ASTErrUnknownType(pos, "multi-character");
             }
 
             type = TUChar.Instance.Const(T.LR.R);
         }
 
         public override bool Equals(object obj) {
-            ASTConstChar cc = obj as ASTConstChar;
-            return cc == null ? false : base.Equals(cc)
-                && cc.values.SequenceEqual(values)
-                && cc.type.Equals(type);
+            return Equals(obj as ASTConstChar);
         }
 
-        public bool Equals(ASTConstChar cc) {
-            return base.Equals(cc)
-                && cc.values.SequenceEqual(values)
-                && cc.type.Equals(type);
+        public bool Equals(ASTConstChar x) {
+            return x != null && x.pos.Equals(pos)
+                && x.values.SequenceEqual(values)
+                && x.type.Equals(type);
         }
 
         public override int GetHashCode() {
-            return line;
+            return pos.GetHashCode();
         }
 
         /// <summary>
@@ -293,7 +260,7 @@ namespace lcc.AST {
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
-        public static IEnumerable<ushort> Evaluate(int line, string text) {
+        public static IEnumerable<ushort> Evaluate(Position pos, string text) {
 
             BigInteger value = 0;
             LinkedList<ushort> values = new LinkedList<ushort>();
@@ -316,7 +283,7 @@ namespace lcc.AST {
             // and push it into the list.
             Action<BigInteger> PushValue = v => {
                 if (v < TUChar.Instance.MIN || v > TUChar.Instance.MAX) {
-                    throw new ASTErrEscapedSequenceOutOfRange(line, text);
+                    throw new ASTErrEscapedSequenceOutOfRange(pos, text);
                 }
                 values.AddLast((ushort)v);  // Store the current result.
             };
@@ -436,8 +403,8 @@ namespace lcc.AST {
     /// Exponent-part is processes as a decimal integer, to which 10 or 2 will be raised.
     /// 
     /// </summary>
-    public sealed class ASTConstFloat : ASTConstant {
-        public ASTConstFloat(T_CONST_FLOAT token) : base(token.line) {
+    public sealed class ASTConstFloat : ASTConstant, IEquatable<ASTConstFloat> {
+        public ASTConstFloat(T_CONST_FLOAT token) : base(new Position { line = token.line }) {
             value = Evaluate(token);
             switch (token.suffix) {
                 case T_CONST_FLOAT.Suffix.NONE:
@@ -453,16 +420,13 @@ namespace lcc.AST {
         }
 
         public override bool Equals(object obj) {
-            ASTConstFloat cf = obj as ASTConstFloat;
-            return cf == null ? false : base.Equals(cf)
-                && cf.value == value
-                && cf.type.Equals(type);
+            return Equals(obj as ASTConstFloat);
         }
 
-        public bool Equals(ASTConstFloat cf) {
-            return base.Equals(cf)
-                && cf.value == value
-                && cf.type.Equals(type);
+        public bool Equals(ASTConstFloat x) {
+            return x != null && x.pos.Equals(pos)
+                && Math.Abs(x.value - value) < 0.0001f
+                && x.type.Equals(type);
         }
 
         private static double Evaluate(T_CONST_FLOAT token) {
@@ -512,7 +476,7 @@ namespace lcc.AST {
         }
 
         public override int GetHashCode() {
-            return line;
+            return pos.GetHashCode();
         }
 
         public readonly double value;
@@ -527,27 +491,22 @@ namespace lcc.AST {
     /// 
     /// Each char is the same as in constant character integer defined in ASTConstChar.
     /// </summary>
-    public sealed class ASTString : ASTExpr {
+    public sealed class ASTString : ASTExpr, IEquatable<ASTString> {
         public ASTString(LinkedList<T_STRING_LITERAL> tokens) {
-            this.line = tokens.First().line;
+            pos = new Position { line = tokens.First().line };
             values = Evaluate(tokens);
             var arrType = new TArray(TChar.Instance.None(T.LR.L), values.Count());
-            this.type = arrType.None(T.LR.L);
+            type = arrType.None(T.LR.L);
         }
 
-        public override int GetLine() {
-            return line;
-        }
+        public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            ASTString s = obj as ASTString;
-            return s == null ? false : base.Equals(s)
-                && s.values.SequenceEqual(values);
+            return Equals(obj as ASTString);
         }
 
         public bool Equals(ASTString s) {
-            return base.Equals(s)
-                && s.values.SequenceEqual(values);
+            return s != null && s.pos.Equals(pos) && s.values.SequenceEqual(values);
         }
 
         public override int GetHashCode() {
@@ -563,15 +522,16 @@ namespace lcc.AST {
             IEnumerable<ushort> values = new LinkedList<ushort>();
 
             foreach (var t in tokens) {
+                Position pos = new Position { line = t.line };
                 if (t.prefix == T_STRING_LITERAL.Prefix.L) {
-                    throw new ASTErrUnknownType(t.line, "multi-character");
+                    throw new ASTErrUnknownType(pos, "multi-character");
                 }
-                values = values.Concat(ASTConstChar.Evaluate(t.line, t.text));
+                values = values.Concat(ASTConstChar.Evaluate(pos, t.text));
             }
             return values;
         }
 
-        public readonly int line;
+        public readonly Position pos;
         public readonly IEnumerable<ushort> values;
         public readonly T type;
     }

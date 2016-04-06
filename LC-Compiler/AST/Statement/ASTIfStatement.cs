@@ -5,33 +5,30 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    public sealed class ASTIfStatement : ASTStatement {
+    public sealed class ASTIfStmt : ASTStmt, IEquatable<ASTIfStmt> {
 
 
-        public ASTIfStatement(
+        public ASTIfStmt(
             int line,
             ASTExpr expr,
-            ASTStatement then,
-            ASTStatement other
+            ASTStmt then,
+            ASTStmt other
             ) {
-            this.line = line;
+            this.pos = new Position { line = line };
             this.expr = expr;
             this.then = then;
             this.other = other;
         }
 
-        public override int GetLine() {
-            return line;
-        }
+        public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            ASTIfStatement x = obj as ASTIfStatement;
-            return Equals(x);
+            return Equals(obj as ASTIfStmt);
         }
 
-        public bool Equals(ASTIfStatement x) {
-            return x == null ? false : base.Equals(x)
-                && x.line == line
+        public bool Equals(ASTIfStmt x) {
+            return x != null
+                && x.pos.Equals(pos)
                 && x.expr.Equals(expr)
                 && x.then.Equals(then)
                 && x.other == null ? other == null : x.other.Equals(other);
@@ -41,9 +38,9 @@ namespace lcc.AST {
             return expr.GetHashCode();
         }
 
-        public readonly int line;
+        private readonly Position pos;
         public readonly ASTExpr expr;
-        public readonly ASTStatement then;
-        public readonly ASTStatement other;
+        public readonly ASTStmt then;
+        public readonly ASTStmt other;
     }
 }

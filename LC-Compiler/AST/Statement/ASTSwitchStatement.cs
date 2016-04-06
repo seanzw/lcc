@@ -5,30 +5,27 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    public sealed class ASTSwitchStatement : ASTStatement {
+    public sealed class ASTSwitch : ASTStmt, IEquatable<ASTSwitch> {
 
-        public ASTSwitchStatement(
+        public ASTSwitch(
             int line,
             ASTExpr expr,
-            ASTStatement statement
+            ASTStmt statement
             ) {
-            this.line = line;
+            this.pos = new Position { line = line };
             this.expr = expr;
             this.statement = statement;
         }
 
-        public override int GetLine() {
-            return line;
-        }
+        public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            ASTSwitchStatement x = obj as ASTSwitchStatement;
-            return Equals(x);
+            return Equals(obj as ASTSwitch);
         }
 
-        public bool Equals(ASTSwitchStatement x) {
-            return x == null ? false : base.Equals(x)
-                && x.line == line
+        public bool Equals(ASTSwitch x) {
+            return x != null
+                && x.pos.Equals(pos)
                 && x.expr.Equals(expr)
                 && x.statement.Equals(statement);
         }
@@ -37,8 +34,8 @@ namespace lcc.AST {
             return expr.GetHashCode();
         }
 
-        public readonly int line;
+        private readonly Position pos;
         public readonly ASTExpr expr;
-        public readonly ASTStatement statement;
+        public readonly ASTStmt statement;
     }
 }

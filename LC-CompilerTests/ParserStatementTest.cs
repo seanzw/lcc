@@ -12,15 +12,15 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserLabeledStatement() {
-            var tests = new Dictionary<string, ASTLabeledStatement> {
+            var tests = new Dictionary<string, ASTLabeled> {
                 {
                     "FOO: x = x + 2;",
-                    new ASTLabeledStatement(
-                        new ASTIdentifier(new T_IDENTIFIER(1, "FOO")),
+                    new ASTLabeled(
+                        new ASTId(new T_IDENTIFIER(1, "FOO")),
                         new ASTAssignExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "x")),
+                            new ASTId(new T_IDENTIFIER(1, "x")),
                             new ASTBinaryExpr(
-                                new ASTIdentifier(new T_IDENTIFIER(1, "x")),
+                                new ASTId(new T_IDENTIFIER(1, "x")),
                                 new ASTConstInt(new T_CONST_INT(1, "2", 10)),
                                 ASTBinaryExpr.Op.PLUS),
                             ASTAssignExpr.Op.ASSIGN))
@@ -34,12 +34,12 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserCaseStatement() {
-            var tests = new Dictionary<string, ASTCaseStatement> {
+            var tests = new Dictionary<string, ASTCase> {
                 {
                     "case 1 : a;",
-                    new ASTCaseStatement(
+                    new ASTCase(
                         new ASTConstInt(new T_CONST_INT(1, "1", 10)),
-                        new ASTIdentifier(new T_IDENTIFIER(1, "a")))
+                        new ASTId(new T_IDENTIFIER(1, "a")))
                 }
             };
 
@@ -50,10 +50,10 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserDefaultStatement() {
-            var tests = new Dictionary<string, ASTDefaultStatement> {
+            var tests = new Dictionary<string, ASTDefault> {
                 {
                     "default: a;",
-                    new ASTDefaultStatement(new ASTIdentifier(new T_IDENTIFIER(1, "a")))
+                    new ASTDefault(new ASTId(new T_IDENTIFIER(1, "a")))
                 }
             };
 
@@ -64,16 +64,16 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserCompoundStatement() {
-            var tests = new Dictionary<string, ASTCompoundStatement> {
+            var tests = new Dictionary<string, ASTCompoundStmt> {
                 {
                     @"
 {
     a;
     int x;
 }",
-                    new ASTCompoundStatement(
-                        new List<ASTStatement> {
-                            new ASTIdentifier(new T_IDENTIFIER(3, "a")),
+                    new ASTCompoundStmt(
+                        new List<ASTStmt> {
+                            new ASTId(new T_IDENTIFIER(3, "a")),
                             new ASTDeclaration(
                                 new ASTDeclSpecs(
                                     new List<ASTDeclSpec> {
@@ -82,11 +82,11 @@ namespace LC_CompilerTests {
                                     new List<ASTTypeSpec.Kind> {
                                         ASTTypeSpec.Kind.INT
                                     }),
-                                new List<ASTInitDeclarator> {
-                                    new ASTInitDeclarator(
-                                        new ASTDeclarator(
-                                            new List<ASTPointer>(),
-                                            new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(4, "x")))))
+                                new List<ASTInitDecl> {
+                                    new ASTInitDecl(
+                                        new ASTDecl(
+                                            new List<ASTPtr>(),
+                                            new ASTIdDecl(new ASTId(new T_IDENTIFIER(4, "x")))))
                                 }),
                         })
                 }
@@ -99,10 +99,10 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserExpressionStatement() {
-            var tests = new Dictionary<string, ASTStatement> {
+            var tests = new Dictionary<string, ASTStmt> {
                 {
                     ";",
-                    new ASTVoidStatement(1)
+                    new ASTVoidStmt(1)
                 }
             };
 
@@ -113,19 +113,19 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserIfStatement() {
-            var tests = new Dictionary<string, ASTIfStatement> {
+            var tests = new Dictionary<string, ASTIfStmt> {
                 {
                     @"
 if (i < length)
     x++;",
-                    new ASTIfStatement(
+                    new ASTIfStmt(
                         2,
                         new ASTBinaryExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(2, "i")),
-                            new ASTIdentifier(new T_IDENTIFIER(2, "length")),
+                            new ASTId(new T_IDENTIFIER(2, "i")),
+                            new ASTId(new T_IDENTIFIER(2, "length")),
                             ASTBinaryExpr.Op.LT),
                         new ASTPostStep(
-                            new ASTIdentifier(new T_IDENTIFIER(3, "x")),
+                            new ASTId(new T_IDENTIFIER(3, "x")),
                             ASTPostStep.Kind.INC),
                         null)
                 },
@@ -135,17 +135,17 @@ if (i < length)
     x++;
 else
     x--;",
-                    new ASTIfStatement(
+                    new ASTIfStmt(
                         2,
                         new ASTBinaryExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(2, "i")),
-                            new ASTIdentifier(new T_IDENTIFIER(2, "length")),
+                            new ASTId(new T_IDENTIFIER(2, "i")),
+                            new ASTId(new T_IDENTIFIER(2, "length")),
                             ASTBinaryExpr.Op.LT),
                         new ASTPostStep(
-                            new ASTIdentifier(new T_IDENTIFIER(3, "x")),
+                            new ASTId(new T_IDENTIFIER(3, "x")),
                             ASTPostStep.Kind.INC),
                         new ASTPostStep(
-                            new ASTIdentifier(new T_IDENTIFIER(5, "x")),
+                            new ASTId(new T_IDENTIFIER(5, "x")),
                             ASTPostStep.Kind.DEC))
                 }
             };
@@ -157,22 +157,22 @@ else
 
         [TestMethod]
         public void LCCParserSwitchStatement() {
-            var tests = new Dictionary<string, ASTSwitchStatement> {
+            var tests = new Dictionary<string, ASTSwitch> {
                 {
                     @"
 switch (x) {
 case 0: a;
 default: c;
 }",
-                    new ASTSwitchStatement(
+                    new ASTSwitch(
                         2,
-                        new ASTIdentifier(new T_IDENTIFIER(2, "x")),
-                        new ASTCompoundStatement(new LinkedList<ASTStatement>(new List<ASTStatement> {
-                            new ASTCaseStatement(
+                        new ASTId(new T_IDENTIFIER(2, "x")),
+                        new ASTCompoundStmt(new LinkedList<ASTStmt>(new List<ASTStmt> {
+                            new ASTCase(
                                 new ASTConstInt(new T_CONST_INT(3, "0", 8)),
-                                new ASTIdentifier(new T_IDENTIFIER(3, "a"))),
-                            new ASTDefaultStatement(
-                                new ASTIdentifier(new T_IDENTIFIER(4, "c"))) })))
+                                new ASTId(new T_IDENTIFIER(3, "a"))),
+                            new ASTDefault(
+                                new ASTId(new T_IDENTIFIER(4, "c"))) })))
                 }
             };
 
@@ -183,20 +183,23 @@ default: c;
 
         [TestMethod]
         public void LCCParserWhileStatement() {
-            var tests = new Dictionary<string, ASTWhileStatement> {
+            var tests = new Dictionary<string, ASTWhile> {
                 {
                     @"
 while (x < length) {
     x++;
 }",
-                    new ASTWhileStatement(
+                    new ASTWhile(
                         new ASTBinaryExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(2, "x")),
-                            new ASTIdentifier(new T_IDENTIFIER(2, "length")),
+                            new ASTId(new T_IDENTIFIER(2, "x")),
+                            new ASTId(new T_IDENTIFIER(2, "length")),
                             ASTBinaryExpr.Op.LT),
-                        new ASTPostStep(
-                            new ASTIdentifier(new T_IDENTIFIER(3, "x")),
-                            ASTPostStep.Kind.INC))
+                        new ASTCompoundStmt(
+                            new List<ASTStmt> {
+                                new ASTPostStep(
+                                    new ASTId(new T_IDENTIFIER(3, "x")),
+                                    ASTPostStep.Kind.INC)
+                            }))
                 }
             };
 
@@ -207,20 +210,23 @@ while (x < length) {
 
         [TestMethod]
         public void LCCParserDoStatement() {
-            var tests = new Dictionary<string, ASTDoStatement> {
+            var tests = new Dictionary<string, ASTDo> {
                 {
                     @"
 do {
     x++;
 } while (x < length);",
-                    new ASTDoStatement(
+                    new ASTDo(
                         new ASTBinaryExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(4, "x")),
-                            new ASTIdentifier(new T_IDENTIFIER(4, "length")),
+                            new ASTId(new T_IDENTIFIER(4, "x")),
+                            new ASTId(new T_IDENTIFIER(4, "length")),
                             ASTBinaryExpr.Op.LT),
-                        new ASTPostStep(
-                            new ASTIdentifier(new T_IDENTIFIER(3, "x")),
-                            ASTPostStep.Kind.INC))
+                        new ASTCompoundStmt(
+                            new List<ASTStmt> {
+                                new ASTPostStep(
+                                    new ASTId(new T_IDENTIFIER(3, "x")),
+                                    ASTPostStep.Kind.INC)
+                            }))
                 }
             };
 
@@ -231,39 +237,42 @@ do {
 
         [TestMethod]
         public void LCCParserForStatement() {
-            var tests = new Dictionary<string, ASTForStatement> {
+            var tests = new Dictionary<string, ASTForStmt> {
                 {
                     @"
 for (i = 0; i < length; ++i) {
     x += i;
 }",
-                    new ASTForStatement(
+                    new ASTForStmt(
                         2,
                         new ASTAssignExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(2, "i")),
+                            new ASTId(new T_IDENTIFIER(2, "i")),
                             new ASTConstInt(new T_CONST_INT(2, "0", 8)),
                             ASTAssignExpr.Op.ASSIGN),
                         new ASTBinaryExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(2, "i")),
-                            new ASTIdentifier(new T_IDENTIFIER(2, "length")),
+                            new ASTId(new T_IDENTIFIER(2, "i")),
+                            new ASTId(new T_IDENTIFIER(2, "length")),
                             ASTBinaryExpr.Op.LT),
                         new ASTPreStep(
-                            new ASTIdentifier(new T_IDENTIFIER(2, "i")),
+                            new ASTId(new T_IDENTIFIER(2, "i")),
                             ASTPreStep.Kind.INC),
-                        new ASTAssignExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(3, "x")),
-                            new ASTIdentifier(new T_IDENTIFIER(3, "i")),
-                            ASTAssignExpr.Op.PLUSEQ))
+                        new ASTCompoundStmt(
+                            new List<ASTStmt> {
+                                new ASTAssignExpr(
+                                    new ASTId(new T_IDENTIFIER(3, "x")),
+                                    new ASTId(new T_IDENTIFIER(3, "i")),
+                                    ASTAssignExpr.Op.PLUSEQ)
+                            }))
                 },
                 {
                     @"
 for (;1;) ;",
-                    new ASTForStatement(
+                    new ASTForStmt(
                         2,
                         null,
                         new ASTConstInt(new T_CONST_INT(2, "1", 10)),
                         null,
-                        new ASTVoidStatement(2))
+                        new ASTVoidStmt(2))
                 }
             };
 
@@ -274,22 +283,22 @@ for (;1;) ;",
 
         [TestMethod]
         public void LCCParserJumpStatement() {
-            var tests = new Dictionary<string, ASTStatement> {
+            var tests = new Dictionary<string, ASTStmt> {
                 {
                     "continue;",
-                    new ASTContinueStatement(1)
+                    new ASTContinue(1)
                 },
                 {
                     "break;",
-                    new ASTBreakStatement(1)
+                    new ASTBreak(1)
                 },
                 {
                     "goto foo;",
-                    new ASTGotoStatement(1, new ASTIdentifier(new T_IDENTIFIER(1, "foo")))
+                    new ASTGoto(1, new ASTId(new T_IDENTIFIER(1, "foo")))
                 },
                 {
                     "return 0;",
-                    new ASTReturnStatement(1, new ASTConstInt(new T_CONST_INT(1, "0", 8)))
+                    new ASTReturn(1, new ASTConstInt(new T_CONST_INT(1, "0", 8)))
                 }
             };
 

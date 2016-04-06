@@ -90,18 +90,18 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserTypeQualifier() {
-            Dictionary<string, ASTTypeQualifier> dict = new Dictionary<string, ASTTypeQualifier> {
+            Dictionary<string, ASTTypeQual> dict = new Dictionary<string, ASTTypeQual> {
                 {
                     "const",
-                    new ASTTypeQualifier(1, ASTTypeQualifier.Kind.CONST)
+                    new ASTTypeQual(1, ASTTypeQual.Kind.CONST)
                 },
                 {
                     "restrict",
-                    new ASTTypeQualifier(1, ASTTypeQualifier.Kind.RESTRICT)
+                    new ASTTypeQual(1, ASTTypeQual.Kind.RESTRICT)
                 },
                 {
                     "volatile",
-                    new ASTTypeQualifier(1, ASTTypeQualifier.Kind.VOLATILE)
+                    new ASTTypeQual(1, ASTTypeQual.Kind.VOLATILE)
                 }
             };
 
@@ -113,10 +113,10 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserFunctionSpecifier() {
-            Dictionary<string, ASTFunctionSpecifier> dict = new Dictionary<string, ASTFunctionSpecifier> {
+            Dictionary<string, ASTFuncSpec> dict = new Dictionary<string, ASTFuncSpec> {
                 {
                     "inline",
-                    new ASTFunctionSpecifier(1, ASTFunctionSpecifier.Kind.INLINE)
+                    new ASTFuncSpec(1, ASTFuncSpec.Kind.INLINE)
                 }
             };
 
@@ -133,10 +133,10 @@ namespace LC_CompilerTests {
                     new ASTDeclSpecs(
                         new List<ASTDeclSpec> {
                             new ASTStorageSpecifier(1, ASTStorageSpecifier.Kind.STATIC),
-                            new ASTTypeQualifier(1, ASTTypeQualifier.Kind.CONST),
+                            new ASTTypeQual(1, ASTTypeQual.Kind.CONST),
                             new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT),
                             new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.CHAR),
-                            new ASTFunctionSpecifier(1, ASTFunctionSpecifier.Kind.INLINE)
+                            new ASTFuncSpec(1, ASTFuncSpec.Kind.INLINE)
                         },
                         new List<ASTTypeSpec.Kind> {
                             ASTTypeSpec.Kind.INT,
@@ -152,15 +152,15 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserEnumerator() {
-            Dictionary<string, ASTEnumerator> dict = new Dictionary<string, ASTEnumerator> {
+            Dictionary<string, ASTEnum> dict = new Dictionary<string, ASTEnum> {
                 {
                     "ZERO",
-                    new ASTEnumerator(new ASTIdentifier(new T_IDENTIFIER(1, "ZERO")), null)
+                    new ASTEnum(new ASTId(new T_IDENTIFIER(1, "ZERO")), null)
                 },
                 {
                     "ZERO = 1",
-                    new ASTEnumerator(
-                        new ASTIdentifier(new T_IDENTIFIER(1, "ZERO")),
+                    new ASTEnum(
+                        new ASTId(new T_IDENTIFIER(1, "ZERO")),
                         new ASTConstInt(new T_CONST_INT(1, "1", 10))
                     )
                 }
@@ -173,15 +173,15 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserEnumeratorList() {
-            var dict = new Dictionary<string, IEnumerable<ASTEnumerator>> {
+            var dict = new Dictionary<string, IEnumerable<ASTEnum>> {
                 {
                     "ZERO, ONE = 1, TWO",
-                    new List<ASTEnumerator> {
-                        new ASTEnumerator(new ASTIdentifier(new T_IDENTIFIER(1, "ZERO")), null),
-                        new ASTEnumerator(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "ONE")),
+                    new List<ASTEnum> {
+                        new ASTEnum(new ASTId(new T_IDENTIFIER(1, "ZERO")), null),
+                        new ASTEnum(
+                            new ASTId(new T_IDENTIFIER(1, "ONE")),
                             new ASTConstInt(new T_CONST_INT(1, "1", 10))),
-                        new ASTEnumerator(new ASTIdentifier(new T_IDENTIFIER(1, "TWO")), null),
+                        new ASTEnum(new ASTId(new T_IDENTIFIER(1, "TWO")), null),
                     }
                 },
             };
@@ -193,7 +193,7 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserEnumSpecifier() {
-            Dictionary<string, ASTEnumSpecifier> dict = new Dictionary<string, ASTEnumSpecifier> {
+            Dictionary<string, ASTEnumSpec> dict = new Dictionary<string, ASTEnumSpec> {
                 {
                     @"
 enum Foo {
@@ -201,24 +201,24 @@ enum Foo {
     ONE = 1,
     TWO
 }",
-                    new ASTEnumSpecifier(
+                    new ASTEnumSpec(
                         2,
-                        new ASTIdentifier(new T_IDENTIFIER(2, "Foo")),
-                        new LinkedList<ASTEnumerator>(new List<ASTEnumerator> {
-                            new ASTEnumerator(new ASTIdentifier(new T_IDENTIFIER(3, "ZERO")), null),
-                            new ASTEnumerator(
-                                new ASTIdentifier(new T_IDENTIFIER(4, "ONE")),
+                        new ASTId(new T_IDENTIFIER(2, "Foo")),
+                        new LinkedList<ASTEnum>(new List<ASTEnum> {
+                            new ASTEnum(new ASTId(new T_IDENTIFIER(3, "ZERO")), null),
+                            new ASTEnum(
+                                new ASTId(new T_IDENTIFIER(4, "ONE")),
                                 new ASTConstInt(new T_CONST_INT(4, "1", 10))),
-                            new ASTEnumerator(new ASTIdentifier(new T_IDENTIFIER(5, "TWO")), null),
+                            new ASTEnum(new ASTId(new T_IDENTIFIER(5, "TWO")), null),
                         }))
                 },
                 {
                     @"
 enum what
 ",
-                    new ASTEnumSpecifier(
+                    new ASTEnumSpec(
                         2,
-                        new ASTIdentifier(new T_IDENTIFIER(2, "what")),
+                        new ASTId(new T_IDENTIFIER(2, "what")),
                         null)
                 },
                 {
@@ -228,20 +228,20 @@ enum {
     ONE = 1,
     TWO,
 }",
-                    new ASTEnumSpecifier(
+                    new ASTEnumSpec(
                         2,
                         null,
-                        new LinkedList<ASTEnumerator>(new List<ASTEnumerator> {
-                            new ASTEnumerator(new ASTIdentifier(new T_IDENTIFIER(3, "ZERO")), null),
-                            new ASTEnumerator(
-                                new ASTIdentifier(new T_IDENTIFIER(4, "ONE")),
+                        new LinkedList<ASTEnum>(new List<ASTEnum> {
+                            new ASTEnum(new ASTId(new T_IDENTIFIER(3, "ZERO")), null),
+                            new ASTEnum(
+                                new ASTId(new T_IDENTIFIER(4, "ONE")),
                                 new ASTConstInt(new T_CONST_INT(4, "1", 10))),
-                            new ASTEnumerator(new ASTIdentifier(new T_IDENTIFIER(5, "TWO")), null),
+                            new ASTEnum(new ASTId(new T_IDENTIFIER(5, "TWO")), null),
                         }))
                 },
                 {
                     "enum test",
-                    new ASTEnumSpecifier(1, new ASTIdentifier(new T_IDENTIFIER(1, "test")), null)
+                    new ASTEnumSpec(1, new ASTId(new T_IDENTIFIER(1, "test")), null)
                 },
             };
 
@@ -252,17 +252,17 @@ enum {
 
         [TestMethod]
         public void LCCParserDirectDeclarator() {
-            var dict = new Dictionary<string, ASTDirDeclarator> {
+            var dict = new Dictionary<string, ASTDirDecl> {
                 {
                     "X",
-                    new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(1, "X")))
+                    new ASTIdDecl(new ASTId(new T_IDENTIFIER(1, "X")))
                 },
                 {
                     "( X )",
-                    new ASTParentDeclarator(
-                        new ASTDeclarator(
-                            new List<ASTPointer>(),
-                            new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(1, "X")))))
+                    new ASTParDecl(
+                        new ASTDecl(
+                            new List<ASTPtr>(),
+                            new ASTIdDecl(new ASTId(new T_IDENTIFIER(1, "X")))))
                 },
             };
 
@@ -273,52 +273,52 @@ enum {
 
         [TestMethod]
         public void LCCParserDeclarator() {
-            var dict = new Dictionary<string, ASTDirDeclarator> {
+            var dict = new Dictionary<string, ASTDirDecl> {
                 {
                     "X",
-                    new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(1, "X")))
+                    new ASTIdDecl(new ASTId(new T_IDENTIFIER(1, "X")))
                 },
                 {
                     "( X )",
-                    new ASTParentDeclarator(
-                        new ASTDeclarator(
-                            new List<ASTPointer>(),
-                            new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(1, "X")))))
+                    new ASTParDecl(
+                        new ASTDecl(
+                            new List<ASTPtr>(),
+                            new ASTIdDecl(new ASTId(new T_IDENTIFIER(1, "X")))))
                 },
                 {
                     @"
 foo(int a, int b, double c, ...)
 ",
-                    new ASTFuncDeclarator(
-                        new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(2, "foo"))),
-                        new List<ASTParameter> {
-                            new ASTParameter(
+                    new ASTFuncDecl(
+                        new ASTIdDecl(new ASTId(new T_IDENTIFIER(2, "foo"))),
+                        new List<ASTParam> {
+                            new ASTParam(
                                 new ASTDeclSpecs(
                                     new List<ASTDeclSpec> {
                                         new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.INT)
                                     },
                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
-                                new ASTDeclarator(
-                                    new List<ASTPointer>(),
-                                    new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(2, "a"))))),
-                            new ASTParameter(
+                                new ASTDecl(
+                                    new List<ASTPtr>(),
+                                    new ASTIdDecl(new ASTId(new T_IDENTIFIER(2, "a"))))),
+                            new ASTParam(
                                 new ASTDeclSpecs(
                                     new List<ASTDeclSpec> {
                                         new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.INT)
                                     },
                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
-                                new ASTDeclarator(
-                                    new List<ASTPointer>(),
-                                    new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(2, "b"))))),
-                            new ASTParameter(
+                                new ASTDecl(
+                                    new List<ASTPtr>(),
+                                    new ASTIdDecl(new ASTId(new T_IDENTIFIER(2, "b"))))),
+                            new ASTParam(
                                 new ASTDeclSpecs(
                                     new List<ASTDeclSpec> {
                                         new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.DOUBLE)
                                     },
                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.DOUBLE }),
-                                new ASTDeclarator(
-                                    new List<ASTPointer>(),
-                                    new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(2, "c"))))),
+                                new ASTDecl(
+                                    new List<ASTPtr>(),
+                                    new ASTIdDecl(new ASTId(new T_IDENTIFIER(2, "c"))))),
                         },
                         true)
                 }
@@ -331,30 +331,30 @@ foo(int a, int b, double c, ...)
 
         [TestMethod]
         public void LCCParserStructDeclarator() {
-            var dict = new Dictionary<string, ASTStructDeclarator> {
+            var dict = new Dictionary<string, ASTStructDecl> {
                 {
                     "X",
-                    new ASTStructDeclarator(
-                        new ASTDeclarator(
-                            new List<ASTPointer>(),
-                            new ASTIdentifierDeclarator(
-                                new ASTIdentifier(new T_IDENTIFIER(1, "X")))),
+                    new ASTStructDecl(
+                        new ASTDecl(
+                            new List<ASTPtr>(),
+                            new ASTIdDecl(
+                                new ASTId(new T_IDENTIFIER(1, "X")))),
                         null)
                 },
                 {
                     "( X ) : 4",
-                    new ASTStructDeclarator(
-                        new ASTDeclarator(
-                            new List<ASTPointer>(),
-                            new ASTParentDeclarator(
-                                new ASTDeclarator(
-                                    new List<ASTPointer>(),
-                                    new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(1, "X")))))),
+                    new ASTStructDecl(
+                        new ASTDecl(
+                            new List<ASTPtr>(),
+                            new ASTParDecl(
+                                new ASTDecl(
+                                    new List<ASTPtr>(),
+                                    new ASTIdDecl(new ASTId(new T_IDENTIFIER(1, "X")))))),
                         new ASTConstInt(new T_CONST_INT(1, "4", 10)))
                 },
                 {
                     ": 4",
-                    new ASTStructDeclarator(
+                    new ASTStructDecl(
                         null,
                         new ASTConstInt(new T_CONST_INT(1, "4", 10)))
                 },
@@ -367,23 +367,24 @@ foo(int a, int b, double c, ...)
 
         [TestMethod]
         public void LCCParserStructDeclaratorList() {
-            var dict = new Dictionary<string, IEnumerable<ASTStructDeclarator>> {
+            var dict = new Dictionary<string, IEnumerable<ASTStructDecl>> {
                 {
                     "X, ( X ) : 4, : 4",
-                    new List<ASTStructDeclarator> {
-                        new ASTStructDeclarator(
-                            new ASTDeclarator(
-                                new List<ASTPointer>(),
-                                new ASTIdentifierDeclarator(
-                                    new ASTIdentifier(new T_IDENTIFIER(1, "X")))),
+                    new List<ASTStructDecl> {
+                        new ASTStructDecl(
+                            new ASTDecl(
+                                new List<ASTPtr>(),
+                                new ASTIdDecl(
+                                    new ASTId(new T_IDENTIFIER(1, "X")))),
                             null),
-                        new ASTStructDeclarator(
-                            new ASTDeclarator(
-                                new List<ASTPointer>(),
-                                new ASTIdentifierDeclarator(
-                                    new ASTIdentifier(new T_IDENTIFIER(1, "X")))),
+                        new ASTStructDecl(
+                            new ASTDecl(
+                                new List<ASTPtr>(),
+                                new ASTParDecl(new ASTDecl(
+                                    new List<ASTPtr>(),
+                                    new ASTIdDecl(new ASTId(new T_IDENTIFIER(1, "X")))))),
                             new ASTConstInt(new T_CONST_INT(1, "4", 10))),
-                        new ASTStructDeclarator(
+                        new ASTStructDecl(
                             null,
                             new ASTConstInt(new T_CONST_INT(1, "4", 10))),
                     }
@@ -397,12 +398,12 @@ foo(int a, int b, double c, ...)
 
         [TestMethod]
         public void LCCParserSpecifierQualifierList() {
-            var dict = new Dictionary<string, IEnumerable<ASTTypeSpecifierQualifier>> {
+            var dict = new Dictionary<string, IEnumerable<ASTTypeSpecQual>> {
                 {
                     "const enum what",
-                    new List<ASTTypeSpecifierQualifier> {
-                        new ASTTypeQualifier(1, ASTTypeQualifier.Kind.CONST),
-                        new ASTEnumSpecifier(1, new ASTIdentifier(new T_IDENTIFIER(1, "what")), null)
+                    new List<ASTTypeSpecQual> {
+                        new ASTTypeQual(1, ASTTypeQual.Kind.CONST),
+                        new ASTEnumSpec(1, new ASTId(new T_IDENTIFIER(1, "what")), null)
                     }
                 },
             };
@@ -418,28 +419,28 @@ foo(int a, int b, double c, ...)
                 {
                     "const enum what x, y, z;",
                     new ASTStructDeclaration(
-                        new List<ASTTypeSpecifierQualifier> {
-                            new ASTTypeQualifier(1, ASTTypeQualifier.Kind.CONST),
-                            new ASTEnumSpecifier(1, new ASTIdentifier(new T_IDENTIFIER(1, "what")), null)
+                        new List<ASTTypeSpecQual> {
+                            new ASTTypeQual(1, ASTTypeQual.Kind.CONST),
+                            new ASTEnumSpec(1, new ASTId(new T_IDENTIFIER(1, "what")), null)
                         },
-                        new List<ASTStructDeclarator> {
-                            new ASTStructDeclarator(
-                                new ASTDeclarator(
-                                    new List<ASTPointer>(),
-                                    new ASTIdentifierDeclarator(
-                                        new ASTIdentifier(new T_IDENTIFIER(1, "x")))),
+                        new List<ASTStructDecl> {
+                            new ASTStructDecl(
+                                new ASTDecl(
+                                    new List<ASTPtr>(),
+                                    new ASTIdDecl(
+                                        new ASTId(new T_IDENTIFIER(1, "x")))),
                                     null),
-                            new ASTStructDeclarator(
-                                new ASTDeclarator(
-                                    new List<ASTPointer>(),
-                                    new ASTIdentifierDeclarator(
-                                        new ASTIdentifier(new T_IDENTIFIER(1, "y")))),
+                            new ASTStructDecl(
+                                new ASTDecl(
+                                    new List<ASTPtr>(),
+                                    new ASTIdDecl(
+                                        new ASTId(new T_IDENTIFIER(1, "y")))),
                                 null),
-                            new ASTStructDeclarator(
-                                new ASTDeclarator(
-                                    new List<ASTPointer>(),
-                                    new ASTIdentifierDeclarator(
-                                        new ASTIdentifier(new T_IDENTIFIER(1, "z")))),
+                            new ASTStructDecl(
+                                new ASTDecl(
+                                    new List<ASTPtr>(),
+                                    new ASTIdDecl(
+                                        new ASTId(new T_IDENTIFIER(1, "z")))),
                                 null),
                         })
                 },
@@ -452,49 +453,49 @@ foo(int a, int b, double c, ...)
 
         [TestMethod]
         public void LCCParserStructUnionSpecifier() {
-            var dict = new Dictionary<string, ASTStructUnionSpecifier> {
+            var dict = new Dictionary<string, ASTStructUnionSpec> {
                 {
                     @"
 struct ss {
     int n;
     const enum what x, y, z;
 }",
-                    new ASTStructUnionSpecifier(
+                    new ASTStructUnionSpec(
                         2,
-                        new ASTIdentifier(new T_IDENTIFIER(2, "ss")),
+                        new ASTId(new T_IDENTIFIER(2, "ss")),
                         new List<ASTStructDeclaration> {
                             new ASTStructDeclaration(
-                                new List<ASTTypeSpecifierQualifier> {
+                                new List<ASTTypeSpecQual> {
                                     new ASTTypeKeySpecifier(3, ASTTypeSpec.Kind.INT)
                                 },
-                                new List<ASTStructDeclarator> {
-                                    new ASTStructDeclarator(
-                                        new ASTDeclarator(
-                                            new List<ASTPointer>(),
-                                            new ASTIdentifierDeclarator(
-                                                new ASTIdentifier(new T_IDENTIFIER(3, "n")))),
+                                new List<ASTStructDecl> {
+                                    new ASTStructDecl(
+                                        new ASTDecl(
+                                            new List<ASTPtr>(),
+                                            new ASTIdDecl(
+                                                new ASTId(new T_IDENTIFIER(3, "n")))),
                                         null)
                                 }),
                             new ASTStructDeclaration(
-                                new List<ASTTypeSpecifierQualifier> {
-                                    new ASTTypeQualifier(4, ASTTypeQualifier.Kind.CONST),
-                                    new ASTEnumSpecifier(4, new ASTIdentifier(new T_IDENTIFIER(4, "what")), null)
+                                new List<ASTTypeSpecQual> {
+                                    new ASTTypeQual(4, ASTTypeQual.Kind.CONST),
+                                    new ASTEnumSpec(4, new ASTId(new T_IDENTIFIER(4, "what")), null)
                                 },
-                                new List<ASTStructDeclarator> {
-                                    new ASTStructDeclarator(
-                                        new ASTDeclarator(
-                                            new List<ASTPointer>(),
-                                            new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(4, "x")))),
+                                new List<ASTStructDecl> {
+                                    new ASTStructDecl(
+                                        new ASTDecl(
+                                            new List<ASTPtr>(),
+                                            new ASTIdDecl(new ASTId(new T_IDENTIFIER(4, "x")))),
                                         null),
-                                    new ASTStructDeclarator(
-                                        new ASTDeclarator(
-                                            new List<ASTPointer>(),
-                                            new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(4, "y")))),
+                                    new ASTStructDecl(
+                                        new ASTDecl(
+                                            new List<ASTPtr>(),
+                                            new ASTIdDecl(new ASTId(new T_IDENTIFIER(4, "y")))),
                                         null),
-                                    new ASTStructDeclarator(
-                                        new ASTDeclarator(
-                                            new List<ASTPointer>(),
-                                            new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(4, "z")))),
+                                    new ASTStructDecl(
+                                        new ASTDecl(
+                                            new List<ASTPtr>(),
+                                            new ASTIdDecl(new ASTId(new T_IDENTIFIER(4, "z")))),
                                         null),
                                 })
                         },
@@ -509,18 +510,18 @@ struct ss {
 
         [TestMethod]
         public void LCCParserParameterDeclaration() {
-            var tests = new Dictionary<string, ASTParameter> {
+            var tests = new Dictionary<string, ASTParam> {
                 {
                     "int a",
-                    new ASTParameter(
+                    new ASTParam(
                         new ASTDeclSpecs(
                             new List<ASTDeclSpec> {
                                 new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT)
                             },
                             new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
-                        new ASTDeclarator(
-                            new List<ASTPointer>(),
-                            new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(1, "a")))))
+                        new ASTDecl(
+                            new List<ASTPtr>(),
+                            new ASTIdDecl(new ASTId(new T_IDENTIFIER(1, "a")))))
                 }
             };
             foreach (var test in tests) {
@@ -530,37 +531,37 @@ struct ss {
 
         [TestMethod]
         public void LCCParserParameterList() {
-            var tests = new Dictionary<string, IEnumerable<ASTParameter>> {
+            var tests = new Dictionary<string, IEnumerable<ASTParam>> {
                 {
                     "int a, int b, double c",
-                    new List<ASTParameter> {
-                            new ASTParameter(
+                    new List<ASTParam> {
+                            new ASTParam(
                                 new ASTDeclSpecs(
                                     new List<ASTDeclSpec> {
                                         new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT)
                                     },
                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
-                                new ASTDeclarator(
-                                    new List<ASTPointer>(),
-                                    new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(1, "a"))))),
-                            new ASTParameter(
+                                new ASTDecl(
+                                    new List<ASTPtr>(),
+                                    new ASTIdDecl(new ASTId(new T_IDENTIFIER(1, "a"))))),
+                            new ASTParam(
                                 new ASTDeclSpecs(
                                     new List<ASTDeclSpec> {
                                         new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT)
                                     },
                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
-                                new ASTDeclarator(
-                                    new List<ASTPointer>(),
-                                    new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(1, "b"))))),
-                            new ASTParameter(
+                                new ASTDecl(
+                                    new List<ASTPtr>(),
+                                    new ASTIdDecl(new ASTId(new T_IDENTIFIER(1, "b"))))),
+                            new ASTParam(
                                 new ASTDeclSpecs(
                                     new List<ASTDeclSpec> {
                                         new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.DOUBLE)
                                     },
                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.DOUBLE }),
-                                new ASTDeclarator(
-                                    new List<ASTPointer>(),
-                                    new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(1, "c"))))),
+                                new ASTDecl(
+                                    new List<ASTPtr>(),
+                                    new ASTIdDecl(new ASTId(new T_IDENTIFIER(1, "c"))))),
                         }
                 }
             };
@@ -572,40 +573,40 @@ struct ss {
 
         [TestMethod]
         public void LCCParserParameterTypeList() {
-            var dict = new Dictionary<string, Tuple<IEnumerable<ASTParameter>, bool>> {
+            var dict = new Dictionary<string, Tuple<IEnumerable<ASTParam>, bool>> {
                 {
                     @"
 int a, int b, double c, ...
 ",
-                    new Tuple<IEnumerable<ASTParameter>, bool>(
-                        new List<ASTParameter> {
-                            new ASTParameter(
+                    new Tuple<IEnumerable<ASTParam>, bool>(
+                        new List<ASTParam> {
+                            new ASTParam(
                                 new ASTDeclSpecs(
                                     new List<ASTDeclSpec> {
                                         new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.INT)
                                     },
                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
-                                new ASTDeclarator(
-                                    new List<ASTPointer>(),
-                                    new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(2, "a"))))),
-                            new ASTParameter(
+                                new ASTDecl(
+                                    new List<ASTPtr>(),
+                                    new ASTIdDecl(new ASTId(new T_IDENTIFIER(2, "a"))))),
+                            new ASTParam(
                                 new ASTDeclSpecs(
                                     new List<ASTDeclSpec> {
                                         new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.INT)
                                     },
                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
-                                new ASTDeclarator(
-                                    new List<ASTPointer>(),
-                                    new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(2, "b"))))),
-                            new ASTParameter(
+                                new ASTDecl(
+                                    new List<ASTPtr>(),
+                                    new ASTIdDecl(new ASTId(new T_IDENTIFIER(2, "b"))))),
+                            new ASTParam(
                                 new ASTDeclSpecs(
                                     new List<ASTDeclSpec> {
                                         new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.DOUBLE)
                                     },
                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.DOUBLE }),
-                                new ASTDeclarator(
-                                    new List<ASTPointer>(),
-                                    new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(2, "c"))))),
+                                new ASTDecl(
+                                    new List<ASTPtr>(),
+                                    new ASTIdDecl(new ASTId(new T_IDENTIFIER(2, "c"))))),
                         },
                         true)
                 },
@@ -624,37 +625,37 @@ int a, int b, double c, ...
 
         [TestMethod]
         public void LCCParserArrayDeclarator() {
-            var tests = new Dictionary<string, ASTArrDeclarator> {
+            var tests = new Dictionary<string, ASTArrDecl> {
                 {
                     "fa[11]",
-                    new ASTArrDeclarator(
-                        new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(1, "fa"))),
-                        new List<ASTTypeQualifier>(),
+                    new ASTArrDecl(
+                        new ASTIdDecl(new ASTId(new T_IDENTIFIER(1, "fa"))),
+                        new List<ASTTypeQual>(),
                         new ASTConstInt(new T_CONST_INT(1, "11", 10)),
                         false)
                 },
                 {
                     "y[]",
-                    new ASTArrDeclarator(
-                        new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(1, "y"))),
-                        new List<ASTTypeQualifier>(),
+                    new ASTArrDecl(
+                        new ASTIdDecl(new ASTId(new T_IDENTIFIER(1, "y"))),
+                        new List<ASTTypeQual>(),
                         null,
                         false)
                 },
                 {
                     "a[n][6][m]",
-                    new ASTArrDeclarator(
-                        new ASTArrDeclarator(
-                            new ASTArrDeclarator(
-                                new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(1, "a"))),
-                                new List<ASTTypeQualifier>(),
-                                new ASTIdentifier(new T_IDENTIFIER(1, "n")),
+                    new ASTArrDecl(
+                        new ASTArrDecl(
+                            new ASTArrDecl(
+                                new ASTIdDecl(new ASTId(new T_IDENTIFIER(1, "a"))),
+                                new List<ASTTypeQual>(),
+                                new ASTId(new T_IDENTIFIER(1, "n")),
                                 false),
-                            new List<ASTTypeQualifier>(),
+                            new List<ASTTypeQual>(),
                             new ASTConstInt(new T_CONST_INT(1, "6", 10)),
                             false),
-                        new List<ASTTypeQualifier>(),
-                        new ASTIdentifier(new T_IDENTIFIER(1, "m")),
+                        new List<ASTTypeQual>(),
+                        new ASTId(new T_IDENTIFIER(1, "m")),
                         false)
                 }
             };
@@ -670,128 +671,131 @@ int a, int b, double c, ...
                 {
                     "int",
                     new ASTTypeName(
-                        new List<ASTTypeSpecifierQualifier> {
+                        new List<ASTTypeSpecQual> {
                             new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT)
                         })
                 },
                 {
                     "int *",
                     new ASTTypeName(
-                        new List<ASTTypeSpecifierQualifier> {
+                        new List<ASTTypeSpecQual> {
                             new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT)
                         },
-                        new ASTAbsDeclarator(
-                            new List<ASTPointer> {
-                                new ASTPointer(1, new List<ASTTypeQualifier>())
+                        new ASTAbsDecl(
+                            new List<ASTPtr> {
+                                new ASTPtr(1, new List<ASTTypeQual>())
                             },
                             null))
                 },
                 {
                     "int *[3]",
                     new ASTTypeName(
-                        new List<ASTTypeSpecifierQualifier> {
+                        new List<ASTTypeSpecQual> {
                             new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT)
                         },
-                        new ASTAbsDeclarator(
-                            new List<ASTPointer> {
-                                new ASTPointer(1, new List<ASTTypeQualifier>())
+                        new ASTAbsDecl(
+                            new List<ASTPtr> {
+                                new ASTPtr(1, new List<ASTTypeQual>())
                             },
-                            new ASTAbsArrDeclarator(
-                                null,
-                                new List<ASTTypeQualifier>(),
+                            new ASTAbsArrDecl(
+                                new ASTAbsDirDeclNil(1),
+                                new List<ASTTypeQual>(),
                                 new ASTConstInt(new T_CONST_INT(1, "3", 10)),
                                 false)))
                 },
                 {
                     "int (*)[3]",
                     new ASTTypeName(
-                        new List<ASTTypeSpecifierQualifier> {
+                        new List<ASTTypeSpecQual> {
                             new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT)
                         },
-                        new ASTAbsDeclarator(
-                            new List<ASTPointer> {},
-                            new ASTAbsArrDeclarator(
-                                new ASTAbsParentDeclarator(new ASTAbsDeclarator(
-                                    new List<ASTPointer> {
-                                        new ASTPointer(1, new List<ASTTypeQualifier>())
-                                    })),
-                                new List<ASTTypeQualifier>(),
+                        new ASTAbsDecl(
+                            new List<ASTPtr> {},
+                            new ASTAbsArrDecl(
+                                new ASTAbsParDecl(new ASTAbsDecl(
+                                    new List<ASTPtr> {
+                                        new ASTPtr(1, new List<ASTTypeQual>())
+                                    },
+                                    null)),
+                                new List<ASTTypeQual>(),
                                 new ASTConstInt(new T_CONST_INT(1, "3", 10)),
                                 false)))
                 },
                 {
                     "int (*)[*]",
                     new ASTTypeName(
-                        new List<ASTTypeSpecifierQualifier> {
+                        new List<ASTTypeSpecQual> {
                             new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT)
                         },
-                        new ASTAbsDeclarator(
-                            new List<ASTPointer> {},
-                            new ASTAbsArrDeclarator(
-                                new ASTAbsParentDeclarator(new ASTAbsDeclarator(
-                                    new List<ASTPointer> {
-                                        new ASTPointer(1, new List<ASTTypeQualifier>())
-                                    })))))
+                        new ASTAbsDecl(
+                            new List<ASTPtr> {},
+                            new ASTAbsArrDecl(
+                                new ASTAbsParDecl(new ASTAbsDecl(
+                                    new List<ASTPtr> {
+                                        new ASTPtr(1, new List<ASTTypeQual>())
+                                    },
+                                    null)))))
                 },
                 {
                     "int *[]",
                     new ASTTypeName(
-                        new List<ASTTypeSpecifierQualifier> {
+                        new List<ASTTypeSpecQual> {
                             new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT)
                         },
-                        new ASTAbsDeclarator(
-                            new List<ASTPointer> {
-                                new ASTPointer(1, new List<ASTTypeQualifier>())
+                        new ASTAbsDecl(
+                            new List<ASTPtr> {
+                                new ASTPtr(1, new List<ASTTypeQual>())
                             },
-                            new ASTAbsArrDeclarator(
-                                null,
-                                new List<ASTTypeQualifier>(),
+                            new ASTAbsArrDecl(
+                                new ASTAbsDirDeclNil(1),
+                                new List<ASTTypeQual>(),
                                 null,
                                 false)))
                 },
                 {
                     "int (*)(void)",
                     new ASTTypeName(
-                        new List<ASTTypeSpecifierQualifier> {
+                        new List<ASTTypeSpecQual> {
                             new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT)
                         },
-                        new ASTAbsDeclarator(
-                            new List<ASTPointer> {},
-                            new ASTAbsFuncDeclarator(
-                                new ASTAbsParentDeclarator(new ASTAbsDeclarator(
-                                    new List<ASTPointer> {
-                                        new ASTPointer(1, new List<ASTTypeQualifier>())
-                                    })),
-                                new List<ASTParameter> {
-                                    new ASTParameter(
+                        new ASTAbsDecl(
+                            new List<ASTPtr> {},
+                            new ASTAbsFuncDecl(
+                                new ASTAbsParDecl(new ASTAbsDecl(
+                                    new List<ASTPtr> {
+                                        new ASTPtr(1, new List<ASTTypeQual>())
+                                    },
+                                    null)),
+                                new List<ASTParam> {
+                                    new ASTParam(
                                         new ASTDeclSpecs(
                                             new List<ASTDeclSpec> {
-                                                new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT)
+                                                new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.VOID)
                                             },
-                                            new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }))
+                                            new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.VOID }))
                                 },
                                 false)))
                 },
                 {
                     "int (*const []) (unsigned int, ...)",
                     new ASTTypeName(
-                        new List<ASTTypeSpecifierQualifier> {
+                        new List<ASTTypeSpecQual> {
                             new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT)
                         },
-                        new ASTAbsDeclarator(
-                            new List<ASTPointer> {},
-                            new ASTAbsFuncDeclarator(
-                                new ASTAbsParentDeclarator(new ASTAbsDeclarator(
-                                    new List<ASTPointer> {
-                                        new ASTPointer(1, new List<ASTTypeQualifier> { new ASTTypeQualifier(1, ASTTypeQualifier.Kind.CONST) })
+                        new ASTAbsDecl(
+                            new List<ASTPtr> {},
+                            new ASTAbsFuncDecl(
+                                new ASTAbsParDecl(new ASTAbsDecl(
+                                    new List<ASTPtr> {
+                                        new ASTPtr(1, new List<ASTTypeQual> { new ASTTypeQual(1, ASTTypeQual.Kind.CONST) })
                                     },
-                                    new ASTAbsArrDeclarator(
-                                        null,
-                                        new List<ASTTypeQualifier>(),
+                                    new ASTAbsArrDecl(
+                                        new ASTAbsDirDeclNil(1),
+                                        new List<ASTTypeQual>(),
                                         null,
                                         false))),
-                                new List<ASTParameter> {
-                                    new ASTParameter(
+                                new List<ASTParam> {
+                                    new ASTParam(
                                         new ASTDeclSpecs(
                                             new List<ASTDeclSpec> {
                                                 new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.UNSIGNED),
@@ -825,40 +829,40 @@ int foo(int a, int b, double c, ...);
                                 new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.INT)
                             },
                             new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
-                        new List<ASTInitDeclarator> {
-                            new ASTInitDeclarator(
-                                new ASTDeclarator(
-                                    new List<ASTPointer>(),
-                                    new ASTFuncDeclarator(
-                                        new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(2, "foo"))),
-                                        new List<ASTParameter> {
-                                            new ASTParameter(
+                        new List<ASTInitDecl> {
+                            new ASTInitDecl(
+                                new ASTDecl(
+                                    new List<ASTPtr>(),
+                                    new ASTFuncDecl(
+                                        new ASTIdDecl(new ASTId(new T_IDENTIFIER(2, "foo"))),
+                                        new List<ASTParam> {
+                                            new ASTParam(
                                                 new ASTDeclSpecs(
                                                     new List<ASTDeclSpec> {
                                                         new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.INT)
                                                     },
                                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
-                                                new ASTDeclarator(
-                                                    new List<ASTPointer>(),
-                                                    new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(2, "a"))))),
-                                            new ASTParameter(
+                                                new ASTDecl(
+                                                    new List<ASTPtr>(),
+                                                    new ASTIdDecl(new ASTId(new T_IDENTIFIER(2, "a"))))),
+                                            new ASTParam(
                                                 new ASTDeclSpecs(
                                                     new List<ASTDeclSpec> {
                                                         new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.INT)
                                                     },
                                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
-                                                new ASTDeclarator(
-                                                    new List<ASTPointer>(),
-                                                    new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(2, "b"))))),
-                                            new ASTParameter(
+                                                new ASTDecl(
+                                                    new List<ASTPtr>(),
+                                                    new ASTIdDecl(new ASTId(new T_IDENTIFIER(2, "b"))))),
+                                            new ASTParam(
                                                 new ASTDeclSpecs(
                                                     new List<ASTDeclSpec> {
                                                         new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.DOUBLE)
                                                     },
                                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.DOUBLE }),
-                                                new ASTDeclarator(
-                                                    new List<ASTPointer>(),
-                                                    new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(2, "c"))))),
+                                                new ASTDecl(
+                                                    new List<ASTPtr>(),
+                                                    new ASTIdDecl(new ASTId(new T_IDENTIFIER(2, "c"))))),
                                         },
                                         true)),
                                 null)
@@ -874,16 +878,16 @@ int foo(a, b, c);
                                 new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.INT)
                             },
                             new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
-                        new List<ASTInitDeclarator> {
-                            new ASTInitDeclarator(
-                                new ASTDeclarator(
-                                    new List<ASTPointer>(),
-                                    new ASTFuncDeclarator(
-                                        new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(2, "foo"))),
-                                        new List<ASTIdentifier> {
-                                            new ASTIdentifier(new T_IDENTIFIER(2, "a")),
-                                            new ASTIdentifier(new T_IDENTIFIER(2, "b")),
-                                            new ASTIdentifier(new T_IDENTIFIER(2, "c")),
+                        new List<ASTInitDecl> {
+                            new ASTInitDecl(
+                                new ASTDecl(
+                                    new List<ASTPtr>(),
+                                    new ASTFuncDecl(
+                                        new ASTIdDecl(new ASTId(new T_IDENTIFIER(2, "foo"))),
+                                        new List<ASTId> {
+                                            new ASTId(new T_IDENTIFIER(2, "a")),
+                                            new ASTId(new T_IDENTIFIER(2, "b")),
+                                            new ASTId(new T_IDENTIFIER(2, "c")),
                                         })),
                                 null)
                         })
@@ -898,13 +902,13 @@ int foo();
                                 new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.INT)
                             },
                             new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
-                        new List<ASTInitDeclarator> {
-                            new ASTInitDeclarator(
-                                new ASTDeclarator(
-                                    new List<ASTPointer>(),
-                                    new ASTFuncDeclarator(
-                                        new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(2, "foo"))),
-                                        new List<ASTIdentifier>())),
+                        new List<ASTInitDecl> {
+                            new ASTInitDecl(
+                                new ASTDecl(
+                                    new List<ASTPtr>(),
+                                    new ASTFuncDecl(
+                                        new ASTIdDecl(new ASTId(new T_IDENTIFIER(2, "foo"))),
+                                        new List<ASTId>())),
                                 null)
                         })
                 }
@@ -934,7 +938,7 @@ int foo();
                             new ASTInitItem(new ASTInitializer(new ASTConstInt(new T_CONST_INT(1, "3", 10))))
                         }),
                         new List<ASTDesignator> {
-                            new ASTDesignator(new ASTIdentifier(new T_IDENTIFIER(1, "what")))
+                            new ASTDesignator(new ASTId(new T_IDENTIFIER(1, "what")))
                         })
                     })
                 }
@@ -951,9 +955,9 @@ int foo();
                 {
                     ".ref[3].w = ",
                     new List<ASTDesignator> {
-                        new ASTDesignator(new ASTIdentifier(new T_IDENTIFIER(1, "ref"))),
+                        new ASTDesignator(new ASTId(new T_IDENTIFIER(1, "ref"))),
                         new ASTDesignator(new ASTConstInt(new T_CONST_INT(1, "3", 10))),
-                        new ASTDesignator(new ASTIdentifier(new T_IDENTIFIER(1, "w")))
+                        new ASTDesignator(new ASTId(new T_IDENTIFIER(1, "w")))
                     }
                 }
             };
@@ -966,18 +970,28 @@ int foo();
         public void LCCParserTypedef() {
             Env.PushScope();
             Env.AddTypedefName(1, "a");
-            var tests = new Dictionary<string, ASTParameter> {
+            var tests = new Dictionary<string, ASTParam> {
                 {
                     "int a",
-                    new ASTParameter(
+                    new ASTParam(
                         new ASTDeclSpecs(
                             new List<ASTDeclSpec> {
                                 new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT)
                             },
                             new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
-                        new ASTDeclarator(
-                            new List<ASTPointer>(),
-                            new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(1, "a")))))
+                        new ASTDecl(
+                            new List<ASTPtr>(),
+                            new ASTIdDecl(new ASTId(new T_IDENTIFIER(1, "a")))))
+                },
+                {
+                    "const a",
+                    new ASTParam(
+                        new ASTDeclSpecs(
+                            new List<ASTDeclSpec> {
+                                new ASTTypeQual(1, ASTTypeQual.Kind.CONST),
+                                new ASTTypedefName(new ASTId(new T_IDENTIFIER(1, "a")))
+                            },
+                            new ASTTypedefName(new ASTId(new T_IDENTIFIER(1, "a")))))
                 }
             };
             foreach (var test in tests) {
@@ -1000,10 +1014,10 @@ int foo();
                                 new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT)
                             },
                             new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
-                        new List<ASTInitDeclarator> {
-                            new ASTInitDeclarator(
-                                new ASTDeclarator(new List<ASTPointer>(),
-                                new ASTIdentifierDeclarator(new ASTIdentifier(new T_IDENTIFIER(1, "a")))))
+                        new List<ASTInitDecl> {
+                            new ASTInitDecl(
+                                new ASTDecl(new List<ASTPtr>(),
+                                new ASTIdDecl(new ASTId(new T_IDENTIFIER(1, "a")))))
                         })
                 }
             };

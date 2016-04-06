@@ -51,6 +51,23 @@ namespace Parserc {
         }
 
         /// <summary>
+        /// Peek the next token.
+        /// </summary>
+        /// <typeparam name="I"></typeparam>
+        /// <returns></returns>
+        public static Parser<I, I> Peek<I>() {
+            return tokens => {
+                if (tokens.More()) {
+                    return new List<IParserResult<I, I>> {
+                        new ParserResult<I, I>(tokens.Head(), tokens)
+                    };
+                } else {
+                    return new List<IParserResult<I, I>>();
+                }
+            };
+        }
+
+        /// <summary>
         /// Cast from V2 to V1.
         /// </summary>
         /// <typeparam name="V1"></typeparam>

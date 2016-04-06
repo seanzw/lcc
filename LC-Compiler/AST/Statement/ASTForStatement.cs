@@ -5,37 +5,34 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    public sealed class ASTForStatement : ASTStatement {
+    public sealed class ASTForStmt : ASTStmt, IEquatable<ASTForStmt> {
 
 
-        public ASTForStatement(
+        public ASTForStmt(
             int line,
             ASTExpr init,
             ASTExpr pred,
             ASTExpr iter, 
-            ASTStatement statement) {
-            this.line = line;
+            ASTStmt statement) {
+            this.pos = new Position { line = line };
             this.init = init;
             this.pred = pred;
             this.iter = iter;
             this.statement = statement;
         }
 
-        public override int GetLine() {
-            return line;
-        }
+        public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            ASTForStatement x = obj as ASTForStatement;
-            return Equals(x);
+            return Equals(obj as ASTForStmt);
         }
 
-        public bool Equals(ASTForStatement x) {
-            return x == null ? false : base.Equals(x)
-                && x.line == line
-                && x.init == null ? init == null : x.init.Equals(init)
-                && x.pred == null ? pred == null : x.pred.Equals(pred)
-                && x.pred == null ? pred == null : x.pred.Equals(iter)
+        public bool Equals(ASTForStmt x) {
+            return x != null
+                && x.pos.Equals(pos)
+                && NullableEquals(x.init, init)
+                && NullableEquals(x.pred, pred)
+                && NullableEquals(x.iter, iter)
                 && x.statement.Equals(statement);
         }
 
@@ -43,10 +40,10 @@ namespace lcc.AST {
             return statement.GetHashCode();
         }
 
-        public readonly int line;
+        private readonly Position pos;
         public readonly ASTExpr init;
         public readonly ASTExpr pred;
         public readonly ASTExpr iter;
-        public readonly ASTStatement statement;
+        public readonly ASTStmt statement;
     }
 }

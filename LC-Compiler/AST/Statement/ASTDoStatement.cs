@@ -5,24 +5,22 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    public sealed class ASTDoStatement : ASTStatement {
+    public sealed class ASTDo : ASTStmt, IEquatable<ASTDo> {
 
-        public ASTDoStatement(ASTExpr expr, ASTStatement statement) {
+        public ASTDo(ASTExpr expr, ASTStmt statement) {
             this.expr = expr;
             this.statement = statement;
         }
 
-        public override int GetLine() {
-            return expr.GetLine();
-        }
+        public override Position Pos => expr.Pos;
 
         public override bool Equals(object obj) {
-            ASTDoStatement x = obj as ASTDoStatement;
+            ASTDo x = obj as ASTDo;
             return Equals(x);
         }
 
-        public bool Equals(ASTDoStatement x) {
-            return x == null ? false : base.Equals(x)
+        public bool Equals(ASTDo x) {
+            return x != null
                 && x.expr.Equals(expr)
                 && x.statement.Equals(statement);
         }
@@ -32,6 +30,6 @@ namespace lcc.AST {
         }
 
         public readonly ASTExpr expr;
-        public readonly ASTStatement statement;
+        public readonly ASTStmt statement;
     }
 }

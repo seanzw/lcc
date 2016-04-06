@@ -5,29 +5,26 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    public sealed class ASTCompoundStatement : ASTStatement {
+    public sealed class ASTCompoundStmt : ASTStmt, IEquatable<ASTCompoundStmt> {
 
-        public ASTCompoundStatement(IEnumerable<ASTStatement> statements) {
-            this.statements = statements;
+        public ASTCompoundStmt(IEnumerable<ASTStmt> stmts) {
+            this.stmts = stmts;
         }
 
-        public override int GetLine() {
-            return statements.First().GetLine();
-        }
+        public override Position Pos => stmts.First().Pos;
 
         public override bool Equals(object obj) {
-            ASTCompoundStatement x = obj as ASTCompoundStatement;
-            return Equals(x);
+            return Equals(obj as ASTCompoundStmt);
         }
 
-        public bool Equals(ASTCompoundStatement x) {
-            return x == null ? false : x.statements.SequenceEqual(statements);
+        public bool Equals(ASTCompoundStmt x) {
+            return x != null && x.stmts.SequenceEqual(stmts);
         }
 
         public override int GetHashCode() {
-            return statements.GetHashCode();
+            return Pos.GetHashCode();
         }
 
-        public readonly IEnumerable<ASTStatement> statements;
+        public readonly IEnumerable<ASTStmt> stmts;
     }
 }

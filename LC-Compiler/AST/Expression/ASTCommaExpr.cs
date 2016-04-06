@@ -5,31 +5,26 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    public sealed class ASTCommaExpr : ASTExpr {
+    public sealed class ASTCommaExpr : ASTExpr, IEquatable<ASTCommaExpr> {
 
-        public ASTCommaExpr(LinkedList<ASTExpr> exprs) {
+        public ASTCommaExpr(IEnumerable<ASTExpr> exprs) {
             this.exprs = exprs;
         }
 
-        public override int GetLine() {
-            return exprs.First().GetLine();
-        }
+        public override Position Pos => exprs.First().Pos;
 
         public override bool Equals(object obj) {
-            ASTCommaExpr expr = obj as ASTCommaExpr;
-            return expr == null ? false : base.Equals(expr)
-                && exprs.SequenceEqual(expr.exprs);
+            return Equals(obj as ASTCommaExpr);
         }
 
-        public bool Equals(ASTCommaExpr expr) {
-            return base.Equals(expr)
-                && exprs.SequenceEqual(expr.exprs);
+        public bool Equals(ASTCommaExpr x) {
+            return x != null && exprs.SequenceEqual(x.exprs);
         }
 
         public override int GetHashCode() {
             return exprs.Aggregate(0, (acc, expr) => acc ^ expr.GetHashCode());
         }
 
-        public readonly LinkedList<ASTExpr> exprs;
+        public readonly IEnumerable<ASTExpr> exprs;
     }
 }

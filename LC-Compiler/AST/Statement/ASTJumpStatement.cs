@@ -5,127 +5,111 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    public sealed class ASTContinueStatement : ASTStatement {
+    public sealed class ASTContinue : ASTStmt, IEquatable<ASTContinue> {
 
-        public ASTContinueStatement(
+        public ASTContinue(
             int line
             ) {
-            this.line = line;
+            this.pos = new Position { line = line };
         }
 
-        public override int GetLine() {
-            return line;
-        }
+        public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            ASTContinueStatement x = obj as ASTContinueStatement;
-            return Equals(x);
+            return Equals(obj as ASTContinue);
         }
 
-        public bool Equals(ASTContinueStatement x) {
-            return x == null ? false : base.Equals(x)
-                && x.line == line;
+        public bool Equals(ASTContinue x) {
+            return x != null && x.pos.Equals(pos);
         }
 
         public override int GetHashCode() {
-            return line;
+            return Pos.GetHashCode();
         }
 
-        public readonly int line;
+        private readonly Position pos;
     }
 
-    public sealed class ASTBreakStatement : ASTStatement {
+    public sealed class ASTBreak : ASTStmt, IEquatable<ASTBreak> {
 
-        public ASTBreakStatement(
+        public ASTBreak(
             int line
             ) {
-            this.line = line;
+            this.pos = new Position { line = line };
         }
 
-        public override int GetLine() {
-            return line;
-        }
+        public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            ASTBreakStatement x = obj as ASTBreakStatement;
-            return Equals(x);
+            return Equals(obj as ASTBreak);
         }
 
-        public bool Equals(ASTBreakStatement x) {
-            return x == null ? false : base.Equals(x)
-                && x.line == line;
+        public bool Equals(ASTBreak x) {
+            return x != null && x.pos.Equals(pos);
         }
 
         public override int GetHashCode() {
-            return line;
+            return Pos.GetHashCode();
         }
 
-        public readonly int line;
+        private readonly Position pos;
     }
 
-    public sealed class ASTReturnStatement : ASTStatement {
+    public sealed class ASTReturn : ASTStmt, IEquatable<ASTReturn> {
 
-        public ASTReturnStatement(
+        public ASTReturn(
             int line,
             ASTExpr expr
             ) {
-            this.line = line;
+            this.pos = new Position { line = line };
             this.expr = expr;
         }
 
-        public override int GetLine() {
-            return line;
-        }
+        public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            ASTReturnStatement x = obj as ASTReturnStatement;
-            return Equals(x);
+            return Equals(obj as ASTReturn);
         }
 
-        public bool Equals(ASTReturnStatement x) {
-            return x == null ? false : base.Equals(x)
-                && x.line == line
+        public bool Equals(ASTReturn x) {
+            return x != null && x.pos.Equals(pos)
                 && x.expr == null ? expr == null : x.expr.Equals(expr);
         }
 
         public override int GetHashCode() {
-            return line;
+            return Pos.GetHashCode();
         }
 
-        public readonly int line;
+        private readonly Position pos;
         public readonly ASTExpr expr;
     }
 
-    public sealed class ASTGotoStatement : ASTStatement {
+    public sealed class ASTGoto : ASTStmt, IEquatable<ASTGoto> {
 
-        public ASTGotoStatement(
+        public ASTGoto(
             int line,
-            ASTIdentifier label
+            ASTId label
             ) {
-            this.line = line;
+            this.pos = new Position { line = line };
             this.label = label;
         }
 
-        public override int GetLine() {
-            return line;
-        }
+        public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            ASTGotoStatement x = obj as ASTGotoStatement;
-            return Equals(x);
+            return Equals(obj as ASTGoto);
         }
 
-        public bool Equals(ASTGotoStatement x) {
-            return x == null ? false : base.Equals(x)
-                && x.line == line
+        public bool Equals(ASTGoto x) {
+            return x != null && x.pos.Equals(pos)
                 && x.label.Equals(label);
         }
 
         public override int GetHashCode() {
-            return line;
+            return Pos.GetHashCode();
         }
 
-        public readonly int line;
-        public readonly ASTIdentifier label;
+        private readonly Position pos;
+        public readonly ASTId label;
     }
 }

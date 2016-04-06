@@ -52,7 +52,7 @@ namespace LC_CompilerTests {
             Dictionary<string, ASTExpr> dict = new Dictionary<string, ASTExpr> {
                 {
                     "tmp",
-                    new ASTIdentifier(new T_IDENTIFIER(1, "tmp"))
+                    new ASTId(new T_IDENTIFIER(1, "tmp"))
                 },
                 {
                     "12356u",
@@ -85,14 +85,14 @@ namespace LC_CompilerTests {
                 {
                     "abc[123]",
                     new ASTArrSub(
-                        new ASTIdentifier(new T_IDENTIFIER(1, "abc")),
+                        new ASTId(new T_IDENTIFIER(1, "abc")),
                         new ASTConstInt(new T_CONST_INT(1, "123", 10))
                     )
                 },
                 {
                     "abc.x",
                     new ASTAccess(
-                        new ASTIdentifier(new T_IDENTIFIER(1, "abc")),
+                        new ASTId(new T_IDENTIFIER(1, "abc")),
                         new T_IDENTIFIER(1, "x"),
                         ASTAccess.Kind.DOT
                     )
@@ -101,7 +101,7 @@ namespace LC_CompilerTests {
                     "arr[2].value",
                     new ASTAccess(
                         new ASTArrSub(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "arr")),
+                            new ASTId(new T_IDENTIFIER(1, "arr")),
                             new ASTConstInt(new T_CONST_INT(1, "2", 10))
                         ),
                         new T_IDENTIFIER(1, "value"),
@@ -111,7 +111,7 @@ namespace LC_CompilerTests {
                 {
                     "abc->x",
                     new ASTAccess(
-                        new ASTIdentifier(new T_IDENTIFIER(1, "abc")),
+                        new ASTId(new T_IDENTIFIER(1, "abc")),
                         new T_IDENTIFIER(1, "x"),
                         ASTAccess.Kind.PTR
                     )
@@ -119,14 +119,14 @@ namespace LC_CompilerTests {
                 {
                     "x++",
                     new ASTPostStep(
-                        new ASTIdentifier(new T_IDENTIFIER(1, "x")),
+                        new ASTId(new T_IDENTIFIER(1, "x")),
                         ASTPostStep.Kind.INC
                     )
                 },
                 {
                     "x--",
                     new ASTPostStep(
-                        new ASTIdentifier(new T_IDENTIFIER(1, "x")),
+                        new ASTId(new T_IDENTIFIER(1, "x")),
                         ASTPostStep.Kind.DEC
                     )
                 }
@@ -145,7 +145,7 @@ namespace LC_CompilerTests {
                     "++x--",
                     new ASTPreStep(
                         new ASTPostStep(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "x")),
+                            new ASTId(new T_IDENTIFIER(1, "x")),
                             ASTPostStep.Kind.DEC),
                         ASTPreStep.Kind.INC
                     )
@@ -154,7 +154,7 @@ namespace LC_CompilerTests {
                     "--x[2]",
                     new ASTPreStep(
                         new ASTArrSub(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "x")),
+                            new ASTId(new T_IDENTIFIER(1, "x")),
                             new ASTConstInt(new T_CONST_INT(1, "2", 10))),
                         ASTPreStep.Kind.DEC
                     )
@@ -163,7 +163,7 @@ namespace LC_CompilerTests {
                     "&x[2]",
                     new ASTUnaryOp(
                         new ASTArrSub(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "x")),
+                            new ASTId(new T_IDENTIFIER(1, "x")),
                             new ASTConstInt(new T_CONST_INT(1, "2", 10))),
                         ASTUnaryOp.Op.REF
                     )
@@ -172,7 +172,7 @@ namespace LC_CompilerTests {
                     "*x[2]",
                     new ASTUnaryOp(
                         new ASTArrSub(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "x")),
+                            new ASTId(new T_IDENTIFIER(1, "x")),
                             new ASTConstInt(new T_CONST_INT(1, "2", 10))),
                         ASTUnaryOp.Op.STAR
                     )
@@ -181,7 +181,7 @@ namespace LC_CompilerTests {
                     "+x[2]",
                     new ASTUnaryOp(
                         new ASTArrSub(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "x")),
+                            new ASTId(new T_IDENTIFIER(1, "x")),
                             new ASTConstInt(new T_CONST_INT(1, "2", 10))),
                         ASTUnaryOp.Op.PLUS
                     )
@@ -190,7 +190,7 @@ namespace LC_CompilerTests {
                     "-x[2]",
                     new ASTUnaryOp(
                         new ASTArrSub(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "x")),
+                            new ASTId(new T_IDENTIFIER(1, "x")),
                             new ASTConstInt(new T_CONST_INT(1, "2", 10))),
                         ASTUnaryOp.Op.MINUS
                     )
@@ -199,7 +199,7 @@ namespace LC_CompilerTests {
                     "~x[2]",
                     new ASTUnaryOp(
                         new ASTArrSub(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "x")),
+                            new ASTId(new T_IDENTIFIER(1, "x")),
                             new ASTConstInt(new T_CONST_INT(1, "2", 10))),
                         ASTUnaryOp.Op.REVERSE
                     )
@@ -208,7 +208,7 @@ namespace LC_CompilerTests {
                     "!x[2]",
                     new ASTUnaryOp(
                         new ASTArrSub(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "x")),
+                            new ASTId(new T_IDENTIFIER(1, "x")),
                             new ASTConstInt(new T_CONST_INT(1, "2", 10))),
                         ASTUnaryOp.Op.NOT
                     )
@@ -227,7 +227,7 @@ namespace LC_CompilerTests {
                     "++x--",
                     new ASTPreStep(
                         new ASTPostStep(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "x")),
+                            new ASTId(new T_IDENTIFIER(1, "x")),
                             ASTPostStep.Kind.DEC),
                         ASTPreStep.Kind.INC
                     )
@@ -247,12 +247,12 @@ namespace LC_CompilerTests {
                     new ASTBinaryExpr(
                         new ASTBinaryExpr(
                             new ASTBinaryExpr(
-                                new ASTIdentifier(new T_IDENTIFIER(1, "a")),
-                                new ASTIdentifier(new T_IDENTIFIER(1, "b")),
+                                new ASTId(new T_IDENTIFIER(1, "a")),
+                                new ASTId(new T_IDENTIFIER(1, "b")),
                                 ASTBinaryExpr.Op.MULT),
-                            new ASTIdentifier(new T_IDENTIFIER(1, "c")),
+                            new ASTId(new T_IDENTIFIER(1, "c")),
                             ASTBinaryExpr.Op.DIV),
-                        new ASTIdentifier(new T_IDENTIFIER(1, "d")),
+                        new ASTId(new T_IDENTIFIER(1, "d")),
                         ASTBinaryExpr.Op.MOD)
                 }
             };
@@ -268,9 +268,9 @@ namespace LC_CompilerTests {
                 {
                     "a + b * 3",
                     new ASTBinaryExpr(
-                        new ASTIdentifier(new T_IDENTIFIER(1, "a")),
+                        new ASTId(new T_IDENTIFIER(1, "a")),
                         new ASTBinaryExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "b")),
+                            new ASTId(new T_IDENTIFIER(1, "b")),
                             new ASTConstInt(new T_CONST_INT(1, "3", 10)),
                             ASTBinaryExpr.Op.MULT),
                         ASTBinaryExpr.Op.PLUS)
@@ -282,7 +282,7 @@ namespace LC_CompilerTests {
                             new ASTConstInt(new T_CONST_INT(1, "1", 10)),
                             new ASTBinaryExpr(
                                 new ASTConstInt(new T_CONST_INT(1, "2", 10)),
-                                new ASTIdentifier(new T_IDENTIFIER(2, "c")),
+                                new ASTId(new T_IDENTIFIER(2, "c")),
                                 ASTBinaryExpr.Op.MULT),
                             ASTBinaryExpr.Op.PLUS),
                         new ASTConstInt(new T_CONST_INT(3, "5", 10)),
@@ -301,7 +301,7 @@ namespace LC_CompilerTests {
                 {
                     "a << 1",
                     new ASTBinaryExpr(
-                        new ASTIdentifier(new T_IDENTIFIER(1, "a")),
+                        new ASTId(new T_IDENTIFIER(1, "a")),
                         new ASTConstInt(new T_CONST_INT(1, "1", 10)),
                         ASTBinaryExpr.Op.LEFT)
                 }
@@ -318,7 +318,7 @@ namespace LC_CompilerTests {
                     "a << 1 >= 23",
                     new ASTBinaryExpr(
                         new ASTBinaryExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "a")),
+                            new ASTId(new T_IDENTIFIER(1, "a")),
                             new ASTConstInt(new T_CONST_INT(1, "1", 10)),
                             ASTBinaryExpr.Op.LEFT),
                         new ASTConstInt(new T_CONST_INT(1, "23", 10)),
@@ -337,7 +337,7 @@ namespace LC_CompilerTests {
                     "a << 1 != 23",
                     new ASTBinaryExpr(
                         new ASTBinaryExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "a")),
+                            new ASTId(new T_IDENTIFIER(1, "a")),
                             new ASTConstInt(new T_CONST_INT(1, "1", 10)),
                             ASTBinaryExpr.Op.LEFT),
                         new ASTConstInt(new T_CONST_INT(1, "23", 10)),
@@ -356,10 +356,10 @@ namespace LC_CompilerTests {
                     "a >> 1 & 0x1",
                     new ASTBinaryExpr(
                         new ASTBinaryExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "a")),
+                            new ASTId(new T_IDENTIFIER(1, "a")),
                             new ASTConstInt(new T_CONST_INT(1, "1", 10)),
                             ASTBinaryExpr.Op.RIGHT),
-                        new ASTConstInt(new T_CONST_INT(1, "23", 16)),
+                        new ASTConstInt(new T_CONST_INT(1, "1", 16)),
                         ASTBinaryExpr.Op.AND)
                 }
             };
@@ -375,10 +375,10 @@ namespace LC_CompilerTests {
                     "a >> 1 ^ 0x1",
                     new ASTBinaryExpr(
                         new ASTBinaryExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "a")),
+                            new ASTId(new T_IDENTIFIER(1, "a")),
                             new ASTConstInt(new T_CONST_INT(1, "1", 10)),
                             ASTBinaryExpr.Op.RIGHT),
-                        new ASTConstInt(new T_CONST_INT(1, "23", 16)),
+                        new ASTConstInt(new T_CONST_INT(1, "1", 16)),
                         ASTBinaryExpr.Op.XOR)
                 }
             };
@@ -394,10 +394,10 @@ namespace LC_CompilerTests {
                     "a >> 1 | 0x1",
                     new ASTBinaryExpr(
                         new ASTBinaryExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "a")),
+                            new ASTId(new T_IDENTIFIER(1, "a")),
                             new ASTConstInt(new T_CONST_INT(1, "1", 10)),
                             ASTBinaryExpr.Op.RIGHT),
-                        new ASTConstInt(new T_CONST_INT(1, "23", 16)),
+                        new ASTConstInt(new T_CONST_INT(1, "1", 16)),
                         ASTBinaryExpr.Op.OR)
                 }
             };
@@ -414,13 +414,13 @@ namespace LC_CompilerTests {
                     new ASTBinaryExpr(
                         new ASTBinaryExpr(
                             new ASTBinaryExpr(
-                                new ASTIdentifier(new T_IDENTIFIER(1, "a")),
+                                new ASTId(new T_IDENTIFIER(1, "a")),
                                 new ASTConstInt(new T_CONST_INT(1, "1", 10)),
                                 ASTBinaryExpr.Op.RIGHT),
-                            new ASTConstInt(new T_CONST_INT(1, "23", 16)),
+                            new ASTConstInt(new T_CONST_INT(1, "1", 16)),
                             ASTBinaryExpr.Op.EQ),
                         new ASTBinaryExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "b")),
+                            new ASTId(new T_IDENTIFIER(1, "b")),
                             new ASTConstInt(new T_CONST_INT(1, "0", 8)),
                             ASTBinaryExpr.Op.EQ),
                         ASTBinaryExpr.Op.LOGAND)
@@ -439,13 +439,13 @@ namespace LC_CompilerTests {
                     new ASTBinaryExpr(
                         new ASTBinaryExpr(
                             new ASTBinaryExpr(
-                                new ASTIdentifier(new T_IDENTIFIER(1, "a")),
+                                new ASTId(new T_IDENTIFIER(1, "a")),
                                 new ASTConstInt(new T_CONST_INT(1, "1", 10)),
                                 ASTBinaryExpr.Op.RIGHT),
-                            new ASTConstInt(new T_CONST_INT(1, "23", 16)),
+                            new ASTConstInt(new T_CONST_INT(1, "1", 16)),
                             ASTBinaryExpr.Op.EQ),
                         new ASTBinaryExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "b")),
+                            new ASTId(new T_IDENTIFIER(1, "b")),
                             new ASTConstInt(new T_CONST_INT(1, "0", 8)),
                             ASTBinaryExpr.Op.EQ),
                         ASTBinaryExpr.Op.LOGOR)
@@ -463,11 +463,11 @@ namespace LC_CompilerTests {
                     "a == 0 ? c : d",
                     new ASTConditionalExpr(
                         new ASTBinaryExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "a")),
+                            new ASTId(new T_IDENTIFIER(1, "a")),
                             new ASTConstInt(new T_CONST_INT(1, "0", 10)),
                             ASTBinaryExpr.Op.EQ),
-                        new ASTIdentifier(new T_IDENTIFIER(1, "c")),
-                        new ASTIdentifier(new T_IDENTIFIER(1, "d")))
+                        new ASTId(new T_IDENTIFIER(1, "c")),
+                        new ASTId(new T_IDENTIFIER(1, "d")))
                 }
             };
             foreach (var test in dict) {
@@ -482,26 +482,26 @@ namespace LC_CompilerTests {
                     "a == 0 ? c : d",
                     new ASTConditionalExpr(
                         new ASTBinaryExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "a")),
+                            new ASTId(new T_IDENTIFIER(1, "a")),
                             new ASTConstInt(new T_CONST_INT(1, "0", 10)),
                             ASTBinaryExpr.Op.EQ),
-                        new ASTIdentifier(new T_IDENTIFIER(1, "c")),
-                        new ASTIdentifier(new T_IDENTIFIER(1, "d")))
+                        new ASTId(new T_IDENTIFIER(1, "c")),
+                        new ASTId(new T_IDENTIFIER(1, "d")))
                 },
                 {
                     "a += 6",
                     new ASTAssignExpr(
-                        new ASTIdentifier(new T_IDENTIFIER(1, "a")),
+                        new ASTId(new T_IDENTIFIER(1, "a")),
                         new ASTConstInt(new T_CONST_INT(1, "6", 10)),
                         ASTAssignExpr.Op.PLUSEQ)
                 },
                 {
                     "val = a = c",
                     new ASTAssignExpr(
-                        new ASTIdentifier(new T_IDENTIFIER(1, "val")),
+                        new ASTId(new T_IDENTIFIER(1, "val")),
                         new ASTAssignExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "a")),
-                            new ASTIdentifier(new T_IDENTIFIER(1, "c")),
+                            new ASTId(new T_IDENTIFIER(1, "a")),
+                            new ASTId(new T_IDENTIFIER(1, "c")),
                             ASTAssignExpr.Op.ASSIGN),
                         ASTAssignExpr.Op.ASSIGN)
                 }
@@ -513,14 +513,14 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserCommaExpressionEquals() {
-            var e11 = new ASTIdentifier(new T_IDENTIFIER(1, "a"));
-            var e21 = new ASTIdentifier(new T_IDENTIFIER(1, "a"));
+            var e11 = new ASTId(new T_IDENTIFIER(1, "a"));
+            var e21 = new ASTId(new T_IDENTIFIER(1, "a"));
             var e12 = new ASTBinaryExpr(
-                    new ASTIdentifier(new T_IDENTIFIER(2, "b")),
+                    new ASTId(new T_IDENTIFIER(2, "b")),
                     new ASTConstInt(new T_CONST_INT(2, "4", 10)),
                     ASTBinaryExpr.Op.PLUS);
             var e22 = new ASTBinaryExpr(
-                    new ASTIdentifier(new T_IDENTIFIER(2, "b")),
+                    new ASTId(new T_IDENTIFIER(2, "b")),
                     new ASTConstInt(new T_CONST_INT(2, "4", 10)),
                     ASTBinaryExpr.Op.PLUS);
             var l1 = new LinkedList<ASTExpr>();
@@ -552,15 +552,15 @@ namespace LC_CompilerTests {
                     "a = 1, b = 2, c = 3",
                     new ASTCommaExpr(new LinkedList<ASTExpr>(new List<ASTExpr> {
                         new ASTAssignExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "a")),
+                            new ASTId(new T_IDENTIFIER(1, "a")),
                             new ASTConstInt(new T_CONST_INT(1, "1", 10)),
                             ASTAssignExpr.Op.ASSIGN),
                         new ASTAssignExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "b")),
+                            new ASTId(new T_IDENTIFIER(1, "b")),
                             new ASTConstInt(new T_CONST_INT(1, "2", 10)),
                             ASTAssignExpr.Op.ASSIGN),
                         new ASTAssignExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "c")),
+                            new ASTId(new T_IDENTIFIER(1, "c")),
                             new ASTConstInt(new T_CONST_INT(1, "3", 10)),
                             ASTAssignExpr.Op.ASSIGN),
                     }))
@@ -578,11 +578,11 @@ namespace LC_CompilerTests {
                     "a == 0 ? c : d",
                     new ASTConditionalExpr(
                         new ASTBinaryExpr(
-                            new ASTIdentifier(new T_IDENTIFIER(1, "a")),
+                            new ASTId(new T_IDENTIFIER(1, "a")),
                             new ASTConstInt(new T_CONST_INT(1, "0", 10)),
                             ASTBinaryExpr.Op.EQ),
-                        new ASTIdentifier(new T_IDENTIFIER(1, "c")),
-                        new ASTIdentifier(new T_IDENTIFIER(1, "d")))
+                        new ASTId(new T_IDENTIFIER(1, "c")),
+                        new ASTId(new T_IDENTIFIER(1, "d")))
                 }
             };
             foreach (var test in dict) {

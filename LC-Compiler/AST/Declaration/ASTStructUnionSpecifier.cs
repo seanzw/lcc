@@ -6,61 +6,51 @@ using System.Threading.Tasks;
 
 namespace lcc.AST {
 
-    public sealed class ASTStructDeclarator : ASTNode {
+    public sealed class ASTStructDecl : ASTNode, IEquatable<ASTStructDecl> {
 
-        public ASTStructDeclarator(ASTDeclarator declarator, ASTExpr expr) {
+        public ASTStructDecl(ASTDecl declarator, ASTExpr expr) {
             this.declarator = declarator;
             this.expr = expr;
         }
 
-        public override int GetLine() {
-            return declarator == null ? expr.GetLine() : declarator.GetLine();
-        }
+        public override Position Pos => declarator == null ? expr.Pos : declarator.Pos;
 
         public override bool Equals(object obj) {
-            ASTStructDeclarator x = obj as ASTStructDeclarator;
-            return x == null ? false : base.Equals(x)
-                && (x.declarator == null ? declarator == null : x.declarator.Equals(declarator))
-                && (x.expr == null ? expr == null : x.expr.Equals(expr));
+            return Equals(obj as ASTStructDecl);
         }
 
-        public bool Equals(ASTStructDeclarator x) {
-            return base.Equals(x)
-                && (x.declarator == null ? declarator == null : x.declarator.Equals(declarator))
-                && (x.expr == null ? expr == null : x.expr.Equals(expr));
+        public bool Equals(ASTStructDecl x) {
+            return x != null
+                && NullableEquals(x.declarator, declarator)
+                && NullableEquals(x.expr, expr);
         }
 
         public override int GetHashCode() {
-            return GetLine();
+            return Pos.GetHashCode();
         }
 
-        public readonly ASTDeclarator declarator;
+        public readonly ASTDecl declarator;
         public readonly ASTExpr expr;
     }
 
-    public sealed class ASTStructDeclaration : ASTNode {
+    public sealed class ASTStructDeclaration : ASTNode, IEquatable<ASTStructDeclaration> {
 
         public ASTStructDeclaration(
-            IEnumerable<ASTTypeSpecifierQualifier> specifierQualifierList,
-            IEnumerable<ASTStructDeclarator> declarators
+            IEnumerable<ASTTypeSpecQual> specifierQualifierList,
+            IEnumerable<ASTStructDecl> declarators
             ) {
             this.specifierQualifierList = specifierQualifierList;
             this.declarators = declarators;
         }
 
-        public override int GetLine() {
-            return specifierQualifierList.First().GetLine();
-        }
+        public override Position Pos => specifierQualifierList.First().Pos;
 
         public override bool Equals(object obj) {
-            ASTStructDeclaration x = obj as ASTStructDeclaration;
-            return x == null ? false : base.Equals(x)
-                && x.specifierQualifierList.SequenceEqual(specifierQualifierList)
-                && x.declarators.SequenceEqual(declarators);
+            return Equals(obj as ASTStructDeclaration);
         }
 
         public bool Equals(ASTStructDeclaration x) {
-            return base.Equals(x)
+            return x != null
                 && x.specifierQualifierList.SequenceEqual(specifierQualifierList)
                 && x.declarators.SequenceEqual(declarators);
         }
@@ -69,47 +59,45 @@ namespace lcc.AST {
             return specifierQualifierList.GetHashCode();
         }
 
-        public readonly IEnumerable<ASTTypeSpecifierQualifier> specifierQualifierList;
-        public readonly IEnumerable<ASTStructDeclarator> declarators;
+        public readonly IEnumerable<ASTTypeSpecQual> specifierQualifierList;
+        public readonly IEnumerable<ASTStructDecl> declarators;
     }
 
-    public sealed class ASTStructUnionSpecifier : ASTTypeSpec {
+    public sealed class ASTStructUnionSpec : ASTTypeSpec, IEquatable<ASTStructUnionSpec> {
 
-        public ASTStructUnionSpecifier(
+        public ASTStructUnionSpec(
             int line,
-            ASTIdentifier identifier,
+            ASTId identifier,
             IEnumerable<ASTStructDeclaration> declarations,
             Kind kind
             ) : base(kind) {
-            this.line = line;
+            this.pos = new Position { line = line };
             this.identifier = identifier;
             this.declarations = declarations;
         }
 
-        public override int GetLine() {
-            return line;
-        }
+        public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as ASTStructUnionSpecifier);
+            return Equals(obj as ASTStructUnionSpec);
         }
 
-        public bool Equals(ASTStructUnionSpecifier x) {
-            return x != null && base.Equals(x)
+        public bool Equals(ASTStructUnionSpec x) {
+            return x != null
                 && NullableEquals(x.identifier, identifier)
                 && NullableEquals(x.declarations, declarations);
         }
 
         public override int GetHashCode() {
-            return GetLine();
+            return Pos.GetHashCode();
         }
 
-        public readonly int line;
+        private readonly Position pos;
 
         /// <summary>
         /// Nullable.
         /// </summary>
-        public readonly ASTIdentifier identifier;
+        public readonly ASTId identifier;
         /// <summary>
         /// Nullable.
         /// </summary>

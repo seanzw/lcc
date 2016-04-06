@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    public sealed class ASTAssignExpr : ASTExpr {
+    public sealed class ASTAssignExpr : ASTExpr, IEquatable<ASTAssignExpr> {
 
         public enum Op {
             ASSIGN,
@@ -27,23 +27,17 @@ namespace lcc.AST {
             this.op = op;
         }
 
-        public override int GetLine() {
-            return lexpr.GetLine();
-        }
+        public override Position Pos => lexpr.Pos;
 
         public override bool Equals(object obj) {
-            ASTAssignExpr expr = obj as ASTAssignExpr;
-            return expr == null ? false : base.Equals(expr)
-                && expr.lexpr.Equals(lexpr)
-                && expr.rexpr.Equals(rexpr)
-                && expr.op.Equals(op);
+            return Equals(obj as ASTAssignExpr);
         }
 
         public bool Equals(ASTAssignExpr expr) {
-            return base.Equals(expr)
+            return expr != null
                 && expr.lexpr.Equals(lexpr)
                 && expr.rexpr.Equals(rexpr)
-                && expr.op.Equals(op);
+                && expr.op == op;
         }
 
         public override int GetHashCode() {

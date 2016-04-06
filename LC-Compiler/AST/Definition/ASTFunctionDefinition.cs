@@ -5,13 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    public sealed class ASTFuncDefinition : ASTNode {
+    public sealed class ASTFuncDef : ASTNode, IEquatable<ASTFuncDef> {
 
-        public ASTFuncDefinition(
+        public ASTFuncDef(
             ASTDeclSpecs specifiers,
-            ASTDeclarator declarator,
+            ASTDecl declarator,
             IEnumerable<ASTDeclaration> declarations,
-            ASTStatement statement
+            ASTStmt statement
             ) {
             this.specifiers = specifiers;
             this.declarator = declarator;
@@ -19,16 +19,14 @@ namespace lcc.AST {
             this.statement = statement;
         }
 
-        public override int GetLine() {
-            return declarator.GetLine();
-        }
+        public override Position Pos => declarator.Pos;
 
         public override bool Equals(object obj) {
-            ASTFuncDefinition x = obj as ASTFuncDefinition;
+            ASTFuncDef x = obj as ASTFuncDef;
             return Equals(x);
         }
 
-        public bool Equals(ASTFuncDefinition x) {
+        public bool Equals(ASTFuncDef x) {
             return x == null ? false : base.Equals(x)
                 && x.specifiers.Equals(specifiers)
                 && x.declarator.Equals(declarator)
@@ -41,8 +39,8 @@ namespace lcc.AST {
         }
 
         public readonly ASTDeclSpecs specifiers;
-        public readonly ASTDeclarator declarator;
+        public readonly ASTDecl declarator;
         public readonly IEnumerable<ASTDeclaration> declarations;
-        public readonly ASTStatement statement;
+        public readonly ASTStmt statement;
     }
 }

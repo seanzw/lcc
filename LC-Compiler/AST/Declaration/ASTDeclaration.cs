@@ -8,32 +8,32 @@ using lcc.TypeSystem;
 
 namespace lcc.AST {
 
-    public sealed class ASTDeclSpecs : ASTNode {
+    public sealed class ASTDeclSpecs : ASTNode, IEquatable<ASTDeclSpecs> {
 
         public ASTDeclSpecs(
             IEnumerable<ASTDeclSpec> all,
             IEnumerable<ASTTypeSpec.Kind> keys
             ) {
-            this.line = all.First().GetLine();
+            this.pos = all.First().Pos;
             this.storages = from s in all.OfType<ASTStorageSpecifier>() select s.kind;
-            this.qualifiers = from s in all.OfType<ASTTypeQualifier>() select s.kind;
+            this.qualifiers = from s in all.OfType<ASTTypeQual>() select s.kind;
             this.keys = keys;
-            this.functions = from s in all.OfType<ASTFunctionSpecifier>() select s.kind;
+            this.functions = from s in all.OfType<ASTFuncSpec>() select s.kind;
         }
 
         public ASTDeclSpecs(
             IEnumerable<ASTDeclSpec> all,
             ASTTypeSpec specifier
             ) {
-            this.line = all.First().GetLine();
+            this.pos = all.First().Pos;
             this.storages = from s in all.OfType<ASTStorageSpecifier>() select s.kind;
-            this.qualifiers = from s in all.OfType<ASTTypeQualifier>() select s.kind;
-            this.functions = from s in all.OfType<ASTFunctionSpecifier>() select s.kind;
+            this.qualifiers = from s in all.OfType<ASTTypeQual>() select s.kind;
+            this.functions = from s in all.OfType<ASTFuncSpec>() select s.kind;
             this.specifier = specifier;
         }
 
         public bool Equals(ASTDeclSpecs x) {
-            return x != null && x.line == line
+            return x != null && x.pos.Equals(pos)
                 && x.storages.SequenceEqual(storages)
                 && x.qualifiers.SequenceEqual(qualifiers)
                 && keys == null ? x.keys == null : keys.SequenceEqual(x.keys)
@@ -46,23 +46,21 @@ namespace lcc.AST {
         }
 
         public override int GetHashCode() {
-            return line;
+            return Pos.GetHashCode();
         }
 
-        public override int GetLine() {
-            return line;
-        }
+        public override Position Pos => pos;
 
-        public readonly int line;
+        private readonly Position pos;
 
         public readonly IEnumerable<ASTStorageSpecifier.Kind> storages;
-        public readonly IEnumerable<ASTTypeQualifier.Kind> qualifiers;
+        public readonly IEnumerable<ASTTypeQual.Kind> qualifiers;
 
         /// <summary>
         /// All the type specifiers EXCEPT struct, union, enum, typedef.
         /// </summary>
         public readonly IEnumerable<ASTTypeSpec.Kind> keys;
-        public readonly IEnumerable<ASTFunctionSpecifier.Kind> functions;
+        public readonly IEnumerable<ASTFuncSpec.Kind> functions;
 
         /// <summary>
         /// All the struct, union, enum, typedef specifier.
@@ -70,11 +68,11 @@ namespace lcc.AST {
         public readonly ASTTypeSpec specifier;
     }
 
-    public sealed class ASTDeclaration : ASTStatement {
+    public sealed class ASTDeclaration : ASTStmt, IEquatable<ASTDeclaration> {
 
         public ASTDeclaration(
             ASTDeclSpecs specifiers,
-            IEnumerable<ASTInitDeclarator> declarators
+            IEnumerable<ASTInitDecl> declarators
             ) {
             this.specifiers = specifiers;
             this.declarators = declarators;
@@ -91,9 +89,7 @@ namespace lcc.AST {
         /// </summary>
         public IEnumerable<string> DeclNames => from declarator in declarators select declarator.declarator.direct.Name;
 
-        public override int GetLine() {
-            return specifiers.GetLine();
-        }
+        public override Position Pos => specifiers.Pos;
 
         public override bool Equals(object obj) {
             return Equals(obj as ASTDeclaration);
@@ -109,7 +105,7 @@ namespace lcc.AST {
         }
 
         public readonly ASTDeclSpecs specifiers;
-        public readonly IEnumerable<ASTInitDeclarator> declarators;
+        public readonly IEnumerable<ASTInitDecl> declarators;
 
         public T TypeCheck(ASTEnv env) {
 

@@ -5,24 +5,21 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    public sealed class ASTWhileStatement : ASTStatement {
+    public sealed class ASTWhile : ASTStmt, IEquatable<ASTWhile> {
 
-        public ASTWhileStatement(ASTExpr expr, ASTStatement statement) {
+        public ASTWhile(ASTExpr expr, ASTStmt statement) {
             this.expr = expr;
             this.statement = statement;
         }
 
-        public override int GetLine() {
-            return expr.GetLine();
-        }
+        public override Position Pos => expr.Pos;
 
         public override bool Equals(object obj) {
-            ASTWhileStatement x = obj as ASTWhileStatement;
-            return Equals(x);
+            return Equals(obj as ASTWhile);
         }
 
-        public bool Equals(ASTWhileStatement x) {
-            return x == null ? false : base.Equals(x)
+        public bool Equals(ASTWhile x) {
+            return x != null
                 && x.expr.Equals(expr)
                 && x.statement.Equals(statement);
         }
@@ -32,6 +29,6 @@ namespace lcc.AST {
         }
 
         public readonly ASTExpr expr;
-        public readonly ASTStatement statement;
+        public readonly ASTStmt statement;
     }
 }

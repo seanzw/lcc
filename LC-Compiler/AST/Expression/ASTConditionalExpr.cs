@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    public sealed class ASTConditionalExpr : ASTExpr {
+    public sealed class ASTConditionalExpr : ASTExpr, IEquatable<ASTConditionalExpr> {
 
         public ASTConditionalExpr(ASTExpr predicator, ASTExpr trueExpr, ASTExpr falseExpr) {
             this.predicator = predicator;
@@ -13,23 +13,16 @@ namespace lcc.AST {
             this.falseExpr = falseExpr;
         }
 
-        public override int GetLine() {
-            return predicator.GetLine();
-        }
+        public override Position Pos => predicator.Pos;
 
         public override bool Equals(object obj) {
-            ASTConditionalExpr expr = obj as ASTConditionalExpr;
-            return expr == null ? false : base.Equals(expr)
-                && expr.predicator.Equals(predicator)
-                && expr.trueExpr.Equals(trueExpr)
-                && expr.falseExpr.Equals(falseExpr);
+            return Equals(obj as ASTConditionalExpr);
         }
 
-        public bool Equals(ASTConditionalExpr expr) {
-            return base.Equals(expr)
-                && expr.predicator.Equals(predicator)
-                && expr.trueExpr.Equals(trueExpr)
-                && expr.falseExpr.Equals(falseExpr);
+        public bool Equals(ASTConditionalExpr x) {
+            return x != null && x.predicator.Equals(predicator)
+                && x.trueExpr.Equals(trueExpr)
+                && x.falseExpr.Equals(falseExpr);
         }
 
         public override int GetHashCode() {

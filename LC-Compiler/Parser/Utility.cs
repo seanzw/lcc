@@ -93,8 +93,8 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTIdentifier> Identifier() {
-            return Get<T_IDENTIFIER>().Select(t => new ASTIdentifier(t));
+        public static Parserc.Parser<T, ASTId> Identifier() {
+            return Get<T_IDENTIFIER>().Select(t => new ASTId(t));
         }
     }
 

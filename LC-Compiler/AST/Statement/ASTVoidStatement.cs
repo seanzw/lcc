@@ -5,29 +5,26 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    public sealed class ASTVoidStatement : ASTStatement {
+    public sealed class ASTVoidStmt : ASTStmt {
 
-        public ASTVoidStatement(int line) {
-            this.line = line;
+        public ASTVoidStmt(int line) {
+            this.pos = new Position { line = line };
         }
 
-        public override int GetLine() {
-            return line;
-        }
+        public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            ASTVoidStatement x = obj as ASTVoidStatement;
-            return Equals(x);
+            return Equals(obj as ASTVoidStmt);
         }
 
-        public bool Equals(ASTVoidStatement x) {
-            return x == null ? false : x.line == line;
+        public bool Equals(ASTVoidStmt x) {
+            return x != null && x.pos.Equals(pos);
         }
 
         public override int GetHashCode() {
-            return line;
+            return Pos.GetHashCode();
         }
 
-        public readonly int line;
+        private readonly Position pos;
     }
 }

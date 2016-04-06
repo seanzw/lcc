@@ -5,22 +5,26 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    public abstract class ASTNode {
-        protected ASTNode() { }
 
-        public abstract int GetLine();
-
-        public override bool Equals(object obj) {
-            return obj is ASTNode;
+    /// <summary>
+    /// Position in the source code.
+    /// </summary>
+    public struct Position : IEquatable<Position> {
+        public int line;
+        public override string ToString() {
+            return string.Format("line {0}", line);
         }
-
-        public bool Equals(ASTNode node) {
-            return true;
+        public bool Equals(Position x) {
+            return x.line == line; 
         }
-
         public override int GetHashCode() {
-            return base.GetHashCode();
+            return line;
         }
+    }
+
+    public abstract class ASTNode {
+
+        public abstract Position Pos { get; }
 
         /// <summary>
         /// Returns true if x equals y or both values are null.

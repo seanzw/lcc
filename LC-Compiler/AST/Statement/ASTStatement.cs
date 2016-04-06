@@ -5,6 +5,5 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.AST {
-    public abstract class ASTStatement : ASTNode {
-    }
+    public abstract class ASTStmt : ASTNode {}
 }

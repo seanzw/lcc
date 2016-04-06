@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,28 +11,21 @@ namespace lcc.AST {
     /// <summary>
     /// arr[idx].
     /// </summary>
-    public sealed class ASTArrSub : ASTExpr {
+    public sealed class ASTArrSub : ASTExpr, IEquatable<ASTArrSub> {
 
         public ASTArrSub(ASTExpr arr, ASTExpr idx) {
             this.arr = arr;
             this.idx = idx;
         }
 
-        public override int GetLine() {
-            return arr.GetLine();
-        }
+        public override Position Pos => arr.Pos;
 
         public override bool Equals(object obj) {
-            ASTArrSub x = obj as ASTArrSub;
-            return x == null ? false : base.Equals(x)
-                && x.arr.Equals(arr)
-                && x.idx.Equals(idx);
+            return Equals(obj as ASTArrSub);
         }
 
         public bool Equals(ASTArrSub x) {
-            return base.Equals(x)
-                && x.arr.Equals(arr)
-                && x.idx.Equals(idx);
+            return x != null && x.arr.Equals(arr) && x.idx.Equals(idx);
         }
 
         public override int GetHashCode() {
@@ -50,12 +44,12 @@ namespace lcc.AST {
         public override T TypeCheck(ASTEnv env) {
             T arrType = arr.TypeCheck(env);
             if (!arrType.IsPointer && !arrType.IsArray) {
-                throw new ASTException(arr.GetLine(), "subscripting none pointer type");
+                throw new ASTException(arr.Pos, "subscripting none pointer type");
             }
 
             T idxType = idx.TypeCheck(env);
             if (!idxType.IsInteger) {
-                throw new ASTException(idx.GetLine(), "subscripting none integer type");
+                throw new ASTException(idx.Pos, "subscripting none integer type");
             }
 
             if (arrType.IsPointer)
@@ -72,7 +66,7 @@ namespace lcc.AST {
     /// s.i
     /// p->i
     /// </summary>
-    public sealed class ASTAccess : ASTExpr {
+    public sealed class ASTAccess : ASTExpr, IEquatable<ASTAccess> {
 
         public enum Kind {
             DOT,
@@ -85,21 +79,14 @@ namespace lcc.AST {
             this.kind = type;
         }
 
-        public override int GetLine() {
-            return agg.GetLine();
-        }
+        public override Position Pos => agg.Pos;
 
         public override bool Equals(object obj) {
-            ASTAccess x = obj as ASTAccess;
-            return x == null ? false : base.Equals(x)
-                && x.agg.Equals(agg)
-                && x.field.Equals(field)
-                && x.kind == kind;
+            return Equals(obj as ASTAccess);
         }
 
         public bool Equals(ASTAccess x) {
-            return base.Equals(x)
-                && x.agg.Equals(agg)
+            return x != null && x.agg.Equals(agg)
                 && x.field.Equals(field)
                 && x.kind == kind;
         }
@@ -126,18 +113,18 @@ namespace lcc.AST {
 
             if (kind == Kind.PTR) {
                 if (!aggType.IsPointer)
-                    throw new ASTException(agg.GetLine(), "member reference base type is not a pointer");
+                    throw new ASTException(agg.Pos, "member reference base type is not a pointer");
                 aggType = (aggType.baseType as TPointer).element;
             }
 
             if (!aggType.IsStructUnion)
-                throw new ASTException(agg.GetLine(), "member reference base type is not a struct or union");
+                throw new ASTException(agg.Pos, "member reference base type is not a struct or union");
 
             TStructUnion s = aggType.baseType as TStructUnion;
 
             T m = s.GetType(field);
             if (m == null) {
-                throw new ASTException(agg.GetLine(), string.Format("no member named {0} in {1}", field, s.ToString()));
+                throw new ASTException(agg.Pos, string.Format("no member named {0} in {1}", field, s.ToString()));
             }
 
             if (kind == Kind.DOT) {
@@ -156,7 +143,7 @@ namespace lcc.AST {
     /// i++
     /// i--
     /// </summary>
-    public sealed class ASTPostStep : ASTExpr {
+    public sealed class ASTPostStep : ASTExpr, IEquatable<ASTPostStep> {
 
         public enum Kind {
             INC,
@@ -168,21 +155,14 @@ namespace lcc.AST {
             this.kind = kind;
         }
 
-        public override int GetLine() {
-            return expr.GetLine();
-        }
+        public override Position Pos => expr.Pos;
 
         public override bool Equals(object obj) {
-            ASTPostStep x = obj as ASTPostStep;
-            return x == null ? false : base.Equals(x)
-                && x.expr.Equals(expr)
-                && x.kind == kind;
+            return Equals(obj as ASTPostStep);
         }
 
         public bool Equals(ASTPostStep x) {
-            return base.Equals(x)
-                && x.expr.Equals(expr)
-                && x.kind == kind;
+            return x != null && x.expr.Equals(expr) && x.kind == kind;
         }
 
         public override int GetHashCode() {
@@ -206,11 +186,11 @@ namespace lcc.AST {
 
             T t = expr.TypeCheck(env);
             if (!t.IsPointer && !t.IsArithmetic) {
-                throw new ASTException(expr.GetLine(), string.Format("{0} on type {1}", kind, t));
+                throw new ASTException(expr.Pos, string.Format("{0} on type {1}", kind, t));
             }
 
             if (!t.IsModifiable) {
-                throw new ASTException(expr.GetLine(), string.Format("cannot assign to type {0}", t));
+                throw new ASTException(expr.Pos, string.Format("cannot assign to type {0}", t));
             }
 
             return t.R();
@@ -218,5 +198,30 @@ namespace lcc.AST {
 
         public readonly ASTExpr expr;
         public readonly Kind kind;
+    }
+
+    public sealed class ASTCompound : ASTExpr, IEquatable<ASTCompound> {
+
+        public ASTCompound(ASTTypeName name, IEnumerable<ASTInitItem> initializers) {
+            this.name = name;
+            this.initializers = initializers;
+        }
+
+        public bool Equals(ASTCompound x) {
+            return x != null && x.name.Equals(name) && x.initializers.SequenceEqual(initializers);
+        }
+
+        public override bool Equals(object obj) {
+            return Equals(obj as ASTCompound);
+        }
+
+        public override int GetHashCode() {
+            return name.GetHashCode();
+        }
+
+        public override Position Pos => name.Pos;
+
+        public readonly ASTTypeName name;
+        public readonly IEnumerable<ASTInitItem> initializers; 
     }
 }
