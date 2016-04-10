@@ -13,16 +13,10 @@ namespace lcc.AST {
     /// </summary>
     public sealed class ASTEnv {
 
-        /// <summary>
-        /// Signature records the type of a symbol and where it is declared.
-        /// </summary>
-        public struct Signature {
-            public T type;
-            public readonly int line;
-            public Signature(T type, int line) {
-                this.type = type;
-                this.line = line;
-            }
+        public enum ScopeKind {
+            BLOCK,
+            FUNC,
+            FILE
         }
 
         /// <summary>
@@ -30,27 +24,95 @@ namespace lcc.AST {
         /// One for symbols, another for tags.
         /// </summary>
         private sealed class Scope {
-            public Scope() {
-                symbols = new Dictionary<string, Signature>();
-                tags = new Dictionary<string, T>();
+            public Scope(ScopeKind kind) {
+                this.kind = kind;
+                symbols = new Dictionary<string, Tuple<T, ASTDeclaration>>();
+                tags = new Dictionary<string, Tuple<TUnqualified, ASTTypeUserSpec>>();
+                typedefs = new Dictionary<string, Tuple<T, ASTDeclaration>>();
             }
-            public readonly Dictionary<string, Signature> symbols;
-            public readonly Dictionary<string, T> tags;
+            public void AddSymbol(string symbol, T t, ASTDeclaration declaration) {
+                symbols.Add(symbol, new Tuple<T, ASTDeclaration>(t, declaration));
+            }
+            public void AddTag(string tag, TUnqualified t, ASTTypeUserSpec definition) {
+                tags.Add(tag, new Tuple<TUnqualified, ASTTypeUserSpec>(t, definition));
+            }
+            public void AddTypedef(string typedef, T t, ASTDeclaration declaration) {
+                typedefs.Add(typedef, new Tuple<T, ASTDeclaration>(t, declaration));
+            }
+
+            /// <summary>
+            /// Get the type of a symbol, null if undeclared.
+            /// </summary>
+            /// <param name="symbol"></param>
+            /// <returns></returns>
+            public T TSymbol(string symbol) {
+                if (symbols.ContainsKey(symbol)) return symbols[symbol].Item1;
+                else return null;
+            }
+            /// <summary>
+            /// Get the declaration of a symbol, null if undeclaraed.
+            /// </summary>
+            /// <param name="symbol"></param>
+            /// <returns></returns>
+            public ASTDeclaration DSymbol(string symbol) {
+                if (symbols.ContainsKey(symbol)) return symbols[symbol].Item2;
+                else return null;
+            }
+            /// <summary>
+            /// Get the unqualified type of the tag.
+            /// </summary>
+            /// <param name="tag"></param>
+            /// <returns></returns>
+            public TUnqualified TTag(string tag) {
+                if (tags.ContainsKey(tag)) return tags[tag].Item1;
+                else return null;
+            }
+            /// <summary>
+            /// Get the definition of the tag.
+            /// </summary>
+            /// <param name="tag"></param>
+            /// <returns></returns>
+            public ASTTypeUserSpec DTag(string tag) {
+                if (tags.ContainsKey(tag)) return tags[tag].Item2;
+                else return null;
+            }
+            /// <summary>
+            /// Get the type of a typedef name.
+            /// </summary>
+            /// <param name="typedef"></param>
+            /// <returns></returns>
+            public T TTypedef(string typedef) {
+                if (typedefs.ContainsKey(typedef)) return typedefs[typedef].Item1;
+                else return null;
+            }
+            /// <summary>
+            /// Get the declaration of a typedef name.
+            /// </summary>
+            /// <param name="typedef"></param>
+            /// <returns></returns>
+            public ASTDeclaration DTypedef(string typedef) {
+                if (typedefs.ContainsKey(typedef)) return typedefs[typedef].Item2;
+                else return null;
+            }
+            public readonly ScopeKind kind;
+            private readonly Dictionary<string, Tuple<T, ASTDeclaration>> symbols;
+            private readonly Dictionary<string, Tuple<TUnqualified, ASTTypeUserSpec>> tags;
+            private readonly Dictionary<string, Tuple<T, ASTDeclaration>> typedefs;
         }
 
         /// <summary>
-        /// Initialize the environment with the global scope.
+        /// Initialize the environment with the file scope.
         /// </summary>
         public ASTEnv() {
             scopes = new Stack<Scope>();
-            PushScope();
+            PushScope(ScopeKind.FILE);
         }
 
         /// <summary>
         /// Push a nested scope into the environment.
         /// </summary>
-        public void PushScope() {
-            scopes.Push(new Scope());
+        public void PushScope(ScopeKind kind) {
+            scopes.Push(new Scope(kind));
         }
 
         /// <summary>
@@ -60,40 +122,6 @@ namespace lcc.AST {
             scopes.Pop();
         }
 
-        /// <summary>
-        /// Check if this symbol is defined.
-        /// </summary>
-        /// <param name="symbol"></param>
-        /// <returns></returns>
-        public bool ContainsSymbol(string symbol) {
-            foreach (var scope in scopes) {
-                if (scope.symbols.ContainsKey(symbol)) return true;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Check if this symbol is defined in the current scope.
-        /// </summary>
-        /// <param name="symbol"></param>
-        /// <returns></returns>
-        public bool ContainsSymbolInCurrentScope(string symbol) {
-            return scopes.Peek().symbols.ContainsKey(symbol);
-        }
-
-        /// <summary>
-        /// Get the declaration for this symbol.
-        /// </summary>
-        /// <param name="symbol"></param>
-        /// <returns></returns>
-        public int GetDeclaration(string symbol) {
-            foreach (var scope in scopes) {
-                if (scope.symbols.ContainsKey(symbol)) {
-                    return scope.symbols[symbol].line;
-                }
-            }
-            return -1;
-        }
 
         /// <summary>
         /// Add a symbol to the current scope.
@@ -105,34 +133,128 @@ namespace lcc.AST {
         /// <param name="symbol"></param>
         /// <param name="type"></param>
         /// <param name="line"></param>
-        public void AddSymbol(string symbol, T type, int line) {
-            scopes.Peek().symbols.Add(symbol, new Signature(type, line));
+        public void AddSymbol(string symbol, T t, ASTDeclaration declaration) {
+            scopes.Peek().AddSymbol(symbol, t, declaration);
+        }
+        /// <summary>
+        /// Add a tag to the current scope.
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="t"></param>
+        /// <param name="definition"></param>
+        public void AddTag(string tag, TUnqualified t, ASTTypeUserSpec definition) {
+            scopes.Peek().AddTag(tag, t, definition);
+        }
+        /// <summary>
+        /// Add a typdef name to the current scope.
+        /// </summary>
+        /// <param name="typedef"></param>
+        /// <param name="t"></param>
+        /// <param name="declaration"></param>
+        public void AddTypedef(string typedef, T t, ASTDeclaration declaration) {
+            scopes.Peek().AddTypedef(typedef, t, declaration);
         }
 
         /// <summary>
-        /// Get the symbol from the environment.
-        /// Return null if this symbol doesn't exist.
+        /// Find the type of a symbol.
         /// </summary>
-        /// <param name="symbol"></param>
+        /// <param name="symbol"> The name of the symbol. </param>
+        /// <param name="here"> Restrict the search area to the current scope. </param>
         /// <returns></returns>
-        public Signature? GetSymbol(string symbol) {
-            foreach (var scope in scopes) {
-                if (scope.symbols.ContainsKey(symbol)) return scope.symbols[symbol];
+        public T TSymbol(string symbol, bool here = false) {
+            if (here) return scopes.Peek().TSymbol(symbol);
+            else {
+                foreach (var scope in scopes) {
+                    T t = scope.TSymbol(symbol);
+                    if (t != null) return t;
+                }
+                return null;
             }
-            return null;
         }
 
         /// <summary>
-        /// Get the type of the symbol.
-        /// Return null if the symbol is undefined.
+        /// Find the declaration of a symbol.
         /// </summary>
-        /// <param name="symbol"></param>
+        /// <param name="symbol"> The name of the symbol. </param>
+        /// <param name="here"> Restrict the search area to the current scope. </param>
         /// <returns></returns>
-        public T GetType(string symbol) {
-            foreach (var scope in scopes) {
-                if (scope.symbols.ContainsKey(symbol)) return scope.symbols[symbol].type;
+        public ASTDeclaration DSymbol(string symbol, bool here = false) {
+            if (here) return scopes.Peek().DSymbol(symbol);
+            else {
+                foreach (var scope in scopes) {
+                    var d = scope.DSymbol(symbol);
+                    if (d != null) return d;
+                }
+                return null;
             }
-            return null;
+        }
+
+        /// <summary>
+        /// Get the unqualified type of the tag.
+        /// </summary>
+        /// <param name="tag"> Name of the tag. </param>
+        /// <param name="here"> Retrict the search area to the current scope. </param>
+        /// <returns></returns>
+        public TUnqualified TTag(string tag, bool here = false) {
+            if (here) return scopes.Peek().TTag(tag);
+            else {
+                foreach (var scope in scopes) {
+                    var t = scope.TTag(tag);
+                    if (t != null) return t;
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Find the definition of a tag.
+        /// </summary>
+        /// <param name="symbol"> The name of the tag. </param>
+        /// <param name="here"> Restrict the search area to the current scope. </param>
+        /// <returns></returns>
+        public ASTTypeUserSpec DTag(string tag, bool here = false) {
+            if (here) return scopes.Peek().DTag(tag);
+            else {
+                foreach (var scope in scopes) {
+                    var d = scope.DTag(tag);
+                    if (d != null) return d;
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Find the type of a typedef name.
+        /// </summary>
+        /// <param name="symbol"> The name of the typedef. </param>
+        /// <param name="here"> Restrict the search area to the current scope. </param>
+        /// <returns></returns>
+        public T TTypedef(string typedef, bool here = false) {
+            if (here) return scopes.Peek().TTypedef(typedef);
+            else {
+                foreach (var scope in scopes) {
+                    T t = scope.TTypedef(typedef);
+                    if (t != null) return t;
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Find the declaration of a typedef name.
+        /// </summary>
+        /// <param name="symbol"> The name of the typedef. </param>
+        /// <param name="here"> Restrict the search area to the current scope. </param>
+        /// <returns></returns>
+        public ASTDeclaration DTypedef(string typedef, bool here = false) {
+            if (here) return scopes.Peek().DTypedef(typedef);
+            else {
+                foreach (var scope in scopes) {
+                    var d = scope.DTypedef(typedef);
+                    if (d != null) return d;
+                }
+                return null;
+            }
         }
 
         private Stack<Scope> scopes;

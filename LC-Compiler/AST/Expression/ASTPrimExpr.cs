@@ -35,12 +35,12 @@ namespace lcc.AST {
         }
 
         /// <summary>
-        /// Check that the identfifier is defined.
+        /// Check that the identfifier is defined as variable.
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
         public override T TypeCheck(ASTEnv env) {
-            T type = env.GetType(name);
+            T type = env.TSymbol(name);
             if (type == null) throw new ASTErrUndefinedIdentifier(pos, name);
             else return type;
         }

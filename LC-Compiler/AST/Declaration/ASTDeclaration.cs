@@ -12,33 +12,37 @@ namespace lcc.AST {
 
         public ASTDeclSpecs(
             IEnumerable<ASTDeclSpec> all,
-            IEnumerable<ASTTypeSpec.Kind> keys
+            ASTStoreSpec.Kind storage,
+            IEnumerable<ASTTypeSpec.Kind> keys,
+            ASTFuncSpec.Kind function = ASTFuncSpec.Kind.NONE
             ) {
-            this.pos = all.First().Pos;
-            this.storages = from s in all.OfType<ASTStorageSpecifier>() select s.kind;
-            this.qualifiers = from s in all.OfType<ASTTypeQual>() select s.kind;
+            this.storage = storage;
             this.keys = keys;
-            this.functions = from s in all.OfType<ASTFuncSpec>() select s.kind;
+            this.function = function;
+            qualifiers = GetQualifiers(from s in all.OfType<ASTTypeQual>() select s.kind);
+            pos = all.First().Pos;
         }
 
         public ASTDeclSpecs(
             IEnumerable<ASTDeclSpec> all,
-            ASTTypeSpec specifier
+            ASTStoreSpec.Kind storage,
+            ASTTypeUserSpec specifier,
+            ASTFuncSpec.Kind function = ASTFuncSpec.Kind.NONE
             ) {
-            this.pos = all.First().Pos;
-            this.storages = from s in all.OfType<ASTStorageSpecifier>() select s.kind;
-            this.qualifiers = from s in all.OfType<ASTTypeQual>() select s.kind;
-            this.functions = from s in all.OfType<ASTFuncSpec>() select s.kind;
+            this.storage = storage;
+            this.function = function;
             this.specifier = specifier;
+            qualifiers = GetQualifiers(from s in all.OfType<ASTTypeQual>() select s.kind);
+            pos = all.First().Pos;
         }
 
         public bool Equals(ASTDeclSpecs x) {
             return x != null && x.pos.Equals(pos)
-                && x.storages.SequenceEqual(storages)
-                && x.qualifiers.SequenceEqual(qualifiers)
+                && x.storage == storage
+                && x.qualifiers.Equals(qualifiers)
                 && keys == null ? x.keys == null : keys.SequenceEqual(x.keys)
                 && NullableEquals(x.specifier, specifier)
-                && x.functions.SequenceEqual(functions);
+                && x.function == function;
         }
 
         public override bool Equals(object obj) {
@@ -51,92 +55,64 @@ namespace lcc.AST {
 
         public override Position Pos => pos;
 
-        private readonly Position pos;
+        /// <summary>
+        /// At most one storage specifier.
+        /// </summary>
+        public readonly ASTStoreSpec.Kind storage;
 
-        public readonly IEnumerable<ASTStorageSpecifier.Kind> storages;
-        public readonly IEnumerable<ASTTypeQual.Kind> qualifiers;
+        /// <summary>
+        /// All the qualifiers.
+        /// </summary>
+        public readonly TQualifiers qualifiers;
+
+        /// <summary>
+        /// At most one function specifier (inline).
+        /// </summary>
+        public readonly ASTFuncSpec.Kind function;
 
         /// <summary>
         /// All the type specifiers EXCEPT struct, union, enum, typedef.
         /// </summary>
         public readonly IEnumerable<ASTTypeSpec.Kind> keys;
-        public readonly IEnumerable<ASTFuncSpec.Kind> functions;
 
         /// <summary>
         /// All the struct, union, enum, typedef specifier.
         /// </summary>
-        public readonly ASTTypeSpec specifier;
-    }
+        public readonly ASTTypeUserSpec specifier;
 
-    public sealed class ASTDeclaration : ASTStmt, IEquatable<ASTDeclaration> {
-
-        public ASTDeclaration(
-            ASTDeclSpecs specifiers,
-            IEnumerable<ASTInitDecl> declarators
-            ) {
-            this.specifiers = specifiers;
-            this.declarators = declarators;
+        /// <summary>
+        /// Evaluate the type specifiers and get the unqualified type.
+        /// </summary>
+        /// <param name="env"></param>
+        /// <returns></returns>
+        public TUnqualified GetTUnqualified(ASTEnv env) {
+            // Get the unqualified type.
+            if (keys != null) {
+                // This is built-in type.
+                if (dict.ContainsKey(keys)) return dict[keys];
+                else throw new ASTException(pos, string.Format("Unkown type: {0}", keys.Aggregate("", (str, key) => str + " " + key)));
+            } else if (specifier != null) {
+                // This is a user-defined type.
+                return specifier.GetTUnqualified(env);
+            } else {
+                // Error!
+                throw new ASTException(pos, "At least one type specifier should be given.");
+            }
         }
 
         /// <summary>
-        /// Check if this is a typedef declaration.
+        /// Evaluate the type qualifiers.
         /// </summary>
         /// <returns></returns>
-        public bool IsTypedef => specifiers.storages.Contains(ASTStorageSpecifier.Kind.TYPEDEF);
-
-        /// <summary>
-        /// Return the names of the all the direct declarators.
-        /// </summary>
-        public IEnumerable<string> DeclNames => from declarator in declarators select declarator.declarator.direct.Name;
-
-        public override Position Pos => specifiers.Pos;
-
-        public override bool Equals(object obj) {
-            return Equals(obj as ASTDeclaration);
+        private static TQualifiers GetQualifiers(IEnumerable<ASTTypeQual.Kind> qualifiers) {
+            var tuple = new Tuple<bool, bool, bool>(
+                qualifiers.Contains(ASTTypeQual.Kind.CONST),
+                qualifiers.Contains(ASTTypeQual.Kind.RESTRICT), 
+                qualifiers.Contains(ASTTypeQual.Kind.VOLATILE));
+            return TQualifiers.dict[tuple];
         }
 
-        public bool Equals(ASTDeclaration x) {
-            return x != null && x.specifiers.Equals(specifiers)
-                && x.declarators.SequenceEqual(declarators);
-        }
-
-        public override int GetHashCode() {
-            return specifiers.GetHashCode();
-        }
-
-        public readonly ASTDeclSpecs specifiers;
-        public readonly IEnumerable<ASTInitDecl> declarators;
-
-        public T TypeCheck(ASTEnv env) {
-
-            return null;
-        }
-
-        //public UnqualifiedType TCTypeSpecifiers(
-        //    ASTEnv env,
-        //    IEnumerable<ASTTypeSpecifier> typeSpecifiers
-        //    ) {
-
-        //    var typeSpecifierType = from s in typeSpecifiers orderby s.type ascending select s.type;
-
-        //    // First check built-in type.
-        //    if (dict.ContainsKey(typeSpecifierType)) {
-        //        return dict[typeSpecifierType];
-        //    }
-
-        //    if (typeSpecifiers.Count() == 1) {
-
-        //        // Handle the enum specifier.
-        //        var specifier = typeSpecifiers.First();
-        //        if (specifier.type == ASTTypeSpecifier.Type.ENUM) {
-        //            return (specifier as ASTEnumSpecifier).TypeCheck(env);
-        //        }
-
-        //    }
-
-        //    return new TypeError("Unimplemented Type!");
-
-        //}
+        private readonly Position pos;
 
         #region TypeSpecifier Map
         private class ListComparer : IEqualityComparer<IEnumerable<ASTTypeSpec.Kind>> {
@@ -406,5 +382,50 @@ namespace lcc.AST {
                 },
             };
         #endregion
+    }
+
+    public sealed class ASTDeclaration : ASTStmt, IEquatable<ASTDeclaration> {
+
+        public ASTDeclaration(
+            ASTDeclSpecs specifiers,
+            IEnumerable<ASTInitDecl> declarators
+            ) {
+            this.specifiers = specifiers;
+            this.declarators = declarators;
+        }
+
+        /// <summary>
+        /// Check if this is a typedef declaration.
+        /// </summary>
+        /// <returns></returns>
+        public bool IsTypedef => specifiers.storage == ASTStoreSpec.Kind.TYPEDEF;
+
+        /// <summary>
+        /// Return the names of the all the direct declarators.
+        /// </summary>
+        public IEnumerable<string> DeclNames => from declarator in declarators select declarator.declarator.direct.Name;
+
+        public override Position Pos => specifiers.Pos;
+
+        public override bool Equals(object obj) {
+            return Equals(obj as ASTDeclaration);
+        }
+
+        public bool Equals(ASTDeclaration x) {
+            return x != null && x.specifiers.Equals(specifiers)
+                && x.declarators.SequenceEqual(declarators);
+        }
+
+        public override int GetHashCode() {
+            return specifiers.GetHashCode();
+        }
+
+        public readonly ASTDeclSpecs specifiers;
+        public readonly IEnumerable<ASTInitDecl> declarators;
+
+        public T TypeCheck(ASTEnv env) {
+
+            return null;
+        }
     }
 }

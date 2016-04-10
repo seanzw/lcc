@@ -32,11 +32,12 @@ namespace lcc.TypeSystem {
         /// Notice that enum type is always complete.
         /// </summary>
         /// <returns></returns>
-        public override bool Completed {
-            get {
-                return true;
-            }
-        }
+        public override bool IsComplete => true;
+
+        /// <summary>
+        /// Enumerator is represent as int.
+        /// </summary>
+        public override int Size => 4;
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();

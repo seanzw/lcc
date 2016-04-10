@@ -18,8 +18,8 @@ namespace LC_CompilerTests {
             // const char carr[3];
             // char arr[4];
             ASTEnv env = new ASTEnv();
-            env.AddSymbol("carr", new TArray(TChar.Instance.Const(), 3).None(), 1);
-            env.AddSymbol("arr", new TArray(TChar.Instance.None(), 4).None(), 1);
+            env.AddSymbol("carr", new TArray(TChar.Instance.Const(), 3).None(), null);
+            env.AddSymbol("arr", new TArray(TChar.Instance.None(), 4).None(), null);
 
             var tests = new Dictionary<string, T> {
                 {
@@ -54,20 +54,19 @@ namespace LC_CompilerTests {
             // const struct s *cp;
             ASTEnv env = new ASTEnv();
 
-            TStructUnion s = new TStructUnion(
+            TStructUnion s = new TStruct(
                 "s",
                 new List<TStructUnion.Field> {
                     new TStructUnion.Field("i", TInt.Instance.None(), 0),
                     new TStructUnion.Field("ci", TInt.Instance.Const(), 4)
-                },
-                TStructUnion.Kind.STRUCT);
+                });
 
             TPointer p = new TPointer(s.None());
             TPointer cp = new TPointer(s.Const());
 
-            env.AddSymbol("t", s.None(), 1);
-            env.AddSymbol("p", p.None(), 2);
-            env.AddSymbol("cp", cp.None(), 3);
+            env.AddSymbol("t", s.None(), null);
+            env.AddSymbol("p", p.None(), null);
+            env.AddSymbol("cp", cp.None(), null);
 
             var tests = new Dictionary<string, T> {
                 {

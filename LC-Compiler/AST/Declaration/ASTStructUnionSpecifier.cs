@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using lcc.TypeSystem;
 
 namespace lcc.AST {
 
@@ -63,7 +64,7 @@ namespace lcc.AST {
         public readonly IEnumerable<ASTStructDecl> declarators;
     }
 
-    public sealed class ASTStructUnionSpec : ASTTypeSpec, IEquatable<ASTStructUnionSpec> {
+    public sealed class ASTStructUnionSpec : ASTTypeUserSpec, IEquatable<ASTStructUnionSpec> {
 
         public ASTStructUnionSpec(
             int line,
@@ -90,6 +91,10 @@ namespace lcc.AST {
 
         public override int GetHashCode() {
             return Pos.GetHashCode();
+        }
+
+        public override TUnqualified GetTUnqualified(ASTEnv env) {
+            throw new NotImplementedException();
         }
 
         private readonly Position pos;

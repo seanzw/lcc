@@ -49,9 +49,20 @@ namespace lcc.Parser {
         public static Parserc.Parser<T, ASTDeclSpecs> DeclarationSpecifiers() {
             return DeclarationSpecifier().Plus().Bind(ss => {
 
-                var specs = ss.OfType<ASTTypeSpec>();
+                // At most one storage-class specifier may be given in the declaration specifiers.
+                var stors = ss.OfType<ASTStoreSpec>();
+                ASTStoreSpec.Kind storage = ASTStoreSpec.Kind.NONE;
+                if (stors.Count() > 1) return Zero<T, ASTDeclSpecs>();
+                else if (stors.Count() == 1) storage = stors.First().kind;
+
+                // At most one function specifier.
+                var funcs = ss.OfType<ASTFuncSpec>();
+                ASTFuncSpec.Kind function = ASTFuncSpec.Kind.NONE;
+                if (funcs.Count() > 1) return Zero<T, ASTDeclSpecs>();
+                else if (funcs.Count() == 1) function = funcs.First().kind;
 
                 // At least one type specifier shall be given in the declaration specifiers.
+                var specs = ss.OfType<ASTTypeSpec>();
                 if (specs.Count() == 0) return Zero<T, ASTDeclSpecs>();
 
                 foreach (var spec in specs) {
@@ -60,11 +71,13 @@ namespace lcc.Parser {
                         spec.kind == ASTTypeSpec.Kind.UNION ||
                         spec.kind == ASTTypeSpec.Kind.ENUM)
                         if (specs.Count() != 1) return Zero<T, ASTDeclSpecs>();
-                        else return Result<T, ASTDeclSpecs>(new ASTDeclSpecs(ss, spec));
+                        // User-defined types.
+                        else return Result<T, ASTDeclSpecs>(new ASTDeclSpecs(ss, storage, spec as ASTTypeUserSpec, function));
                 }
 
+                // Built-in type.
                 var keys = from s in specs select s.kind;
-                return Result<T, ASTDeclSpecs>(new ASTDeclSpecs(ss, keys));
+                return Result<T, ASTDeclSpecs>(new ASTDeclSpecs(ss, storage, keys, function));
             });
         }
 
@@ -78,7 +91,7 @@ namespace lcc.Parser {
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<T, ASTDeclSpec> DeclarationSpecifier() {
-            return StorageClassSpecifier().Cast<T, ASTDeclSpec, ASTStorageSpecifier>()
+            return StorageClassSpecifier().Cast<T, ASTDeclSpec, ASTStoreSpec>()
                 .Or(TypeSpecifier())
                 .Or(TypeQualifier())
                 .Or(FunctionSpecifier());
@@ -117,12 +130,12 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTStorageSpecifier> StorageClassSpecifier() {
-            return Get<T_KEY_TYPEDEF>().Select(t => new ASTStorageSpecifier(t.line, ASTStorageSpecifier.Kind.TYPEDEF))
-                .Else(Get<T_KEY_EXTERN>().Select(t => new ASTStorageSpecifier(t.line, ASTStorageSpecifier.Kind.EXTERN)))
-                .Else(Get<T_KEY_STATIC>().Select(t => new ASTStorageSpecifier(t.line, ASTStorageSpecifier.Kind.STATIC)))
-                .Else(Get<T_KEY_AUTO>().Select(t => new ASTStorageSpecifier(t.line, ASTStorageSpecifier.Kind.AUTO)))
-                .Else(Get<T_KEY_REGISTER>().Select(t => new ASTStorageSpecifier(t.line, ASTStorageSpecifier.Kind.REGISTER)));
+        public static Parserc.Parser<T, ASTStoreSpec> StorageClassSpecifier() {
+            return Get<T_KEY_TYPEDEF>().Select(t => new ASTStoreSpec(t.line, ASTStoreSpec.Kind.TYPEDEF))
+                .Else(Get<T_KEY_EXTERN>().Select(t => new ASTStoreSpec(t.line, ASTStoreSpec.Kind.EXTERN)))
+                .Else(Get<T_KEY_STATIC>().Select(t => new ASTStoreSpec(t.line, ASTStoreSpec.Kind.STATIC)))
+                .Else(Get<T_KEY_AUTO>().Select(t => new ASTStoreSpec(t.line, ASTStoreSpec.Kind.AUTO)))
+                .Else(Get<T_KEY_REGISTER>().Select(t => new ASTStoreSpec(t.line, ASTStoreSpec.Kind.REGISTER)));
         }
 
         /// <summary>

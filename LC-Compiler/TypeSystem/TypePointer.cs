@@ -11,7 +11,10 @@ namespace lcc.TypeSystem {
             this.element = element;
         }
 
-        public override bool Completed => true;
+        public override bool IsPointer => true;
+        public override bool IsComplete => true;
+        public override int Size => 8;
+
         public override string ToString() {
             return string.Format("{0} *", element.ToString());
         }
@@ -32,32 +35,5 @@ namespace lcc.TypeSystem {
         public readonly T element;
     }
 
-    public sealed class TArray : TObject {
-
-        public TArray(T element, int n) {
-            this.element = element;
-            this.n = n;
-        }
-
-        public override TUnqualified Composite(TUnqualified other) {
-            throw new NotImplementedException();
-        }
-
-        public override bool Equals(object obj) {
-            return Equals(obj as TArray);
-        }
-        public bool Equals(TArray t) {
-            return t != null && t.n == n && t.element.Equals(element);
-        }
-        public override int GetHashCode() {
-            return element.GetHashCode() ^ n;
-        }
-
-        public override string ToString() {
-            return string.Format("{0}[{1}]", element.ToString(), n);
-        }
-
-        public readonly int n;
-        public readonly T element;
-    }
+    
 }

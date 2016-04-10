@@ -12,7 +12,9 @@ namespace lcc.TypeSystem {
             this.parameters = parameters;
         }
 
-        public override bool Completed => true;
+        public override bool IsFunc => true;
+        public override bool IsComplete => true;
+        public override int Size { get { throw new InvalidOperationException("Can't take sizeof func designator!"); } } 
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
@@ -35,7 +37,7 @@ namespace lcc.TypeSystem {
             foreach (var param in parameters) {
                 paramsStr = string.Format("{0}{1}, ", paramsStr, param);
             }
-            return string.Format("{0} ({1})", ret, paramsStr);
+            return string.Format("(({1}) -> {0})", ret, paramsStr);
         }
 
         public readonly T ret;

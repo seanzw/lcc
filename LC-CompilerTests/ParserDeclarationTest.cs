@@ -14,26 +14,26 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserStorageClassSpecifier() {
-            Dictionary<string, ASTStorageSpecifier> dict = new Dictionary<string, ASTStorageSpecifier> {
+            Dictionary<string, ASTStoreSpec> dict = new Dictionary<string, ASTStoreSpec> {
                 {
                     "typedef",
-                    new ASTStorageSpecifier(1, ASTStorageSpecifier.Kind.TYPEDEF)
+                    new ASTStoreSpec(1, ASTStoreSpec.Kind.TYPEDEF)
                 },
                 {
                     "extern",
-                    new ASTStorageSpecifier(1, ASTStorageSpecifier.Kind.EXTERN)
+                    new ASTStoreSpec(1, ASTStoreSpec.Kind.EXTERN)
                 },
                 {
                     "static",
-                    new ASTStorageSpecifier(1, ASTStorageSpecifier.Kind.STATIC)
+                    new ASTStoreSpec(1, ASTStoreSpec.Kind.STATIC)
                 },
                 {
                     "auto",
-                    new ASTStorageSpecifier(1, ASTStorageSpecifier.Kind.AUTO)
+                    new ASTStoreSpec(1, ASTStoreSpec.Kind.AUTO)
                 },
                 {
                     "register",
-                    new ASTStorageSpecifier(1, ASTStorageSpecifier.Kind.REGISTER)
+                    new ASTStoreSpec(1, ASTStoreSpec.Kind.REGISTER)
                 }
             };
 
@@ -132,16 +132,18 @@ namespace LC_CompilerTests {
                     "static const int char inline",
                     new ASTDeclSpecs(
                         new List<ASTDeclSpec> {
-                            new ASTStorageSpecifier(1, ASTStorageSpecifier.Kind.STATIC),
+                            new ASTStoreSpec(1, ASTStoreSpec.Kind.STATIC),
                             new ASTTypeQual(1, ASTTypeQual.Kind.CONST),
                             new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT),
                             new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.CHAR),
                             new ASTFuncSpec(1, ASTFuncSpec.Kind.INLINE)
                         },
+                        ASTStoreSpec.Kind.STATIC,
                         new List<ASTTypeSpec.Kind> {
                             ASTTypeSpec.Kind.INT,
                             ASTTypeSpec.Kind.CHAR
-                        })
+                        },
+                        ASTFuncSpec.Kind.INLINE)
                 }
             };
 
@@ -297,6 +299,7 @@ foo(int a, int b, double c, ...)
                                     new List<ASTDeclSpec> {
                                         new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.INT)
                                     },
+                                    ASTStoreSpec.Kind.NONE,
                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
                                 new ASTDecl(
                                     new List<ASTPtr>(),
@@ -306,6 +309,7 @@ foo(int a, int b, double c, ...)
                                     new List<ASTDeclSpec> {
                                         new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.INT)
                                     },
+                                    ASTStoreSpec.Kind.NONE,
                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
                                 new ASTDecl(
                                     new List<ASTPtr>(),
@@ -315,6 +319,7 @@ foo(int a, int b, double c, ...)
                                     new List<ASTDeclSpec> {
                                         new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.DOUBLE)
                                     },
+                                    ASTStoreSpec.Kind.NONE,
                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.DOUBLE }),
                                 new ASTDecl(
                                     new List<ASTPtr>(),
@@ -518,6 +523,7 @@ struct ss {
                             new List<ASTDeclSpec> {
                                 new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT)
                             },
+                            ASTStoreSpec.Kind.NONE,
                             new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
                         new ASTDecl(
                             new List<ASTPtr>(),
@@ -540,6 +546,7 @@ struct ss {
                                     new List<ASTDeclSpec> {
                                         new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT)
                                     },
+                                    ASTStoreSpec.Kind.NONE,
                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
                                 new ASTDecl(
                                     new List<ASTPtr>(),
@@ -549,6 +556,7 @@ struct ss {
                                     new List<ASTDeclSpec> {
                                         new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT)
                                     },
+                                    ASTStoreSpec.Kind.NONE,
                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
                                 new ASTDecl(
                                     new List<ASTPtr>(),
@@ -558,6 +566,7 @@ struct ss {
                                     new List<ASTDeclSpec> {
                                         new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.DOUBLE)
                                     },
+                                    ASTStoreSpec.Kind.NONE,
                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.DOUBLE }),
                                 new ASTDecl(
                                     new List<ASTPtr>(),
@@ -585,6 +594,7 @@ int a, int b, double c, ...
                                     new List<ASTDeclSpec> {
                                         new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.INT)
                                     },
+                                    ASTStoreSpec.Kind.NONE,
                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
                                 new ASTDecl(
                                     new List<ASTPtr>(),
@@ -594,6 +604,7 @@ int a, int b, double c, ...
                                     new List<ASTDeclSpec> {
                                         new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.INT)
                                     },
+                                    ASTStoreSpec.Kind.NONE,
                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
                                 new ASTDecl(
                                     new List<ASTPtr>(),
@@ -603,6 +614,7 @@ int a, int b, double c, ...
                                     new List<ASTDeclSpec> {
                                         new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.DOUBLE)
                                     },
+                                    ASTStoreSpec.Kind.NONE,
                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.DOUBLE }),
                                 new ASTDecl(
                                     new List<ASTPtr>(),
@@ -772,6 +784,7 @@ int a, int b, double c, ...
                                             new List<ASTDeclSpec> {
                                                 new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.VOID)
                                             },
+                                            ASTStoreSpec.Kind.NONE,
                                             new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.VOID }))
                                 },
                                 false)))
@@ -801,6 +814,7 @@ int a, int b, double c, ...
                                                 new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.UNSIGNED),
                                                 new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT)
                                             },
+                                            ASTStoreSpec.Kind.NONE,
                                             new List<ASTTypeSpec.Kind> {
                                                 ASTTypeSpec.Kind.UNSIGNED,
                                                 ASTTypeSpec.Kind.INT
@@ -828,6 +842,7 @@ int foo(int a, int b, double c, ...);
                             new List<ASTDeclSpec> {
                                 new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.INT)
                             },
+                            ASTStoreSpec.Kind.NONE,
                             new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
                         new List<ASTInitDecl> {
                             new ASTInitDecl(
@@ -841,6 +856,7 @@ int foo(int a, int b, double c, ...);
                                                     new List<ASTDeclSpec> {
                                                         new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.INT)
                                                     },
+                                                    ASTStoreSpec.Kind.NONE,
                                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
                                                 new ASTDecl(
                                                     new List<ASTPtr>(),
@@ -850,6 +866,7 @@ int foo(int a, int b, double c, ...);
                                                     new List<ASTDeclSpec> {
                                                         new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.INT)
                                                     },
+                                                    ASTStoreSpec.Kind.NONE,
                                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
                                                 new ASTDecl(
                                                     new List<ASTPtr>(),
@@ -859,6 +876,7 @@ int foo(int a, int b, double c, ...);
                                                     new List<ASTDeclSpec> {
                                                         new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.DOUBLE)
                                                     },
+                                                    ASTStoreSpec.Kind.NONE,
                                                     new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.DOUBLE }),
                                                 new ASTDecl(
                                                     new List<ASTPtr>(),
@@ -877,6 +895,7 @@ int foo(a, b, c);
                             new List<ASTDeclSpec> {
                                 new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.INT)
                             },
+                            ASTStoreSpec.Kind.NONE,
                             new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
                         new List<ASTInitDecl> {
                             new ASTInitDecl(
@@ -901,6 +920,7 @@ int foo();
                             new List<ASTDeclSpec> {
                                 new ASTTypeKeySpecifier(2, ASTTypeSpec.Kind.INT)
                             },
+                            ASTStoreSpec.Kind.NONE,
                             new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
                         new List<ASTInitDecl> {
                             new ASTInitDecl(
@@ -978,6 +998,7 @@ int foo();
                             new List<ASTDeclSpec> {
                                 new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT)
                             },
+                            ASTStoreSpec.Kind.NONE,
                             new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
                         new ASTDecl(
                             new List<ASTPtr>(),
@@ -991,6 +1012,7 @@ int foo();
                                 new ASTTypeQual(1, ASTTypeQual.Kind.CONST),
                                 new ASTTypedefName(new ASTId(new T_IDENTIFIER(1, "a")))
                             },
+                            ASTStoreSpec.Kind.NONE,
                             new ASTTypedefName(new ASTId(new T_IDENTIFIER(1, "a")))))
                 }
             };
@@ -1013,6 +1035,7 @@ int foo();
                             new List<ASTDeclSpec> {
                                 new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT)
                             },
+                            ASTStoreSpec.Kind.NONE,
                             new List<ASTTypeSpec.Kind> { ASTTypeSpec.Kind.INT }),
                         new List<ASTInitDecl> {
                             new ASTInitDecl(

@@ -113,7 +113,7 @@ namespace lcc.AST {
                 case Op.STAR:
                     if (!t.IsPointer) 
                         throw new ASTException(expr.Pos, string.Format("indirection requires pointer type ({0} provided)", t));
-                    return (t.baseType as TPointer).element;
+                    return (t.nake as TPointer).element;
                 case Op.PLUS:
                 case Op.MINUS:
                     if (!t.IsArithmetic)

@@ -53,9 +53,9 @@ namespace lcc.AST {
             }
 
             if (arrType.IsPointer)
-                return (arrType.baseType as TPointer).element;
+                return (arrType.nake as TPointer).element;
             else
-                return (arrType.baseType as TArray).element;
+                return (arrType.nake as TArray).element;
         }
 
         public readonly ASTExpr arr;
@@ -114,13 +114,13 @@ namespace lcc.AST {
             if (kind == Kind.PTR) {
                 if (!aggType.IsPointer)
                     throw new ASTException(agg.Pos, "member reference base type is not a pointer");
-                aggType = (aggType.baseType as TPointer).element;
+                aggType = (aggType.nake as TPointer).element;
             }
 
-            if (!aggType.IsStructUnion)
+            if (!aggType.IsStruct && !aggType.IsUnion)
                 throw new ASTException(agg.Pos, "member reference base type is not a struct or union");
 
-            TStructUnion s = aggType.baseType as TStructUnion;
+            TStructUnion s = aggType.nake as TStructUnion;
 
             T m = s.GetType(field);
             if (m == null) {

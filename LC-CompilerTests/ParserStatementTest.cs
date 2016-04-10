@@ -79,6 +79,7 @@ namespace LC_CompilerTests {
                                     new List<ASTDeclSpec> {
                                         new ASTTypeKeySpecifier(4, ASTTypeSpec.Kind.INT)
                                     },
+                                    ASTStoreSpec.Kind.NONE,
                                     new List<ASTTypeSpec.Kind> {
                                         ASTTypeSpec.Kind.INT
                                     }),

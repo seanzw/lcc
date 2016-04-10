@@ -8,16 +8,9 @@ namespace lcc.TypeSystem {
     public sealed class TBool : TArithmetic {
 
         private static readonly TBool instance = new TBool();
-
-        public static TBool Instance {
-            get {
-                return instance;
-            }
-        }
-
-        public override int RANK => 0;
-
-        private TBool() : base(1) { }
+        public static TBool Instance => instance;
+        public override int Rank => 0;
+        public override int Size => 1;
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();

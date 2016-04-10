@@ -5,13 +5,15 @@ using System.Text;
 using System.Threading.Tasks;
 
 using lcc.Token;
+using lcc.TypeSystem;
 
 namespace lcc.AST {
     public abstract class ASTDeclSpec : ASTNode { }
 
-    public sealed class ASTStorageSpecifier : ASTDeclSpec, IEquatable<ASTStorageSpecifier> {
+    public sealed class ASTStoreSpec : ASTDeclSpec, IEquatable<ASTStoreSpec> {
 
         public enum Kind {
+            NONE,           // Represent no storage-specifier
             TYPEDEF,
             EXTERN,
             STATIC,
@@ -19,7 +21,7 @@ namespace lcc.AST {
             REGISTER
         }
 
-        public ASTStorageSpecifier(int line, Kind type) {
+        public ASTStoreSpec(int line, Kind type) {
             this.pos = new Position { line = line };
             this.kind = type;
         }
@@ -27,10 +29,10 @@ namespace lcc.AST {
         public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as ASTStorageSpecifier);
+            return Equals(obj as ASTStoreSpec);
         }
 
-        public bool Equals(ASTStorageSpecifier x) {
+        public bool Equals(ASTStoreSpec x) {
             return x != null && x.pos.Equals(pos) && x.kind == kind;
         }
 
@@ -94,14 +96,23 @@ namespace lcc.AST {
         public readonly Position pos;
     }
 
-    public sealed class ASTTypedefName : ASTTypeSpec, IEquatable<ASTTypedefName> {
+    /// <summary>
+    /// Represents a user-defined type specifier.
+    /// </summary>
+    public abstract class ASTTypeUserSpec : ASTTypeSpec {
+        public ASTTypeUserSpec(Kind kind) : base(kind) { }
+        public abstract TUnqualified GetTUnqualified(ASTEnv env);
+    }
+
+    public sealed class ASTTypedefName : ASTTypeUserSpec, IEquatable<ASTTypedefName> {
 
         public ASTTypedefName(ASTId identifier) : base(Kind.TYPEDEF) {
-            this.identifier = identifier;
+            name = identifier.name;
+            pos = identifier.Pos;
         }
 
         public bool Equals(ASTTypedefName x) {
-            return x != null && x.identifier.Equals(identifier);
+            return x != null && x.name.Equals(name) && x.pos.Equals(pos);
         }
 
         public override bool Equals(object obj) {
@@ -109,12 +120,17 @@ namespace lcc.AST {
         }
 
         public override int GetHashCode() {
-            return identifier.GetHashCode();
+            return Pos.GetHashCode();
         }
 
-        public override Position Pos => identifier.Pos;
+        public override TUnqualified GetTUnqualified(ASTEnv env) {
+            throw new NotImplementedException();
+        }
 
-        public readonly ASTId identifier;
+        public override Position Pos => pos;
+
+        public readonly string name;
+        private readonly Position pos;
     }
 
     public sealed class ASTTypeQual : ASTTypeSpecQual, IEquatable<ASTTypeQual> {
@@ -151,12 +167,13 @@ namespace lcc.AST {
     public sealed class ASTFuncSpec : ASTDeclSpec, IEquatable<ASTFuncSpec> {
 
         public enum Kind {
+            NONE,
             INLINE
         }
 
-        public ASTFuncSpec(int line, Kind type) {
+        public ASTFuncSpec(int line, Kind kind) {
             this.pos = new Position { line = line };
-            this.kind = type;
+            this.kind = kind;
         }
 
         public override Position Pos => pos;

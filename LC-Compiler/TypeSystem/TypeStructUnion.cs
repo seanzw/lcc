@@ -5,14 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.TypeSystem {
-    public sealed class TStructUnion : TObject {
+    public abstract class TStructUnion : TObject, IEquatable<TStructUnion> {
 
-        public enum Kind {
-            STRUCT,
-            UNION
-        }
-
-        public struct Field {
+        public struct Field : IEquatable<Field> {
             public string name;
             public T type;
             public int offset;
@@ -36,25 +31,21 @@ namespace lcc.TypeSystem {
             }
         }
 
-        public TStructUnion(string tag, IEnumerable<Field> fields, Kind kind) {
+        public TStructUnion(string tag, IEnumerable<Field> fields = null) {
             this.tag = tag;
             this.fields = fields;
-            this.kind = kind;
         }
 
-        public TStructUnion(IEnumerable<Field> fields, Kind kind) {
-            this.fields = fields;
-            this.kind = kind;
-            tag = (kind == Kind.STRUCT ? "struct@" : "union@") + (idx++);
-        }
+        public override bool IsComplete => fields != null;
 
         /// <summary>
         /// Get the type of a field.
-        /// Returns null if this is not a field name.
+        /// Returns null if this is not a field name or this is an incomplete type.
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
         public T GetType(string name) {
+            if (fields == null) return null;
             foreach (var field in fields) 
                 if (field.name.Equals(name)) return field.type;
             return null;
@@ -64,27 +55,83 @@ namespace lcc.TypeSystem {
             throw new NotImplementedException();
         }
 
+        public bool Equals(TStructUnion x) {
+            return x != null && x.tag.Equals(tag)
+                && fields == null ? x.fields == null : fields.SequenceEqual(x.fields);
+        }
+
         public override bool Equals(object obj) {
-            var o = obj as TStructUnion;
-            return o == null ? false : o.kind == kind
-                && o.fields.SequenceEqual(fields);
+            return Equals(obj as TStructUnion);
         }
 
         public override int GetHashCode() {
-            return kind.GetHashCode();
-        }
-
-        public override string ToString() {
-            return "struct " + tag;
+            return tag.GetHashCode();
         }
 
         public readonly string tag;
+        public IEnumerable<Field> fields;
+    }
 
-        public readonly IEnumerable<Field> fields;
+    public sealed class TStruct : TStructUnion {
+        public TStruct(string tag, IEnumerable<Field> fields = null) : base(tag, fields) {
+            if (fields != null) size = Padding(fields);
+        }
+        public TStruct(IEnumerable<Field> fields = null) : base("struct@" + (idx++), fields) {
+            if (fields != null) size = Padding(fields);
+        }
+        public override bool IsStruct => true;
+        public override int Size {
+            get {
+                if (fields == null) throw new InvalidOperationException("Can't take size of an incomplete struct.");
+                else return size;
+            }
+        }
 
-        public readonly Kind kind;
+        public override string ToString() {
+            return string.Format("struct {0}", tag);
+        }
 
+        public override void CompleteStruct(IEnumerable<Field> fields) {
+            if (this.fields != null) base.CompleteStruct(fields);
+            else this.fields = fields;
+        }
+
+        /// <summary>
+        /// Determine the size of the struct.
+        /// </summary>
+        /// <param name="fields"></param>
+        /// <returns></returns>
+        private static int Padding(IEnumerable<Field> fields) {
+            return 0;
+        }
+        private readonly int size;
         private static int idx = 0;
     }
 
+    public sealed class TUnion : TStructUnion {
+        public TUnion(string tag, IEnumerable<Field> fields = null) : base(tag, fields) {
+            if (fields != null) size = fields.Aggregate(0, (size, field) => Math.Max(size, field.type.Size));
+        }
+        public TUnion(IEnumerable<Field> fields = null) : base("union@" + (idx++), fields) {
+            if (fields != null) size = fields.Aggregate(0, (size, field) => Math.Max(size, field.type.Size));
+        }
+        public override bool IsUnion => true;
+        public override int Size {
+            get {
+                if (fields == null) throw new InvalidOperationException("Can't take size of an incomplete struct.");
+                else return size;
+            }
+        }
+        public override void CompleteUnion(IEnumerable<Field> fields) {
+            if (this.fields != null) base.CompleteUnion(fields);
+            else this.fields = fields;
+        }
+
+        public override string ToString() {
+            return string.Format("union {0}", tag);
+        }
+
+        private readonly int size;
+        private static int idx = 0;
+    }
 }
