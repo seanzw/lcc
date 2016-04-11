@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using lcc.TypeSystem;
-using lcc.AST;
+using lcc.SyntaxTree;
 using lcc.Parser;
 using Parserc;
 
@@ -18,8 +18,8 @@ namespace LC_CompilerTests {
             // const char carr[3];
             // char arr[4];
             ASTEnv env = new ASTEnv();
-            env.AddSymbol("carr", new TArray(TChar.Instance.Const(), 3).None(), null);
-            env.AddSymbol("arr", new TArray(TChar.Instance.None(), 4).None(), null);
+            env.AddSymbol("carr", new SymbolSignature(TChar.Instance.Const().Arr(3), SymbolKind.OBJECT, null));
+            env.AddSymbol("arr", new SymbolSignature(TChar.Instance.None().Arr(4), SymbolKind.OBJECT, null));
 
             var tests = new Dictionary<string, T> {
                 {
@@ -36,8 +36,8 @@ namespace LC_CompilerTests {
                 var result = Utility.parse(test.Key, Parser.PostfixExpression().End());
                 Assert.AreEqual(1, result.Count());
                 Assert.IsFalse(result.First().Remain.More());
-                Assert.IsTrue(result.First().Value is ASTArrSub);
-                var ast = result.First().Value as ASTArrSub;
+                Assert.IsTrue(result.First().Value is STArrSub);
+                var ast = result.First().Value as STArrSub;
                 Assert.AreEqual(test.Value, ast.TypeCheck(env));
             }
         }
@@ -64,9 +64,9 @@ namespace LC_CompilerTests {
             TPointer p = new TPointer(s.None());
             TPointer cp = new TPointer(s.Const());
 
-            env.AddSymbol("t", s.None(), null);
-            env.AddSymbol("p", p.None(), null);
-            env.AddSymbol("cp", cp.None(), null);
+            env.AddSymbol("t", new SymbolSignature(s.None(), SymbolKind.OBJECT, null));
+            env.AddSymbol("p", new SymbolSignature(p.None(), SymbolKind.OBJECT, null));
+            env.AddSymbol("cp", new SymbolSignature(cp.None(), SymbolKind.OBJECT, null));
 
             var tests = new Dictionary<string, T> {
                 {
@@ -91,8 +91,8 @@ namespace LC_CompilerTests {
                 var result = Utility.parse(test.Key, Parser.PostfixExpression().End());
                 Assert.AreEqual(1, result.Count());
                 Assert.IsFalse(result.First().Remain.More());
-                Assert.IsTrue(result.First().Value is ASTAccess);
-                var ast = result.First().Value as ASTAccess;
+                Assert.IsTrue(result.First().Value is STAccess);
+                var ast = result.First().Value as STAccess;
                 Assert.AreEqual(test.Value, ast.TypeCheck(env));
             }
         }

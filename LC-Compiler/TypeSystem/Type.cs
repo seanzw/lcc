@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Store = lcc.AST.ASTStoreSpec.Kind;
+using Store = lcc.SyntaxTree.STStoreSpec.Kind;
 
 namespace lcc.TypeSystem {
 
@@ -61,19 +61,66 @@ namespace lcc.TypeSystem {
         /// <returns></returns>
         public abstract TUnqualified Composite(TUnqualified other);
 
-        public virtual void CompleteArr(int n) {
-            throw new InvalidOperationException("Can't complete an array which is not an incomplete array!");
+        /// <summary>
+        /// Gives the definition of an array be specifying its length.
+        /// This also completes an incomplete array.
+        /// </summary>
+        /// <param name="n"></param>
+        public virtual void DefArr(int n) {
+            throw new InvalidOperationException("Can't define an array which is not an undefined array!");
         }
 
-        public virtual void CompleteStruct(IEnumerable<TStructUnion.Field> fields) {
-            throw new InvalidOperationException("Can't complete a struct which is not an incomplete struct!");
+        /// <summary>
+        /// Gives the definition of a struct by specifying its fields.
+        /// This also completes the incomplete struct.
+        /// </summary>
+        /// <param name="fields"></param>
+        public virtual void DefStruct(IEnumerable<TStructUnion.Field> fields) {
+            throw new InvalidOperationException("Can't define a struct which is not an undefined struct!");
         }
 
-        public virtual void CompleteUnion(IEnumerable<TStructUnion.Field> fields) {
-            throw new InvalidOperationException("Can't complete a union which is not an incomplete union!");
+        /// <summary>
+        /// Gives the definition of a union by specifying its fields.
+        /// This also completes the incomplete union.
+        /// </summary>
+        /// <param name="fields"></param>
+        public virtual void DefUnion(IEnumerable<TStructUnion.Field> fields) {
+            throw new InvalidOperationException("Can't define a union which is not an undefined union!");
         }
 
+        /// <summary>
+        /// Gives the definition of a enum by specifying the enumerators.
+        /// Notice that even without definition, a enum type is still a complete type, but is not defined.
+        /// </summary>
+        /// <param name="enums"></param>
+        public virtual void DefEnum(IDictionary<string, int> enums) {
+            throw new InvalidOperationException("Can't define a enum which is not an undefined enum!");
+        }
+
+        /// <summary>
+        /// Gives the definition of a function.
+        /// Notice that even without definition, a function type is still a complete type.
+        /// </summary>
+        public virtual void DefFunc() {
+            throw new InvalidOperationException("Can't define a function which is not an undefined function!");
+        }
+
+        /// <summary>
+        /// Whether this is a complete type.
+        /// Incomplete type can be:
+        ///     - array with unknown length
+        ///     - struct/union without definition
+        /// </summary>
         public virtual bool IsComplete => false;
+
+        /// <summary>
+        /// Whether this type has definition.
+        /// Undefined type can be:
+        ///     - incomplete types
+        ///     - enum without definition
+        ///     - function without definition
+        /// </summary>
+        public virtual bool IsDefined => false;
         public virtual bool IsFunc => false;
         public virtual bool IsObject => false;
         public virtual bool IsCharacter => false;
@@ -125,6 +172,7 @@ namespace lcc.TypeSystem {
 
     public abstract class TScalar : TObject {
         public override bool IsComplete => true;
+        public override bool IsDefined => true;
         public override bool IsScalar => true;
     }
 
@@ -221,8 +269,8 @@ namespace lcc.TypeSystem {
             R
         }
 
-        public T(TUnqualified baseType, TQualifiers qualifiers, LR lr, Store store) {
-            this.nake = baseType;
+        public T(TUnqualified nake, TQualifiers qualifiers, LR lr, Store store) {
+            this.nake = nake;
             this.qualifiers = qualifiers;
             this.lr = lr;
             this.store = store;
@@ -333,11 +381,14 @@ namespace lcc.TypeSystem {
             return new T(new TVarArray(this), qualifiers, LR.L, store);
         }
 
-        public void CompleteArr(int n) { nake.CompleteArr(n); }
-        public void CompleteStruct(IEnumerable<TStructUnion.Field> fields) { nake.CompleteStruct(fields); }
-        public void CompleteUnion(IEnumerable<TStructUnion.Field> fields) { nake.CompleteUnion(fields); }
+        public void DefArr(int n) { nake.DefArr(n); }
+        public void DefStruct(IEnumerable<TStructUnion.Field> fields) { nake.DefStruct(fields); }
+        public void DefUnion(IEnumerable<TStructUnion.Field> fields) { nake.DefUnion(fields); }
+        public void DefEnum(IDictionary<string, int> enums) { nake.DefEnum(enums); }
+        public void DefFunc() { nake.DefFunc(); }
 
         public bool IsComplete => nake.IsComplete;
+        public bool IsDefined => nake.IsDefined;
         public bool IsFunc => nake.IsFunc;
         public bool IsObject => nake.IsObject;
         public bool IsCharacter => nake.IsCharacter;
@@ -362,7 +413,6 @@ namespace lcc.TypeSystem {
         public readonly TQualifiers qualifiers;
         public readonly LR lr;
         public readonly Store store;
-
     }
 
     public static class TPromotion {

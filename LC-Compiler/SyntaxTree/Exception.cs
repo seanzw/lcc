@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace lcc.AST {
-    public class ASTException : Exception {
+namespace lcc.SyntaxTree {
+    public class STException : Exception {
 
-        public ASTException(Position pos, string msg) {
+        public STException(Position pos, string msg) {
             this.pos = pos;
             this.msg = msg;
         }
@@ -21,22 +21,22 @@ namespace lcc.AST {
 
     }
 
-    public sealed class ASTErrUnknownType : ASTException {
+    public sealed class ASTErrUnknownType : STException {
         public ASTErrUnknownType(Position pos, string name) 
             : base(pos, "unknown type " + name) { }
     }
 
-    public sealed class ASTErrEscapedSequenceOutOfRange : ASTException {
+    public sealed class ASTErrEscapedSequenceOutOfRange : STException {
         public ASTErrEscapedSequenceOutOfRange(Position pos, string sequence)
             : base(pos, string.Format("escaped sequence out of range.\n\t{0}", sequence)) { }
     }
 
-    public sealed class ASTErrIntegerLiteralOutOfRange : ASTException {
+    public sealed class ASTErrIntegerLiteralOutOfRange : STException {
         public ASTErrIntegerLiteralOutOfRange(Position pos)
             : base(pos, "integer literal is too large to be represented in any integer type.") { }
     }
 
-    public sealed class ASTErrUndefinedIdentifier : ASTException {
+    public sealed class ASTErrUndefinedIdentifier : STException {
         public ASTErrUndefinedIdentifier(Position pos, string name)
             : base(pos, string.Format("undefined identfifier {0}", name)) { }
     }

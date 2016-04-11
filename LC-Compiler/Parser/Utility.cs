@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using static Parserc.Parserc;
-using lcc.AST;
+using lcc.SyntaxTree;
 using lcc.Token;
 
 // Simplify...
@@ -40,12 +40,12 @@ namespace lcc.Parser {
         /// <param name="parser"> Basic element parser. </param>
         /// <param name="sep"> Match the operator. </param>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTExpr> ChainBinaryExpr(
-            this Parserc.Parser<T, ASTExpr> parser,
-            Parserc.Parser<T, ASTBinaryExpr.Op> sep
+        public static Parserc.Parser<T, STExpr> ChainBinaryExpr(
+            this Parserc.Parser<T, STExpr> parser,
+            Parserc.Parser<T, STBiExpr.Op> sep
             ) {
             return parser.ChainPlus(sep.Select(op => {
-                Func<ASTExpr, ASTExpr, ASTExpr> f = (lhs, rhs) => new ASTBinaryExpr(lhs, rhs, op);
+                Func<STExpr, STExpr, STExpr> f = (lhs, rhs) => new STBiExpr(lhs, rhs, op);
                 return f;
             }));
         }
@@ -93,8 +93,8 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTId> Identifier() {
-            return Get<T_IDENTIFIER>().Select(t => new ASTId(t));
+        public static Parserc.Parser<T, STId> Identifier() {
+            return Get<T_IDENTIFIER>().Select(t => new STId(t));
         }
     }
 

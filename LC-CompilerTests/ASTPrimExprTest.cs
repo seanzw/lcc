@@ -5,7 +5,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using lcc.TypeSystem;
 using lcc.Token;
-using lcc.AST;
+using lcc.SyntaxTree;
 using lcc.Parser;
 using Parserc;
 
@@ -60,7 +60,7 @@ namespace LC_CompilerTests {
             };
 
             foreach (var test in tests) {
-                var values = ASTConstChar.Evaluate(new Position { line = 1 }, test.Key);
+                var values = STConstChar.Evaluate(new Position { line = 1 }, test.Key);
                 Assert.IsTrue(values.SequenceEqual(test.Value));
             }
         }
@@ -69,21 +69,21 @@ namespace LC_CompilerTests {
         [ExpectedException(typeof(ASTErrEscapedSequenceOutOfRange), "Too long escaped sequence")]
         public void LCCTCConstCharIllegal1() {
             string src = "\\xfff";
-            var values = ASTConstChar.Evaluate(new Position { line = 1 }, src);
+            var values = STConstChar.Evaluate(new Position { line = 1 }, src);
         }
 
         [TestMethod]
         [ExpectedException(typeof(ASTErrEscapedSequenceOutOfRange), "Too long escaped sequence")]
         public void LCCTCConstCharIllegal2() {
             string src = "\\777";
-            var values = ASTConstChar.Evaluate(new Position { line = 1 }, src);
+            var values = STConstChar.Evaluate(new Position { line = 1 }, src);
         }
 
         [TestMethod]
         [ExpectedException(typeof(ASTErrUnknownType), "Multi-character")]
         public void LCCTCConstCharIllegalMultiChar1() {
             string src = "'\\0223'";
-            var ast = new ASTConstChar(new T_CONST_CHAR(1, src));
+            var ast = new STConstChar(new T_CONST_CHAR(1, src));
             ast.TypeCheck(new ASTEnv());
         }
 
@@ -91,7 +91,7 @@ namespace LC_CompilerTests {
         [ExpectedException(typeof(ASTErrUnknownType), "Multi-character")]
         public void LCCTCConstCharIllegalMultiChar2() {
             string src = "L'\\0223'";
-            var ast = new ASTConstChar(new T_CONST_CHAR(1, src));
+            var ast = new STConstChar(new T_CONST_CHAR(1, src));
             ast.TypeCheck(new ASTEnv());
         }
 
@@ -102,8 +102,8 @@ namespace LC_CompilerTests {
             var result = Utility.parse(src, Parser.PrimaryExpression().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
-            Assert.IsTrue(result.First().Value is ASTString);
-            var ast = result.First().Value as ASTString;
+            Assert.IsTrue(result.First().Value is STString);
+            var ast = result.First().Value as STString;
             Assert.IsTrue(truth.SequenceEqual(ast.values));
         }
 
@@ -135,8 +135,8 @@ namespace LC_CompilerTests {
                 var result = Utility.parse(test.Key, Parser.PrimaryExpression().End());
                 Assert.AreEqual(1, result.Count());
                 Assert.IsFalse(result.First().Remain.More());
-                Assert.IsTrue(result.First().Value is ASTConstInt);
-                var ast = result.First().Value as ASTConstInt;
+                Assert.IsTrue(result.First().Value is STConstInt);
+                var ast = result.First().Value as STConstInt;
                 Assert.AreEqual(test.Value, ast.value);
             }
         }
@@ -169,8 +169,8 @@ namespace LC_CompilerTests {
                 var result = Utility.parse(test.Key, Parser.PrimaryExpression().End());
                 Assert.AreEqual(1, result.Count());
                 Assert.IsFalse(result.First().Remain.More());
-                Assert.IsTrue(result.First().Value is ASTConstInt);
-                var ast = result.First().Value as ASTConstInt;
+                Assert.IsTrue(result.First().Value is STConstInt);
+                var ast = result.First().Value as STConstInt;
                 Assert.AreEqual(test.Value, ast.type);
             }
         }
@@ -216,8 +216,8 @@ namespace LC_CompilerTests {
                 var result = Utility.parse(test.Key, Parser.PrimaryExpression().End());
                 Assert.AreEqual(1, result.Count());
                 Assert.IsFalse(result.First().Remain.More());
-                Assert.IsTrue(result.First().Value is ASTConstFloat);
-                var ast = result.First().Value as ASTConstFloat;
+                Assert.IsTrue(result.First().Value is STConstFloat);
+                var ast = result.First().Value as STConstFloat;
                 Assert.AreEqual(test.Value, ast.value, 0.0001);
             }
         }

@@ -37,6 +37,7 @@ namespace lcc.TypeSystem {
         }
 
         public override bool IsComplete => fields != null;
+        public override bool IsDefined => IsComplete;
 
         /// <summary>
         /// Get the type of a field.
@@ -91,8 +92,8 @@ namespace lcc.TypeSystem {
             return string.Format("struct {0}", tag);
         }
 
-        public override void CompleteStruct(IEnumerable<Field> fields) {
-            if (this.fields != null) base.CompleteStruct(fields);
+        public override void DefStruct(IEnumerable<Field> fields) {
+            if (this.fields != null) throw new InvalidOperationException("Can't complete a complete struct.");
             else this.fields = fields;
         }
 
@@ -122,8 +123,8 @@ namespace lcc.TypeSystem {
                 else return size;
             }
         }
-        public override void CompleteUnion(IEnumerable<Field> fields) {
-            if (this.fields != null) base.CompleteUnion(fields);
+        public override void DefUnion(IEnumerable<Field> fields) {
+            if (this.fields != null) base.DefUnion(fields);
             else this.fields = fields;
         }
 

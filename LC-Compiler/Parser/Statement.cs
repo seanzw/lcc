@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using static Parserc.Parserc;
 using lcc.Token;
-using lcc.AST;
+using lcc.SyntaxTree;
 using T = lcc.Token.Token;
 
 namespace lcc.Parser {
@@ -28,8 +28,8 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTStmt> Statement() {
-            return LabeledStatement().Cast<T, ASTStmt, ASTLabeled>()
+        public static Parserc.Parser<T, STStmt> Statement() {
+            return LabeledStatement().Cast<T, STStmt, STLabeled>()
                 .Or(CaseStatement())
                 .Or(DefaultStatement())
                 .Or(CompoundStatement())
@@ -49,11 +49,11 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTLabeled> LabeledStatement() {
+        public static Parserc.Parser<T, STLabeled> LabeledStatement() {
             return Identifier()
                 .Bind(identifier => Match<T_PUNC_COLON>()
                 .Then(Ref(Statement))
-                .Select(statement => new ASTLabeled(identifier, statement)));
+                .Select(statement => new STLabeled(identifier, statement)));
         }
 
         /// <summary>
@@ -62,12 +62,12 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTCase> CaseStatement() {
+        public static Parserc.Parser<T, STCase> CaseStatement() {
             return Match<T_KEY_CASE>()
                 .Then(ConstantExpression())
                 .Bind(expr => Match<T_PUNC_COLON>()
                 .Then(Ref(Statement))
-                .Select(statement => new ASTCase(expr, statement)));
+                .Select(statement => new STCase(expr, statement)));
         }
 
         /// <summary>
@@ -76,11 +76,11 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTDefault> DefaultStatement() {
+        public static Parserc.Parser<T, STDefault> DefaultStatement() {
             return Match<T_KEY_DEFAULT>()
                 .Then(Match<T_PUNC_COLON>())
                 .Then(Ref(Statement))
-                .Select(statement => new ASTDefault(statement));
+                .Select(statement => new STDefault(statement));
         }
 
         /// <summary>
@@ -99,8 +99,8 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTCompoundStmt> CompoundStatement() {
-            return Ref(Statement).Or(Declaration()).Many().BracelLR().Select(ss => new ASTCompoundStmt(ss));
+        public static Parserc.Parser<T, STCompoundStmt> CompoundStatement() {
+            return Ref(Statement).Or(Declaration()).Many().BracelLR().Select(ss => new STCompoundStmt(ss));
         }
 
         /// <summary>
@@ -109,9 +109,9 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTStmt> ExpressionStatement() {
-            return Expression().Bind(expr => Match<T_PUNC_SEMICOLON>().Return(expr as ASTStmt))
-                .Or(Get<T_PUNC_SEMICOLON>().Select(t => new ASTVoidStmt(t.line)));
+        public static Parserc.Parser<T, STStmt> ExpressionStatement() {
+            return Expression().Bind(expr => Match<T_PUNC_SEMICOLON>().Return(expr as STStmt))
+                .Or(Get<T_PUNC_SEMICOLON>().Select(t => new STVoidStmt(t.line)));
         }
 
         /// <summary>
@@ -121,13 +121,13 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTIfStmt> IfStatement() {
+        public static Parserc.Parser<T, STIf> IfStatement() {
             return Get<T_KEY_IF>()
                 .Bind(t => Expression().ParentLR()
                 .Bind(expr => Ref(Statement)
                 .Bind(then => Match<T_KEY_ELSE>()
                 .Then(Ref(Statement)).ElseNull()
-                .Select(other => new ASTIfStmt(t.line, expr, then, other)))));
+                .Select(other => new STIf(t.line, expr, then, other)))));
         }
 
         /// <summary>
@@ -136,11 +136,11 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTSwitch> SwitchStatement() {
+        public static Parserc.Parser<T, STSwitch> SwitchStatement() {
             return Get<T_KEY_SWITCH>()
                 .Bind(t => Expression().ParentLR()
                 .Bind(expr => Ref(Statement)
-                .Select(statement => new ASTSwitch(t.line, expr, statement))));
+                .Select(statement => new STSwitch(t.line, expr, statement))));
         }
 
         /// <summary>
@@ -149,11 +149,11 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTWhile> WhileStatement() {
+        public static Parserc.Parser<T, STWhile> WhileStatement() {
             return Match<T_KEY_WHILE>()
                 .Then(Expression().ParentLR())
                 .Bind(expr => Ref(Statement)
-                .Select(statement => new ASTWhile(expr, statement)));
+                .Select(statement => new STWhile(expr, statement)));
         }
 
         /// <summary>
@@ -161,12 +161,12 @@ namespace lcc.Parser {
         ///     : do statement while ( expression ) ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTDo> DoStatement() {
+        public static Parserc.Parser<T, STDo> DoStatement() {
             return Match<T_KEY_DO>()
                 .Then(Ref(Statement))
                 .Bind(statement => Match<T_KEY_WHILE>()
                 .Then(Expression().ParentLR())
-                .Bind(expr => Match<T_PUNC_SEMICOLON>().Return(new ASTDo(expr, statement))));
+                .Bind(expr => Match<T_PUNC_SEMICOLON>().Return(new STDo(expr, statement))));
         }
 
         /// <summary>
@@ -175,7 +175,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTForStmt> ForStatement() {
+        public static Parserc.Parser<T, STFor> ForStatement() {
             return Get<T_KEY_FOR>()
                 .Bind(t => Match<T_PUNC_PARENTL>()
                 .Then(Expression().ElseNull())
@@ -185,7 +185,7 @@ namespace lcc.Parser {
                 .Then(Expression().ElseNull())
                 .Bind(iter => Match<T_PUNC_PARENTR>()
                 .Then(Ref(Statement))
-                .Select(statement => new ASTForStmt(t.line, init, pred, iter, statement))))));
+                .Select(statement => new STFor(t.line, init, pred, iter, statement))))));
         }
 
         /// <summary>
@@ -197,21 +197,21 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTStmt> JumpStatement() {
+        public static Parserc.Parser<T, STStmt> JumpStatement() {
             return Get<T_KEY_GOTO>()
                     .Bind(t => Identifier()
                     .Bind(label => Match<T_PUNC_SEMICOLON>()
-                    .Return(new ASTGoto(t.line, label) as ASTStmt)))
+                    .Return(new STGoto(t.line, label) as STStmt)))
                 .Else(Get<T_KEY_CONTINUE>()
                     .Bind(t => Match<T_PUNC_SEMICOLON>()
-                    .Return(new ASTContinue(t.line) as ASTStmt)))
+                    .Return(new STContinue(t.line) as STStmt)))
                 .Else(Get<T_KEY_BREAK>()
                     .Bind(t => Match<T_PUNC_SEMICOLON>()
-                    .Return(new ASTBreak(t.line) as ASTStmt)))
+                    .Return(new STBreak(t.line) as STStmt)))
                 .Else(Get<T_KEY_RETURN>()
                     .Bind(t => Expression().ElseNull()
                     .Bind(expr => Match<T_PUNC_SEMICOLON>()
-                    .Return(new ASTReturn(t.line, expr) as ASTStmt))));
+                    .Return(new STReturn(t.line, expr) as STStmt))));
         }
 
     }

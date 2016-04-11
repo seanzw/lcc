@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using lcc.AST;
+using lcc.SyntaxTree;
 using lcc.Token;
 using lcc.Parser;
 using LLexer;

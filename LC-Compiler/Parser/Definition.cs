@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using static Parserc.Parserc;
-using lcc.AST;
+using lcc.SyntaxTree;
 
 namespace lcc.Parser {
     public static partial class Parser {
@@ -22,10 +22,10 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, ASTProgram> TranslationUnit() {
-            return FunctionDefintion().Cast<Token.Token, ASTNode, ASTFuncDef>()
-                .Or(Declaration().Cast<Token.Token, ASTNode, ASTDeclaration>()).Plus()
-                .Select(nodes => new ASTProgram(nodes));
+        public static Parserc.Parser<Token.Token, STProgram> TranslationUnit() {
+            return FunctionDefintion().Cast<Token.Token, STNode, STFuncDef>()
+                .Or(Declaration().Cast<Token.Token, STNode, STDeclaration>()).Plus()
+                .Select(nodes => new STProgram(nodes));
         }
 
         /// <summary>
@@ -39,12 +39,12 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, ASTFuncDef> FunctionDefintion() {
+        public static Parserc.Parser<Token.Token, STFuncDef> FunctionDefintion() {
             return DeclarationSpecifiers()
                 .Bind(specifiers => Declarator()
                 .Bind(declarator => Declaration().Plus().ElseNull()
                 .Bind(declarations => CompoundStatement()
-                .Select(statement => new ASTFuncDef(specifiers, declarator, declarations, statement)))));
+                .Select(statement => new STFuncDef(specifiers, declarator, declarations, statement)))));
         }
     }
 }

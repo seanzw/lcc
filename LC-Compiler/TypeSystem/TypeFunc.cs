@@ -10,10 +10,18 @@ namespace lcc.TypeSystem {
         public TFunc(T ret, IEnumerable<T> parameters) {
             this.ret = ret;
             this.parameters = parameters;
+            isDefined = false;
         }
 
         public override bool IsFunc => true;
         public override bool IsComplete => true;
+        public override bool IsDefined => isDefined;
+
+        public override void DefFunc() {
+            if (isDefined) throw new InvalidOperationException("Can't define a function which is already defined.");
+            else isDefined = true;
+        }
+
         public override int Size { get { throw new InvalidOperationException("Can't take sizeof func designator!"); } } 
 
         public override TUnqualified Composite(TUnqualified other) {
@@ -42,5 +50,10 @@ namespace lcc.TypeSystem {
 
         public readonly T ret;
         public readonly IEnumerable<T> parameters;
+
+        /// <summary>
+        /// Whether the definition of this function has been detected.
+        /// </summary>
+        private bool isDefined;
     }
 }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace lcc.AST {
+namespace lcc.SyntaxTree {
 
     /// <summary>
     /// Position in the source code.
@@ -22,7 +22,7 @@ namespace lcc.AST {
         }
     }
 
-    public abstract class ASTNode {
+    public abstract class STNode {
 
         public abstract Position Pos { get; }
 
@@ -32,7 +32,7 @@ namespace lcc.AST {
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
-        public static bool NullableEquals(ASTNode x, ASTNode y) {
+        public static bool NullableEquals(STNode x, STNode y) {
             return x == null ? y == null : x.Equals(y);
         }
 
@@ -42,7 +42,7 @@ namespace lcc.AST {
         /// <param name="xs"></param>
         /// <param name="ys"></param>
         /// <returns></returns>
-        public static bool NullableEquals(IEnumerable<ASTNode> xs, IEnumerable<ASTNode> ys) {
+        public static bool NullableEquals(IEnumerable<STNode> xs, IEnumerable<STNode> ys) {
             return xs == null ? ys == null : xs.SequenceEqual(ys);
         }
     }

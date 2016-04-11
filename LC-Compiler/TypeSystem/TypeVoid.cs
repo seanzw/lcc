@@ -11,6 +11,10 @@ namespace lcc.TypeSystem {
         public static TypeVoid Instance => instance;
         public override int Size => 1;
         public override bool IsComplete => false;
+        /// <summary>
+        /// void is always defined.
+        /// </summary>
+        public override bool IsDefined => true;
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();

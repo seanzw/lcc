@@ -13,6 +13,7 @@ namespace lcc.TypeSystem {
 
         public override bool IsPointer => true;
         public override bool IsComplete => true;
+        public override bool IsDefined => true;
         public override int Size => 8;
 
         public override string ToString() {

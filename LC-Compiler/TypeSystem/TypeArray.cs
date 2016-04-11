@@ -17,6 +17,7 @@ namespace lcc.TypeSystem {
         }
         public override bool IsArray => true;
         public override bool IsComplete => n != -1;
+        public override bool IsDefined => IsComplete;
         public override int Size {
             get {
                 if (n == -1) throw new InvalidOperationException("Can't take size of an incomplete array.");
@@ -28,8 +29,8 @@ namespace lcc.TypeSystem {
         /// Complete this array with length n.
         /// </summary>
         /// <param name="n"></param>
-        public override void CompleteArr(int n) {
-            if (this.n != -1) base.CompleteArr(n);
+        public override void DefArr(int n) {
+            if (this.n != -1) throw new InvalidOperationException("Can't complete an array which is already completed");
             else this.n = n;
         }
 
@@ -66,6 +67,7 @@ namespace lcc.TypeSystem {
         }
         public override bool IsArray => true;
         public override bool IsComplete => true;
+        public override bool IsDefined => true;
         public override int Size {
             get {
                 throw new InvalidOperationException("Can't take the size of a variable length array.");

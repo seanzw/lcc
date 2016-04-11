@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using lcc.TypeSystem;
-using lcc.AST;
+using lcc.SyntaxTree;
 using lcc.Parser;
 using Parserc;
 
@@ -19,9 +19,9 @@ namespace LC_CompilerTests {
             // const char *pc;
             // char arr[4];
             ASTEnv env = new ASTEnv();
-            env.AddSymbol("carr", TChar.Instance.Const().Arr(3), null);
-            env.AddSymbol("pc", TChar.Instance.Const().Ptr(), null);
-            env.AddSymbol("arr", TChar.Instance.None().Arr(4), null);
+            env.AddSymbol("carr", new SymbolSignature(TChar.Instance.Const().Arr(3), SymbolKind.OBJECT, null));
+            env.AddSymbol("pc", new SymbolSignature(TChar.Instance.Const().Ptr(), SymbolKind.OBJECT, null));
+            env.AddSymbol("arr", new SymbolSignature(TChar.Instance.None().Arr(4), SymbolKind.OBJECT, null));
 
             var tests = new Dictionary<string, T> {
                 {
@@ -38,8 +38,8 @@ namespace LC_CompilerTests {
                 var result = Utility.parse(test.Key, Parser.UnaryExpression().End());
                 Assert.AreEqual(1, result.Count());
                 Assert.IsFalse(result.First().Remain.More());
-                Assert.IsTrue(result.First().Value is ASTPreStep);
-                var ast = result.First().Value as ASTPreStep;
+                Assert.IsTrue(result.First().Value is STPreStep);
+                var ast = result.First().Value as STPreStep;
                 Assert.AreEqual(test.Value, ast.TypeCheck(env));
             }
         }
@@ -66,9 +66,9 @@ namespace LC_CompilerTests {
             TPointer p = new TPointer(s.None());
             TPointer cp = new TPointer(s.Const());
 
-            env.AddSymbol("t", s.None(), null);
-            env.AddSymbol("p", p.None(), null);
-            env.AddSymbol("cp", cp.None(), null);
+            env.AddSymbol("t", new SymbolSignature(s.None(), SymbolKind.OBJECT, null));
+            env.AddSymbol("p", new SymbolSignature(p.None(), SymbolKind.OBJECT, null));
+            env.AddSymbol("cp", new SymbolSignature(cp.None(), SymbolKind.OBJECT, null));
 
             var tests = new Dictionary<string, T> {
                 {
@@ -93,8 +93,8 @@ namespace LC_CompilerTests {
                 var result = Utility.parse(test.Key, Parser.UnaryExpression().End());
                 Assert.AreEqual(1, result.Count());
                 Assert.IsFalse(result.First().Remain.More());
-                Assert.IsTrue(result.First().Value is ASTUnaryOp);
-                var ast = result.First().Value as ASTUnaryOp;
+                Assert.IsTrue(result.First().Value is STUnaryOp);
+                var ast = result.First().Value as STUnaryOp;
                 Assert.AreEqual(test.Value, ast.TypeCheck(env));
             }
         }

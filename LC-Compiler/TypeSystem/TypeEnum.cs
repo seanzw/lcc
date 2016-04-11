@@ -29,10 +29,24 @@ namespace lcc.TypeSystem {
         }
 
         /// <summary>
-        /// Notice that enum type is always complete.
+        /// Complete the definition of the enum type.
+        /// </summary>
+        /// <param name="enums"></param>
+        public override void DefEnum(IDictionary<string, int> enums) {
+            if (this.enums != null) throw new InvalidOperationException("Can't complete an enum which is already complete.");
+            else this.enums = enums;
+        }
+
+        /// <summary>
+        /// Notice that enum type is always complete, but not always defined.
         /// </summary>
         /// <returns></returns>
         public override bool IsComplete => true;
+
+        /// <summary>
+        /// Whether this enum is defined.
+        /// </summary>
+        public override bool IsDefined => enums != null;
 
         /// <summary>
         /// Enumerator is represent as int.
@@ -46,7 +60,12 @@ namespace lcc.TypeSystem {
         /// <summary>
         /// The tag for this enum type.
         /// </summary>
-        public string tag;
+        public readonly string tag;
+
+        /// <summary>
+        /// The value for enumerators.
+        /// </summary>
+        public IDictionary<string, int> enums;
 
         private static int id = 0;
     }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using static Parserc.Parserc;
 using lcc.Token;
-using lcc.AST;
+using lcc.SyntaxTree;
 
 // To simplify all the Token.Token.
 using T = lcc.Token.Token;
@@ -22,16 +22,16 @@ namespace lcc.Parser {
         /// If the declaration is a typedef, add the name into the environment.
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTDeclaration> Declaration() {
+        public static Parserc.Parser<T, STDeclaration> Declaration() {
             return DeclarationSpecifiers()
                 .Bind(specifiers => InitDeclaratorList()
                 .Bind(declarators => Match<T_PUNC_SEMICOLON>()
                 .Bind(_ => {
-                    var decl = new ASTDeclaration(specifiers, declarators);
+                    var decl = new STDeclaration(specifiers, declarators);
                     if (decl.IsTypedef)
                         foreach (var name in decl.DeclNames)
                             Env.AddTypedefName(decl.Pos.line, name);
-                    return Result<T, ASTDeclaration>(decl);
+                    return Result<T, STDeclaration>(decl);
                 })));
         }
 
@@ -46,38 +46,38 @@ namespace lcc.Parser {
         /// 2. at least one type specifier shall be given in the declaration.
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTDeclSpecs> DeclarationSpecifiers() {
+        public static Parserc.Parser<T, STDeclSpecs> DeclarationSpecifiers() {
             return DeclarationSpecifier().Plus().Bind(ss => {
 
                 // At most one storage-class specifier may be given in the declaration specifiers.
-                var stors = ss.OfType<ASTStoreSpec>();
-                ASTStoreSpec.Kind storage = ASTStoreSpec.Kind.NONE;
-                if (stors.Count() > 1) return Zero<T, ASTDeclSpecs>();
+                var stors = ss.OfType<STStoreSpec>();
+                STStoreSpec.Kind storage = STStoreSpec.Kind.NONE;
+                if (stors.Count() > 1) return Zero<T, STDeclSpecs>();
                 else if (stors.Count() == 1) storage = stors.First().kind;
 
                 // At most one function specifier.
-                var funcs = ss.OfType<ASTFuncSpec>();
-                ASTFuncSpec.Kind function = ASTFuncSpec.Kind.NONE;
-                if (funcs.Count() > 1) return Zero<T, ASTDeclSpecs>();
+                var funcs = ss.OfType<STFuncSpec>();
+                STFuncSpec.Kind function = STFuncSpec.Kind.NONE;
+                if (funcs.Count() > 1) return Zero<T, STDeclSpecs>();
                 else if (funcs.Count() == 1) function = funcs.First().kind;
 
                 // At least one type specifier shall be given in the declaration specifiers.
-                var specs = ss.OfType<ASTTypeSpec>();
-                if (specs.Count() == 0) return Zero<T, ASTDeclSpecs>();
+                var specs = ss.OfType<STTypeSpec>();
+                if (specs.Count() == 0) return Zero<T, STDeclSpecs>();
 
                 foreach (var spec in specs) {
-                    if (spec.kind == ASTTypeSpec.Kind.TYPEDEF ||
-                        spec.kind == ASTTypeSpec.Kind.STRUCT ||
-                        spec.kind == ASTTypeSpec.Kind.UNION ||
-                        spec.kind == ASTTypeSpec.Kind.ENUM)
-                        if (specs.Count() != 1) return Zero<T, ASTDeclSpecs>();
+                    if (spec.kind == STTypeSpec.Kind.TYPEDEF ||
+                        spec.kind == STTypeSpec.Kind.STRUCT ||
+                        spec.kind == STTypeSpec.Kind.UNION ||
+                        spec.kind == STTypeSpec.Kind.ENUM)
+                        if (specs.Count() != 1) return Zero<T, STDeclSpecs>();
                         // User-defined types.
-                        else return Result<T, ASTDeclSpecs>(new ASTDeclSpecs(ss, storage, spec as ASTTypeUserSpec, function));
+                        else return Result<T, STDeclSpecs>(new STDeclSpecs(ss, storage, spec as STTypeUserSpec, function));
                 }
 
                 // Built-in type.
                 var keys = from s in specs select s.kind;
-                return Result<T, ASTDeclSpecs>(new ASTDeclSpecs(ss, storage, keys, function));
+                return Result<T, STDeclSpecs>(new STDeclSpecs(ss, storage, keys, function));
             });
         }
 
@@ -90,8 +90,8 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTDeclSpec> DeclarationSpecifier() {
-            return StorageClassSpecifier().Cast<T, ASTDeclSpec, ASTStoreSpec>()
+        public static Parserc.Parser<T, STDeclSpec> DeclarationSpecifier() {
+            return StorageClassSpecifier().Cast<T, STDeclSpec, STStoreSpec>()
                 .Or(TypeSpecifier())
                 .Or(TypeQualifier())
                 .Or(FunctionSpecifier());
@@ -104,7 +104,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, LinkedList<ASTInitDecl>> InitDeclaratorList() {
+        public static Parserc.Parser<T, LinkedList<STInitDeclarator>> InitDeclaratorList() {
             return InitDeclarator().PlusSeperatedBy(Match<T_PUNC_COMMA>());
         }
 
@@ -115,9 +115,9 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTInitDecl> InitDeclarator() {
+        public static Parserc.Parser<T, STInitDeclarator> InitDeclarator() {
             return Declarator().Bind(declarator => Match<T_PUNC_ASSIGN>().Then(Initializer()).ElseNull()
-                .Select(initializer => new ASTInitDecl(declarator, initializer)));
+                .Select(initializer => new STInitDeclarator(declarator, initializer)));
         }
 
         /// <summary>
@@ -130,12 +130,12 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTStoreSpec> StorageClassSpecifier() {
-            return Get<T_KEY_TYPEDEF>().Select(t => new ASTStoreSpec(t.line, ASTStoreSpec.Kind.TYPEDEF))
-                .Else(Get<T_KEY_EXTERN>().Select(t => new ASTStoreSpec(t.line, ASTStoreSpec.Kind.EXTERN)))
-                .Else(Get<T_KEY_STATIC>().Select(t => new ASTStoreSpec(t.line, ASTStoreSpec.Kind.STATIC)))
-                .Else(Get<T_KEY_AUTO>().Select(t => new ASTStoreSpec(t.line, ASTStoreSpec.Kind.AUTO)))
-                .Else(Get<T_KEY_REGISTER>().Select(t => new ASTStoreSpec(t.line, ASTStoreSpec.Kind.REGISTER)));
+        public static Parserc.Parser<T, STStoreSpec> StorageClassSpecifier() {
+            return Get<T_KEY_TYPEDEF>().Select(t => new STStoreSpec(t.line, STStoreSpec.Kind.TYPEDEF))
+                .Else(Get<T_KEY_EXTERN>().Select(t => new STStoreSpec(t.line, STStoreSpec.Kind.EXTERN)))
+                .Else(Get<T_KEY_STATIC>().Select(t => new STStoreSpec(t.line, STStoreSpec.Kind.STATIC)))
+                .Else(Get<T_KEY_AUTO>().Select(t => new STStoreSpec(t.line, STStoreSpec.Kind.AUTO)))
+                .Else(Get<T_KEY_REGISTER>().Select(t => new STStoreSpec(t.line, STStoreSpec.Kind.REGISTER)));
         }
 
         /// <summary>
@@ -151,13 +151,13 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTTypeSpec> TypeSpecifier() {
-            return TypeKeySpecifier().Cast<T, ASTTypeSpec, ASTTypeKeySpecifier>()
+        public static Parserc.Parser<T, STTypeSpec> TypeSpecifier() {
+            return TypeKeySpecifier().Cast<T, STTypeSpec, STTypeKeySpec>()
                 .Else(StructUnionSpecifier())
                 .Else(EnumSpecifier())
                 .Else(Identifier().Bind(identifier => {
-                    return Env.IsTypedefName(identifier.name) ? Result<T, ASTTypeSpec>(new ASTTypedefName(identifier))
-                        : Zero<T, ASTTypeSpec>();
+                    return Env.IsTypedefName(identifier.name) ? Result<T, STTypeSpec>(new STTypedefName(identifier))
+                        : Zero<T, STTypeSpec>();
                 }));
         }
 
@@ -177,18 +177,18 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTTypeKeySpecifier> TypeKeySpecifier() {
-            return Get<T_KEY_VOID>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpec.Kind.VOID))
-                .Else(Get<T_KEY_CHAR>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpec.Kind.CHAR)))
-                .Else(Get<T_KEY_SHORT>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpec.Kind.SHORT)))
-                .Else(Get<T_KEY_INT>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpec.Kind.INT)))
-                .Else(Get<T_KEY_LONG>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpec.Kind.LONG)))
-                .Else(Get<T_KEY_FLOAT>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpec.Kind.FLOAT)))
-                .Else(Get<T_KEY_DOUBLE>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpec.Kind.DOUBLE)))
-                .Else(Get<T_KEY_SIGNED>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpec.Kind.SIGNED)))
-                .Else(Get<T_KEY_UNSIGNED>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpec.Kind.UNSIGNED)))
-                .Else(Get<T_KEY__BOOL>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpec.Kind.BOOL)))
-                .Else(Get<T_KEY__COMPLEX>().Select(t => new ASTTypeKeySpecifier(t.line, ASTTypeSpec.Kind.COMPLEX)));
+        public static Parserc.Parser<T, STTypeKeySpec> TypeKeySpecifier() {
+            return Get<T_KEY_VOID>().Select(t => new STTypeKeySpec(t.line, STTypeSpec.Kind.VOID))
+                .Else(Get<T_KEY_CHAR>().Select(t => new STTypeKeySpec(t.line, STTypeSpec.Kind.CHAR)))
+                .Else(Get<T_KEY_SHORT>().Select(t => new STTypeKeySpec(t.line, STTypeSpec.Kind.SHORT)))
+                .Else(Get<T_KEY_INT>().Select(t => new STTypeKeySpec(t.line, STTypeSpec.Kind.INT)))
+                .Else(Get<T_KEY_LONG>().Select(t => new STTypeKeySpec(t.line, STTypeSpec.Kind.LONG)))
+                .Else(Get<T_KEY_FLOAT>().Select(t => new STTypeKeySpec(t.line, STTypeSpec.Kind.FLOAT)))
+                .Else(Get<T_KEY_DOUBLE>().Select(t => new STTypeKeySpec(t.line, STTypeSpec.Kind.DOUBLE)))
+                .Else(Get<T_KEY_SIGNED>().Select(t => new STTypeKeySpec(t.line, STTypeSpec.Kind.SIGNED)))
+                .Else(Get<T_KEY_UNSIGNED>().Select(t => new STTypeKeySpec(t.line, STTypeSpec.Kind.UNSIGNED)))
+                .Else(Get<T_KEY__BOOL>().Select(t => new STTypeKeySpec(t.line, STTypeSpec.Kind.BOOL)))
+                .Else(Get<T_KEY__COMPLEX>().Select(t => new STTypeKeySpec(t.line, STTypeSpec.Kind.COMPLEX)));
         }
 
         /// <summary>
@@ -198,9 +198,9 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTStructUnionSpec> StructUnionSpecifier() {
-            return Get<T_KEY_STRUCT>().Bind(t => StructUnionSpecifierTail(ASTTypeSpec.Kind.STRUCT, t.line))
-                .Else(Get<T_KEY_UNION>().Bind(t => StructUnionSpecifierTail(ASTTypeSpec.Kind.UNION, t.line)));
+        public static Parserc.Parser<T, STStructUnionSpec> StructUnionSpecifier() {
+            return Get<T_KEY_STRUCT>().Bind(t => StructUnionSpecifierTail(STTypeSpec.Kind.STRUCT, t.line))
+                .Else(Get<T_KEY_UNION>().Bind(t => StructUnionSpecifierTail(STTypeSpec.Kind.UNION, t.line)));
         }
 
         /// <summary>
@@ -213,12 +213,12 @@ namespace lcc.Parser {
         /// <param name="structOrUnion"></param>
         /// <param name="line"></param>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTStructUnionSpec> StructUnionSpecifierTail(ASTTypeSpec.Kind kind, int line) {
+        public static Parserc.Parser<T, STStructUnionSpec> StructUnionSpecifierTail(STTypeSpec.Kind kind, int line) {
             return Identifier()
                     .Bind(identifier => StructDeclarationList().BracelLR().ElseNull()
-                    .Select(declarations => new ASTStructUnionSpec(line, identifier, declarations, kind)))
+                    .Select(declarations => new STStructUnionSpec(line, identifier, declarations, kind)))
                 .Or(StructDeclarationList().BracelLR()
-                    .Select(declarations => new ASTStructUnionSpec(line, null, declarations, kind)));
+                    .Select(declarations => new STStructUnionSpec(line, null, declarations, kind)));
         }
 
         /// <summary>
@@ -228,7 +228,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, LinkedList<ASTStructDeclaration>> StructDeclarationList() {
+        public static Parserc.Parser<T, LinkedList<STStructDeclaration>> StructDeclarationList() {
             return StructDeclaration().Plus();
         }
 
@@ -238,11 +238,11 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTStructDeclaration> StructDeclaration() {
+        public static Parserc.Parser<T, STStructDeclaration> StructDeclaration() {
             return SpecifierQualifierList()
                 .Bind(spcifierQualifierList => StructDeclaratorList()
                 .Bind(declarators => Match<T_PUNC_SEMICOLON>()
-                .Return(new ASTStructDeclaration(spcifierQualifierList, declarators))));
+                .Return(new STStructDeclaration(spcifierQualifierList, declarators))));
         }
 
         /// <summary>
@@ -252,8 +252,8 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, IEnumerable<ASTTypeSpecQual>> SpecifierQualifierList() {
-            return Ref(TypeSpecifier).Cast<T, ASTTypeSpecQual, ASTTypeSpec>()
+        public static Parserc.Parser<T, IEnumerable<STTypeSpecQual>> SpecifierQualifierList() {
+            return Ref(TypeSpecifier).Cast<T, STTypeSpecQual, STTypeSpec>()
                 .Else(TypeQualifier())
                 .Plus();
         }
@@ -265,7 +265,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, LinkedList<ASTStructDecl>> StructDeclaratorList() {
+        public static Parserc.Parser<T, LinkedList<STStructDeclarator>> StructDeclaratorList() {
             return StructDeclarator().PlusSeperatedBy(Match<T_PUNC_COMMA>());
         }
 
@@ -277,15 +277,15 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTStructDecl> StructDeclarator() {
+        public static Parserc.Parser<T, STStructDeclarator> StructDeclarator() {
             return Declarator()
                 .Bind(declarator => Match<T_PUNC_COLON>()
                     .Then(ConstantExpression())
-                    .Select(expr => new ASTStructDecl(declarator, expr))
-                    .Else(Result<T, ASTStructDecl>(new ASTStructDecl(declarator, null))))
+                    .Select(expr => new STStructDeclarator(declarator, expr))
+                    .Else(Result<T, STStructDeclarator>(new STStructDeclarator(declarator, null))))
                 .Or(Match<T_PUNC_COLON>()
                     .Then(ConstantExpression())
-                    .Select(expr => new ASTStructDecl(null, expr)));
+                    .Select(expr => new STStructDeclarator(null, expr)));
         }
 
         /// <summary>
@@ -296,15 +296,15 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTEnumSpec> EnumSpecifier() {
+        public static Parserc.Parser<T, STEnumSpec> EnumSpecifier() {
             return Get<T_KEY_ENUM>().Bind(e =>
                 Identifier().Bind(identifier =>
                     EnumeratorList().Option(Match<T_PUNC_COMMA>()).BracelLR()
-                        .Select(enumerators => new ASTEnumSpec(e.line, identifier, enumerators))
-                    .Or(Result<T, ASTEnumSpec>(new ASTEnumSpec(e.line, identifier, null))))
+                        .Select(enumerators => new STEnumSpec(e.line, identifier, enumerators))
+                    .Or(Result<T, STEnumSpec>(new STEnumSpec(e.line, identifier, null))))
                 .Or(EnumeratorList().Option(Match<T_PUNC_COMMA>()).Bracket(
                         Match<T_PUNC_BRACEL>(),
-                        Match<T_PUNC_BRACER>()).Select(enumerators => new ASTEnumSpec(e.line, null, enumerators))));
+                        Match<T_PUNC_BRACER>()).Select(enumerators => new STEnumSpec(e.line, null, enumerators))));
         }
 
         /// <summary>
@@ -314,7 +314,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, IEnumerable<ASTEnum>> EnumeratorList() {
+        public static Parserc.Parser<T, IEnumerable<STEnum>> EnumeratorList() {
             return Enumerator().PlusSeperatedBy(Match<T_PUNC_COMMA>());
         }
 
@@ -325,9 +325,9 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTEnum> Enumerator() {
+        public static Parserc.Parser<T, STEnum> Enumerator() {
             return Identifier().Bind(i => Match<T_PUNC_ASSIGN>().Then(ConstantExpression()).ElseNull()
-                .Select(expr => new ASTEnum(i, expr)));
+                .Select(expr => new STEnum(i, expr)));
         }
 
         /// <summary>
@@ -338,10 +338,10 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTTypeQual> TypeQualifier() {
-            return Get<T_KEY_CONST>().Select(t => new ASTTypeQual(t.line, ASTTypeQual.Kind.CONST))
-                .Else(Get<T_KEY_RESTRICT>().Select(t => new ASTTypeQual(t.line, ASTTypeQual.Kind.RESTRICT)))
-                .Else(Get<T_KEY_VOLATILE>().Select(t => new ASTTypeQual(t.line, ASTTypeQual.Kind.VOLATILE)));
+        public static Parserc.Parser<T, STTypeQual> TypeQualifier() {
+            return Get<T_KEY_CONST>().Select(t => new STTypeQual(t.line, STTypeQual.Kind.CONST))
+                .Else(Get<T_KEY_RESTRICT>().Select(t => new STTypeQual(t.line, STTypeQual.Kind.RESTRICT)))
+                .Else(Get<T_KEY_VOLATILE>().Select(t => new STTypeQual(t.line, STTypeQual.Kind.VOLATILE)));
         }
 
         /// <summary>
@@ -350,8 +350,8 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTFuncSpec> FunctionSpecifier() {
-            return Get<T_KEY_INLINE>().Select(t => new ASTFuncSpec(t.line, ASTFuncSpec.Kind.INLINE));
+        public static Parserc.Parser<T, STFuncSpec> FunctionSpecifier() {
+            return Get<T_KEY_INLINE>().Select(t => new STFuncSpec(t.line, STFuncSpec.Kind.INLINE));
         }
 
 
@@ -361,9 +361,9 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTDecl> Declarator() {
+        public static Parserc.Parser<T, STDeclarator> Declarator() {
             return Pointer().Many().Bind(pointers => DirectDeclarator()
-                .Select(direct => new ASTDecl(pointers, direct)));
+                .Select(direct => new STDeclarator(pointers, direct)));
         }
 
         /// <summary>
@@ -373,9 +373,9 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTDirDecl> DirectDeclarator() {
-            return Identifier().Bind(identifier => DirectDeclaratorPrime(new ASTIdDecl(identifier)))
-                .Else(Ref(Declarator).ParentLR().Bind(declarator => DirectDeclaratorPrime(new ASTParDecl(declarator))));
+        public static Parserc.Parser<T, STDirDeclarator> DirectDeclarator() {
+            return Identifier().Bind(identifier => DirectDeclaratorPrime(new STIdDeclarator(identifier)))
+                .Else(Ref(Declarator).ParentLR().Bind(declarator => DirectDeclaratorPrime(new STParDeclarator(declarator))));
         }
 
         /// <summary>
@@ -395,29 +395,29 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTDirDecl> DirectDeclaratorPrime(ASTDirDecl direct) {
+        public static Parserc.Parser<T, STDirDeclarator> DirectDeclaratorPrime(STDirDeclarator direct) {
             return ParameterTypeList().ParentLR()
-                    .Bind(tuple => DirectDeclaratorPrime(new ASTFuncDecl(direct, tuple.Item1, tuple.Item2)))
+                    .Bind(tuple => DirectDeclaratorPrime(new STFuncDeclarator(direct, tuple.Item1, tuple.Item2)))
                 .Or(Identifier().ManySeperatedBy(Match<T_PUNC_COMMA>()).ParentLR()
-                    .Bind(identifiers => DirectDeclaratorPrime(new ASTFuncDecl(direct, identifiers))))
+                    .Bind(identifiers => DirectDeclaratorPrime(new STFuncDeclarator(direct, identifiers))))
                 .Or(Match<T_PUNC_SUBSCRIPTL>().Then(TypeQualifier().Many())
                     .Bind(qualifiers => AssignmentExpression().ElseNull()
                     .Bind(expr => Match<T_PUNC_SUBSCRIPTR>()
-                    .Then(DirectDeclaratorPrime(new ASTArrDecl(direct, qualifiers, expr, false))))))
+                    .Then(DirectDeclaratorPrime(new STArrDeclarator(direct, qualifiers, expr, false))))))
                 .Or(Match<T_PUNC_SUBSCRIPTL>().Then(Match<T_KEY_STATIC>())
                     .Then(TypeQualifier().Many())
                     .Bind(qualifiers => AssignmentExpression()
                     .Bind(expr => Match<T_PUNC_SUBSCRIPTR>()
-                    .Then(DirectDeclaratorPrime(new ASTArrDecl(direct, qualifiers, expr, true))))))
+                    .Then(DirectDeclaratorPrime(new STArrDeclarator(direct, qualifiers, expr, true))))))
                 .Or(Match<T_PUNC_SUBSCRIPTL>().Then(TypeQualifier().Plus())
                     .Bind(qualifiers => Match<T_KEY_STATIC>()
                     .Then(AssignmentExpression())
                     .Bind(expr => Match<T_PUNC_SUBSCRIPTR>()
-                    .Then(DirectDeclaratorPrime(new ASTArrDecl(direct, qualifiers, expr, true))))))
+                    .Then(DirectDeclaratorPrime(new STArrDeclarator(direct, qualifiers, expr, true))))))
                 .Or(Match<T_PUNC_SUBSCRIPTL>().Then(TypeQualifier().Many())
                     .Bind(qualifiers => Match<T_PUNC_STAR>()
                     .Then(Match<T_PUNC_SUBSCRIPTR>())
-                    .Then(DirectDeclaratorPrime(new ASTArrDecl(direct, qualifiers)))))
+                    .Then(DirectDeclaratorPrime(new STArrDeclarator(direct, qualifiers)))))
                 .ElseReturn(direct);
         }
 
@@ -428,9 +428,9 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTPtr> Pointer() {
+        public static Parserc.Parser<T, STPtr> Pointer() {
             return Get<T_PUNC_STAR>().Bind(t => TypeQualifier().Many()
-                .Select(qualifiers => new ASTPtr(t.line, qualifiers)));
+                .Select(qualifiers => new STPtr(t.line, qualifiers)));
         }
 
         /// <summary>
@@ -440,10 +440,10 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, Tuple<IEnumerable<ASTParam>, bool>> ParameterTypeList() {
+        public static Parserc.Parser<T, Tuple<IEnumerable<STParam>, bool>> ParameterTypeList() {
             return ParameterList().Bind(parameters => Match<T_PUNC_COMMA>()
                 .Then(Match<T_PUNC_ELLIPSIS>()).Return(true).ElseReturn(false)
-                .Select(isEllipis => new Tuple<IEnumerable<ASTParam>, bool>(parameters, isEllipis)));
+                .Select(isEllipis => new Tuple<IEnumerable<STParam>, bool>(parameters, isEllipis)));
         }
 
         /// <summary>
@@ -453,7 +453,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, IEnumerable<ASTParam>> ParameterList() {
+        public static Parserc.Parser<T, IEnumerable<STParam>> ParameterList() {
             return ParameterDeclaration().PlusSeperatedBy(Match<T_PUNC_COMMA>());
         }
 
@@ -464,11 +464,11 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTParam> ParameterDeclaration() {
+        public static Parserc.Parser<T, STParam> ParameterDeclaration() {
             return Ref(DeclarationSpecifiers)
                 .Bind(specifiers => Ref(Declarator)
-                .Select(declarator => new ASTParam(specifiers, declarator))
-                .Else(AbstractDeclarator().ElseNull().Select(absDeclarator => new ASTParam(specifiers, absDeclarator))));
+                .Select(declarator => new STParam(specifiers, declarator))
+                .Else(AbstractDeclarator().ElseNull().Select(absDeclarator => new STParam(specifiers, absDeclarator))));
         }
 
         /// <summary>
@@ -489,10 +489,10 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTAbsDecl> AbstractDeclarator() {
-            return Pointer().Plus().Select(pointers => new ASTAbsDecl(pointers, null))
+        public static Parserc.Parser<T, STAbsDeclarator> AbstractDeclarator() {
+            return Pointer().Plus().Select(pointers => new STAbsDeclarator(pointers, null))
                 .Or(Pointer().Many().Bind(pointers => DirectAbstractDeclarator()
-                .Select(direct => new ASTAbsDecl(pointers, direct))));
+                .Select(direct => new STAbsDeclarator(pointers, direct))));
         }
 
 
@@ -503,10 +503,10 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTAbsDirDecl> DirectAbstractDeclarator() {
-            return Ref(AbstractDeclarator).ParentLR().Bind(declarator => DirectAbstractDeclaratorPrime(new ASTAbsParDecl(declarator)))
+        public static Parserc.Parser<T, STAbsDirDeclarator> DirectAbstractDeclarator() {
+            return Ref(AbstractDeclarator).ParentLR().Bind(declarator => DirectAbstractDeclaratorPrime(new STAbsParDeclarator(declarator)))
                 .Else(Peek<T>()
-                    .Bind(t => DirectAbstractDeclaratorPrime(new ASTAbsDirDeclNil(t.line))));
+                    .Bind(t => DirectAbstractDeclaratorPrime(new STAbsDirDeclaratorNil(t.line))));
         }
 
         /// <summary>
@@ -521,29 +521,29 @@ namespace lcc.Parser {
         /// </summary>
         /// <param name="direct"></param>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTAbsDirDecl> DirectAbstractDeclaratorPrime(ASTAbsDirDecl direct) {
+        public static Parserc.Parser<T, STAbsDirDeclarator> DirectAbstractDeclaratorPrime(STAbsDirDeclarator direct) {
             return Ref(ParameterTypeList).ParentLR()
-                    .Bind(tuple => DirectAbstractDeclaratorPrime(new ASTAbsFuncDecl(direct, tuple.Item1, tuple.Item2)))
+                    .Bind(tuple => DirectAbstractDeclaratorPrime(new STAbsFuncDeclarator(direct, tuple.Item1, tuple.Item2)))
                 .Or(Match<T_PUNC_PARENTL>().Then(Match<T_PUNC_PARENTR>())
-                    .Bind(_ => DirectAbstractDeclaratorPrime(new ASTAbsFuncDecl(direct, null, false))))
+                    .Bind(_ => DirectAbstractDeclaratorPrime(new STAbsFuncDeclarator(direct, null, false))))
                 .Or(Match<T_PUNC_SUBSCRIPTL>().Then(TypeQualifier().Many())
                     .Bind(qualifiers => AssignmentExpression().ElseNull()
                     .Bind(expr => Match<T_PUNC_SUBSCRIPTR>()
-                    .Then(DirectAbstractDeclaratorPrime(new ASTAbsArrDecl(direct, qualifiers, expr, false))))))
+                    .Then(DirectAbstractDeclaratorPrime(new STAbsArrDeclarator(direct, qualifiers, expr, false))))))
                 .Or(Match<T_PUNC_SUBSCRIPTL>().Then(Match<T_KEY_STATIC>())
                     .Then(TypeQualifier().Many())
                     .Bind(qualifiers => AssignmentExpression()
                     .Bind(expr => Match<T_PUNC_SUBSCRIPTR>()
-                    .Then(DirectAbstractDeclaratorPrime(new ASTAbsArrDecl(direct, qualifiers, expr, true))))))
+                    .Then(DirectAbstractDeclaratorPrime(new STAbsArrDeclarator(direct, qualifiers, expr, true))))))
                 .Or(Match<T_PUNC_SUBSCRIPTL>().Then(TypeQualifier().Plus())
                     .Bind(qualifiers => Match<T_KEY_STATIC>()
                     .Then(AssignmentExpression())
                     .Bind(expr => Match<T_PUNC_SUBSCRIPTR>()
-                    .Then(DirectAbstractDeclaratorPrime(new ASTAbsArrDecl(direct, qualifiers, expr, true))))))
+                    .Then(DirectAbstractDeclaratorPrime(new STAbsArrDeclarator(direct, qualifiers, expr, true))))))
                 .Or(Match<T_PUNC_SUBSCRIPTL>().Then(Match<T_PUNC_STAR>())
                     .Then(Match<T_PUNC_SUBSCRIPTR>())
-                    .Bind(_ => DirectAbstractDeclaratorPrime(new ASTAbsArrDecl(direct))))
-                .Else(direct is ASTAbsDirDeclNil ? Zero<T, ASTAbsDirDecl>() : Result<T, ASTAbsDirDecl>(direct));
+                    .Bind(_ => DirectAbstractDeclaratorPrime(new STAbsArrDeclarator(direct))))
+                .Else(direct is STAbsDirDeclaratorNil ? Zero<T, STAbsDirDeclarator>() : Result<T, STAbsDirDeclarator>(direct));
         }
 
         /// <summary>
@@ -559,11 +559,11 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTInitializer> Initializer() {
-            return AssignmentExpression().Select(expr => new ASTInitializer(expr))
+        public static Parserc.Parser<T, STInitializer> Initializer() {
+            return AssignmentExpression().Select(expr => new STInitializer(expr))
                 .Else(InitItem()
                     .PlusSeperatedBy(Match<T_PUNC_COMMA>()).Option(Match<T_PUNC_COMMA>())
-                    .BracelLR().Select(items => new ASTInitializer(items)));
+                    .BracelLR().Select(items => new STInitializer(items)));
         }
 
         /// <summary>
@@ -572,9 +572,9 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTInitItem> InitItem() {
+        public static Parserc.Parser<T, STInitItem> InitItem() {
             return Designation().ElseNull().Bind(designators => Ref(Initializer)
-                .Select(initializer => new ASTInitItem(initializer, designators)));
+                .Select(initializer => new STInitItem(initializer, designators)));
         }
 
         /// <summary>
@@ -588,7 +588,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, LinkedList<ASTDesignator>> Designation() {
+        public static Parserc.Parser<T, LinkedList<STDesignator>> Designation() {
             return Designator().Plus().Bind(designators => Match<T_PUNC_ASSIGN>().Return(designators));
         }
 
@@ -599,9 +599,9 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, ASTDesignator> Designator() {
-            return ConstantExpression().SubLR().Select(expr => new ASTDesignator(expr))
-                .Or(Match<T_PUNC_DOT>().Then(Identifier()).Select(identifier => new ASTDesignator(identifier)));
+        public static Parserc.Parser<T, STDesignator> Designator() {
+            return ConstantExpression().SubLR().Select(expr => new STDesignator(expr))
+                .Or(Match<T_PUNC_DOT>().Then(Identifier()).Select(identifier => new STDesignator(identifier)));
         }
     }
 }

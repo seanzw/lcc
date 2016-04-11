@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using lcc.AST;
+using lcc.SyntaxTree;
 using lcc.Token;
 using lcc.Parser;
 using LLexer;
@@ -49,26 +49,26 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserPrimaryExpression() {
-            Dictionary<string, ASTExpr> dict = new Dictionary<string, ASTExpr> {
+            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
                 {
                     "tmp",
-                    new ASTId(new T_IDENTIFIER(1, "tmp"))
+                    new STId(new T_IDENTIFIER(1, "tmp"))
                 },
                 {
                     "12356u",
-                    new ASTConstInt(new T_CONST_INT(1, "12356u", 10))
+                    new STConstInt(new T_CONST_INT(1, "12356u", 10))
                 },
                 {
                     "1.264f",
-                    new ASTConstFloat(new T_CONST_FLOAT(1, "1.264f", 10))
+                    new STConstFloat(new T_CONST_FLOAT(1, "1.264f", 10))
                 },
                 {
                     "'C'",
-                    new ASTConstChar(new T_CONST_CHAR(1, "'C'"))
+                    new STConstChar(new T_CONST_CHAR(1, "'C'"))
                 },
                 {
                     "\"what is this?\"",
-                    new ASTString(new LinkedList<T_STRING_LITERAL>(new List<T_STRING_LITERAL> {
+                    new STString(new LinkedList<T_STRING_LITERAL>(new List<T_STRING_LITERAL> {
                         new T_STRING_LITERAL(1, "\"what is this?\"")
                     }))
                 },
@@ -81,80 +81,80 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserPostfixExpression() {
-            Dictionary<string, ASTExpr> dict = new Dictionary<string, ASTExpr> {
+            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
                 {
                     "abc[123]",
-                    new ASTArrSub(
-                        new ASTId(new T_IDENTIFIER(1, "abc")),
-                        new ASTConstInt(new T_CONST_INT(1, "123", 10))
+                    new STArrSub(
+                        new STId(new T_IDENTIFIER(1, "abc")),
+                        new STConstInt(new T_CONST_INT(1, "123", 10))
                     )
                 },
                 {
                     "abc.x",
-                    new ASTAccess(
-                        new ASTId(new T_IDENTIFIER(1, "abc")),
+                    new STAccess(
+                        new STId(new T_IDENTIFIER(1, "abc")),
                         new T_IDENTIFIER(1, "x"),
-                        ASTAccess.Kind.DOT
+                        STAccess.Kind.DOT
                     )
                 },
                 {
                     "arr[2].value",
-                    new ASTAccess(
-                        new ASTArrSub(
-                            new ASTId(new T_IDENTIFIER(1, "arr")),
-                            new ASTConstInt(new T_CONST_INT(1, "2", 10))
+                    new STAccess(
+                        new STArrSub(
+                            new STId(new T_IDENTIFIER(1, "arr")),
+                            new STConstInt(new T_CONST_INT(1, "2", 10))
                         ),
                         new T_IDENTIFIER(1, "value"),
-                        ASTAccess.Kind.DOT
+                        STAccess.Kind.DOT
                     )
                 },
                 {
                     "abc->x",
-                    new ASTAccess(
-                        new ASTId(new T_IDENTIFIER(1, "abc")),
+                    new STAccess(
+                        new STId(new T_IDENTIFIER(1, "abc")),
                         new T_IDENTIFIER(1, "x"),
-                        ASTAccess.Kind.PTR
+                        STAccess.Kind.PTR
                     )
                 },
                 {
                     "x++",
-                    new ASTPostStep(
-                        new ASTId(new T_IDENTIFIER(1, "x")),
-                        ASTPostStep.Kind.INC
+                    new STPostStep(
+                        new STId(new T_IDENTIFIER(1, "x")),
+                        STPostStep.Kind.INC
                     )
                 },
                 {
                     "x--",
-                    new ASTPostStep(
-                        new ASTId(new T_IDENTIFIER(1, "x")),
-                        ASTPostStep.Kind.DEC
+                    new STPostStep(
+                        new STId(new T_IDENTIFIER(1, "x")),
+                        STPostStep.Kind.DEC
                     )
                 },
                 {
                     "printf(x)",
-                    new ASTFuncCall(
-                        new ASTId(new T_IDENTIFIER(1, "printf")),
-                        new List<ASTExpr> {
-                            new ASTId(new T_IDENTIFIER(1, "x"))
+                    new STFuncCall(
+                        new STId(new T_IDENTIFIER(1, "printf")),
+                        new List<STExpr> {
+                            new STId(new T_IDENTIFIER(1, "x"))
                         }
                     )
                 },
                 {
                     "printf()",
-                    new ASTFuncCall(
-                        new ASTId(new T_IDENTIFIER(1, "printf")),
-                        new List<ASTExpr> {
+                    new STFuncCall(
+                        new STId(new T_IDENTIFIER(1, "printf")),
+                        new List<STExpr> {
                         }
                     )
                 },
                 {
                     "(int) { 1 }",
-                    new ASTCompound(
+                    new STCompound(
                         new ASTTypeName(
-                            new List<ASTTypeSpecQual> { new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT) }
+                            new List<STTypeSpecQual> { new STTypeKeySpec(1, STTypeSpec.Kind.INT) }
                         ),
-                        new List<ASTInitItem> {
-                            new ASTInitItem(new ASTInitializer(new ASTConstInt(new T_CONST_INT(1, "1", 10))))
+                        new List<STInitItem> {
+                            new STInitItem(new STInitializer(new STConstInt(new T_CONST_INT(1, "1", 10))))
                         })
                 }
             };
@@ -167,88 +167,88 @@ namespace LC_CompilerTests {
         [TestMethod]
         public void LCCParserUnaryExpression() {
 
-            Dictionary<string, ASTExpr> dict = new Dictionary<string, ASTExpr> {
+            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
                 {
                     "++x--",
-                    new ASTPreStep(
-                        new ASTPostStep(
-                            new ASTId(new T_IDENTIFIER(1, "x")),
-                            ASTPostStep.Kind.DEC),
-                        ASTPreStep.Kind.INC
+                    new STPreStep(
+                        new STPostStep(
+                            new STId(new T_IDENTIFIER(1, "x")),
+                            STPostStep.Kind.DEC),
+                        STPreStep.Kind.INC
                     )
                 },
                 {
                     "--x[2]",
-                    new ASTPreStep(
-                        new ASTArrSub(
-                            new ASTId(new T_IDENTIFIER(1, "x")),
-                            new ASTConstInt(new T_CONST_INT(1, "2", 10))),
-                        ASTPreStep.Kind.DEC
+                    new STPreStep(
+                        new STArrSub(
+                            new STId(new T_IDENTIFIER(1, "x")),
+                            new STConstInt(new T_CONST_INT(1, "2", 10))),
+                        STPreStep.Kind.DEC
                     )
                 },
                 {
                     "&x[2]",
-                    new ASTUnaryOp(
-                        new ASTArrSub(
-                            new ASTId(new T_IDENTIFIER(1, "x")),
-                            new ASTConstInt(new T_CONST_INT(1, "2", 10))),
-                        ASTUnaryOp.Op.REF
+                    new STUnaryOp(
+                        new STArrSub(
+                            new STId(new T_IDENTIFIER(1, "x")),
+                            new STConstInt(new T_CONST_INT(1, "2", 10))),
+                        STUnaryOp.Op.REF
                     )
                 },
                 {
                     "*x[2]",
-                    new ASTUnaryOp(
-                        new ASTArrSub(
-                            new ASTId(new T_IDENTIFIER(1, "x")),
-                            new ASTConstInt(new T_CONST_INT(1, "2", 10))),
-                        ASTUnaryOp.Op.STAR
+                    new STUnaryOp(
+                        new STArrSub(
+                            new STId(new T_IDENTIFIER(1, "x")),
+                            new STConstInt(new T_CONST_INT(1, "2", 10))),
+                        STUnaryOp.Op.STAR
                     )
                 },
                 {
                     "+x[2]",
-                    new ASTUnaryOp(
-                        new ASTArrSub(
-                            new ASTId(new T_IDENTIFIER(1, "x")),
-                            new ASTConstInt(new T_CONST_INT(1, "2", 10))),
-                        ASTUnaryOp.Op.PLUS
+                    new STUnaryOp(
+                        new STArrSub(
+                            new STId(new T_IDENTIFIER(1, "x")),
+                            new STConstInt(new T_CONST_INT(1, "2", 10))),
+                        STUnaryOp.Op.PLUS
                     )
                 },
                 {
                     "-x[2]",
-                    new ASTUnaryOp(
-                        new ASTArrSub(
-                            new ASTId(new T_IDENTIFIER(1, "x")),
-                            new ASTConstInt(new T_CONST_INT(1, "2", 10))),
-                        ASTUnaryOp.Op.MINUS
+                    new STUnaryOp(
+                        new STArrSub(
+                            new STId(new T_IDENTIFIER(1, "x")),
+                            new STConstInt(new T_CONST_INT(1, "2", 10))),
+                        STUnaryOp.Op.MINUS
                     )
                 },
                 {
                     "~x[2]",
-                    new ASTUnaryOp(
-                        new ASTArrSub(
-                            new ASTId(new T_IDENTIFIER(1, "x")),
-                            new ASTConstInt(new T_CONST_INT(1, "2", 10))),
-                        ASTUnaryOp.Op.REVERSE
+                    new STUnaryOp(
+                        new STArrSub(
+                            new STId(new T_IDENTIFIER(1, "x")),
+                            new STConstInt(new T_CONST_INT(1, "2", 10))),
+                        STUnaryOp.Op.REVERSE
                     )
                 },
                 {
                     "!x[2]",
-                    new ASTUnaryOp(
-                        new ASTArrSub(
-                            new ASTId(new T_IDENTIFIER(1, "x")),
-                            new ASTConstInt(new T_CONST_INT(1, "2", 10))),
-                        ASTUnaryOp.Op.NOT
+                    new STUnaryOp(
+                        new STArrSub(
+                            new STId(new T_IDENTIFIER(1, "x")),
+                            new STConstInt(new T_CONST_INT(1, "2", 10))),
+                        STUnaryOp.Op.NOT
                     )
                 },
                 {
                     "sizeof a",
-                    new ASTSizeOf(new ASTId(new T_IDENTIFIER(1, "a")))
+                    new STSizeOf(new STId(new T_IDENTIFIER(1, "a")))
                 },
                 {
                     "sizeof (int)",
-                    new ASTSizeOf(
+                    new STSizeOf(
                         new ASTTypeName(
-                            new List<ASTTypeSpecQual> { new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT) }
+                            new List<STTypeSpecQual> { new STTypeKeySpec(1, STTypeSpec.Kind.INT) }
                         ))
                 }
             };
@@ -260,23 +260,23 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserCastExpression() {
-            Dictionary<string, ASTExpr> dict = new Dictionary<string, ASTExpr> {
+            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
                 {
                     "++x--",
-                    new ASTPreStep(
-                        new ASTPostStep(
-                            new ASTId(new T_IDENTIFIER(1, "x")),
-                            ASTPostStep.Kind.DEC),
-                        ASTPreStep.Kind.INC
+                    new STPreStep(
+                        new STPostStep(
+                            new STId(new T_IDENTIFIER(1, "x")),
+                            STPostStep.Kind.DEC),
+                        STPreStep.Kind.INC
                     )
                 },
                 {
                     "(int)what",
-                    new ASTCast(
+                    new STCast(
                         new ASTTypeName(
-                            new List<ASTTypeSpecQual> { new ASTTypeKeySpecifier(1, ASTTypeSpec.Kind.INT) }
+                            new List<STTypeSpecQual> { new STTypeKeySpec(1, STTypeSpec.Kind.INT) }
                         ),
-                        new ASTId(new T_IDENTIFIER(1, "what")))
+                        new STId(new T_IDENTIFIER(1, "what")))
                 }
             };
 
@@ -287,19 +287,19 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserMultiplicativeExpression() {
-            Dictionary<string, ASTExpr> dict = new Dictionary<string, ASTExpr> {
+            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
                 {
                     "a * b / c % d",
-                    new ASTBinaryExpr(
-                        new ASTBinaryExpr(
-                            new ASTBinaryExpr(
-                                new ASTId(new T_IDENTIFIER(1, "a")),
-                                new ASTId(new T_IDENTIFIER(1, "b")),
-                                ASTBinaryExpr.Op.MULT),
-                            new ASTId(new T_IDENTIFIER(1, "c")),
-                            ASTBinaryExpr.Op.DIV),
-                        new ASTId(new T_IDENTIFIER(1, "d")),
-                        ASTBinaryExpr.Op.MOD)
+                    new STBiExpr(
+                        new STBiExpr(
+                            new STBiExpr(
+                                new STId(new T_IDENTIFIER(1, "a")),
+                                new STId(new T_IDENTIFIER(1, "b")),
+                                STBiExpr.Op.MULT),
+                            new STId(new T_IDENTIFIER(1, "c")),
+                            STBiExpr.Op.DIV),
+                        new STId(new T_IDENTIFIER(1, "d")),
+                        STBiExpr.Op.MOD)
                 }
             };
 
@@ -310,29 +310,29 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserAdditiveOperator() {
-            Dictionary<string, ASTExpr> dict = new Dictionary<string, ASTExpr> {
+            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
                 {
                     "a + b * 3",
-                    new ASTBinaryExpr(
-                        new ASTId(new T_IDENTIFIER(1, "a")),
-                        new ASTBinaryExpr(
-                            new ASTId(new T_IDENTIFIER(1, "b")),
-                            new ASTConstInt(new T_CONST_INT(1, "3", 10)),
-                            ASTBinaryExpr.Op.MULT),
-                        ASTBinaryExpr.Op.PLUS)
+                    new STBiExpr(
+                        new STId(new T_IDENTIFIER(1, "a")),
+                        new STBiExpr(
+                            new STId(new T_IDENTIFIER(1, "b")),
+                            new STConstInt(new T_CONST_INT(1, "3", 10)),
+                            STBiExpr.Op.MULT),
+                        STBiExpr.Op.PLUS)
                 },
                 {
                     "1 + 2 \n * c \n - 5",
-                    new ASTBinaryExpr(
-                        new ASTBinaryExpr(
-                            new ASTConstInt(new T_CONST_INT(1, "1", 10)),
-                            new ASTBinaryExpr(
-                                new ASTConstInt(new T_CONST_INT(1, "2", 10)),
-                                new ASTId(new T_IDENTIFIER(2, "c")),
-                                ASTBinaryExpr.Op.MULT),
-                            ASTBinaryExpr.Op.PLUS),
-                        new ASTConstInt(new T_CONST_INT(3, "5", 10)),
-                        ASTBinaryExpr.Op.MINUS)
+                    new STBiExpr(
+                        new STBiExpr(
+                            new STConstInt(new T_CONST_INT(1, "1", 10)),
+                            new STBiExpr(
+                                new STConstInt(new T_CONST_INT(1, "2", 10)),
+                                new STId(new T_IDENTIFIER(2, "c")),
+                                STBiExpr.Op.MULT),
+                            STBiExpr.Op.PLUS),
+                        new STConstInt(new T_CONST_INT(3, "5", 10)),
+                        STBiExpr.Op.MINUS)
                 }
             };
 
@@ -343,13 +343,13 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserShiftExpression() {
-            Dictionary<string, ASTExpr> dict = new Dictionary<string, ASTExpr> {
+            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
                 {
                     "a << 1",
-                    new ASTBinaryExpr(
-                        new ASTId(new T_IDENTIFIER(1, "a")),
-                        new ASTConstInt(new T_CONST_INT(1, "1", 10)),
-                        ASTBinaryExpr.Op.LEFT)
+                    new STBiExpr(
+                        new STId(new T_IDENTIFIER(1, "a")),
+                        new STConstInt(new T_CONST_INT(1, "1", 10)),
+                        STBiExpr.Op.LEFT)
                 }
             };
             foreach (var test in dict) {
@@ -359,16 +359,16 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserRelationalExpression() {
-            Dictionary<string, ASTExpr> dict = new Dictionary<string, ASTExpr> {
+            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
                 {
                     "a << 1 >= 23",
-                    new ASTBinaryExpr(
-                        new ASTBinaryExpr(
-                            new ASTId(new T_IDENTIFIER(1, "a")),
-                            new ASTConstInt(new T_CONST_INT(1, "1", 10)),
-                            ASTBinaryExpr.Op.LEFT),
-                        new ASTConstInt(new T_CONST_INT(1, "23", 10)),
-                        ASTBinaryExpr.Op.GE)
+                    new STBiExpr(
+                        new STBiExpr(
+                            new STId(new T_IDENTIFIER(1, "a")),
+                            new STConstInt(new T_CONST_INT(1, "1", 10)),
+                            STBiExpr.Op.LEFT),
+                        new STConstInt(new T_CONST_INT(1, "23", 10)),
+                        STBiExpr.Op.GE)
                 }
             };
             foreach (var test in dict) {
@@ -378,16 +378,16 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserEqualityExpression() {
-            Dictionary<string, ASTExpr> dict = new Dictionary<string, ASTExpr> {
+            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
                 {
                     "a << 1 != 23",
-                    new ASTBinaryExpr(
-                        new ASTBinaryExpr(
-                            new ASTId(new T_IDENTIFIER(1, "a")),
-                            new ASTConstInt(new T_CONST_INT(1, "1", 10)),
-                            ASTBinaryExpr.Op.LEFT),
-                        new ASTConstInt(new T_CONST_INT(1, "23", 10)),
-                        ASTBinaryExpr.Op.NEQ)
+                    new STBiExpr(
+                        new STBiExpr(
+                            new STId(new T_IDENTIFIER(1, "a")),
+                            new STConstInt(new T_CONST_INT(1, "1", 10)),
+                            STBiExpr.Op.LEFT),
+                        new STConstInt(new T_CONST_INT(1, "23", 10)),
+                        STBiExpr.Op.NEQ)
                 }
             };
             foreach (var test in dict) {
@@ -397,16 +397,16 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserANDExpression() {
-            Dictionary<string, ASTExpr> dict = new Dictionary<string, ASTExpr> {
+            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
                 {
                     "a >> 1 & 0x1",
-                    new ASTBinaryExpr(
-                        new ASTBinaryExpr(
-                            new ASTId(new T_IDENTIFIER(1, "a")),
-                            new ASTConstInt(new T_CONST_INT(1, "1", 10)),
-                            ASTBinaryExpr.Op.RIGHT),
-                        new ASTConstInt(new T_CONST_INT(1, "1", 16)),
-                        ASTBinaryExpr.Op.AND)
+                    new STBiExpr(
+                        new STBiExpr(
+                            new STId(new T_IDENTIFIER(1, "a")),
+                            new STConstInt(new T_CONST_INT(1, "1", 10)),
+                            STBiExpr.Op.RIGHT),
+                        new STConstInt(new T_CONST_INT(1, "1", 16)),
+                        STBiExpr.Op.AND)
                 }
             };
             foreach (var test in dict) {
@@ -416,16 +416,16 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserXORExpression() {
-            Dictionary<string, ASTExpr> dict = new Dictionary<string, ASTExpr> {
+            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
                 {
                     "a >> 1 ^ 0x1",
-                    new ASTBinaryExpr(
-                        new ASTBinaryExpr(
-                            new ASTId(new T_IDENTIFIER(1, "a")),
-                            new ASTConstInt(new T_CONST_INT(1, "1", 10)),
-                            ASTBinaryExpr.Op.RIGHT),
-                        new ASTConstInt(new T_CONST_INT(1, "1", 16)),
-                        ASTBinaryExpr.Op.XOR)
+                    new STBiExpr(
+                        new STBiExpr(
+                            new STId(new T_IDENTIFIER(1, "a")),
+                            new STConstInt(new T_CONST_INT(1, "1", 10)),
+                            STBiExpr.Op.RIGHT),
+                        new STConstInt(new T_CONST_INT(1, "1", 16)),
+                        STBiExpr.Op.XOR)
                 }
             };
             foreach (var test in dict) {
@@ -435,16 +435,16 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserORExpression() {
-            Dictionary<string, ASTExpr> dict = new Dictionary<string, ASTExpr> {
+            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
                 {
                     "a >> 1 | 0x1",
-                    new ASTBinaryExpr(
-                        new ASTBinaryExpr(
-                            new ASTId(new T_IDENTIFIER(1, "a")),
-                            new ASTConstInt(new T_CONST_INT(1, "1", 10)),
-                            ASTBinaryExpr.Op.RIGHT),
-                        new ASTConstInt(new T_CONST_INT(1, "1", 16)),
-                        ASTBinaryExpr.Op.OR)
+                    new STBiExpr(
+                        new STBiExpr(
+                            new STId(new T_IDENTIFIER(1, "a")),
+                            new STConstInt(new T_CONST_INT(1, "1", 10)),
+                            STBiExpr.Op.RIGHT),
+                        new STConstInt(new T_CONST_INT(1, "1", 16)),
+                        STBiExpr.Op.OR)
                 }
             };
             foreach (var test in dict) {
@@ -454,22 +454,22 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserLogicalANDExpression() {
-            Dictionary<string, ASTExpr> dict = new Dictionary<string, ASTExpr> {
+            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
                 {
                     "a >> 1 == 0x1 && b == 0",
-                    new ASTBinaryExpr(
-                        new ASTBinaryExpr(
-                            new ASTBinaryExpr(
-                                new ASTId(new T_IDENTIFIER(1, "a")),
-                                new ASTConstInt(new T_CONST_INT(1, "1", 10)),
-                                ASTBinaryExpr.Op.RIGHT),
-                            new ASTConstInt(new T_CONST_INT(1, "1", 16)),
-                            ASTBinaryExpr.Op.EQ),
-                        new ASTBinaryExpr(
-                            new ASTId(new T_IDENTIFIER(1, "b")),
-                            new ASTConstInt(new T_CONST_INT(1, "0", 8)),
-                            ASTBinaryExpr.Op.EQ),
-                        ASTBinaryExpr.Op.LOGAND)
+                    new STBiExpr(
+                        new STBiExpr(
+                            new STBiExpr(
+                                new STId(new T_IDENTIFIER(1, "a")),
+                                new STConstInt(new T_CONST_INT(1, "1", 10)),
+                                STBiExpr.Op.RIGHT),
+                            new STConstInt(new T_CONST_INT(1, "1", 16)),
+                            STBiExpr.Op.EQ),
+                        new STBiExpr(
+                            new STId(new T_IDENTIFIER(1, "b")),
+                            new STConstInt(new T_CONST_INT(1, "0", 8)),
+                            STBiExpr.Op.EQ),
+                        STBiExpr.Op.LOGAND)
                 }
             };
             foreach (var test in dict) {
@@ -479,22 +479,22 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserLogicalORExpression() {
-            Dictionary<string, ASTExpr> dict = new Dictionary<string, ASTExpr> {
+            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
                 {
                     "a >> 1 == 0x1 || b == 0",
-                    new ASTBinaryExpr(
-                        new ASTBinaryExpr(
-                            new ASTBinaryExpr(
-                                new ASTId(new T_IDENTIFIER(1, "a")),
-                                new ASTConstInt(new T_CONST_INT(1, "1", 10)),
-                                ASTBinaryExpr.Op.RIGHT),
-                            new ASTConstInt(new T_CONST_INT(1, "1", 16)),
-                            ASTBinaryExpr.Op.EQ),
-                        new ASTBinaryExpr(
-                            new ASTId(new T_IDENTIFIER(1, "b")),
-                            new ASTConstInt(new T_CONST_INT(1, "0", 8)),
-                            ASTBinaryExpr.Op.EQ),
-                        ASTBinaryExpr.Op.LOGOR)
+                    new STBiExpr(
+                        new STBiExpr(
+                            new STBiExpr(
+                                new STId(new T_IDENTIFIER(1, "a")),
+                                new STConstInt(new T_CONST_INT(1, "1", 10)),
+                                STBiExpr.Op.RIGHT),
+                            new STConstInt(new T_CONST_INT(1, "1", 16)),
+                            STBiExpr.Op.EQ),
+                        new STBiExpr(
+                            new STId(new T_IDENTIFIER(1, "b")),
+                            new STConstInt(new T_CONST_INT(1, "0", 8)),
+                            STBiExpr.Op.EQ),
+                        STBiExpr.Op.LOGOR)
                 }
             };
             foreach (var test in dict) {
@@ -504,16 +504,16 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserConditionalExpression() {
-            Dictionary<string, ASTExpr> dict = new Dictionary<string, ASTExpr> {
+            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
                 {
                     "a == 0 ? c : d",
-                    new ASTConditionalExpr(
-                        new ASTBinaryExpr(
-                            new ASTId(new T_IDENTIFIER(1, "a")),
-                            new ASTConstInt(new T_CONST_INT(1, "0", 10)),
-                            ASTBinaryExpr.Op.EQ),
-                        new ASTId(new T_IDENTIFIER(1, "c")),
-                        new ASTId(new T_IDENTIFIER(1, "d")))
+                    new STCondExpr(
+                        new STBiExpr(
+                            new STId(new T_IDENTIFIER(1, "a")),
+                            new STConstInt(new T_CONST_INT(1, "0", 10)),
+                            STBiExpr.Op.EQ),
+                        new STId(new T_IDENTIFIER(1, "c")),
+                        new STId(new T_IDENTIFIER(1, "d")))
                 }
             };
             foreach (var test in dict) {
@@ -523,33 +523,33 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserAssignmentExpression() {
-            Dictionary<string, ASTExpr> dict = new Dictionary<string, ASTExpr> {
+            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
                 {
                     "a == 0 ? c : d",
-                    new ASTConditionalExpr(
-                        new ASTBinaryExpr(
-                            new ASTId(new T_IDENTIFIER(1, "a")),
-                            new ASTConstInt(new T_CONST_INT(1, "0", 10)),
-                            ASTBinaryExpr.Op.EQ),
-                        new ASTId(new T_IDENTIFIER(1, "c")),
-                        new ASTId(new T_IDENTIFIER(1, "d")))
+                    new STCondExpr(
+                        new STBiExpr(
+                            new STId(new T_IDENTIFIER(1, "a")),
+                            new STConstInt(new T_CONST_INT(1, "0", 10)),
+                            STBiExpr.Op.EQ),
+                        new STId(new T_IDENTIFIER(1, "c")),
+                        new STId(new T_IDENTIFIER(1, "d")))
                 },
                 {
                     "a += 6",
-                    new ASTAssignExpr(
-                        new ASTId(new T_IDENTIFIER(1, "a")),
-                        new ASTConstInt(new T_CONST_INT(1, "6", 10)),
-                        ASTAssignExpr.Op.PLUSEQ)
+                    new STAssignExpr(
+                        new STId(new T_IDENTIFIER(1, "a")),
+                        new STConstInt(new T_CONST_INT(1, "6", 10)),
+                        STAssignExpr.Op.PLUSEQ)
                 },
                 {
                     "val = a = c",
-                    new ASTAssignExpr(
-                        new ASTId(new T_IDENTIFIER(1, "val")),
-                        new ASTAssignExpr(
-                            new ASTId(new T_IDENTIFIER(1, "a")),
-                            new ASTId(new T_IDENTIFIER(1, "c")),
-                            ASTAssignExpr.Op.ASSIGN),
-                        ASTAssignExpr.Op.ASSIGN)
+                    new STAssignExpr(
+                        new STId(new T_IDENTIFIER(1, "val")),
+                        new STAssignExpr(
+                            new STId(new T_IDENTIFIER(1, "a")),
+                            new STId(new T_IDENTIFIER(1, "c")),
+                            STAssignExpr.Op.ASSIGN),
+                        STAssignExpr.Op.ASSIGN)
                 }
             };
             foreach (var test in dict) {
@@ -559,19 +559,19 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserCommaExpressionEquals() {
-            var e11 = new ASTId(new T_IDENTIFIER(1, "a"));
-            var e21 = new ASTId(new T_IDENTIFIER(1, "a"));
-            var e12 = new ASTBinaryExpr(
-                    new ASTId(new T_IDENTIFIER(2, "b")),
-                    new ASTConstInt(new T_CONST_INT(2, "4", 10)),
-                    ASTBinaryExpr.Op.PLUS);
-            var e22 = new ASTBinaryExpr(
-                    new ASTId(new T_IDENTIFIER(2, "b")),
-                    new ASTConstInt(new T_CONST_INT(2, "4", 10)),
-                    ASTBinaryExpr.Op.PLUS);
-            var l1 = new LinkedList<ASTExpr>();
-            var l2 = new LinkedList<ASTExpr>();
-            var l3 = new LinkedList<ASTExpr>();
+            var e11 = new STId(new T_IDENTIFIER(1, "a"));
+            var e21 = new STId(new T_IDENTIFIER(1, "a"));
+            var e12 = new STBiExpr(
+                    new STId(new T_IDENTIFIER(2, "b")),
+                    new STConstInt(new T_CONST_INT(2, "4", 10)),
+                    STBiExpr.Op.PLUS);
+            var e22 = new STBiExpr(
+                    new STId(new T_IDENTIFIER(2, "b")),
+                    new STConstInt(new T_CONST_INT(2, "4", 10)),
+                    STBiExpr.Op.PLUS);
+            var l1 = new LinkedList<STExpr>();
+            var l2 = new LinkedList<STExpr>();
+            var l3 = new LinkedList<STExpr>();
 
             l1.AddFirst(e11);
             l1.AddFirst(e12);
@@ -582,9 +582,9 @@ namespace LC_CompilerTests {
             l3.AddFirst(e21);
             l3.AddFirst(e22);
 
-            var comma1 = new ASTCommaExpr(l1);
-            var comma2 = new ASTCommaExpr(l2);
-            var comma3 = new ASTCommaExpr(l3);
+            var comma1 = new STCommaExpr(l1);
+            var comma2 = new STCommaExpr(l2);
+            var comma3 = new STCommaExpr(l3);
 
             Assert.IsFalse(comma1.Equals(comma2));
             Assert.IsTrue(comma1.Equals(comma3));
@@ -593,22 +593,22 @@ namespace LC_CompilerTests {
         [TestMethod]
         public void LCCParserExpression() {
 
-            Dictionary<string, ASTExpr> dict = new Dictionary<string, ASTExpr> {
+            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
                 {
                     "a = 1, b = 2, c = 3",
-                    new ASTCommaExpr(new LinkedList<ASTExpr>(new List<ASTExpr> {
-                        new ASTAssignExpr(
-                            new ASTId(new T_IDENTIFIER(1, "a")),
-                            new ASTConstInt(new T_CONST_INT(1, "1", 10)),
-                            ASTAssignExpr.Op.ASSIGN),
-                        new ASTAssignExpr(
-                            new ASTId(new T_IDENTIFIER(1, "b")),
-                            new ASTConstInt(new T_CONST_INT(1, "2", 10)),
-                            ASTAssignExpr.Op.ASSIGN),
-                        new ASTAssignExpr(
-                            new ASTId(new T_IDENTIFIER(1, "c")),
-                            new ASTConstInt(new T_CONST_INT(1, "3", 10)),
-                            ASTAssignExpr.Op.ASSIGN),
+                    new STCommaExpr(new LinkedList<STExpr>(new List<STExpr> {
+                        new STAssignExpr(
+                            new STId(new T_IDENTIFIER(1, "a")),
+                            new STConstInt(new T_CONST_INT(1, "1", 10)),
+                            STAssignExpr.Op.ASSIGN),
+                        new STAssignExpr(
+                            new STId(new T_IDENTIFIER(1, "b")),
+                            new STConstInt(new T_CONST_INT(1, "2", 10)),
+                            STAssignExpr.Op.ASSIGN),
+                        new STAssignExpr(
+                            new STId(new T_IDENTIFIER(1, "c")),
+                            new STConstInt(new T_CONST_INT(1, "3", 10)),
+                            STAssignExpr.Op.ASSIGN),
                     }))
                 }
             };
@@ -619,16 +619,16 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserConstantExpression() {
-            Dictionary<string, ASTExpr> dict = new Dictionary<string, ASTExpr> {
+            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
                 {
                     "a == 0 ? c : d",
-                    new ASTConditionalExpr(
-                        new ASTBinaryExpr(
-                            new ASTId(new T_IDENTIFIER(1, "a")),
-                            new ASTConstInt(new T_CONST_INT(1, "0", 10)),
-                            ASTBinaryExpr.Op.EQ),
-                        new ASTId(new T_IDENTIFIER(1, "c")),
-                        new ASTId(new T_IDENTIFIER(1, "d")))
+                    new STCondExpr(
+                        new STBiExpr(
+                            new STId(new T_IDENTIFIER(1, "a")),
+                            new STConstInt(new T_CONST_INT(1, "0", 10)),
+                            STBiExpr.Op.EQ),
+                        new STId(new T_IDENTIFIER(1, "c")),
+                        new STId(new T_IDENTIFIER(1, "d")))
                 }
             };
             foreach (var test in dict) {
