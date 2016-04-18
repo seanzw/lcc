@@ -10,7 +10,7 @@ namespace lcc.TypeSystem {
         private static readonly TBool instance = new TBool();
         public static TBool Instance => instance;
         public override int Rank => 0;
-        public override int Size => 1;
+        public override int Bits => 8;
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();

@@ -14,10 +14,10 @@ namespace lcc.TypeSystem {
         public override bool IsPointer => true;
         public override bool IsComplete => true;
         public override bool IsDefined => true;
-        public override int Size => 8;
+        public override int Bits => 32;
 
         public override string ToString() {
-            return string.Format("{0} *", element.ToString());
+            return string.Format("({0}) *", element.ToString());
         }
         public override bool Equals(object obj) {
             return Equals(obj as TPointer);

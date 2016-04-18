@@ -11,7 +11,7 @@ namespace lcc.SyntaxTree {
     public sealed class STDeclaration : STStmt, IEquatable<STDeclaration> {
 
         public STDeclaration(
-            STDeclSpecs specifiers,
+            DeclSpecs specifiers,
             IEnumerable<STInitDeclarator> declarators
             ) {
             this.specifiers = specifiers;
@@ -44,44 +44,44 @@ namespace lcc.SyntaxTree {
             return specifiers.GetHashCode();
         }
 
-        public readonly STDeclSpecs specifiers;
+        public readonly DeclSpecs specifiers;
         public readonly IEnumerable<STInitDeclarator> declarators;
 
-        public T TypeCheck(ASTEnv env) {
+        public T TypeCheck(Env env) {
 
             return null;
         }
     }
 
-    public sealed class STDeclSpecs : STNode, IEquatable<STDeclSpecs> {
+    public sealed class DeclSpecs : Node, IEquatable<DeclSpecs> {
 
-        public STDeclSpecs(
-            IEnumerable<STDeclSpec> all,
+        public DeclSpecs(
+            IEnumerable<DeclSpec> all,
             STStoreSpec.Kind storage,
-            IEnumerable<STTypeSpec.Kind> keys,
+            IEnumerable<TypeSpec.Kind> keys,
             STFuncSpec.Kind function = STFuncSpec.Kind.NONE
             ) {
             this.storage = storage;
             this.keys = keys;
             this.function = function;
-            qualifiers = GetQualifiers(from s in all.OfType<STTypeQual>() select s.kind);
+            qualifiers = GetQualifiers(from s in all.OfType<TypeQual>() select s.kind);
             pos = all.First().Pos;
         }
 
-        public STDeclSpecs(
-            IEnumerable<STDeclSpec> all,
+        public DeclSpecs(
+            IEnumerable<DeclSpec> all,
             STStoreSpec.Kind storage,
-            STTypeUserSpec specifier,
+            TypeUserSpec specifier,
             STFuncSpec.Kind function = STFuncSpec.Kind.NONE
             ) {
             this.storage = storage;
             this.function = function;
             this.specifier = specifier;
-            qualifiers = GetQualifiers(from s in all.OfType<STTypeQual>() select s.kind);
+            qualifiers = GetQualifiers(from s in all.OfType<TypeQual>() select s.kind);
             pos = all.First().Pos;
         }
 
-        public bool Equals(STDeclSpecs x) {
+        public bool Equals(DeclSpecs x) {
             return x != null && x.pos.Equals(pos)
                 && x.storage == storage
                 && x.qualifiers.Equals(qualifiers)
@@ -91,7 +91,7 @@ namespace lcc.SyntaxTree {
         }
 
         public override bool Equals(object obj) {
-            return Equals(obj as STDeclSpecs);
+            return Equals(obj as DeclSpecs);
         }
 
         public override int GetHashCode() {
@@ -118,30 +118,38 @@ namespace lcc.SyntaxTree {
         /// <summary>
         /// All the type specifiers EXCEPT struct, union, enum, typedef.
         /// </summary>
-        public readonly IEnumerable<STTypeSpec.Kind> keys;
+        public readonly IEnumerable<TypeSpec.Kind> keys;
 
         /// <summary>
         /// All the struct, union, enum, typedef specifier.
         /// </summary>
-        public readonly STTypeUserSpec specifier;
+        public readonly TypeUserSpec specifier;
+
+        /// <summary>
+        /// Get the qualified type as LValue.
+        /// </summary>
+        /// <param name="env"></param>
+        /// <returns></returns>
+        public T GetT(Env env) {
+            return GetTUnqualified(env).Qualify(qualifiers, T.LR.L, storage);
+        }
 
         /// <summary>
         /// Evaluate the type specifiers and get the unqualified type.
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        public TUnqualified GetTUnqualified(ASTEnv env) {
-            // Get the unqualified type.
+        private TUnqualified GetTUnqualified(Env env) {
             if (keys != null) {
                 // This is built-in type.
                 if (dict.ContainsKey(keys)) return dict[keys];
-                else throw new STException(pos, string.Format("Unkown type: {0}", keys.Aggregate("", (str, key) => str + " " + key)));
+                else throw new Error(pos, string.Format("Unkown type: {0}", keys.Aggregate("", (str, key) => str + " " + key)));
             } else if (specifier != null) {
                 // This is a user-defined type.
                 return specifier.GetTUnqualified(env);
             } else {
                 // Error!
-                throw new STException(pos, "At least one type specifier should be given.");
+                throw new Error(pos, "At least one type specifier should be given.");
             }
         }
 
@@ -149,23 +157,23 @@ namespace lcc.SyntaxTree {
         /// Evaluate the type qualifiers.
         /// </summary>
         /// <returns></returns>
-        private static TQualifiers GetQualifiers(IEnumerable<STTypeQual.Kind> qualifiers) {
+        public static TQualifiers GetQualifiers(IEnumerable<TypeQual.Kind> qualifiers) {
             var tuple = new Tuple<bool, bool, bool>(
-                qualifiers.Contains(STTypeQual.Kind.CONST),
-                qualifiers.Contains(STTypeQual.Kind.RESTRICT), 
-                qualifiers.Contains(STTypeQual.Kind.VOLATILE));
+                qualifiers.Contains(TypeQual.Kind.CONST),
+                qualifiers.Contains(TypeQual.Kind.RESTRICT), 
+                qualifiers.Contains(TypeQual.Kind.VOLATILE));
             return TQualifiers.dict[tuple];
         }
 
         private readonly Position pos;
 
         #region TypeSpecifier Map
-        private class ListComparer : IEqualityComparer<IEnumerable<STTypeSpec.Kind>> {
-            public bool Equals(IEnumerable<STTypeSpec.Kind> x, IEnumerable<STTypeSpec.Kind> y) {
+        private class ListComparer : IEqualityComparer<IEnumerable<TypeSpec.Kind>> {
+            public bool Equals(IEnumerable<TypeSpec.Kind> x, IEnumerable<TypeSpec.Kind> y) {
                 return x.SequenceEqual(y);
             }
 
-            public int GetHashCode(IEnumerable<STTypeSpec.Kind> x) {
+            public int GetHashCode(IEnumerable<TypeSpec.Kind> x) {
                 int hash = 0;
                 foreach (var s in x) {
                     hash |= s.GetHashCode();
@@ -174,254 +182,254 @@ namespace lcc.SyntaxTree {
             }
         }
 
-        private static Dictionary<IEnumerable<STTypeSpec.Kind>, TUnqualified> dict =
-            new Dictionary<IEnumerable<STTypeSpec.Kind>, TUnqualified>(new ListComparer()) {
+        private static Dictionary<IEnumerable<TypeSpec.Kind>, TUnqualified> dict =
+            new Dictionary<IEnumerable<TypeSpec.Kind>, TUnqualified>(new ListComparer()) {
                 {
                     // void
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.VOID
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.VOID
                     } orderby s ascending select s,
                     TypeVoid.Instance
                 },
                 {
                     // char
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.CHAR
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.CHAR
                     } orderby s ascending select s,
                     TChar.Instance
                 },
                 {
                     // signed char
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.SIGNED,
-                        STTypeSpec.Kind.CHAR
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.SIGNED,
+                        TypeSpec.Kind.CHAR
                     } orderby s ascending select s,
                     TSChar.Instance
                 },
                 {
                     // unsigned char
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.UNSIGNED,
-                        STTypeSpec.Kind.CHAR
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.UNSIGNED,
+                        TypeSpec.Kind.CHAR
                     } orderby s ascending select s,
                     TUChar.Instance
                 },
                 {
                     // short
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.SHORT
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.SHORT
                     } orderby s ascending select s,
                     TShort.Instance
                 },
                 {
                     // signed short
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.SIGNED,
-                        STTypeSpec.Kind.SHORT
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.SIGNED,
+                        TypeSpec.Kind.SHORT
                     } orderby s ascending select s,
                     TShort.Instance
                 },
                 {
                     // short int
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.SHORT,
-                        STTypeSpec.Kind.INT
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.SHORT,
+                        TypeSpec.Kind.INT
                     } orderby s ascending select s,
                     TShort.Instance
                 },
                 {
                     // signed short int
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.SIGNED,
-                        STTypeSpec.Kind.SHORT,
-                        STTypeSpec.Kind.INT
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.SIGNED,
+                        TypeSpec.Kind.SHORT,
+                        TypeSpec.Kind.INT
                     } orderby s ascending select s,
                     TShort.Instance
                 },
                 {
                     // unsigned short
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.UNSIGNED,
-                        STTypeSpec.Kind.SHORT
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.UNSIGNED,
+                        TypeSpec.Kind.SHORT
                     } orderby s ascending select s,
                     TUShort.Instance
                 },
                 {
                     // unsigned short int
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.UNSIGNED,
-                        STTypeSpec.Kind.SHORT,
-                        STTypeSpec.Kind.INT
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.UNSIGNED,
+                        TypeSpec.Kind.SHORT,
+                        TypeSpec.Kind.INT
                     } orderby s ascending select s,
                     TUShort.Instance
                 },
                 {
                     // int
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.INT
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.INT
                     } orderby s ascending select s,
                     TInt.Instance
                 },
                 {
                     // signed
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.SIGNED
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.SIGNED
                     } orderby s ascending select s,
                     TInt.Instance
                 },
                 {
                     // signed int
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.SIGNED,
-                        STTypeSpec.Kind.INT
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.SIGNED,
+                        TypeSpec.Kind.INT
                     } orderby s ascending select s,
                     TInt.Instance
                 },
                 {
                     // unsigned
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.UNSIGNED
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.UNSIGNED
                     } orderby s ascending select s,
                     TUInt.Instance
                 },
                 {
                     // unsigned int
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.UNSIGNED,
-                        STTypeSpec.Kind.INT
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.UNSIGNED,
+                        TypeSpec.Kind.INT
                     } orderby s ascending select s,
                     TUInt.Instance
                 },
                 {
                     // long
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.LONG
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.LONG
                     } orderby s ascending select s,
                     TLong.Instance
                 },
                 {
                     // signed long
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.SIGNED,
-                        STTypeSpec.Kind.LONG
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.SIGNED,
+                        TypeSpec.Kind.LONG
                     } orderby s ascending select s,
                     TLong.Instance
                 },
                 {
                     // long int
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.LONG,
-                        STTypeSpec.Kind.INT
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.LONG,
+                        TypeSpec.Kind.INT
                     } orderby s ascending select s,
                     TLong.Instance
                 },
                 {
                     // signed long int
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.SIGNED,
-                        STTypeSpec.Kind.LONG,
-                        STTypeSpec.Kind.INT
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.SIGNED,
+                        TypeSpec.Kind.LONG,
+                        TypeSpec.Kind.INT
                     } orderby s ascending select s,
                     TLong.Instance
                 },
                 {
                     // unsigned long
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.UNSIGNED,
-                        STTypeSpec.Kind.LONG
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.UNSIGNED,
+                        TypeSpec.Kind.LONG
                     } orderby s ascending select s,
                     TULong.Instance
                 },
                 {
                     // unsigned long int
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.UNSIGNED,
-                        STTypeSpec.Kind.LONG,
-                        STTypeSpec.Kind.INT
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.UNSIGNED,
+                        TypeSpec.Kind.LONG,
+                        TypeSpec.Kind.INT
                     } orderby s ascending select s,
                     TULong.Instance
                 },
                 {
                     // long long
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.LONG,
-                        STTypeSpec.Kind.LONG
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.LONG,
+                        TypeSpec.Kind.LONG
                     } orderby s ascending select s,
                     TLLong.Instance
                 },
                 {
                     // signed long long
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.SIGNED,
-                        STTypeSpec.Kind.LONG,
-                        STTypeSpec.Kind.LONG
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.SIGNED,
+                        TypeSpec.Kind.LONG,
+                        TypeSpec.Kind.LONG
                     } orderby s ascending select s,
                     TLLong.Instance
                 },
                 {
                     // long long int
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.LONG,
-                        STTypeSpec.Kind.LONG,
-                        STTypeSpec.Kind.INT
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.LONG,
+                        TypeSpec.Kind.LONG,
+                        TypeSpec.Kind.INT
                     } orderby s ascending select s,
                     TLLong.Instance
                 },
                 {
                     // signed long long int
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.SIGNED,
-                        STTypeSpec.Kind.LONG,
-                        STTypeSpec.Kind.LONG,
-                        STTypeSpec.Kind.INT
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.SIGNED,
+                        TypeSpec.Kind.LONG,
+                        TypeSpec.Kind.LONG,
+                        TypeSpec.Kind.INT
                     } orderby s ascending select s,
                     TLLong.Instance
                 },
                 {
                     // unsigned long long
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.UNSIGNED,
-                        STTypeSpec.Kind.LONG,
-                        STTypeSpec.Kind.LONG
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.UNSIGNED,
+                        TypeSpec.Kind.LONG,
+                        TypeSpec.Kind.LONG
                     } orderby s ascending select s,
                     TULLong.Instance
                 },
                 {
                     // unsigned long long int
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.UNSIGNED,
-                        STTypeSpec.Kind.LONG,
-                        STTypeSpec.Kind.LONG,
-                        STTypeSpec.Kind.INT
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.UNSIGNED,
+                        TypeSpec.Kind.LONG,
+                        TypeSpec.Kind.LONG,
+                        TypeSpec.Kind.INT
                     } orderby s ascending select s,
                     TULLong.Instance
                 },
                 {
                     // float
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.FLOAT
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.FLOAT
                     } orderby s ascending select s,
                     TFloat.Instance
                 },
                 {
                     // double
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.DOUBLE
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.DOUBLE
                     } orderby s ascending select s,
                     TDouble.Instance
                 },
                 {
                     // long double
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.LONG,
-                        STTypeSpec.Kind.DOUBLE
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.LONG,
+                        TypeSpec.Kind.DOUBLE
                     } orderby s ascending select s,
                     TLDouble.Instance
                 },
                 {
                     // double
-                    from s in new List<STTypeSpec.Kind> {
-                        STTypeSpec.Kind.BOOL
+                    from s in new List<TypeSpec.Kind> {
+                        TypeSpec.Kind.BOOL
                     } orderby s ascending select s,
                     TBool.Instance
                 },
@@ -429,9 +437,9 @@ namespace lcc.SyntaxTree {
         #endregion
     }
 
-    public sealed class STInitDeclarator : STNode, IEquatable<STInitDeclarator> {
+    public sealed class STInitDeclarator : Node, IEquatable<STInitDeclarator> {
 
-        public STInitDeclarator(STDeclarator declarator, STInitializer initializer = null) {
+        public STInitDeclarator(Declarator declarator, STInitializer initializer = null) {
             this.declarator = declarator;
             this.initializer = initializer;
         }
@@ -450,13 +458,13 @@ namespace lcc.SyntaxTree {
 
         public override Position Pos => declarator.Pos;
 
-        public readonly STDeclarator declarator;
+        public readonly Declarator declarator;
         public readonly STInitializer initializer;
     }
 
-    public abstract class STDeclSpec : STNode { }
+    public abstract class DeclSpec : Node { }
 
-    public sealed class STStoreSpec : STDeclSpec, IEquatable<STStoreSpec> {
+    public sealed class STStoreSpec : DeclSpec, IEquatable<STStoreSpec> {
 
         public enum Kind {
             NONE,           // Represent no storage-specifier
@@ -490,9 +498,9 @@ namespace lcc.SyntaxTree {
         public readonly Position pos;
     }
 
-    public abstract class STTypeSpecQual : STDeclSpec { }
+    public abstract class TypeSpecQual : DeclSpec { }
 
-    public abstract class STTypeSpec : STTypeSpecQual {
+    public abstract class TypeSpec : TypeSpecQual {
 
         public enum Kind {
             VOID,
@@ -512,14 +520,14 @@ namespace lcc.SyntaxTree {
             TYPEDEF
         }
 
-        public STTypeSpec(Kind kind) {
+        public TypeSpec(Kind kind) {
             this.kind = kind;
         }
 
         public readonly Kind kind;
     }
 
-    public sealed class STTypeKeySpec : STTypeSpec, IEquatable<STTypeKeySpec> {
+    public sealed class STTypeKeySpec : TypeSpec, IEquatable<STTypeKeySpec> {
 
         public STTypeKeySpec(int line, Kind kind) : base(kind) {
             this.pos = new Position { line = line };
@@ -545,20 +553,22 @@ namespace lcc.SyntaxTree {
     /// <summary>
     /// Represents a user-defined type specifier.
     /// </summary>
-    public abstract class STTypeUserSpec : STTypeSpec {
-        public STTypeUserSpec(Kind kind) : base(kind) { }
-        public abstract TUnqualified GetTUnqualified(ASTEnv env);
+    public abstract class TypeUserSpec : TypeSpec {
+        public TypeUserSpec(Kind kind) : base(kind) { }
+        public abstract TUnqualified GetTUnqualified(Env env);
     }
 
-    public sealed class STStructUnionSpec : STTypeUserSpec, IEquatable<STStructUnionSpec> {
+    public sealed class StructUnionSpec : TypeUserSpec, IEquatable<StructUnionSpec> {
 
-        public STStructUnionSpec(
+        public StructUnionSpec(
             int line,
-            STId identifier,
-            IEnumerable<STStructDeclaration> declarations,
+            Id identifier,
+            IEnumerable<StructDeclaration> declarations,
             Kind kind
             ) : base(kind) {
-            this.pos = new Position { line = line };
+            if (kind != Kind.STRUCT && kind != Kind.UNION)
+                throw new ArgumentException("This must be either struct or union!");
+            pos = new Position { line = line };
             this.identifier = identifier;
             this.declarations = declarations;
         }
@@ -566,10 +576,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STStructUnionSpec);
+            return Equals(obj as StructUnionSpec);
         }
 
-        public bool Equals(STStructUnionSpec x) {
+        public bool Equals(StructUnionSpec x) {
             return x != null
                 && NullableEquals(x.identifier, identifier)
                 && NullableEquals(x.declarations, declarations);
@@ -579,8 +589,95 @@ namespace lcc.SyntaxTree {
             return Pos.GetHashCode();
         }
 
-        public override TUnqualified GetTUnqualified(ASTEnv env) {
-            throw new NotImplementedException();
+        /// <summary>
+        /// Evaluate the struct or union specifier and get the unqualified type.
+        /// 
+        /// struct/union tag
+        ///     - check if the tag has been declaraed in the current scope
+        ///     - yes -> return the type
+        ///     - no  -> make this an incomplete type in the current scope
+        ///     
+        /// 
+        /// </summary>
+        /// <param name="env"></param>
+        /// <returns></returns>
+        public override TUnqualified GetTUnqualified(Env env) {
+
+            Func<TagEntry, bool> IsSameType = (tagEntry) => {
+                if (kind == Kind.STRUCT) return tagEntry.type.IsStruct;
+                else return tagEntry.type.IsUnion;
+            };
+
+            if (declarations == null) {
+                // struct/union tag
+                var tag = identifier.name;
+                
+                // Check the tag in all scopes.
+                var tagEntry = env.GetTag(tag, false);
+                if (tagEntry != null) {
+                    // This tag has been declaraed, check if this is the same type.
+                    if (IsSameType(tagEntry.Value))
+                        return tagEntry.Value.type;
+                    else
+                        throw new ErrDeclareTagAsDifferentType(pos, tag, tagEntry.Value.node.Pos, tagEntry.Value.type);
+                } else {
+                    // This tag has not been declaraed, make it an incomplete type.
+                    TStructUnion type = kind == Kind.STRUCT ? new TStruct(tag) as TStructUnion : new TUnion(tag);
+                    env.AddTag(identifier.name, type, this);
+                    return type;
+                }
+            } else {
+                TStructUnion type;
+                TagEntry entry;
+
+                if (identifier == null) {
+                    // struct/union { ... }
+                    // should declare a unique new type.
+                    type = kind == Kind.STRUCT ? new TStruct() as TStructUnion : new TUnion();
+                    entry = env.AddTag(type.tag, type, this);
+                } else {
+                    // struct/union tag { ... }
+                    // Check if this tag has been declared in the current scope.
+                    var tag = identifier.name;
+                    var tmp = env.GetTag(tag, true);
+                    if (tmp != null) {
+                        // This tag has been declaraed, check if this is the same type
+                        if (!IsSameType(tmp.Value))
+                            throw new ErrDeclareTagAsDifferentType(pos, tag, tmp.Value.node.Pos, tmp.Value.type);
+                        // Check if this type is already complete.
+                        if (tmp.Value.type.IsComplete)
+                            throw new ErrRedefineTag(pos, tag, tmp.Value.node.Pos);
+                        entry = tmp.Value;
+                        type = entry.type as TStructUnion;
+                    } else {
+                        type = kind == Kind.STRUCT ? new TStruct(tag) as TStructUnion : new TUnion(tag);
+                        entry = env.AddTag(type.tag, type, this);
+                    }
+                }
+
+                // Push a new scope.
+                env.PushScope(ScopeKind.BLOCK);
+
+                // Get all the fields.
+                var fields = declarations.Aggregate(
+                    Enumerable.Empty<Tuple<string, T>>(),
+                    (acc, decl) => acc.Concat(decl.GetFields(env)));
+
+                // Complete the definition of the struct/union with all these structs.
+                if (kind == Kind.STRUCT) {
+                    type.DefStruct(fields);
+                } else {
+                    type.DefUnion(fields);
+                }
+
+                // Update the entry and set the node to this syntax tree node.
+                entry.node = this;
+
+                // Pop a new scope.
+                env.PopScope();
+
+                return type;
+            }
         }
 
         private readonly Position pos;
@@ -588,46 +685,71 @@ namespace lcc.SyntaxTree {
         /// <summary>
         /// Nullable.
         /// </summary>
-        public readonly STId identifier;
+        public readonly Id identifier;
         /// <summary>
         /// Nullable.
         /// </summary>
-        public readonly IEnumerable<STStructDeclaration> declarations;
+        public readonly IEnumerable<StructDeclaration> declarations;
     }
 
-    public sealed class STStructDeclaration : STNode, IEquatable<STStructDeclaration> {
+    public sealed class StructDeclaration : Node, IEquatable<StructDeclaration> {
 
-        public STStructDeclaration(
-            IEnumerable<STTypeSpecQual> specifierQualifierList,
-            IEnumerable<STStructDeclarator> declarators
+        public StructDeclaration(
+            DeclSpecs specifiers,
+            IEnumerable<StructDeclarator> declarators
             ) {
-            this.specifierQualifierList = specifierQualifierList;
+            this.specifiers = specifiers;
             this.declarators = declarators;
         }
 
-        public override Position Pos => specifierQualifierList.First().Pos;
+        public override Position Pos => specifiers.Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STStructDeclaration);
+            return Equals(obj as StructDeclaration);
         }
 
-        public bool Equals(STStructDeclaration x) {
+        public bool Equals(StructDeclaration x) {
             return x != null
-                && x.specifierQualifierList.SequenceEqual(specifierQualifierList)
+                && x.specifiers.Equals(specifiers)
                 && x.declarators.SequenceEqual(declarators);
         }
 
         public override int GetHashCode() {
-            return specifierQualifierList.GetHashCode();
+            return specifiers.GetHashCode();
         }
 
-        public readonly IEnumerable<STTypeSpecQual> specifierQualifierList;
-        public readonly IEnumerable<STStructDeclarator> declarators;
+        /// <summary>
+        /// Evaluate the fields and get all the fields.
+        /// </summary>
+        /// <param name="env"> Environment. </param>
+        /// <returns> A list of tuples, containing the field name and its type. </returns>
+        public IEnumerable<Tuple<string, T>> GetFields(Env env) {
+
+            // First get the type.
+            T type = specifiers.GetT(env);
+
+            // Get all the fields.
+            return declarators.Aggregate(
+                new LinkedList<Tuple<string, T>>(),
+                (acc, decl) => {
+                    acc.AddLast(decl.GetField(env, type));
+                    return acc;
+                });
+        }
+
+        public readonly DeclSpecs specifiers;
+        public readonly IEnumerable<StructDeclarator> declarators;
     }
 
-    public sealed class STStructDeclarator : STNode, IEquatable<STStructDeclarator> {
+    /// <summary>
+    /// struct-declarator
+    ///     : declarator
+    ///     | declarator_opt : constant-expression
+    ///     ;
+    /// </summary>
+    public sealed class StructDeclarator : Node, IEquatable<StructDeclarator> {
 
-        public STStructDeclarator(STDeclarator declarator, STExpr expr) {
+        public StructDeclarator(Declarator declarator, Expr expr) {
             this.declarator = declarator;
             this.expr = expr;
         }
@@ -635,10 +757,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => declarator == null ? expr.Pos : declarator.Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STStructDeclarator);
+            return Equals(obj as StructDeclarator);
         }
 
-        public bool Equals(STStructDeclarator x) {
+        public bool Equals(StructDeclarator x) {
             return x != null
                 && NullableEquals(x.declarator, declarator)
                 && NullableEquals(x.expr, expr);
@@ -648,13 +770,36 @@ namespace lcc.SyntaxTree {
             return Pos.GetHashCode();
         }
 
-        public readonly STDeclarator declarator;
-        public readonly STExpr expr;
+        /// <summary>
+        /// Get the field and the type.
+        /// </summary>
+        /// <param name="env"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public Tuple<string, T> GetField(Env env, T type) {
+
+
+            if (declarator != null) {
+
+            }
+
+            // Whether a bit field.
+            if (expr == null) {
+
+            } else {
+
+            }
+
+            throw new NotImplementedException();
+        }
+
+        public readonly Declarator declarator;
+        public readonly Expr expr;
     }
 
-    public sealed class STEnumSpec : STTypeUserSpec, IEquatable<STEnumSpec> {
+    public sealed class STEnumSpec : TypeUserSpec, IEquatable<STEnumSpec> {
 
-        public STEnumSpec(int line, STId id, IEnumerable<STEnum> enums)
+        public STEnumSpec(int line, Id id, IEnumerable<STEnum> enums)
             : base(Kind.ENUM) {
             pos = new Position { line = line };
             this.id = id;
@@ -677,7 +822,7 @@ namespace lcc.SyntaxTree {
             return Pos.GetHashCode();
         }
 
-        public override TUnqualified GetTUnqualified(ASTEnv env) {
+        public override TUnqualified GetTUnqualified(Env env) {
             throw new NotImplementedException();
         }
 
@@ -720,13 +865,13 @@ namespace lcc.SyntaxTree {
         //}
 
         private readonly Position pos;
-        public readonly STId id;
+        public readonly Id id;
         public readonly IEnumerable<STEnum> enums;
     }
 
-    public sealed class STEnum : STNode, IEquatable<STEnum> {
+    public sealed class STEnum : Node, IEquatable<STEnum> {
 
-        public STEnum(STId id, STExpr expr) {
+        public STEnum(Id id, Expr expr) {
             this.id = id;
             this.expr = expr;
         }
@@ -747,11 +892,11 @@ namespace lcc.SyntaxTree {
             return id.GetHashCode();
         }
 
-        public readonly STId id;
-        public readonly STExpr expr;
+        public readonly Id id;
+        public readonly Expr expr;
     }
 
-    public sealed class STTypeQual : STTypeSpecQual, IEquatable<STTypeQual> {
+    public sealed class TypeQual : TypeSpecQual, IEquatable<TypeQual> {
 
         public enum Kind {
             CONST,
@@ -759,7 +904,7 @@ namespace lcc.SyntaxTree {
             VOLATILE
         }
 
-        public STTypeQual(int line, Kind kind) {
+        public TypeQual(int line, Kind kind) {
             this.pos = new Position { line = line };
             this.kind = kind;
         }
@@ -767,10 +912,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STTypeQual);
+            return Equals(obj as TypeQual);
         }
 
-        public bool Equals(STTypeQual x) {
+        public bool Equals(TypeQual x) {
             return x != null && x.pos.Equals(pos) && x.kind == kind;
         }
 
@@ -782,7 +927,7 @@ namespace lcc.SyntaxTree {
         private readonly Position pos;
     }
 
-    public sealed class STFuncSpec : STDeclSpec, IEquatable<STFuncSpec> {
+    public sealed class STFuncSpec : DeclSpec, IEquatable<STFuncSpec> {
 
         public enum Kind {
             NONE,
@@ -813,38 +958,59 @@ namespace lcc.SyntaxTree {
 
     }
 
-    public sealed class STDeclarator : STNode, IEquatable<STDeclarator> {
+    public sealed class Declarator : Node, IEquatable<Declarator> {
 
-        public STDeclarator(IEnumerable<STPtr> pointers, STDirDeclarator direct) {
+        public Declarator(IEnumerable<Ptr> pointers, DirDeclarator direct) {
             this.pointers = pointers;
             this.direct = direct;
         }
 
-        public bool Equals(STDeclarator x) {
+        public bool Equals(Declarator x) {
             return x != null && x.pointers.SequenceEqual(pointers) && x.direct.Equals(direct);
         }
 
         public override bool Equals(object obj) {
-            return Equals(obj as STDeclarator);
+            return Equals(obj as Declarator);
         }
 
         public override int GetHashCode() {
             return direct.GetHashCode();
         }
 
+        /// <summary>
+        /// Get the identifier and the type of the declarator.
+        /// </summary>
+        /// <param name="env"> Environment </param>
+        /// <param name="type"> Type specified by declaration specifiers. </param>
+        /// <returns></returns>
+        public Tuple<string, T> Declare(Env env, T type) {
+
+            // Add the pointer derivation.
+            foreach (var pointer in pointers) {
+                type = pointer.GetPtr(type);
+            }
+
+            // Get the declaration from direct declarator.
+            return direct.Declare(env, type);
+        }
+
         public override Position Pos => direct.Pos;
 
-        public IEnumerable<STPtr> pointers;
-        public STDirDeclarator direct;
+        /// <summary>
+        /// Zero or more pointers.
+        /// </summary>
+        public IEnumerable<Ptr> pointers;
+        public DirDeclarator direct;
     }
 
-    public abstract class STDirDeclarator : STNode {
+    public abstract class DirDeclarator : Node {
         public abstract string Name { get; }
+        public abstract Tuple<string, T> Declare(Env env, T type);
     }
 
-    public sealed class STIdDeclarator : STDirDeclarator, IEquatable<STIdDeclarator> {
+    public sealed class IdDeclarator : DirDeclarator, IEquatable<IdDeclarator> {
 
-        public STIdDeclarator(STId id) {
+        public IdDeclarator(Id id) {
             this.id = id;
         }
 
@@ -852,10 +1018,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => id.Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STIdDeclarator);
+            return Equals(obj as IdDeclarator);
         }
 
-        public bool Equals(STIdDeclarator i) {
+        public bool Equals(IdDeclarator i) {
             return i != null && i.id.Equals(id);
         }
 
@@ -863,37 +1029,44 @@ namespace lcc.SyntaxTree {
             return id.GetHashCode();
         }
 
-        public readonly STId id;
+        public override Tuple<string, T> Declare(Env env, T type) {
+            return new Tuple<string, T>(id.name, type);
+        }
+
+        public readonly Id id;
     }
 
-    public sealed class STParDeclarator : STDirDeclarator, IEquatable<STParDeclarator> {
+    public sealed class ParDeclarator : DirDeclarator, IEquatable<ParDeclarator> {
 
-        public STParDeclarator(STDeclarator declarator) {
+        public ParDeclarator(Declarator declarator) {
             this.declarator = declarator;
         }
 
         public override string Name => declarator.direct.Name;
         public override Position Pos => declarator.Pos;
 
-        public bool Equals(STParDeclarator x) {
+        public bool Equals(ParDeclarator x) {
             return x != null && x.declarator.Equals(declarator);
         }
 
         public override bool Equals(object obj) {
-            return Equals(obj as STParDeclarator);
+            return Equals(obj as ParDeclarator);
         }
 
         public override int GetHashCode() {
             return declarator.GetHashCode();
         }
+        public override Tuple<string, T> Declare(Env env, T type) {
+            return declarator.Declare(env, type);
+        }
 
-        public readonly STDeclarator declarator;
+        public readonly Declarator declarator;
     }
 
-    public sealed class STFuncDeclarator : STDirDeclarator, IEquatable<STFuncDeclarator> {
+    public sealed class FuncDeclarator : DirDeclarator, IEquatable<FuncDeclarator> {
 
-        public STFuncDeclarator(
-            STDirDeclarator direct,
+        public FuncDeclarator(
+            DirDeclarator direct,
             IEnumerable<STParam> parameters,
             bool isEllipis
             ) {
@@ -902,7 +1075,7 @@ namespace lcc.SyntaxTree {
             this.isEllipis = isEllipis;
         }
 
-        public STFuncDeclarator(STDirDeclarator direct, IEnumerable<STId> identifiers) {
+        public FuncDeclarator(DirDeclarator direct, IEnumerable<Id> identifiers) {
             this.direct = direct;
             this.identifiers = identifiers;
         }
@@ -912,10 +1085,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => direct.Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STFuncDeclarator);
+            return Equals(obj as FuncDeclarator);
         }
 
-        public bool Equals(STFuncDeclarator x) {
+        public bool Equals(FuncDeclarator x) {
             return x != null && x.direct.Equals(direct)
                 && NullableEquals(x.parameters, parameters)
                 && x.isEllipis == isEllipis
@@ -926,22 +1099,26 @@ namespace lcc.SyntaxTree {
             return direct.GetHashCode();
         }
 
-        public readonly STDirDeclarator direct;
+        public override Tuple<string, T> Declare(Env env, T type) {
+            throw new NotImplementedException();
+        }
+
+        public readonly DirDeclarator direct;
 
         // ( parameter-type-list )
         public readonly IEnumerable<STParam> parameters;
         public readonly bool isEllipis;
 
         // ( identifier-list_opt )
-        public readonly IEnumerable<STId> identifiers;
+        public readonly IEnumerable<Id> identifiers;
     }
 
-    public sealed class STArrDeclarator : STDirDeclarator, IEquatable<STArrDeclarator> {
+    public sealed class ArrDeclarator : DirDeclarator, IEquatable<ArrDeclarator> {
 
-        public STArrDeclarator(
-            STDirDeclarator direct,
-            IEnumerable<STTypeQual> qualifiers,
-            STExpr expr,
+        public ArrDeclarator(
+            DirDeclarator direct,
+            IEnumerable<TypeQual> qualifiers,
+            Expr expr,
             bool isStatic
             ) {
             this.direct = direct;
@@ -951,7 +1128,7 @@ namespace lcc.SyntaxTree {
             this.isStar = false;
         }
 
-        public STArrDeclarator(STDirDeclarator direct, IEnumerable<STTypeQual> qualifiers) {
+        public ArrDeclarator(DirDeclarator direct, IEnumerable<TypeQual> qualifiers) {
             this.direct = direct;
             this.qualifiers = qualifiers;
             this.expr = null;
@@ -961,7 +1138,7 @@ namespace lcc.SyntaxTree {
 
         public override string Name => direct.Name;
 
-        public bool Equals(STArrDeclarator x) {
+        public bool Equals(ArrDeclarator x) {
             return x != null && x.direct.Equals(direct)
                 && x.qualifiers.SequenceEqual(qualifiers)
                 && x.isStatic == isStatic && x.isStar == isStar
@@ -969,56 +1146,98 @@ namespace lcc.SyntaxTree {
         }
 
         public override bool Equals(object obj) {
-            return Equals(obj as STArrDeclarator);
+            return Equals(obj as ArrDeclarator);
         }
 
         public override int GetHashCode() {
             return direct.GetHashCode();
         }
 
+        /// <summary>
+        /// Array declarator.
+        /// For now only support complete array and incomplete array.
+        /// </summary>
+        /// <param name="env"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public override Tuple<string, T> Declare(Env env, T type) {
+
+            // The element type shall not be an incomplete type.
+            if (!type.IsComplete) {
+                throw new Error(Pos, string.Format("use incomplete type as array element: {0}.", type));
+            }
+
+            // The element type shall not be a function type.
+            if (type.IsFunc) {
+                throw new Error(Pos, string.Format("use function type as array element: {0}.", type));
+            }
+
+            // Check the expression is const integer expression.
+            if (expr != null) {
+                AST.ConstIntExpr expr = this.expr.ToAST(env) as AST.ConstIntExpr;
+                if (expr == null) {
+                    throw new Error(Pos, "use non-constant expression as array length.");
+                }
+                if (expr.value <= 0) {
+                    throw new Error(Pos, "array length should be greater than zero.");
+                }
+                if (expr.value > TInt.Instance.MAX) {
+                    throw new Error(Pos, string.Format("sorry we can't handle such long array: {0}.", expr.value));
+                }
+                return direct.Declare(env, type.Arr((int)expr.value));
+            } else {
+                // Set this as incomplete array.
+                return direct.Declare(env, type.IArr());
+            }
+        }
+
         public override Position Pos => direct.Pos;
 
-        public readonly STDirDeclarator direct;
+        public readonly DirDeclarator direct;
 
-        public readonly STExpr expr;
-        public readonly IEnumerable<STTypeQual> qualifiers;
+        public readonly Expr expr;
+        public readonly IEnumerable<TypeQual> qualifiers;
         public readonly bool isStatic;
         public readonly bool isStar;
     }
 
-    public sealed class STPtr : STNode, IEquatable<STPtr> {
+    public sealed class Ptr : Node, IEquatable<Ptr> {
 
-        public STPtr(int line, IEnumerable<STTypeQual> qualifiers) {
+        public Ptr(int line, IEnumerable<TypeQual> qualifiers) {
             this.pos = new Position { line = line };
-            this.qualifiers = qualifiers;
+            this.qualifiers = DeclSpecs.GetQualifiers(qualifiers.Select(_ => _.kind));
         }
 
         public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STPtr);
+            return Equals(obj as Ptr);
         }
 
-        public bool Equals(STPtr x) {
-            return x != null && x.pos.Equals(pos) && x.qualifiers.SequenceEqual(qualifiers);
+        public bool Equals(Ptr x) {
+            return x != null && x.pos.Equals(pos) && x.qualifiers.Equals(qualifiers);
         }
 
         public override int GetHashCode() {
             return Pos.GetHashCode();
         }
 
+        public T GetPtr(T type) {
+            return type.Ptr(qualifiers);
+        }
+
         private readonly Position pos;
-        public readonly IEnumerable<STTypeQual> qualifiers;
+        public readonly TQualifiers qualifiers;
     }
 
-    public sealed class STParam : STNode, IEquatable<STParam> {
+    public sealed class STParam : Node, IEquatable<STParam> {
 
-        public STParam(STDeclSpecs specifiers, STDeclarator declarator) {
+        public STParam(DeclSpecs specifiers, Declarator declarator) {
             this.specifiers = specifiers;
             this.declarator = declarator;
         }
 
-        public STParam(STDeclSpecs specifiers, STAbsDeclarator absDeclarator = null) {
+        public STParam(DeclSpecs specifiers, STAbsDeclarator absDeclarator = null) {
             this.specifiers = specifiers;
             this.absDeclarator = absDeclarator;
         }
@@ -1038,39 +1257,39 @@ namespace lcc.SyntaxTree {
             return specifiers.GetHashCode();
         }
 
-        public readonly STDeclSpecs specifiers;
-        public readonly STDeclarator declarator;
+        public readonly DeclSpecs specifiers;
+        public readonly Declarator declarator;
         public readonly STAbsDeclarator absDeclarator;
     }
 
-    public sealed class ASTTypeName : STNode, IEquatable<ASTTypeName> {
+    public sealed class TypeName : Node, IEquatable<TypeName> {
 
-        public ASTTypeName(IEnumerable<STTypeSpecQual> specifiers, STAbsDeclarator declarator = null) {
+        public TypeName(DeclSpecs specifiers, STAbsDeclarator declarator = null) {
             this.specifiers = specifiers;
             this.declarator = declarator;
         }
 
-        public bool Equals(ASTTypeName x) {
-            return x != null && x.specifiers.SequenceEqual(specifiers) && NullableEquals(declarator, x.declarator);
+        public bool Equals(TypeName x) {
+            return x != null && x.specifiers.Equals(specifiers) && NullableEquals(declarator, x.declarator);
         }
 
         public override bool Equals(object obj) {
-            return Equals(obj as ASTTypeName);
+            return Equals(obj as TypeName);
         }
 
         public override int GetHashCode() {
-            return specifiers.First().GetHashCode();
+            return specifiers.GetHashCode();
         }
 
-        public override Position Pos => specifiers.First().Pos;
+        public override Position Pos => specifiers.Pos;
 
-        public readonly IEnumerable<STTypeSpecQual> specifiers;
+        public readonly DeclSpecs specifiers;
         public readonly STAbsDeclarator declarator;
     }
 
-    public sealed class STAbsDeclarator : STNode, IEquatable<STAbsDeclarator> {
+    public sealed class STAbsDeclarator : Node, IEquatable<STAbsDeclarator> {
 
-        public STAbsDeclarator(IEnumerable<STPtr> pointers, STAbsDirDeclarator direct) {
+        public STAbsDeclarator(IEnumerable<Ptr> pointers, STAbsDirDeclarator direct) {
             this.pointers = pointers;
             this.direct = direct;
         }
@@ -1089,7 +1308,7 @@ namespace lcc.SyntaxTree {
 
         public override Position Pos => direct == null ? pointers.First().Pos : direct.Pos;
 
-        public IEnumerable<STPtr> pointers;
+        public IEnumerable<Ptr> pointers;
 
         /// <summary>
         /// Nullable.
@@ -1097,7 +1316,7 @@ namespace lcc.SyntaxTree {
         public STAbsDirDeclarator direct;
     }
 
-    public abstract class STAbsDirDeclarator : STNode { }
+    public abstract class STAbsDirDeclarator : Node { }
 
     public sealed class STAbsDirDeclaratorNil : STAbsDirDeclarator {
         public STAbsDirDeclaratorNil(int line) {
@@ -1147,8 +1366,8 @@ namespace lcc.SyntaxTree {
 
         public STAbsArrDeclarator(
             STAbsDirDeclarator direct,
-            IEnumerable<STTypeQual> qualifiers,
-            STExpr expr,
+            IEnumerable<TypeQual> qualifiers,
+            Expr expr,
             bool isStatic
             ) {
             this.direct = direct;
@@ -1160,7 +1379,7 @@ namespace lcc.SyntaxTree {
 
         public STAbsArrDeclarator(STAbsDirDeclarator direct) {
             this.direct = direct;
-            this.qualifiers = new List<STTypeQual>();
+            this.qualifiers = new List<TypeQual>();
             this.expr = null;
             this.isStar = true;
             this.isStatic = false;
@@ -1185,8 +1404,8 @@ namespace lcc.SyntaxTree {
 
         public readonly STAbsDirDeclarator direct;
 
-        public readonly STExpr expr;
-        public readonly IEnumerable<STTypeQual> qualifiers;
+        public readonly Expr expr;
+        public readonly IEnumerable<TypeQual> qualifiers;
         public readonly bool isStatic;
         public readonly bool isStar;
     }
@@ -1226,9 +1445,9 @@ namespace lcc.SyntaxTree {
         public readonly bool isEllipis;
     }
 
-    public sealed class STTypedefName : STTypeUserSpec, IEquatable<STTypedefName> {
+    public sealed class STTypedefName : TypeUserSpec, IEquatable<STTypedefName> {
 
-        public STTypedefName(STId identifier) : base(Kind.TYPEDEF) {
+        public STTypedefName(Id identifier) : base(Kind.TYPEDEF) {
             name = identifier.name;
             pos = identifier.Pos;
         }
@@ -1245,7 +1464,7 @@ namespace lcc.SyntaxTree {
             return Pos.GetHashCode();
         }
 
-        public override TUnqualified GetTUnqualified(ASTEnv env) {
+        public override TUnqualified GetTUnqualified(Env env) {
             throw new NotImplementedException();
         }
 
@@ -1262,13 +1481,13 @@ namespace lcc.SyntaxTree {
     ///     | { initializer-list , }
     ///     ;
     /// </summary>
-    public sealed class STInitializer : STNode, IEquatable<STInitializer> {
+    public sealed class STInitializer : Node, IEquatable<STInitializer> {
 
         /// <summary>
         /// initializer : assignment-expression;
         /// </summary>
         /// <param name="expr"></param>
-        public STInitializer(STExpr expr) { this.expr = expr; }
+        public STInitializer(Expr expr) { this.expr = expr; }
         public STInitializer(IEnumerable<STInitItem> items) { this.items = items; }
 
         public bool Equals(STInitializer x) {
@@ -1287,14 +1506,14 @@ namespace lcc.SyntaxTree {
 
         public override Position Pos => expr != null ? expr.Pos : items.First().Pos;
 
-        public readonly STExpr expr;
+        public readonly Expr expr;
         public readonly IEnumerable<STInitItem> items;
     }
 
     /// <summary>
     /// init-item : designation_opt initializer;
     /// </summary>
-    public sealed class STInitItem : STNode, IEquatable<STInitItem> {
+    public sealed class STInitItem : Node, IEquatable<STInitItem> {
 
         public STInitItem(STInitializer initializer, IEnumerable<STDesignator> designators = null) {
             this.initializer = initializer;
@@ -1325,10 +1544,10 @@ namespace lcc.SyntaxTree {
     /// [ constant-expression ]
     /// .identfier
     /// </summary>
-    public sealed class STDesignator : STNode, IEquatable<STDesignator> {
+    public sealed class STDesignator : Node, IEquatable<STDesignator> {
 
-        public STDesignator(STExpr expr) { this.expr = expr; }
-        public STDesignator(STId id) { this.id = id; }
+        public STDesignator(Expr expr) { this.expr = expr; }
+        public STDesignator(Id id) { this.id = id; }
 
         public override Position Pos => expr != null ? expr.Pos : id.Pos;
 
@@ -1346,8 +1565,8 @@ namespace lcc.SyntaxTree {
             return Pos.GetHashCode();
         }
 
-        public readonly STExpr expr;
-        public readonly STId id;
+        public readonly Expr expr;
+        public readonly Id id;
     }
 
 }

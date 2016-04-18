@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.TypeSystem {
+
     public abstract class TStructUnion : TObject, IEquatable<TStructUnion> {
 
         public struct Field : IEquatable<Field> {
@@ -74,14 +75,10 @@ namespace lcc.TypeSystem {
     }
 
     public sealed class TStruct : TStructUnion {
-        public TStruct(string tag, IEnumerable<Field> fields = null) : base(tag, fields) {
-            if (fields != null) size = Padding(fields);
-        }
-        public TStruct(IEnumerable<Field> fields = null) : base("struct@" + (idx++), fields) {
-            if (fields != null) size = Padding(fields);
-        }
+        public TStruct(string tag) : base(tag, null) {}
+        public TStruct() : base("struct@" + (idx++), null) {}
         public override bool IsStruct => true;
-        public override int Size {
+        public override int Bits {
             get {
                 if (fields == null) throw new InvalidOperationException("Can't take size of an incomplete struct.");
                 else return size;
@@ -92,47 +89,43 @@ namespace lcc.TypeSystem {
             return string.Format("struct {0}", tag);
         }
 
-        public override void DefStruct(IEnumerable<Field> fields) {
-            if (this.fields != null) throw new InvalidOperationException("Can't complete a complete struct.");
-            else this.fields = fields;
+        public override void DefStruct(IEnumerable<Tuple<string, T>> fields) {
+            if (this.fields != null)
+                throw new InvalidOperationException("Can't complete a complete struct.");
+            var tmp = new LinkedList<Field>();
+            int offset = 0;
+            foreach (var field in fields) {
+                tmp.AddLast(new Field(field.Item1, field.Item2, offset));
+                offset += field.Item2.Align;
+            }
+            size = offset;
         }
 
-        /// <summary>
-        /// Determine the size of the struct.
-        /// </summary>
-        /// <param name="fields"></param>
-        /// <returns></returns>
-        private static int Padding(IEnumerable<Field> fields) {
-            return 0;
-        }
-        private readonly int size;
+        private int size;
         private static int idx = 0;
     }
 
     public sealed class TUnion : TStructUnion {
-        public TUnion(string tag, IEnumerable<Field> fields = null) : base(tag, fields) {
-            if (fields != null) size = fields.Aggregate(0, (size, field) => Math.Max(size, field.type.Size));
-        }
-        public TUnion(IEnumerable<Field> fields = null) : base("union@" + (idx++), fields) {
-            if (fields != null) size = fields.Aggregate(0, (size, field) => Math.Max(size, field.type.Size));
-        }
+        public TUnion(string tag) : base(tag, null) {}
+        public TUnion() : base("union@" + (idx++), null) {}
         public override bool IsUnion => true;
-        public override int Size {
+        public override int Bits {
             get {
                 if (fields == null) throw new InvalidOperationException("Can't take size of an incomplete struct.");
                 else return size;
             }
         }
-        public override void DefUnion(IEnumerable<Field> fields) {
-            if (this.fields != null) base.DefUnion(fields);
-            else this.fields = fields;
+        public override void DefUnion(IEnumerable<Tuple<string, T>> fields) {
+            if (this.fields != null) throw new InvalidOperationException("Can't define a union which is alread defined.");
+            this.fields = from field in fields select new Field(field.Item1, field.Item2, 0);
+            size = this.fields.Aggregate(0, (size, field) => Math.Max(size, field.type.Bits));
         }
 
         public override string ToString() {
             return string.Format("union {0}", tag);
         }
 
-        private readonly int size;
+        private int size;
         private static int idx = 0;
     }
 }

@@ -17,7 +17,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, STExpr> ConstantExpression() {
+        public static Parserc.Parser<Token.Token, Expr> ConstantExpression() {
             return ConditionalExpression();
         }
 
@@ -28,7 +28,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, STExpr> Expression() {
+        public static Parserc.Parser<Token.Token, Expr> Expression() {
             return AssignmentExpression().PlusSeperatedBy(Match<T_PUNC_COMMA>())
                 .Select(exprs => exprs.Count == 1 ? exprs.First() : new STCommaExpr(exprs));
         }
@@ -40,7 +40,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, STExpr> AssignmentExpression() {
+        public static Parserc.Parser<Token.Token, Expr> AssignmentExpression() {
             return ConditionalExpression()
                 .Or(UnaryExpression()
                     .Bind(lexpr => AssgnmentOperator()
@@ -76,14 +76,14 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, STExpr> ConditionalExpression() {
+        public static Parserc.Parser<Token.Token, Expr> ConditionalExpression() {
             return LogicalORExpression()
                 .Bind(predicator => Match<T_PUNC_QUESTION>()
                     .Then(Ref(Expression)
                     .Bind(trueExpr => Match<T_PUNC_COLON>()
                     .Then(Ref(ConditionalExpression)
                     .Select(falseExpr => new STCondExpr(predicator, trueExpr, falseExpr)))))
-                    .Else(Result<Token.Token, STExpr>(predicator))
+                    .Else(Result<Token.Token, Expr>(predicator))
                 );
         }
 
@@ -94,7 +94,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, STExpr> LogicalORExpression() {
+        public static Parserc.Parser<Token.Token, Expr> LogicalORExpression() {
             return LogicalANDExpression().ChainBinaryExpr(Match<T_PUNC_LOGOR>().Return(STBiExpr.Op.LOGOR));
         }
 
@@ -105,7 +105,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, STExpr> LogicalANDExpression() {
+        public static Parserc.Parser<Token.Token, Expr> LogicalANDExpression() {
             return ORExpression().ChainBinaryExpr(Match<T_PUNC_LOGAND>().Return(STBiExpr.Op.LOGAND));
         }
 
@@ -116,7 +116,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, STExpr> ORExpression() {
+        public static Parserc.Parser<Token.Token, Expr> ORExpression() {
             return XORExpression().ChainBinaryExpr(Match<T_PUNC_BITOR>().Return(STBiExpr.Op.OR));
         }
 
@@ -127,7 +127,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, STExpr> XORExpression() {
+        public static Parserc.Parser<Token.Token, Expr> XORExpression() {
             return ANDExpression().ChainBinaryExpr(Match<T_PUNC_BITXOR>().Return(STBiExpr.Op.XOR));
         }
 
@@ -138,7 +138,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, STExpr> ANDExpression() {
+        public static Parserc.Parser<Token.Token, Expr> ANDExpression() {
             return EqualityExpression().ChainBinaryExpr(Match<T_PUNC_REF>().Return(STBiExpr.Op.AND));
         }
 
@@ -150,7 +150,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, STExpr> EqualityExpression() {
+        public static Parserc.Parser<Token.Token, Expr> EqualityExpression() {
             return RelationalExpression().ChainBinaryExpr(EqualityOperator());
         }
 
@@ -172,7 +172,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, STExpr> RelationalExpression() {
+        public static Parserc.Parser<Token.Token, Expr> RelationalExpression() {
             return ShiftExpression().ChainBinaryExpr(RelationalOperator());
         }
 
@@ -196,7 +196,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, STExpr> ShiftExpression() {
+        public static Parserc.Parser<Token.Token, Expr> ShiftExpression() {
             return AdditiveExpressiion().ChainBinaryExpr(ShiftOperator());
         }
 
@@ -218,7 +218,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, STExpr> AdditiveExpressiion() {
+        public static Parserc.Parser<Token.Token, Expr> AdditiveExpressiion() {
             return MultiplicativeExpression().ChainBinaryExpr(AdditiveOperator());
         }
 
@@ -242,7 +242,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, STExpr> MultiplicativeExpression() {
+        public static Parserc.Parser<Token.Token, Expr> MultiplicativeExpression() {
             return CastExpression().ChainBinaryExpr(MultiplicativeOperator());
         }
 
@@ -266,7 +266,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, STExpr> CastExpression() {
+        public static Parserc.Parser<Token.Token, Expr> CastExpression() {
             return UnaryExpression()
                 .Else(Ref(TypeName).ParentLR().Bind(name => Ref(CastExpression)
                 .Select(expr => new STCast(name, expr))));
@@ -283,7 +283,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, STExpr> UnaryExpression() {
+        public static Parserc.Parser<Token.Token, Expr> UnaryExpression() {
             return PostfixExpression()
                 .Else(Match<T_PUNC_INCRE>()
                     .Then(Ref(UnaryExpression))
@@ -321,7 +321,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, STExpr> PostfixExpression() {
+        public static Parserc.Parser<Token.Token, Expr> PostfixExpression() {
             return PrimaryExpression().Bind(x => PostfixExpressionTail(x))
                 .Else(Ref(TypeName).ParentLR()
                     .Bind(name => Ref(InitItem)
@@ -352,7 +352,7 @@ namespace lcc.Parser {
         /// Ref won't work here because PostfixExpressionTail takes one argument.
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, STExpr> PostfixExpressionTail(STExpr expr) {
+        public static Parserc.Parser<Token.Token, Expr> PostfixExpressionTail(Expr expr) {
             return Ref(Expression)
                     .Bracket(Match<T_PUNC_SUBSCRIPTL>(), Match<T_PUNC_SUBSCRIPTR>())
                     .Bind(idx => PostfixExpressionTail(new STArrSub(expr, idx)))
@@ -368,7 +368,7 @@ namespace lcc.Parser {
                     .Bind(_ => PostfixExpressionTail(new STPostStep(expr, STPostStep.Kind.INC))))
                 .Else(Match<T_PUNC_DECRE>()
                     .Bind(_ => PostfixExpressionTail(new STPostStep(expr, STPostStep.Kind.DEC))))
-                .Else(Result<Token.Token, STExpr>(expr));
+                .Else(Result<Token.Token, Expr>(expr));
         }
 
 
@@ -381,12 +381,12 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, STExpr> PrimaryExpression() {
-            return Get<T_IDENTIFIER>().Select(x => new STId(x) as STExpr)
-                .Else(Get<T_CONST_CHAR>().Select(x => new STConstChar(x)))
-                .Else(Get<T_CONST_INT>().Select(x => new STConstInt(x)))
-                .Else(Get<T_CONST_FLOAT>().Select(x => new STConstFloat(x)))
-                .Else(Get<T_STRING_LITERAL>().Plus().Select(x => new STString(x)))
+        public static Parserc.Parser<Token.Token, Expr> PrimaryExpression() {
+            return Get<T_IDENTIFIER>().Select(x => new Id(x) as Expr)
+                .Else(Get<T_CONST_CHAR>().Select(x => new ConstChar(x)))
+                .Else(Get<T_CONST_INT>().Select(x => new ConstInt(x)))
+                .Else(Get<T_CONST_FLOAT>().Select(x => new ConstFloat(x)))
+                .Else(Get<T_STRING_LITERAL>().Plus().Select(x => new Str(x)))
                 .Else(Ref(Expression).ParentLR());
         }
     }

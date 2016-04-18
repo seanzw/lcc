@@ -51,7 +51,7 @@ namespace lcc.TypeSystem {
         /// <summary>
         /// Enumerator is represent as int.
         /// </summary>
-        public override int Size => 4;
+        public override int Bits => 32;
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();

@@ -9,7 +9,7 @@ namespace lcc.TypeSystem {
 
         private static readonly TypeVoid instance = new TypeVoid();
         public static TypeVoid Instance => instance;
-        public override int Size => 1;
+        public override int Bits => 8;
         public override bool IsComplete => false;
         /// <summary>
         /// void is always defined.

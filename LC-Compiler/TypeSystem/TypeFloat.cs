@@ -10,7 +10,7 @@ namespace lcc.TypeSystem {
         private static readonly TFloat instance = new TFloat();
         public static TFloat Instance => instance;
         public override int Rank => 6;
-        public override int Size => 4;
+        public override int Bits => 32;
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
@@ -27,7 +27,7 @@ namespace lcc.TypeSystem {
 
         public static TDouble Instance => instance;
         public override int Rank => 6;
-        public override int Size => 8;
+        public override int Bits => 64;
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
@@ -43,7 +43,7 @@ namespace lcc.TypeSystem {
         private static readonly TLDouble instance = new TLDouble();
         public static TLDouble Instance => instance;
         public override int Rank => 7;
-        public override int Size => 8;
+        public override int Bits => 64;
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();

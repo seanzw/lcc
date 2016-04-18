@@ -49,26 +49,26 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserPrimaryExpression() {
-            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
+            Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "tmp",
-                    new STId(new T_IDENTIFIER(1, "tmp"))
+                    new Id(new T_IDENTIFIER(1, "tmp"))
                 },
                 {
                     "12356u",
-                    new STConstInt(new T_CONST_INT(1, "12356u", 10))
+                    new ConstInt(new T_CONST_INT(1, "12356u", 10))
                 },
                 {
                     "1.264f",
-                    new STConstFloat(new T_CONST_FLOAT(1, "1.264f", 10))
+                    new ConstFloat(new T_CONST_FLOAT(1, "1.264f", 10))
                 },
                 {
                     "'C'",
-                    new STConstChar(new T_CONST_CHAR(1, "'C'"))
+                    new ConstChar(new T_CONST_CHAR(1, "'C'"))
                 },
                 {
                     "\"what is this?\"",
-                    new STString(new LinkedList<T_STRING_LITERAL>(new List<T_STRING_LITERAL> {
+                    new Str(new LinkedList<T_STRING_LITERAL>(new List<T_STRING_LITERAL> {
                         new T_STRING_LITERAL(1, "\"what is this?\"")
                     }))
                 },
@@ -81,18 +81,18 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserPostfixExpression() {
-            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
+            Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "abc[123]",
                     new STArrSub(
-                        new STId(new T_IDENTIFIER(1, "abc")),
-                        new STConstInt(new T_CONST_INT(1, "123", 10))
+                        new Id(new T_IDENTIFIER(1, "abc")),
+                        new ConstInt(new T_CONST_INT(1, "123", 10))
                     )
                 },
                 {
                     "abc.x",
                     new STAccess(
-                        new STId(new T_IDENTIFIER(1, "abc")),
+                        new Id(new T_IDENTIFIER(1, "abc")),
                         new T_IDENTIFIER(1, "x"),
                         STAccess.Kind.DOT
                     )
@@ -101,8 +101,8 @@ namespace LC_CompilerTests {
                     "arr[2].value",
                     new STAccess(
                         new STArrSub(
-                            new STId(new T_IDENTIFIER(1, "arr")),
-                            new STConstInt(new T_CONST_INT(1, "2", 10))
+                            new Id(new T_IDENTIFIER(1, "arr")),
+                            new ConstInt(new T_CONST_INT(1, "2", 10))
                         ),
                         new T_IDENTIFIER(1, "value"),
                         STAccess.Kind.DOT
@@ -111,7 +111,7 @@ namespace LC_CompilerTests {
                 {
                     "abc->x",
                     new STAccess(
-                        new STId(new T_IDENTIFIER(1, "abc")),
+                        new Id(new T_IDENTIFIER(1, "abc")),
                         new T_IDENTIFIER(1, "x"),
                         STAccess.Kind.PTR
                     )
@@ -119,42 +119,42 @@ namespace LC_CompilerTests {
                 {
                     "x++",
                     new STPostStep(
-                        new STId(new T_IDENTIFIER(1, "x")),
+                        new Id(new T_IDENTIFIER(1, "x")),
                         STPostStep.Kind.INC
                     )
                 },
                 {
                     "x--",
                     new STPostStep(
-                        new STId(new T_IDENTIFIER(1, "x")),
+                        new Id(new T_IDENTIFIER(1, "x")),
                         STPostStep.Kind.DEC
                     )
                 },
                 {
                     "printf(x)",
                     new STFuncCall(
-                        new STId(new T_IDENTIFIER(1, "printf")),
-                        new List<STExpr> {
-                            new STId(new T_IDENTIFIER(1, "x"))
+                        new Id(new T_IDENTIFIER(1, "printf")),
+                        new List<Expr> {
+                            new Id(new T_IDENTIFIER(1, "x"))
                         }
                     )
                 },
                 {
                     "printf()",
                     new STFuncCall(
-                        new STId(new T_IDENTIFIER(1, "printf")),
-                        new List<STExpr> {
+                        new Id(new T_IDENTIFIER(1, "printf")),
+                        new List<Expr> {
                         }
                     )
                 },
                 {
                     "(int) { 1 }",
                     new STCompound(
-                        new ASTTypeName(
-                            new List<STTypeSpecQual> { new STTypeKeySpec(1, STTypeSpec.Kind.INT) }
+                        new TypeName(
+                            ProcessSS(new List<TypeSpecQual> { new STTypeKeySpec(1, TypeSpec.Kind.INT) })
                         ),
                         new List<STInitItem> {
-                            new STInitItem(new STInitializer(new STConstInt(new T_CONST_INT(1, "1", 10))))
+                            new STInitItem(new STInitializer(new ConstInt(new T_CONST_INT(1, "1", 10))))
                         })
                 }
             };
@@ -167,12 +167,12 @@ namespace LC_CompilerTests {
         [TestMethod]
         public void LCCParserUnaryExpression() {
 
-            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
+            Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "++x--",
                     new STPreStep(
                         new STPostStep(
-                            new STId(new T_IDENTIFIER(1, "x")),
+                            new Id(new T_IDENTIFIER(1, "x")),
                             STPostStep.Kind.DEC),
                         STPreStep.Kind.INC
                     )
@@ -181,8 +181,8 @@ namespace LC_CompilerTests {
                     "--x[2]",
                     new STPreStep(
                         new STArrSub(
-                            new STId(new T_IDENTIFIER(1, "x")),
-                            new STConstInt(new T_CONST_INT(1, "2", 10))),
+                            new Id(new T_IDENTIFIER(1, "x")),
+                            new ConstInt(new T_CONST_INT(1, "2", 10))),
                         STPreStep.Kind.DEC
                     )
                 },
@@ -190,8 +190,8 @@ namespace LC_CompilerTests {
                     "&x[2]",
                     new STUnaryOp(
                         new STArrSub(
-                            new STId(new T_IDENTIFIER(1, "x")),
-                            new STConstInt(new T_CONST_INT(1, "2", 10))),
+                            new Id(new T_IDENTIFIER(1, "x")),
+                            new ConstInt(new T_CONST_INT(1, "2", 10))),
                         STUnaryOp.Op.REF
                     )
                 },
@@ -199,8 +199,8 @@ namespace LC_CompilerTests {
                     "*x[2]",
                     new STUnaryOp(
                         new STArrSub(
-                            new STId(new T_IDENTIFIER(1, "x")),
-                            new STConstInt(new T_CONST_INT(1, "2", 10))),
+                            new Id(new T_IDENTIFIER(1, "x")),
+                            new ConstInt(new T_CONST_INT(1, "2", 10))),
                         STUnaryOp.Op.STAR
                     )
                 },
@@ -208,8 +208,8 @@ namespace LC_CompilerTests {
                     "+x[2]",
                     new STUnaryOp(
                         new STArrSub(
-                            new STId(new T_IDENTIFIER(1, "x")),
-                            new STConstInt(new T_CONST_INT(1, "2", 10))),
+                            new Id(new T_IDENTIFIER(1, "x")),
+                            new ConstInt(new T_CONST_INT(1, "2", 10))),
                         STUnaryOp.Op.PLUS
                     )
                 },
@@ -217,8 +217,8 @@ namespace LC_CompilerTests {
                     "-x[2]",
                     new STUnaryOp(
                         new STArrSub(
-                            new STId(new T_IDENTIFIER(1, "x")),
-                            new STConstInt(new T_CONST_INT(1, "2", 10))),
+                            new Id(new T_IDENTIFIER(1, "x")),
+                            new ConstInt(new T_CONST_INT(1, "2", 10))),
                         STUnaryOp.Op.MINUS
                     )
                 },
@@ -226,8 +226,8 @@ namespace LC_CompilerTests {
                     "~x[2]",
                     new STUnaryOp(
                         new STArrSub(
-                            new STId(new T_IDENTIFIER(1, "x")),
-                            new STConstInt(new T_CONST_INT(1, "2", 10))),
+                            new Id(new T_IDENTIFIER(1, "x")),
+                            new ConstInt(new T_CONST_INT(1, "2", 10))),
                         STUnaryOp.Op.REVERSE
                     )
                 },
@@ -235,20 +235,20 @@ namespace LC_CompilerTests {
                     "!x[2]",
                     new STUnaryOp(
                         new STArrSub(
-                            new STId(new T_IDENTIFIER(1, "x")),
-                            new STConstInt(new T_CONST_INT(1, "2", 10))),
+                            new Id(new T_IDENTIFIER(1, "x")),
+                            new ConstInt(new T_CONST_INT(1, "2", 10))),
                         STUnaryOp.Op.NOT
                     )
                 },
                 {
                     "sizeof a",
-                    new STSizeOf(new STId(new T_IDENTIFIER(1, "a")))
+                    new STSizeOf(new Id(new T_IDENTIFIER(1, "a")))
                 },
                 {
                     "sizeof (int)",
                     new STSizeOf(
-                        new ASTTypeName(
-                            new List<STTypeSpecQual> { new STTypeKeySpec(1, STTypeSpec.Kind.INT) }
+                        new TypeName(
+                            ProcessSS(new List<TypeSpecQual> { new STTypeKeySpec(1, TypeSpec.Kind.INT) })
                         ))
                 }
             };
@@ -260,12 +260,12 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserCastExpression() {
-            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
+            Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "++x--",
                     new STPreStep(
                         new STPostStep(
-                            new STId(new T_IDENTIFIER(1, "x")),
+                            new Id(new T_IDENTIFIER(1, "x")),
                             STPostStep.Kind.DEC),
                         STPreStep.Kind.INC
                     )
@@ -273,10 +273,10 @@ namespace LC_CompilerTests {
                 {
                     "(int)what",
                     new STCast(
-                        new ASTTypeName(
-                            new List<STTypeSpecQual> { new STTypeKeySpec(1, STTypeSpec.Kind.INT) }
+                        new TypeName(
+                            ProcessSS(new List<TypeSpecQual> { new STTypeKeySpec(1, TypeSpec.Kind.INT) })
                         ),
-                        new STId(new T_IDENTIFIER(1, "what")))
+                        new Id(new T_IDENTIFIER(1, "what")))
                 }
             };
 
@@ -287,18 +287,18 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserMultiplicativeExpression() {
-            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
+            Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a * b / c % d",
                     new STBiExpr(
                         new STBiExpr(
                             new STBiExpr(
-                                new STId(new T_IDENTIFIER(1, "a")),
-                                new STId(new T_IDENTIFIER(1, "b")),
+                                new Id(new T_IDENTIFIER(1, "a")),
+                                new Id(new T_IDENTIFIER(1, "b")),
                                 STBiExpr.Op.MULT),
-                            new STId(new T_IDENTIFIER(1, "c")),
+                            new Id(new T_IDENTIFIER(1, "c")),
                             STBiExpr.Op.DIV),
-                        new STId(new T_IDENTIFIER(1, "d")),
+                        new Id(new T_IDENTIFIER(1, "d")),
                         STBiExpr.Op.MOD)
                 }
             };
@@ -310,14 +310,14 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserAdditiveOperator() {
-            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
+            Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a + b * 3",
                     new STBiExpr(
-                        new STId(new T_IDENTIFIER(1, "a")),
+                        new Id(new T_IDENTIFIER(1, "a")),
                         new STBiExpr(
-                            new STId(new T_IDENTIFIER(1, "b")),
-                            new STConstInt(new T_CONST_INT(1, "3", 10)),
+                            new Id(new T_IDENTIFIER(1, "b")),
+                            new ConstInt(new T_CONST_INT(1, "3", 10)),
                             STBiExpr.Op.MULT),
                         STBiExpr.Op.PLUS)
                 },
@@ -325,13 +325,13 @@ namespace LC_CompilerTests {
                     "1 + 2 \n * c \n - 5",
                     new STBiExpr(
                         new STBiExpr(
-                            new STConstInt(new T_CONST_INT(1, "1", 10)),
+                            new ConstInt(new T_CONST_INT(1, "1", 10)),
                             new STBiExpr(
-                                new STConstInt(new T_CONST_INT(1, "2", 10)),
-                                new STId(new T_IDENTIFIER(2, "c")),
+                                new ConstInt(new T_CONST_INT(1, "2", 10)),
+                                new Id(new T_IDENTIFIER(2, "c")),
                                 STBiExpr.Op.MULT),
                             STBiExpr.Op.PLUS),
-                        new STConstInt(new T_CONST_INT(3, "5", 10)),
+                        new ConstInt(new T_CONST_INT(3, "5", 10)),
                         STBiExpr.Op.MINUS)
                 }
             };
@@ -343,12 +343,12 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserShiftExpression() {
-            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
+            Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a << 1",
                     new STBiExpr(
-                        new STId(new T_IDENTIFIER(1, "a")),
-                        new STConstInt(new T_CONST_INT(1, "1", 10)),
+                        new Id(new T_IDENTIFIER(1, "a")),
+                        new ConstInt(new T_CONST_INT(1, "1", 10)),
                         STBiExpr.Op.LEFT)
                 }
             };
@@ -359,15 +359,15 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserRelationalExpression() {
-            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
+            Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a << 1 >= 23",
                     new STBiExpr(
                         new STBiExpr(
-                            new STId(new T_IDENTIFIER(1, "a")),
-                            new STConstInt(new T_CONST_INT(1, "1", 10)),
+                            new Id(new T_IDENTIFIER(1, "a")),
+                            new ConstInt(new T_CONST_INT(1, "1", 10)),
                             STBiExpr.Op.LEFT),
-                        new STConstInt(new T_CONST_INT(1, "23", 10)),
+                        new ConstInt(new T_CONST_INT(1, "23", 10)),
                         STBiExpr.Op.GE)
                 }
             };
@@ -378,15 +378,15 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserEqualityExpression() {
-            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
+            Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a << 1 != 23",
                     new STBiExpr(
                         new STBiExpr(
-                            new STId(new T_IDENTIFIER(1, "a")),
-                            new STConstInt(new T_CONST_INT(1, "1", 10)),
+                            new Id(new T_IDENTIFIER(1, "a")),
+                            new ConstInt(new T_CONST_INT(1, "1", 10)),
                             STBiExpr.Op.LEFT),
-                        new STConstInt(new T_CONST_INT(1, "23", 10)),
+                        new ConstInt(new T_CONST_INT(1, "23", 10)),
                         STBiExpr.Op.NEQ)
                 }
             };
@@ -397,15 +397,15 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserANDExpression() {
-            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
+            Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a >> 1 & 0x1",
                     new STBiExpr(
                         new STBiExpr(
-                            new STId(new T_IDENTIFIER(1, "a")),
-                            new STConstInt(new T_CONST_INT(1, "1", 10)),
+                            new Id(new T_IDENTIFIER(1, "a")),
+                            new ConstInt(new T_CONST_INT(1, "1", 10)),
                             STBiExpr.Op.RIGHT),
-                        new STConstInt(new T_CONST_INT(1, "1", 16)),
+                        new ConstInt(new T_CONST_INT(1, "1", 16)),
                         STBiExpr.Op.AND)
                 }
             };
@@ -416,15 +416,15 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserXORExpression() {
-            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
+            Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a >> 1 ^ 0x1",
                     new STBiExpr(
                         new STBiExpr(
-                            new STId(new T_IDENTIFIER(1, "a")),
-                            new STConstInt(new T_CONST_INT(1, "1", 10)),
+                            new Id(new T_IDENTIFIER(1, "a")),
+                            new ConstInt(new T_CONST_INT(1, "1", 10)),
                             STBiExpr.Op.RIGHT),
-                        new STConstInt(new T_CONST_INT(1, "1", 16)),
+                        new ConstInt(new T_CONST_INT(1, "1", 16)),
                         STBiExpr.Op.XOR)
                 }
             };
@@ -435,15 +435,15 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserORExpression() {
-            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
+            Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a >> 1 | 0x1",
                     new STBiExpr(
                         new STBiExpr(
-                            new STId(new T_IDENTIFIER(1, "a")),
-                            new STConstInt(new T_CONST_INT(1, "1", 10)),
+                            new Id(new T_IDENTIFIER(1, "a")),
+                            new ConstInt(new T_CONST_INT(1, "1", 10)),
                             STBiExpr.Op.RIGHT),
-                        new STConstInt(new T_CONST_INT(1, "1", 16)),
+                        new ConstInt(new T_CONST_INT(1, "1", 16)),
                         STBiExpr.Op.OR)
                 }
             };
@@ -454,20 +454,20 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserLogicalANDExpression() {
-            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
+            Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a >> 1 == 0x1 && b == 0",
                     new STBiExpr(
                         new STBiExpr(
                             new STBiExpr(
-                                new STId(new T_IDENTIFIER(1, "a")),
-                                new STConstInt(new T_CONST_INT(1, "1", 10)),
+                                new Id(new T_IDENTIFIER(1, "a")),
+                                new ConstInt(new T_CONST_INT(1, "1", 10)),
                                 STBiExpr.Op.RIGHT),
-                            new STConstInt(new T_CONST_INT(1, "1", 16)),
+                            new ConstInt(new T_CONST_INT(1, "1", 16)),
                             STBiExpr.Op.EQ),
                         new STBiExpr(
-                            new STId(new T_IDENTIFIER(1, "b")),
-                            new STConstInt(new T_CONST_INT(1, "0", 8)),
+                            new Id(new T_IDENTIFIER(1, "b")),
+                            new ConstInt(new T_CONST_INT(1, "0", 8)),
                             STBiExpr.Op.EQ),
                         STBiExpr.Op.LOGAND)
                 }
@@ -479,20 +479,20 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserLogicalORExpression() {
-            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
+            Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a >> 1 == 0x1 || b == 0",
                     new STBiExpr(
                         new STBiExpr(
                             new STBiExpr(
-                                new STId(new T_IDENTIFIER(1, "a")),
-                                new STConstInt(new T_CONST_INT(1, "1", 10)),
+                                new Id(new T_IDENTIFIER(1, "a")),
+                                new ConstInt(new T_CONST_INT(1, "1", 10)),
                                 STBiExpr.Op.RIGHT),
-                            new STConstInt(new T_CONST_INT(1, "1", 16)),
+                            new ConstInt(new T_CONST_INT(1, "1", 16)),
                             STBiExpr.Op.EQ),
                         new STBiExpr(
-                            new STId(new T_IDENTIFIER(1, "b")),
-                            new STConstInt(new T_CONST_INT(1, "0", 8)),
+                            new Id(new T_IDENTIFIER(1, "b")),
+                            new ConstInt(new T_CONST_INT(1, "0", 8)),
                             STBiExpr.Op.EQ),
                         STBiExpr.Op.LOGOR)
                 }
@@ -504,16 +504,16 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserConditionalExpression() {
-            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
+            Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a == 0 ? c : d",
                     new STCondExpr(
                         new STBiExpr(
-                            new STId(new T_IDENTIFIER(1, "a")),
-                            new STConstInt(new T_CONST_INT(1, "0", 10)),
+                            new Id(new T_IDENTIFIER(1, "a")),
+                            new ConstInt(new T_CONST_INT(1, "0", 10)),
                             STBiExpr.Op.EQ),
-                        new STId(new T_IDENTIFIER(1, "c")),
-                        new STId(new T_IDENTIFIER(1, "d")))
+                        new Id(new T_IDENTIFIER(1, "c")),
+                        new Id(new T_IDENTIFIER(1, "d")))
                 }
             };
             foreach (var test in dict) {
@@ -523,31 +523,31 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserAssignmentExpression() {
-            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
+            Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a == 0 ? c : d",
                     new STCondExpr(
                         new STBiExpr(
-                            new STId(new T_IDENTIFIER(1, "a")),
-                            new STConstInt(new T_CONST_INT(1, "0", 10)),
+                            new Id(new T_IDENTIFIER(1, "a")),
+                            new ConstInt(new T_CONST_INT(1, "0", 10)),
                             STBiExpr.Op.EQ),
-                        new STId(new T_IDENTIFIER(1, "c")),
-                        new STId(new T_IDENTIFIER(1, "d")))
+                        new Id(new T_IDENTIFIER(1, "c")),
+                        new Id(new T_IDENTIFIER(1, "d")))
                 },
                 {
                     "a += 6",
                     new STAssignExpr(
-                        new STId(new T_IDENTIFIER(1, "a")),
-                        new STConstInt(new T_CONST_INT(1, "6", 10)),
+                        new Id(new T_IDENTIFIER(1, "a")),
+                        new ConstInt(new T_CONST_INT(1, "6", 10)),
                         STAssignExpr.Op.PLUSEQ)
                 },
                 {
                     "val = a = c",
                     new STAssignExpr(
-                        new STId(new T_IDENTIFIER(1, "val")),
+                        new Id(new T_IDENTIFIER(1, "val")),
                         new STAssignExpr(
-                            new STId(new T_IDENTIFIER(1, "a")),
-                            new STId(new T_IDENTIFIER(1, "c")),
+                            new Id(new T_IDENTIFIER(1, "a")),
+                            new Id(new T_IDENTIFIER(1, "c")),
                             STAssignExpr.Op.ASSIGN),
                         STAssignExpr.Op.ASSIGN)
                 }
@@ -559,19 +559,19 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserCommaExpressionEquals() {
-            var e11 = new STId(new T_IDENTIFIER(1, "a"));
-            var e21 = new STId(new T_IDENTIFIER(1, "a"));
+            var e11 = new Id(new T_IDENTIFIER(1, "a"));
+            var e21 = new Id(new T_IDENTIFIER(1, "a"));
             var e12 = new STBiExpr(
-                    new STId(new T_IDENTIFIER(2, "b")),
-                    new STConstInt(new T_CONST_INT(2, "4", 10)),
+                    new Id(new T_IDENTIFIER(2, "b")),
+                    new ConstInt(new T_CONST_INT(2, "4", 10)),
                     STBiExpr.Op.PLUS);
             var e22 = new STBiExpr(
-                    new STId(new T_IDENTIFIER(2, "b")),
-                    new STConstInt(new T_CONST_INT(2, "4", 10)),
+                    new Id(new T_IDENTIFIER(2, "b")),
+                    new ConstInt(new T_CONST_INT(2, "4", 10)),
                     STBiExpr.Op.PLUS);
-            var l1 = new LinkedList<STExpr>();
-            var l2 = new LinkedList<STExpr>();
-            var l3 = new LinkedList<STExpr>();
+            var l1 = new LinkedList<Expr>();
+            var l2 = new LinkedList<Expr>();
+            var l3 = new LinkedList<Expr>();
 
             l1.AddFirst(e11);
             l1.AddFirst(e12);
@@ -593,21 +593,21 @@ namespace LC_CompilerTests {
         [TestMethod]
         public void LCCParserExpression() {
 
-            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
+            Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a = 1, b = 2, c = 3",
-                    new STCommaExpr(new LinkedList<STExpr>(new List<STExpr> {
+                    new STCommaExpr(new LinkedList<Expr>(new List<Expr> {
                         new STAssignExpr(
-                            new STId(new T_IDENTIFIER(1, "a")),
-                            new STConstInt(new T_CONST_INT(1, "1", 10)),
+                            new Id(new T_IDENTIFIER(1, "a")),
+                            new ConstInt(new T_CONST_INT(1, "1", 10)),
                             STAssignExpr.Op.ASSIGN),
                         new STAssignExpr(
-                            new STId(new T_IDENTIFIER(1, "b")),
-                            new STConstInt(new T_CONST_INT(1, "2", 10)),
+                            new Id(new T_IDENTIFIER(1, "b")),
+                            new ConstInt(new T_CONST_INT(1, "2", 10)),
                             STAssignExpr.Op.ASSIGN),
                         new STAssignExpr(
-                            new STId(new T_IDENTIFIER(1, "c")),
-                            new STConstInt(new T_CONST_INT(1, "3", 10)),
+                            new Id(new T_IDENTIFIER(1, "c")),
+                            new ConstInt(new T_CONST_INT(1, "3", 10)),
                             STAssignExpr.Op.ASSIGN),
                     }))
                 }
@@ -619,16 +619,16 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserConstantExpression() {
-            Dictionary<string, STExpr> dict = new Dictionary<string, STExpr> {
+            Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a == 0 ? c : d",
                     new STCondExpr(
                         new STBiExpr(
-                            new STId(new T_IDENTIFIER(1, "a")),
-                            new STConstInt(new T_CONST_INT(1, "0", 10)),
+                            new Id(new T_IDENTIFIER(1, "a")),
+                            new ConstInt(new T_CONST_INT(1, "0", 10)),
                             STBiExpr.Op.EQ),
-                        new STId(new T_IDENTIFIER(1, "c")),
-                        new STId(new T_IDENTIFIER(1, "d")))
+                        new Id(new T_IDENTIFIER(1, "c")),
+                        new Id(new T_IDENTIFIER(1, "d")))
                 }
             };
             foreach (var test in dict) {

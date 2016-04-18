@@ -40,12 +40,12 @@ namespace lcc.Parser {
         /// <param name="parser"> Basic element parser. </param>
         /// <param name="sep"> Match the operator. </param>
         /// <returns></returns>
-        public static Parserc.Parser<T, STExpr> ChainBinaryExpr(
-            this Parserc.Parser<T, STExpr> parser,
+        public static Parserc.Parser<T, Expr> ChainBinaryExpr(
+            this Parserc.Parser<T, Expr> parser,
             Parserc.Parser<T, STBiExpr.Op> sep
             ) {
             return parser.ChainPlus(sep.Select(op => {
-                Func<STExpr, STExpr, STExpr> f = (lhs, rhs) => new STBiExpr(lhs, rhs, op);
+                Func<Expr, Expr, Expr> f = (lhs, rhs) => new STBiExpr(lhs, rhs, op);
                 return f;
             }));
         }
@@ -93,12 +93,12 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STId> Identifier() {
-            return Get<T_IDENTIFIER>().Select(t => new STId(t));
+        public static Parserc.Parser<T, Id> Identifier() {
+            return Get<T_IDENTIFIER>().Select(t => new Id(t));
         }
     }
 
-    public class TypedefRedefined : Exception {
+    public class TypedefRedefined : System.Exception {
         public TypedefRedefined(int line, string name) {
             this.line = line;
             this.name = name;

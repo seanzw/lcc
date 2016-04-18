@@ -13,16 +13,20 @@ namespace lcc.SyntaxTree {
     /// <summary>
     /// The base class for all expression.
     /// </summary>
-    public abstract class STExpr : STStmt {
+    public abstract class Expr : STStmt {
 
-        public virtual T TypeCheck(ASTEnv env) {
+        public virtual T TypeCheck(Env env) {
+            throw new NotImplementedException();
+        }
+
+        public virtual AST.Expr ToAST(Env env) {
             throw new NotImplementedException();
         }
     }
 
-    public sealed class STCommaExpr : STExpr, IEquatable<STCommaExpr> {
+    public sealed class STCommaExpr : Expr, IEquatable<STCommaExpr> {
 
-        public STCommaExpr(IEnumerable<STExpr> exprs) {
+        public STCommaExpr(IEnumerable<Expr> exprs) {
             this.exprs = exprs;
         }
 
@@ -40,10 +44,10 @@ namespace lcc.SyntaxTree {
             return exprs.Aggregate(0, (acc, expr) => acc ^ expr.GetHashCode());
         }
 
-        public readonly IEnumerable<STExpr> exprs;
+        public readonly IEnumerable<Expr> exprs;
     }
 
-    public sealed class STAssignExpr : STExpr, IEquatable<STAssignExpr> {
+    public sealed class STAssignExpr : Expr, IEquatable<STAssignExpr> {
 
         public enum Op {
             ASSIGN,
@@ -59,7 +63,7 @@ namespace lcc.SyntaxTree {
             BITOREQ
         }
 
-        public STAssignExpr(STExpr lexpr, STExpr rexpr, Op op) {
+        public STAssignExpr(Expr lexpr, Expr rexpr, Op op) {
             this.lexpr = lexpr;
             this.rexpr = rexpr;
             this.op = op;
@@ -82,14 +86,14 @@ namespace lcc.SyntaxTree {
             return lexpr.GetHashCode() ^ rexpr.GetHashCode() ^ op.GetHashCode();
         }
 
-        public readonly STExpr lexpr;
-        public readonly STExpr rexpr;
+        public readonly Expr lexpr;
+        public readonly Expr rexpr;
         public readonly Op op;
     }
 
-    public sealed class STCondExpr : STExpr, IEquatable<STCondExpr> {
+    public sealed class STCondExpr : Expr, IEquatable<STCondExpr> {
 
-        public STCondExpr(STExpr predicator, STExpr trueExpr, STExpr falseExpr) {
+        public STCondExpr(Expr predicator, Expr trueExpr, Expr falseExpr) {
             this.predicator = predicator;
             this.trueExpr = trueExpr;
             this.falseExpr = falseExpr;
@@ -111,12 +115,12 @@ namespace lcc.SyntaxTree {
             return predicator.GetHashCode() ^ trueExpr.GetHashCode() ^ falseExpr.GetHashCode();
         }
 
-        public readonly STExpr predicator;
-        public readonly STExpr trueExpr;
-        public readonly STExpr falseExpr;
+        public readonly Expr predicator;
+        public readonly Expr trueExpr;
+        public readonly Expr falseExpr;
     }
 
-    public sealed class STBiExpr : STExpr, IEquatable<STBiExpr> {
+    public sealed class STBiExpr : Expr, IEquatable<STBiExpr> {
 
         public enum Op {
             MULT,   // *
@@ -139,7 +143,7 @@ namespace lcc.SyntaxTree {
             LOGOR   // ||
         }
 
-        public STBiExpr(STExpr lhs, STExpr rhs, Op op) {
+        public STBiExpr(Expr lhs, Expr rhs, Op op) {
             this.lhs = lhs;
             this.rhs = rhs;
             this.op = op;
@@ -162,8 +166,8 @@ namespace lcc.SyntaxTree {
             return lhs.GetHashCode() ^ rhs.GetHashCode() ^ op.GetHashCode();
         }
 
-        public readonly STExpr lhs;
-        public readonly STExpr rhs;
+        public readonly Expr lhs;
+        public readonly Expr rhs;
         public readonly Op op;
     }
 
@@ -171,9 +175,9 @@ namespace lcc.SyntaxTree {
     /// <summary>
     /// ( type-name ) expr
     /// </summary>
-    public sealed class STCast : STExpr, IEquatable<STCast> {
+    public sealed class STCast : Expr, IEquatable<STCast> {
 
-        public STCast(ASTTypeName name, STExpr expr) {
+        public STCast(TypeName name, Expr expr) {
             this.name = name;
             this.expr = expr;
         }
@@ -191,22 +195,22 @@ namespace lcc.SyntaxTree {
             return name.GetHashCode() ^ expr.GetHashCode();
         }
 
-        public readonly ASTTypeName name;
-        public readonly STExpr expr;
+        public readonly TypeName name;
+        public readonly Expr expr;
     }
 
     /// <summary>
     /// ++i
     /// --i
     /// </summary>
-    public sealed class STPreStep : STExpr, IEquatable<STPreStep> {
+    public sealed class STPreStep : Expr, IEquatable<STPreStep> {
 
         public enum Kind {
             INC,
             DEC
         }
 
-        public STPreStep(STExpr expr, Kind kind) {
+        public STPreStep(Expr expr, Kind kind) {
             this.expr = expr;
             this.kind = kind;
         }
@@ -225,25 +229,25 @@ namespace lcc.SyntaxTree {
             return expr.GetHashCode();
         }
 
-        public override T TypeCheck(ASTEnv env) {
+        public override T TypeCheck(Env env) {
             T t = expr.TypeCheck(env);
             if (!t.IsArithmetic && !t.IsPointer) {
-                throw new STException(expr.Pos, string.Format("{0} on type {1}", kind, t));
+                throw new Error(expr.Pos, string.Format("{0} on type {1}", kind, t));
             }
             if (!t.IsModifiable) {
-                throw new STException(expr.Pos, string.Format("cannot assign to type {0}", t));
+                throw new Error(expr.Pos, string.Format("cannot assign to type {0}", t));
             }
             return t.R();
         }
 
-        public readonly STExpr expr;
+        public readonly Expr expr;
         public readonly Kind kind;
     }
 
     /// <summary>
     /// & * + - ~ !
     /// </summary>
-    public sealed class STUnaryOp : STExpr, IEquatable<STUnaryOp> {
+    public sealed class STUnaryOp : Expr, IEquatable<STUnaryOp> {
 
         public enum Op {
             /// <summary>
@@ -272,7 +276,7 @@ namespace lcc.SyntaxTree {
             NOT
         }
 
-        public STUnaryOp(STExpr expr, Op op) {
+        public STUnaryOp(Expr expr, Op op) {
             this.expr = expr;
             this.op = op;
         }
@@ -291,36 +295,36 @@ namespace lcc.SyntaxTree {
             return expr.GetHashCode();
         }
 
-        public override T TypeCheck(ASTEnv env) {
+        public override T TypeCheck(Env env) {
             T t = expr.TypeCheck(env);
             switch (op) {
                 case Op.REF:
                     if (t.IsRValue)
-                        throw new STException(expr.Pos, string.Format("cannot take address of rvalue of {0}", t));
+                        throw new Error(expr.Pos, string.Format("cannot take address of rvalue of {0}", t));
                     return t.Ptr().R();
                 case Op.STAR:
                     if (!t.IsPointer)
-                        throw new STException(expr.Pos, string.Format("indirection requires pointer type ({0} provided)", t));
+                        throw new Error(expr.Pos, string.Format("indirection requires pointer type ({0} provided)", t));
                     return (t.nake as TPointer).element;
                 case Op.PLUS:
                 case Op.MINUS:
                     if (!t.IsArithmetic)
-                        throw new STException(expr.Pos, string.Format("invalid argument type '{0}' to unary expression", t));
+                        throw new Error(expr.Pos, string.Format("invalid argument type '{0}' to unary expression", t));
                     return t.IntPromote().R();
                 case Op.REVERSE:
                     if (!t.IsInteger)
-                        throw new STException(expr.Pos, string.Format("invalid argument type '{0}' to unary expression", t));
+                        throw new Error(expr.Pos, string.Format("invalid argument type '{0}' to unary expression", t));
                     return t.IntPromote().R();
                 case Op.NOT:
                     if (!t.IsScalar)
-                        throw new STException(expr.Pos, string.Format("invalid argument type '{0}' to unary expression", t));
+                        throw new Error(expr.Pos, string.Format("invalid argument type '{0}' to unary expression", t));
                     return TInt.Instance.None(T.LR.R);
                 default:
                     throw new InvalidOperationException("Unrecognized unary operator");
             }
         }
 
-        public readonly STExpr expr;
+        public readonly Expr expr;
         public readonly Op op;
     }
 
@@ -329,13 +333,13 @@ namespace lcc.SyntaxTree {
     /// sizeof unary-expression
     /// sizeof ( type-name )
     /// </summary>
-    public sealed class STSizeOf : STExpr, IEquatable<STSizeOf> {
+    public sealed class STSizeOf : Expr, IEquatable<STSizeOf> {
 
-        public STSizeOf(STExpr expr) {
+        public STSizeOf(Expr expr) {
             this.expr = expr;
         }
 
-        public STSizeOf(ASTTypeName name) {
+        public STSizeOf(TypeName name) {
             this.name = name;
         }
 
@@ -357,20 +361,20 @@ namespace lcc.SyntaxTree {
         /// <summary>
         /// Nullable.
         /// </summary>
-        public readonly STExpr expr;
+        public readonly Expr expr;
 
         /// <summary>
         /// Nullable.
         /// </summary>
-        public readonly ASTTypeName name;
+        public readonly TypeName name;
     }
 
     /// <summary>
     /// arr[idx].
     /// </summary>
-    public sealed class STArrSub : STExpr, IEquatable<STArrSub> {
+    public sealed class STArrSub : Expr, IEquatable<STArrSub> {
 
-        public STArrSub(STExpr arr, STExpr idx) {
+        public STArrSub(Expr arr, Expr idx) {
             this.arr = arr;
             this.idx = idx;
         }
@@ -398,15 +402,15 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        public override T TypeCheck(ASTEnv env) {
+        public override T TypeCheck(Env env) {
             T arrType = arr.TypeCheck(env);
             if (!arrType.IsPointer && !arrType.IsArray) {
-                throw new STException(arr.Pos, "subscripting none pointer type");
+                throw new Error(arr.Pos, "subscripting none pointer type");
             }
 
             T idxType = idx.TypeCheck(env);
             if (!idxType.IsInteger) {
-                throw new STException(idx.Pos, "subscripting none integer type");
+                throw new Error(idx.Pos, "subscripting none integer type");
             }
 
             if (arrType.IsPointer)
@@ -415,22 +419,22 @@ namespace lcc.SyntaxTree {
                 return (arrType.nake as TArray).element;
         }
 
-        public readonly STExpr arr;
-        public readonly STExpr idx;
+        public readonly Expr arr;
+        public readonly Expr idx;
     }
 
     /// <summary>
     /// s.i
     /// p->i
     /// </summary>
-    public sealed class STAccess : STExpr, IEquatable<STAccess> {
+    public sealed class STAccess : Expr, IEquatable<STAccess> {
 
         public enum Kind {
             DOT,
             PTR
         }
 
-        public STAccess(STExpr aggregation, T_IDENTIFIER token, Kind type) {
+        public STAccess(Expr aggregation, T_IDENTIFIER token, Kind type) {
             this.agg = aggregation;
             this.field = token.name;
             this.kind = type;
@@ -465,23 +469,23 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        public override T TypeCheck(ASTEnv env) {
+        public override T TypeCheck(Env env) {
             T aggType = agg.TypeCheck(env);
 
             if (kind == Kind.PTR) {
                 if (!aggType.IsPointer)
-                    throw new STException(agg.Pos, "member reference base type is not a pointer");
+                    throw new Error(agg.Pos, "member reference base type is not a pointer");
                 aggType = (aggType.nake as TPointer).element;
             }
 
             if (!aggType.IsStruct && !aggType.IsUnion)
-                throw new STException(agg.Pos, "member reference base type is not a struct or union");
+                throw new Error(agg.Pos, "member reference base type is not a struct or union");
 
             TStructUnion s = aggType.nake as TStructUnion;
 
             T m = s.GetType(field);
             if (m == null) {
-                throw new STException(agg.Pos, string.Format("no member named {0} in {1}", field, s.ToString()));
+                throw new Error(agg.Pos, string.Format("no member named {0} in {1}", field, s.ToString()));
             }
 
             if (kind == Kind.DOT) {
@@ -491,7 +495,7 @@ namespace lcc.SyntaxTree {
             }
         }
 
-        public readonly STExpr agg;
+        public readonly Expr agg;
         public readonly string field;
         public readonly Kind kind;
     }
@@ -500,14 +504,14 @@ namespace lcc.SyntaxTree {
     /// i++
     /// i--
     /// </summary>
-    public sealed class STPostStep : STExpr, IEquatable<STPostStep> {
+    public sealed class STPostStep : Expr, IEquatable<STPostStep> {
 
         public enum Kind {
             INC,
             DEC
         }
 
-        public STPostStep(STExpr expr, Kind kind) {
+        public STPostStep(Expr expr, Kind kind) {
             this.expr = expr;
             this.kind = kind;
         }
@@ -539,30 +543,30 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        public override T TypeCheck(ASTEnv env) {
+        public override T TypeCheck(Env env) {
 
             T t = expr.TypeCheck(env);
             if (!t.IsPointer && !t.IsArithmetic) {
-                throw new STException(expr.Pos, string.Format("{0} on type {1}", kind, t));
+                throw new Error(expr.Pos, string.Format("{0} on type {1}", kind, t));
             }
 
             if (!t.IsModifiable) {
-                throw new STException(expr.Pos, string.Format("cannot assign to type {0}", t));
+                throw new Error(expr.Pos, string.Format("cannot assign to type {0}", t));
             }
 
             return t.R();
         }
 
-        public readonly STExpr expr;
+        public readonly Expr expr;
         public readonly Kind kind;
     }
 
     /// <summary>
     /// ( type-name ) { initializer-list [,] }
     /// </summary>
-    public sealed class STCompound : STExpr, IEquatable<STCompound> {
+    public sealed class STCompound : Expr, IEquatable<STCompound> {
 
-        public STCompound(ASTTypeName name, IEnumerable<STInitItem> inits) {
+        public STCompound(TypeName name, IEnumerable<STInitItem> inits) {
             this.name = name;
             this.inits = inits;
         }
@@ -581,13 +585,13 @@ namespace lcc.SyntaxTree {
 
         public override Position Pos => name.Pos;
 
-        public readonly ASTTypeName name;
+        public readonly TypeName name;
         public readonly IEnumerable<STInitItem> inits;
     }
 
-    public sealed class STFuncCall : STExpr, IEquatable<STFuncCall> {
+    public sealed class STFuncCall : Expr, IEquatable<STFuncCall> {
 
-        public STFuncCall(STExpr expr, IEnumerable<STExpr> args) {
+        public STFuncCall(Expr expr, IEnumerable<Expr> args) {
             this.expr = expr;
             this.args = args;
         }
@@ -606,16 +610,16 @@ namespace lcc.SyntaxTree {
             return expr.GetHashCode();
         }
 
-        public readonly STExpr expr;
-        public readonly IEnumerable<STExpr> args;
+        public readonly Expr expr;
+        public readonly IEnumerable<Expr> args;
     }
 
     /// <summary>
     /// Represents an identfier.
     /// </summary>
-    public sealed class STId : STExpr, IEquatable<STId> {
+    public sealed class Id : Expr, IEquatable<Id> {
 
-        public STId(T_IDENTIFIER token) {
+        public Id(T_IDENTIFIER token) {
             pos = new Position { line = token.line };
             name = token.name;
         }
@@ -623,10 +627,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STId);
+            return Equals(obj as Id);
         }
 
-        public bool Equals(STId x) {
+        public bool Equals(Id x) {
             return x != null && x.name.Equals(name) && x.pos.Equals(pos);
         }
 
@@ -639,9 +643,9 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        public override T TypeCheck(ASTEnv env) {
+        public override T TypeCheck(Env env) {
             var signature = env.GetSymbol(name);
-            if (!signature.HasValue) throw new ASTErrUndefinedIdentifier(pos, name);
+            if (!signature.HasValue) throw new ErrUndefinedIdentifier(pos, name);
             else return signature.Value.t;
         }
 
@@ -650,9 +654,9 @@ namespace lcc.SyntaxTree {
         private readonly Position pos;
     }
 
-    public abstract class STConstant : STExpr {
+    public abstract class Constant : Expr {
 
-        public STConstant(Position pos) {
+        public Constant(Position pos) {
             this.pos = pos;
         }
 
@@ -701,9 +705,9 @@ namespace lcc.SyntaxTree {
     /// ------------------------------------------------------------------------------------------
     /// 
     /// </summary>
-    public sealed class STConstInt : STConstant, IEquatable<STConstInt> {
+    public sealed class ConstInt : Constant, IEquatable<ConstInt> {
 
-        public STConstInt(T_CONST_INT token) : base(new Position { line = token.line }) {
+        public ConstInt(T_CONST_INT token) : base(new Position { line = token.line }) {
             value = Evaluate(token);
 
             // Select the proper type for this constant.
@@ -763,10 +767,10 @@ namespace lcc.SyntaxTree {
         }
 
         public override bool Equals(object obj) {
-            return Equals(obj as STConstInt);
+            return Equals(obj as ConstInt);
         }
 
-        public bool Equals(STConstInt x) {
+        public bool Equals(ConstInt x) {
             return x != null && x.pos.Equals(pos)
                 && x.value == value
                 && x.type.Equals(type);
@@ -776,8 +780,8 @@ namespace lcc.SyntaxTree {
             return pos.GetHashCode();
         }
 
-        public override T TypeCheck(ASTEnv env) {
-            return type;
+        public override AST.Expr ToAST(Env env) {
+            return new AST.ConstIntExpr(type, value);
         }
 
         /// <summary>
@@ -796,63 +800,55 @@ namespace lcc.SyntaxTree {
             return value;
         }
 
-        private static T FitInType(Position pos, BigInteger value, params TInteger[] types) {
+        private static TInteger FitInType(Position pos, BigInteger value, params TInteger[] types) {
             foreach (var type in types) {
                 if (value >= type.MIN && value <= type.MAX) {
-                    return type.Const(T.LR.R);
+                    return type;
                 }
             }
-            throw new ASTErrIntegerLiteralOutOfRange(pos);
+            throw new ErrIntegerLiteralOutOfRange(pos);
         }
 
         public readonly BigInteger value;
-        public readonly T type;
+        public readonly TInteger type;
     }
 
     /// <summary>
     /// A character is either an octal sequence, a hexadecimal sequence or an ascii character.
     /// An octal sequence and a hexadecimal sequence shall be in the range of representable values for the type unsigned char.
     /// </summary>
-    public sealed class STConstChar : STConstant {
+    public sealed class ConstChar : Constant {
 
-        public STConstChar(T_CONST_CHAR token) : base(new Position { line = token.line }) {
+        public ConstChar(T_CONST_CHAR token) : base(new Position { line = token.line }) {
 
             // Do not support multi-character characer.
             if (token.prefix == T_CONST_CHAR.Prefix.L) {
-                throw new ASTErrUnknownType(pos, "multi-character");
+                throw new ErrUnknownType(pos, "multi-character");
             }
 
             values = Evaluate(pos, token.text);
 
             // Do not support multi-character characer.
             if (values.Count() > 1) {
-                throw new ASTErrUnknownType(pos, "multi-character");
+                throw new ErrUnknownType(pos, "multi-character");
             }
-
-            type = TUChar.Instance.Const(T.LR.R);
         }
 
         public override bool Equals(object obj) {
-            return Equals(obj as STConstChar);
+            return Equals(obj as ConstChar);
         }
 
-        public bool Equals(STConstChar x) {
+        public bool Equals(ConstChar x) {
             return x != null && x.pos.Equals(pos)
-                && x.values.SequenceEqual(values)
-                && x.type.Equals(type);
+                && x.values.SequenceEqual(values);
         }
 
         public override int GetHashCode() {
             return pos.GetHashCode();
         }
 
-        /// <summary>
-        /// Type check.
-        /// </summary>
-        /// <param name="env"></param>
-        /// <returns></returns>
-        public override T TypeCheck(ASTEnv env) {
-            return type;
+        public override AST.Expr ToAST(Env env) {
+            return new AST.ConstIntExpr(TChar.Instance, values.First());
         }
 
         /// <summary>
@@ -883,7 +879,7 @@ namespace lcc.SyntaxTree {
             // and push it into the list.
             Action<BigInteger> PushValue = v => {
                 if (v < TUChar.Instance.MIN || v > TUChar.Instance.MAX) {
-                    throw new ASTErrEscapedSequenceOutOfRange(pos, text);
+                    throw new ErrEscapedSequenceOutOfRange(pos, text);
                 }
                 values.AddLast((ushort)v);  // Store the current result.
             };
@@ -985,11 +981,6 @@ namespace lcc.SyntaxTree {
         /// Store the values from Evaluate().
         /// </summary>
         public readonly IEnumerable<ushort> values;
-
-        /// <summary>
-        /// Type of this constant.
-        /// </summary>
-        public readonly T type;
     }
 
     /// <summary>
@@ -1003,30 +994,34 @@ namespace lcc.SyntaxTree {
     /// Exponent-part is processes as a decimal integer, to which 10 or 2 will be raised.
     /// 
     /// </summary>
-    public sealed class STConstFloat : STConstant, IEquatable<STConstFloat> {
-        public STConstFloat(T_CONST_FLOAT token) : base(new Position { line = token.line }) {
+    public sealed class ConstFloat : Constant, IEquatable<ConstFloat> {
+        public ConstFloat(T_CONST_FLOAT token) : base(new Position { line = token.line }) {
             value = Evaluate(token);
             switch (token.suffix) {
                 case T_CONST_FLOAT.Suffix.NONE:
-                    type = TDouble.Instance.Const(T.LR.R);
+                    t = TDouble.Instance;
                     break;
                 case T_CONST_FLOAT.Suffix.F:
-                    type = TFloat.Instance.Const(T.LR.R);
+                    t = TFloat.Instance;
                     break;
                 case T_CONST_FLOAT.Suffix.L:
-                    type = TLDouble.Instance.Const(T.LR.R);
+                    t = TLDouble.Instance;
                     break;
             }
         }
 
         public override bool Equals(object obj) {
-            return Equals(obj as STConstFloat);
+            return Equals(obj as ConstFloat);
         }
 
-        public bool Equals(STConstFloat x) {
+        public bool Equals(ConstFloat x) {
             return x != null && x.pos.Equals(pos)
                 && Math.Abs(x.value - value) < 0.0001f
-                && x.type.Equals(type);
+                && x.t.Equals(t);
+        }
+
+        public override AST.Expr ToAST(Env env) {
+            return new AST.ConstFloatExpr(t, value);
         }
 
         private static double Evaluate(T_CONST_FLOAT token) {
@@ -1071,16 +1066,12 @@ namespace lcc.SyntaxTree {
             return value;
         }
 
-        public override T TypeCheck(ASTEnv env) {
-            return type;
-        }
-
         public override int GetHashCode() {
             return pos.GetHashCode();
         }
 
         public readonly double value;
-        public readonly T type;
+        public readonly TArithmetic t;
     }
 
     /// <summary>
@@ -1091,8 +1082,8 @@ namespace lcc.SyntaxTree {
     /// 
     /// Each char is the same as in constant character integer defined in ASTConstChar.
     /// </summary>
-    public sealed class STString : STExpr, IEquatable<STString> {
-        public STString(LinkedList<T_STRING_LITERAL> tokens) {
+    public sealed class Str : Expr, IEquatable<Str> {
+        public Str(LinkedList<T_STRING_LITERAL> tokens) {
             pos = new Position { line = tokens.First().line };
             values = Evaluate(tokens);
             var arrType = new TArray(TChar.Instance.None(T.LR.L), values.Count());
@@ -1102,10 +1093,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STString);
+            return Equals(obj as Str);
         }
 
-        public bool Equals(STString s) {
+        public bool Equals(Str s) {
             return s != null && s.pos.Equals(pos) && s.values.SequenceEqual(values);
         }
 
@@ -1113,7 +1104,7 @@ namespace lcc.SyntaxTree {
             return values.First();
         }
 
-        public override T TypeCheck(ASTEnv env) {
+        public override T TypeCheck(Env env) {
             return type;
         }
 
@@ -1124,9 +1115,9 @@ namespace lcc.SyntaxTree {
             foreach (var t in tokens) {
                 Position pos = new Position { line = t.line };
                 if (t.prefix == T_STRING_LITERAL.Prefix.L) {
-                    throw new ASTErrUnknownType(pos, "multi-character");
+                    throw new ErrUnknownType(pos, "multi-character");
                 }
-                values = values.Concat(STConstChar.Evaluate(pos, t.text));
+                values = values.Concat(ConstChar.Evaluate(pos, t.text));
             }
             return values;
         }

@@ -75,7 +75,7 @@ namespace lcc.TypeSystem {
         /// This also completes the incomplete struct.
         /// </summary>
         /// <param name="fields"></param>
-        public virtual void DefStruct(IEnumerable<TStructUnion.Field> fields) {
+        public virtual void DefStruct(IEnumerable<Tuple<string, T>> fields) {
             throw new InvalidOperationException("Can't define a struct which is not an undefined struct!");
         }
 
@@ -84,7 +84,7 @@ namespace lcc.TypeSystem {
         /// This also completes the incomplete union.
         /// </summary>
         /// <param name="fields"></param>
-        public virtual void DefUnion(IEnumerable<TStructUnion.Field> fields) {
+        public virtual void DefUnion(IEnumerable<Tuple<string, T>> fields) {
             throw new InvalidOperationException("Can't define a union which is not an undefined union!");
         }
 
@@ -134,8 +134,7 @@ namespace lcc.TypeSystem {
         public virtual bool IsVarArray => false;
         public virtual bool IsStruct => false;
         public virtual bool IsUnion => false;
-
-        public abstract int Size { get; }
+        public virtual bool IsBitField => false;
 
         /// <summary>
         /// Qualify this type.
@@ -164,6 +163,20 @@ namespace lcc.TypeSystem {
         public T None(T.LR lr = T.LR.L, Store store = Store.NONE) {
             return Qualify(TQualifiers.N, lr, store);
         }
+
+        public abstract int Bits { get; }
+        public virtual int Size => Bits / 8;
+        public int Align => _Align(Bits);
+
+        /// <summary>
+        /// Align the size with 4.
+        /// </summary>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        protected static int _Align(int size) {
+            return ((size - 1) / _alignment + 1) * _alignment;
+        }
+        protected static int _alignment = 4;
     }
 
     public abstract class TObject : TUnqualified {
@@ -192,7 +205,7 @@ namespace lcc.TypeSystem {
     }
 
     public abstract class TCharacter : TInteger {
-        public override int Size => 1;
+        public override int Bits => 8;
         public override bool IsCharacter => true;
     }
 
@@ -382,8 +395,8 @@ namespace lcc.TypeSystem {
         }
 
         public void DefArr(int n) { nake.DefArr(n); }
-        public void DefStruct(IEnumerable<TStructUnion.Field> fields) { nake.DefStruct(fields); }
-        public void DefUnion(IEnumerable<TStructUnion.Field> fields) { nake.DefUnion(fields); }
+        public void DefStruct(IEnumerable<Tuple<string, T>> fields) { nake.DefStruct(fields); }
+        public void DefUnion(IEnumerable<Tuple<string, T>> fields) { nake.DefUnion(fields); }
         public void DefEnum(IDictionary<string, int> enums) { nake.DefEnum(enums); }
         public void DefFunc() { nake.DefFunc(); }
 
@@ -402,8 +415,11 @@ namespace lcc.TypeSystem {
         public bool IsVarArray => nake.IsVarArray;
         public bool IsStruct => nake.IsStruct;
         public bool IsUnion => nake.IsUnion;
+        public bool IsBitField => nake.IsBitField;
 
+        public int Bits => nake.Bits;
         public int Size => nake.Size;
+        public int Align => nake.Align;
 
         public bool IsLValue => lr == LR.L;
         public bool IsRValue => lr == LR.R;

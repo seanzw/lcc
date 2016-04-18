@@ -22,7 +22,7 @@ namespace lcc.TypeSystem {
             else isDefined = true;
         }
 
-        public override int Size { get { throw new InvalidOperationException("Can't take sizeof func designator!"); } } 
+        public override int Bits { get { throw new InvalidOperationException("Can't take bits of func designator!"); } } 
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();

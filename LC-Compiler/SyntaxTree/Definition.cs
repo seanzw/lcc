@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.SyntaxTree {
-    public sealed class STProgram : STNode, IEquatable<STProgram> {
+    public sealed class STProgram : Node, IEquatable<STProgram> {
 
-        public STProgram(IEnumerable<STNode> nodes) {
+        public STProgram(IEnumerable<Node> nodes) {
             this.nodes = nodes;
         }
 
@@ -25,14 +25,14 @@ namespace lcc.SyntaxTree {
             return nodes.Aggregate(0, (hash, node) => hash ^ node.GetHashCode());
         }
 
-        public readonly IEnumerable<STNode> nodes;
+        public readonly IEnumerable<Node> nodes;
     }
 
-    public sealed class STFuncDef : STNode, IEquatable<STFuncDef> {
+    public sealed class STFuncDef : Node, IEquatable<STFuncDef> {
 
         public STFuncDef(
-            STDeclSpecs specifiers,
-            STDeclarator declarator,
+            DeclSpecs specifiers,
+            Declarator declarator,
             IEnumerable<STDeclaration> declarations,
             STStmt statement
             ) {
@@ -61,8 +61,8 @@ namespace lcc.SyntaxTree {
             return specifiers.GetHashCode();
         }
 
-        public readonly STDeclSpecs specifiers;
-        public readonly STDeclarator declarator;
+        public readonly DeclSpecs specifiers;
+        public readonly Declarator declarator;
         public readonly IEnumerable<STDeclaration> declarations;
         public readonly STStmt statement;
     }

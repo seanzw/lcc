@@ -11,7 +11,7 @@ using Parserc;
 
 namespace LC_CompilerTests {
     [TestClass]
-    public partial class ASTTests {
+    public partial class SyntaxTreeTest {
 
         [TestMethod]
         public void LCCTCConstCharEvaluateLegal() {
@@ -60,39 +60,39 @@ namespace LC_CompilerTests {
             };
 
             foreach (var test in tests) {
-                var values = STConstChar.Evaluate(new Position { line = 1 }, test.Key);
+                var values = ConstChar.Evaluate(new Position { line = 1 }, test.Key);
                 Assert.IsTrue(values.SequenceEqual(test.Value));
             }
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ASTErrEscapedSequenceOutOfRange), "Too long escaped sequence")]
+        [ExpectedException(typeof(ErrEscapedSequenceOutOfRange), "Too long escaped sequence")]
         public void LCCTCConstCharIllegal1() {
             string src = "\\xfff";
-            var values = STConstChar.Evaluate(new Position { line = 1 }, src);
+            var values = ConstChar.Evaluate(new Position { line = 1 }, src);
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ASTErrEscapedSequenceOutOfRange), "Too long escaped sequence")]
+        [ExpectedException(typeof(ErrEscapedSequenceOutOfRange), "Too long escaped sequence")]
         public void LCCTCConstCharIllegal2() {
             string src = "\\777";
-            var values = STConstChar.Evaluate(new Position { line = 1 }, src);
+            var values = ConstChar.Evaluate(new Position { line = 1 }, src);
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ASTErrUnknownType), "Multi-character")]
+        [ExpectedException(typeof(ErrUnknownType), "Multi-character")]
         public void LCCTCConstCharIllegalMultiChar1() {
             string src = "'\\0223'";
-            var ast = new STConstChar(new T_CONST_CHAR(1, src));
-            ast.TypeCheck(new ASTEnv());
+            var ast = new ConstChar(new T_CONST_CHAR(1, src));
+            ast.TypeCheck(new lcc.SyntaxTree.Env());
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ASTErrUnknownType), "Multi-character")]
+        [ExpectedException(typeof(ErrUnknownType), "Multi-character")]
         public void LCCTCConstCharIllegalMultiChar2() {
             string src = "L'\\0223'";
-            var ast = new STConstChar(new T_CONST_CHAR(1, src));
-            ast.TypeCheck(new ASTEnv());
+            var ast = new ConstChar(new T_CONST_CHAR(1, src));
+            ast.TypeCheck(new lcc.SyntaxTree.Env());
         }
 
         [TestMethod]
@@ -102,8 +102,8 @@ namespace LC_CompilerTests {
             var result = Utility.parse(src, Parser.PrimaryExpression().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
-            Assert.IsTrue(result.First().Value is STString);
-            var ast = result.First().Value as STString;
+            Assert.IsTrue(result.First().Value is Str);
+            var ast = result.First().Value as Str;
             Assert.IsTrue(truth.SequenceEqual(ast.values));
         }
 
@@ -135,42 +135,42 @@ namespace LC_CompilerTests {
                 var result = Utility.parse(test.Key, Parser.PrimaryExpression().End());
                 Assert.AreEqual(1, result.Count());
                 Assert.IsFalse(result.First().Remain.More());
-                Assert.IsTrue(result.First().Value is STConstInt);
-                var ast = result.First().Value as STConstInt;
+                Assert.IsTrue(result.First().Value is ConstInt);
+                var ast = result.First().Value as ConstInt;
                 Assert.AreEqual(test.Value, ast.value);
             }
         }
 
         [TestMethod]
         public void LCCTCConstIntType() {
-            var tests = new Dictionary<string, T> {
+            var tests = new Dictionary<string, TInteger> {
                 {
                     "233",
-                    TInt.Instance.Const(T.LR.R)
+                    TInt.Instance
                 },
                 {
                     "4294967296",
-                    TLLong.Instance.Const(T.LR.R)
+                    TLLong.Instance
                 },
                 {
                     "0xFFFFFFFF",
-                    TUInt.Instance.Const(T.LR.R)
+                    TUInt.Instance
                 },
                 {
                     "23u",
-                    TUInt.Instance.Const(T.LR.R)
+                    TUInt.Instance
                 },
                 {
                     "0ull",
-                    TULLong.Instance.Const(T.LR.R)
+                    TULLong.Instance
                 }
             };
             foreach (var test in tests) {
                 var result = Utility.parse(test.Key, Parser.PrimaryExpression().End());
                 Assert.AreEqual(1, result.Count());
                 Assert.IsFalse(result.First().Remain.More());
-                Assert.IsTrue(result.First().Value is STConstInt);
-                var ast = result.First().Value as STConstInt;
+                Assert.IsTrue(result.First().Value is ConstInt);
+                var ast = result.First().Value as ConstInt;
                 Assert.AreEqual(test.Value, ast.type);
             }
         }
@@ -216,8 +216,8 @@ namespace LC_CompilerTests {
                 var result = Utility.parse(test.Key, Parser.PrimaryExpression().End());
                 Assert.AreEqual(1, result.Count());
                 Assert.IsFalse(result.First().Remain.More());
-                Assert.IsTrue(result.First().Value is STConstFloat);
-                var ast = result.First().Value as STConstFloat;
+                Assert.IsTrue(result.First().Value is ConstFloat);
+                var ast = result.First().Value as ConstFloat;
                 Assert.AreEqual(test.Value, ast.value, 0.0001);
             }
         }

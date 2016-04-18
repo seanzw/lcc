@@ -20,22 +20,22 @@ namespace lcc.SyntaxTree {
         FUNCTION
     }
 
-    public struct SymbolSignature {
+    public struct SymbolEntry {
         public readonly T t;
         public readonly SymbolKind kind;
-        public readonly STNode node;
-        public SymbolSignature(T t, SymbolKind kind, STNode node) {
+        public readonly Node node;
+        public SymbolEntry(T t, SymbolKind kind, Node node) {
             this.t = t;
             this.kind = kind;
             this.node = node;
         }
     }
 
-    public struct TagSignature {
-        public readonly TUnqualified t;
-        public readonly STTypeUserSpec node;
-        public TagSignature(TUnqualified t, STTypeUserSpec node) {
-            this.t = t;
+    public struct TagEntry {
+        public TUnqualified type;
+        public TypeUserSpec node;
+        public TagEntry(TUnqualified type, TypeUserSpec node) {
+            this.type = type;
             this.node = node;
         }
     }
@@ -43,7 +43,7 @@ namespace lcc.SyntaxTree {
     /// <summary>
     /// Environment used for semantic analysis.
     /// </summary>
-    public sealed class ASTEnv {
+    public sealed class Env {
 
         /// <summary>
         /// Scope contains two dictionary.
@@ -52,13 +52,13 @@ namespace lcc.SyntaxTree {
         private sealed class Scope {
             public Scope(ScopeKind kind) {
                 this.kind = kind;
-                symbols = new Dictionary<string, SymbolSignature>();
-                tags = new Dictionary<string, TagSignature>();
+                symbols = new Dictionary<string, SymbolEntry>();
+                tags = new Dictionary<string, TagEntry>();
             }
-            public void AddSymbol(string symbol, SymbolSignature signature) {
+            public void AddSymbol(string symbol, SymbolEntry signature) {
                 symbols.Add(symbol, signature);
             }
-            public void AddTag(string tag, TagSignature signature) {
+            public void AddTag(string tag, TagEntry signature) {
                 tags.Add(tag, signature);
             }
 
@@ -67,7 +67,7 @@ namespace lcc.SyntaxTree {
             /// </summary>
             /// <param name="symbol"></param>
             /// <returns></returns>
-            public SymbolSignature? GetSymbol(string symbol) {
+            public SymbolEntry? GetSymbol(string symbol) {
                 if (symbols.ContainsKey(symbol)) return symbols[symbol];
                 else return null;
             }
@@ -77,20 +77,20 @@ namespace lcc.SyntaxTree {
             /// </summary>
             /// <param name="tag"></param>
             /// <returns></returns>
-            public TagSignature? GetTag(string tag) {
+            public TagEntry? GetTag(string tag) {
                 if (tags.ContainsKey(tag)) return tags[tag];
                 else return null;
             }
 
             public readonly ScopeKind kind;
-            private readonly Dictionary<string, SymbolSignature> symbols;
-            private readonly Dictionary<string, TagSignature> tags;
+            private readonly Dictionary<string, SymbolEntry> symbols;
+            private readonly Dictionary<string, TagEntry> tags;
         }
 
         /// <summary>
         /// Initialize the environment with the file scope.
         /// </summary>
-        public ASTEnv() {
+        public Env() {
             scopes = new Stack<Scope>();
             PushScope(ScopeKind.FILE);
         }
@@ -109,7 +109,6 @@ namespace lcc.SyntaxTree {
             scopes.Pop();
         }
 
-
         /// <summary>
         /// Add a symbol to the current scope.
         /// Note: 
@@ -120,17 +119,20 @@ namespace lcc.SyntaxTree {
         /// <param name="symbol"></param>
         /// <param name="type"></param>
         /// <param name="line"></param>
-        public void AddSymbol(string symbol, SymbolSignature signature) {
+        public void AddSymbol(string symbol, SymbolEntry signature) {
             scopes.Peek().AddSymbol(symbol, signature);
         }
+
         /// <summary>
         /// Add a tag to the current scope.
         /// </summary>
         /// <param name="tag"></param>
         /// <param name="t"></param>
         /// <param name="definition"></param>
-        public void AddTag(string tag, TagSignature signature) {
-            scopes.Peek().AddTag(tag, signature);
+        public TagEntry AddTag(string tag, TUnqualified type, TypeUserSpec node) {
+            var entry = new TagEntry(type, node);
+            scopes.Peek().AddTag(tag, entry);
+            return entry;
         }
 
         /// <summary>
@@ -139,7 +141,7 @@ namespace lcc.SyntaxTree {
         /// <param name="symbol"> The name of the symbol. </param>
         /// <param name="here"> Restrict the search area to the current scope. </param>
         /// <returns></returns>
-        public SymbolSignature? GetSymbol(string symbol, bool here = false) {
+        public SymbolEntry? GetSymbol(string symbol, bool here = false) {
             if (here) return scopes.Peek().GetSymbol(symbol);
             else {
                 foreach (var scope in scopes) {
@@ -156,7 +158,7 @@ namespace lcc.SyntaxTree {
         /// <param name="tag"> Name of the tag. </param>
         /// <param name="here"> Retrict the search area to the current scope. </param>
         /// <returns></returns>
-        public TagSignature? GetTag(string tag, bool here = false) {
+        public TagEntry? GetTag(string tag, bool here = false) {
             if (here) return scopes.Peek().GetTag(tag);
             else {
                 foreach (var scope in scopes) {

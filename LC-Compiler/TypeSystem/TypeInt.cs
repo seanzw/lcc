@@ -67,7 +67,7 @@ namespace lcc.TypeSystem {
         private static readonly TShort instance = new TShort();
         public static TShort Instance => instance;
         public override int Rank => 2;
-        public override int Size => 2;
+        public override int Bits => 16;
         public override BigInteger MAX => short.MaxValue;
         public override BigInteger MIN => short.MinValue;
 
@@ -85,7 +85,7 @@ namespace lcc.TypeSystem {
         private static readonly TUShort instance = new TUShort();
         public static TUShort Instance => instance;
         public override int Rank => 2;
-        public override int Size => 2;
+        public override int Bits => 16;
         public override BigInteger MAX => ushort.MaxValue;
         public override BigInteger MIN => ushort.MinValue;
 
@@ -106,7 +106,7 @@ namespace lcc.TypeSystem {
 
         public static TInt Instance => instance;
         public override int Rank => 3;
-        public override int Size => 4;
+        public override int Bits => 32;
         public override BigInteger MAX => int.MaxValue;
         public override BigInteger MIN => int.MinValue;
 
@@ -125,7 +125,7 @@ namespace lcc.TypeSystem {
 
         public static TUInt Instance => instance;
         public override int Rank => 3;
-        public override int Size => 4;
+        public override int Bits => 32;
         public override BigInteger MAX => uint.MaxValue;
         public override BigInteger MIN => uint.MinValue;
 
@@ -144,7 +144,7 @@ namespace lcc.TypeSystem {
 
         public static TLong Instance => instance;
         public override int Rank => 4;
-        public override int Size => 4;
+        public override int Bits => 32;
         public override BigInteger MAX => TInt.Instance.MAX;
         public override BigInteger MIN => TInt.Instance.MIN;
 
@@ -163,7 +163,7 @@ namespace lcc.TypeSystem {
 
         public static TULong Instance => instance;
         public override int Rank => 4;
-        public override int Size => 4;
+        public override int Bits => 32;
         public override BigInteger MAX => TUInt.Instance.MAX;
         public override BigInteger MIN => TUInt.Instance.MIN;
 
@@ -181,7 +181,7 @@ namespace lcc.TypeSystem {
         private static readonly TLLong instance = new TLLong();
         public static TLLong Instance => instance;
         public override int Rank => 5;
-        public override int Size => 8;
+        public override int Bits => 64;
         public override BigInteger MAX => long.MaxValue;
         public override BigInteger MIN => long.MinValue;
 
@@ -199,7 +199,7 @@ namespace lcc.TypeSystem {
         private static readonly TULLong instance = new TULLong();
         public static TULLong Instance => instance;
         public override int Rank => 5;
-        public override int Size => 8;
+        public override int Bits => 64;
         public override BigInteger MAX => ulong.MaxValue;
         public override BigInteger MIN => ulong.MinValue;
 

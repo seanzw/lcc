@@ -18,19 +18,19 @@ namespace lcc.TypeSystem {
         public override bool IsArray => true;
         public override bool IsComplete => n != -1;
         public override bool IsDefined => IsComplete;
-        public override int Size {
+        public override int Bits {
             get {
                 if (n == -1) throw new InvalidOperationException("Can't take size of an incomplete array.");
-                else return n * element.Size;
+                else return n * element.Bits;
             }
         }
-
         /// <summary>
         /// Complete this array with length n.
         /// </summary>
         /// <param name="n"></param>
         public override void DefArr(int n) {
             if (this.n != -1) throw new InvalidOperationException("Can't complete an array which is already completed");
+            else if (n <= 0) throw new ArgumentException("Illegal length of an array!");
             else this.n = n;
         }
 
@@ -49,8 +49,8 @@ namespace lcc.TypeSystem {
         }
 
         public override string ToString() {
-            if (IsComplete) return string.Format("{0}[{1}]", element, n);
-            else return string.Format("{0}[]", element);
+            if (IsComplete) return string.Format("({0})[{1}]", element, n);
+            else return string.Format("({0})[]", element);
         }
 
         private int n;
@@ -68,9 +68,9 @@ namespace lcc.TypeSystem {
         public override bool IsArray => true;
         public override bool IsComplete => true;
         public override bool IsDefined => true;
-        public override int Size {
+        public override int Bits {
             get {
-                throw new InvalidOperationException("Can't take the size of a variable length array.");
+                throw new InvalidOperationException("Can't take the bits of a variable length array.");
             }
         }
 
@@ -90,7 +90,7 @@ namespace lcc.TypeSystem {
             return element.GetHashCode();
         }
         public override string ToString() {
-            return string.Format("{0}[x]", element);
+            return string.Format("({0})[x]", element);
         }
 
 

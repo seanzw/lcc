@@ -44,6 +44,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AST\Env.cs" />
+    <Compile Include="AST\Expression.cs" />
+    <Compile Include="SyntaxTree\Env.cs" />
     <Compile Include="SyntaxTree\Exception.cs" />
     <Compile Include="SyntaxTree\Node.cs" />
     <Compile Include="SyntaxTree\Declaration.cs" />
@@ -65,15 +68,15 @@
     <Compile Include="Token\Punctuator.cs" />
     <Compile Include="Token\StringLiteral.cs" />
     <Compile Include="Token\Token.cs" />
-    <Compile Include="SyntaxTree\Env.cs" />
-    <Compile Include="TypeSystem\Type.cs" />
-    <Compile Include="TypeSystem\TypeArray.cs" />
+    <Compile Include="TypeSystem\TBitField.cs" />
+    <Compile Include="TypeSystem\T.cs" />
+    <Compile Include="TypeSystem\TArr.cs" />
     <Compile Include="TypeSystem\TypeBool.cs" />
     <Compile Include="TypeSystem\TypeEnum.cs" />
     <Compile Include="TypeSystem\TypeFloat.cs" />
     <Compile Include="TypeSystem\TypeFunc.cs" />
     <Compile Include="TypeSystem\TypeInt.cs" />
-    <Compile Include="TypeSystem\TypePointer.cs" />
+    <Compile Include="TypeSystem\TPtr.cs" />
     <Compile Include="TypeSystem\TypeStructUnion.cs" />
     <Compile Include="TypeSystem\TypeVoid.cs" />
   </ItemGroup>

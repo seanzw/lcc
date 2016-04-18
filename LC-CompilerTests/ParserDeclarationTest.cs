@@ -12,6 +12,39 @@ namespace LC_CompilerTests {
 
     public partial class ParserTests {
 
+        private DeclSpecs ProcessSS(IEnumerable<DeclSpec> ss) {
+            // At most one storage-class specifier may be given in the declaration specifiers.
+            var stors = ss.OfType<STStoreSpec>();
+            STStoreSpec.Kind storage = STStoreSpec.Kind.NONE;
+            if (stors.Count() > 1) return null;
+            else if (stors.Count() == 1) storage = stors.First().kind;
+
+            // At most one function specifier.
+            var funcs = ss.OfType<STFuncSpec>();
+            STFuncSpec.Kind function = STFuncSpec.Kind.NONE;
+            if (funcs.Count() > 1) return null;
+            else if (funcs.Count() == 1) function = funcs.First().kind;
+
+            // At least one type specifier shall be given in the declaration specifiers.
+            var specs = ss.OfType<TypeSpec>();
+            if (specs.Count() == 0) return null;
+
+            foreach (var spec in specs) {
+                if (spec.kind == TypeSpec.Kind.TYPEDEF ||
+                    spec.kind == TypeSpec.Kind.STRUCT ||
+                    spec.kind == TypeSpec.Kind.UNION ||
+                    spec.kind == TypeSpec.Kind.ENUM)
+                    if (specs.Count() != 1) return null;
+                    // User-defined types.
+                    else return new DeclSpecs(ss, storage, spec as TypeUserSpec, function);
+            }
+
+            // Built-in type.
+            var keys = from s in specs select s.kind;
+            return new DeclSpecs(ss, storage, keys, function);
+        }
+
+
         [TestMethod]
         public void LCCParserStorageClassSpecifier() {
             Dictionary<string, STStoreSpec> dict = new Dictionary<string, STStoreSpec> {
@@ -90,18 +123,18 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserTypeQualifier() {
-            Dictionary<string, STTypeQual> dict = new Dictionary<string, STTypeQual> {
+            Dictionary<string, TypeQual> dict = new Dictionary<string, TypeQual> {
                 {
                     "const",
-                    new STTypeQual(1, STTypeQual.Kind.CONST)
+                    new TypeQual(1, TypeQual.Kind.CONST)
                 },
                 {
                     "restrict",
-                    new STTypeQual(1, STTypeQual.Kind.RESTRICT)
+                    new TypeQual(1, TypeQual.Kind.RESTRICT)
                 },
                 {
                     "volatile",
-                    new STTypeQual(1, STTypeQual.Kind.VOLATILE)
+                    new TypeQual(1, TypeQual.Kind.VOLATILE)
                 }
             };
 
@@ -127,21 +160,21 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserDeclarationSpecifiers() {
-            var dict = new Dictionary<string, STDeclSpecs> {
+            var dict = new Dictionary<string, DeclSpecs> {
                 {
                     "static const int char inline",
-                    new STDeclSpecs(
-                        new List<STDeclSpec> {
+                    new DeclSpecs(
+                        new List<DeclSpec> {
                             new STStoreSpec(1, STStoreSpec.Kind.STATIC),
-                            new STTypeQual(1, STTypeQual.Kind.CONST),
-                            new STTypeKeySpec(1, STTypeSpec.Kind.INT),
-                            new STTypeKeySpec(1, STTypeSpec.Kind.CHAR),
+                            new TypeQual(1, TypeQual.Kind.CONST),
+                            new STTypeKeySpec(1, TypeSpec.Kind.INT),
+                            new STTypeKeySpec(1, TypeSpec.Kind.CHAR),
                             new STFuncSpec(1, STFuncSpec.Kind.INLINE)
                         },
                         STStoreSpec.Kind.STATIC,
-                        new List<STTypeSpec.Kind> {
-                            STTypeSpec.Kind.INT,
-                            STTypeSpec.Kind.CHAR
+                        new List<TypeSpec.Kind> {
+                            TypeSpec.Kind.INT,
+                            TypeSpec.Kind.CHAR
                         },
                         STFuncSpec.Kind.INLINE)
                 }
@@ -157,13 +190,13 @@ namespace LC_CompilerTests {
             Dictionary<string, STEnum> dict = new Dictionary<string, STEnum> {
                 {
                     "ZERO",
-                    new STEnum(new STId(new T_IDENTIFIER(1, "ZERO")), null)
+                    new STEnum(new Id(new T_IDENTIFIER(1, "ZERO")), null)
                 },
                 {
                     "ZERO = 1",
                     new STEnum(
-                        new STId(new T_IDENTIFIER(1, "ZERO")),
-                        new STConstInt(new T_CONST_INT(1, "1", 10))
+                        new Id(new T_IDENTIFIER(1, "ZERO")),
+                        new ConstInt(new T_CONST_INT(1, "1", 10))
                     )
                 }
             };
@@ -179,11 +212,11 @@ namespace LC_CompilerTests {
                 {
                     "ZERO, ONE = 1, TWO",
                     new List<STEnum> {
-                        new STEnum(new STId(new T_IDENTIFIER(1, "ZERO")), null),
+                        new STEnum(new Id(new T_IDENTIFIER(1, "ZERO")), null),
                         new STEnum(
-                            new STId(new T_IDENTIFIER(1, "ONE")),
-                            new STConstInt(new T_CONST_INT(1, "1", 10))),
-                        new STEnum(new STId(new T_IDENTIFIER(1, "TWO")), null),
+                            new Id(new T_IDENTIFIER(1, "ONE")),
+                            new ConstInt(new T_CONST_INT(1, "1", 10))),
+                        new STEnum(new Id(new T_IDENTIFIER(1, "TWO")), null),
                     }
                 },
             };
@@ -205,13 +238,13 @@ enum Foo {
 }",
                     new STEnumSpec(
                         2,
-                        new STId(new T_IDENTIFIER(2, "Foo")),
+                        new Id(new T_IDENTIFIER(2, "Foo")),
                         new LinkedList<STEnum>(new List<STEnum> {
-                            new STEnum(new STId(new T_IDENTIFIER(3, "ZERO")), null),
+                            new STEnum(new Id(new T_IDENTIFIER(3, "ZERO")), null),
                             new STEnum(
-                                new STId(new T_IDENTIFIER(4, "ONE")),
-                                new STConstInt(new T_CONST_INT(4, "1", 10))),
-                            new STEnum(new STId(new T_IDENTIFIER(5, "TWO")), null),
+                                new Id(new T_IDENTIFIER(4, "ONE")),
+                                new ConstInt(new T_CONST_INT(4, "1", 10))),
+                            new STEnum(new Id(new T_IDENTIFIER(5, "TWO")), null),
                         }))
                 },
                 {
@@ -220,7 +253,7 @@ enum what
 ",
                     new STEnumSpec(
                         2,
-                        new STId(new T_IDENTIFIER(2, "what")),
+                        new Id(new T_IDENTIFIER(2, "what")),
                         null)
                 },
                 {
@@ -234,16 +267,16 @@ enum {
                         2,
                         null,
                         new LinkedList<STEnum>(new List<STEnum> {
-                            new STEnum(new STId(new T_IDENTIFIER(3, "ZERO")), null),
+                            new STEnum(new Id(new T_IDENTIFIER(3, "ZERO")), null),
                             new STEnum(
-                                new STId(new T_IDENTIFIER(4, "ONE")),
-                                new STConstInt(new T_CONST_INT(4, "1", 10))),
-                            new STEnum(new STId(new T_IDENTIFIER(5, "TWO")), null),
+                                new Id(new T_IDENTIFIER(4, "ONE")),
+                                new ConstInt(new T_CONST_INT(4, "1", 10))),
+                            new STEnum(new Id(new T_IDENTIFIER(5, "TWO")), null),
                         }))
                 },
                 {
                     "enum test",
-                    new STEnumSpec(1, new STId(new T_IDENTIFIER(1, "test")), null)
+                    new STEnumSpec(1, new Id(new T_IDENTIFIER(1, "test")), null)
                 },
             };
 
@@ -254,17 +287,17 @@ enum {
 
         [TestMethod]
         public void LCCParserDirectDeclarator() {
-            var dict = new Dictionary<string, STDirDeclarator> {
+            var dict = new Dictionary<string, DirDeclarator> {
                 {
                     "X",
-                    new STIdDeclarator(new STId(new T_IDENTIFIER(1, "X")))
+                    new IdDeclarator(new Id(new T_IDENTIFIER(1, "X")))
                 },
                 {
                     "( X )",
-                    new STParDeclarator(
-                        new STDeclarator(
-                            new List<STPtr>(),
-                            new STIdDeclarator(new STId(new T_IDENTIFIER(1, "X")))))
+                    new ParDeclarator(
+                        new Declarator(
+                            new List<Ptr>(),
+                            new IdDeclarator(new Id(new T_IDENTIFIER(1, "X")))))
                 },
             };
 
@@ -275,55 +308,55 @@ enum {
 
         [TestMethod]
         public void LCCParserDeclarator() {
-            var dict = new Dictionary<string, STDirDeclarator> {
+            var dict = new Dictionary<string, DirDeclarator> {
                 {
                     "X",
-                    new STIdDeclarator(new STId(new T_IDENTIFIER(1, "X")))
+                    new IdDeclarator(new Id(new T_IDENTIFIER(1, "X")))
                 },
                 {
                     "( X )",
-                    new STParDeclarator(
-                        new STDeclarator(
-                            new List<STPtr>(),
-                            new STIdDeclarator(new STId(new T_IDENTIFIER(1, "X")))))
+                    new ParDeclarator(
+                        new Declarator(
+                            new List<Ptr>(),
+                            new IdDeclarator(new Id(new T_IDENTIFIER(1, "X")))))
                 },
                 {
                     @"
 foo(int a, int b, double c, ...)
 ",
-                    new STFuncDeclarator(
-                        new STIdDeclarator(new STId(new T_IDENTIFIER(2, "foo"))),
+                    new FuncDeclarator(
+                        new IdDeclarator(new Id(new T_IDENTIFIER(2, "foo"))),
                         new List<STParam> {
                             new STParam(
-                                new STDeclSpecs(
-                                    new List<STDeclSpec> {
-                                        new STTypeKeySpec(2, STTypeSpec.Kind.INT)
+                                new DeclSpecs(
+                                    new List<DeclSpec> {
+                                        new STTypeKeySpec(2, TypeSpec.Kind.INT)
                                     },
                                     STStoreSpec.Kind.NONE,
-                                    new List<STTypeSpec.Kind> { STTypeSpec.Kind.INT }),
-                                new STDeclarator(
-                                    new List<STPtr>(),
-                                    new STIdDeclarator(new STId(new T_IDENTIFIER(2, "a"))))),
+                                    new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
+                                new Declarator(
+                                    new List<Ptr>(),
+                                    new IdDeclarator(new Id(new T_IDENTIFIER(2, "a"))))),
                             new STParam(
-                                new STDeclSpecs(
-                                    new List<STDeclSpec> {
-                                        new STTypeKeySpec(2, STTypeSpec.Kind.INT)
+                                new DeclSpecs(
+                                    new List<DeclSpec> {
+                                        new STTypeKeySpec(2, TypeSpec.Kind.INT)
                                     },
                                     STStoreSpec.Kind.NONE,
-                                    new List<STTypeSpec.Kind> { STTypeSpec.Kind.INT }),
-                                new STDeclarator(
-                                    new List<STPtr>(),
-                                    new STIdDeclarator(new STId(new T_IDENTIFIER(2, "b"))))),
+                                    new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
+                                new Declarator(
+                                    new List<Ptr>(),
+                                    new IdDeclarator(new Id(new T_IDENTIFIER(2, "b"))))),
                             new STParam(
-                                new STDeclSpecs(
-                                    new List<STDeclSpec> {
-                                        new STTypeKeySpec(2, STTypeSpec.Kind.DOUBLE)
+                                new DeclSpecs(
+                                    new List<DeclSpec> {
+                                        new STTypeKeySpec(2, TypeSpec.Kind.DOUBLE)
                                     },
                                     STStoreSpec.Kind.NONE,
-                                    new List<STTypeSpec.Kind> { STTypeSpec.Kind.DOUBLE }),
-                                new STDeclarator(
-                                    new List<STPtr>(),
-                                    new STIdDeclarator(new STId(new T_IDENTIFIER(2, "c"))))),
+                                    new List<TypeSpec.Kind> { TypeSpec.Kind.DOUBLE }),
+                                new Declarator(
+                                    new List<Ptr>(),
+                                    new IdDeclarator(new Id(new T_IDENTIFIER(2, "c"))))),
                         },
                         true)
                 }
@@ -336,32 +369,32 @@ foo(int a, int b, double c, ...)
 
         [TestMethod]
         public void LCCParserStructDeclarator() {
-            var dict = new Dictionary<string, STStructDeclarator> {
+            var dict = new Dictionary<string, StructDeclarator> {
                 {
                     "X",
-                    new STStructDeclarator(
-                        new STDeclarator(
-                            new List<STPtr>(),
-                            new STIdDeclarator(
-                                new STId(new T_IDENTIFIER(1, "X")))),
+                    new StructDeclarator(
+                        new Declarator(
+                            new List<Ptr>(),
+                            new IdDeclarator(
+                                new Id(new T_IDENTIFIER(1, "X")))),
                         null)
                 },
                 {
                     "( X ) : 4",
-                    new STStructDeclarator(
-                        new STDeclarator(
-                            new List<STPtr>(),
-                            new STParDeclarator(
-                                new STDeclarator(
-                                    new List<STPtr>(),
-                                    new STIdDeclarator(new STId(new T_IDENTIFIER(1, "X")))))),
-                        new STConstInt(new T_CONST_INT(1, "4", 10)))
+                    new StructDeclarator(
+                        new Declarator(
+                            new List<Ptr>(),
+                            new ParDeclarator(
+                                new Declarator(
+                                    new List<Ptr>(),
+                                    new IdDeclarator(new Id(new T_IDENTIFIER(1, "X")))))),
+                        new ConstInt(new T_CONST_INT(1, "4", 10)))
                 },
                 {
                     ": 4",
-                    new STStructDeclarator(
+                    new StructDeclarator(
                         null,
-                        new STConstInt(new T_CONST_INT(1, "4", 10)))
+                        new ConstInt(new T_CONST_INT(1, "4", 10)))
                 },
             };
 
@@ -372,26 +405,26 @@ foo(int a, int b, double c, ...)
 
         [TestMethod]
         public void LCCParserStructDeclaratorList() {
-            var dict = new Dictionary<string, IEnumerable<STStructDeclarator>> {
+            var dict = new Dictionary<string, IEnumerable<StructDeclarator>> {
                 {
                     "X, ( X ) : 4, : 4",
-                    new List<STStructDeclarator> {
-                        new STStructDeclarator(
-                            new STDeclarator(
-                                new List<STPtr>(),
-                                new STIdDeclarator(
-                                    new STId(new T_IDENTIFIER(1, "X")))),
+                    new List<StructDeclarator> {
+                        new StructDeclarator(
+                            new Declarator(
+                                new List<Ptr>(),
+                                new IdDeclarator(
+                                    new Id(new T_IDENTIFIER(1, "X")))),
                             null),
-                        new STStructDeclarator(
-                            new STDeclarator(
-                                new List<STPtr>(),
-                                new STParDeclarator(new STDeclarator(
-                                    new List<STPtr>(),
-                                    new STIdDeclarator(new STId(new T_IDENTIFIER(1, "X")))))),
-                            new STConstInt(new T_CONST_INT(1, "4", 10))),
-                        new STStructDeclarator(
+                        new StructDeclarator(
+                            new Declarator(
+                                new List<Ptr>(),
+                                new ParDeclarator(new Declarator(
+                                    new List<Ptr>(),
+                                    new IdDeclarator(new Id(new T_IDENTIFIER(1, "X")))))),
+                            new ConstInt(new T_CONST_INT(1, "4", 10))),
+                        new StructDeclarator(
                             null,
-                            new STConstInt(new T_CONST_INT(1, "4", 10))),
+                            new ConstInt(new T_CONST_INT(1, "4", 10))),
                     }
                 },
             };
@@ -403,13 +436,14 @@ foo(int a, int b, double c, ...)
 
         [TestMethod]
         public void LCCParserSpecifierQualifierList() {
-            var dict = new Dictionary<string, IEnumerable<STTypeSpecQual>> {
+            var dict = new Dictionary<string, DeclSpecs> {
                 {
                     "const enum what",
-                    new List<STTypeSpecQual> {
-                        new STTypeQual(1, STTypeQual.Kind.CONST),
-                        new STEnumSpec(1, new STId(new T_IDENTIFIER(1, "what")), null)
-                    }
+                    ProcessSS(
+                        new List<TypeSpecQual> {
+                            new TypeQual(1, TypeQual.Kind.CONST),
+                            new STEnumSpec(1, new Id(new T_IDENTIFIER(1, "what")), null)
+                        })
                 },
             };
 
@@ -420,32 +454,33 @@ foo(int a, int b, double c, ...)
 
         [TestMethod]
         public void LCCParserStructDeclaration() {
-            var dict = new Dictionary<string, STStructDeclaration> {
+            var dict = new Dictionary<string, StructDeclaration> {
                 {
                     "const enum what x, y, z;",
-                    new STStructDeclaration(
-                        new List<STTypeSpecQual> {
-                            new STTypeQual(1, STTypeQual.Kind.CONST),
-                            new STEnumSpec(1, new STId(new T_IDENTIFIER(1, "what")), null)
-                        },
-                        new List<STStructDeclarator> {
-                            new STStructDeclarator(
-                                new STDeclarator(
-                                    new List<STPtr>(),
-                                    new STIdDeclarator(
-                                        new STId(new T_IDENTIFIER(1, "x")))),
+                    new StructDeclaration(
+                        ProcessSS(
+                            new List<TypeSpecQual> {
+                                new TypeQual(1, TypeQual.Kind.CONST),
+                                new STEnumSpec(1, new Id(new T_IDENTIFIER(1, "what")), null)
+                            }),
+                        new List<StructDeclarator> {
+                            new StructDeclarator(
+                                new Declarator(
+                                    new List<Ptr>(),
+                                    new IdDeclarator(
+                                        new Id(new T_IDENTIFIER(1, "x")))),
                                     null),
-                            new STStructDeclarator(
-                                new STDeclarator(
-                                    new List<STPtr>(),
-                                    new STIdDeclarator(
-                                        new STId(new T_IDENTIFIER(1, "y")))),
+                            new StructDeclarator(
+                                new Declarator(
+                                    new List<Ptr>(),
+                                    new IdDeclarator(
+                                        new Id(new T_IDENTIFIER(1, "y")))),
                                 null),
-                            new STStructDeclarator(
-                                new STDeclarator(
-                                    new List<STPtr>(),
-                                    new STIdDeclarator(
-                                        new STId(new T_IDENTIFIER(1, "z")))),
+                            new StructDeclarator(
+                                new Declarator(
+                                    new List<Ptr>(),
+                                    new IdDeclarator(
+                                        new Id(new T_IDENTIFIER(1, "z")))),
                                 null),
                         })
                 },
@@ -458,53 +493,53 @@ foo(int a, int b, double c, ...)
 
         [TestMethod]
         public void LCCParserStructUnionSpecifier() {
-            var dict = new Dictionary<string, STStructUnionSpec> {
+            var dict = new Dictionary<string, StructUnionSpec> {
                 {
                     @"
 struct ss {
     int n;
     const enum what x, y, z;
 }",
-                    new STStructUnionSpec(
+                    new StructUnionSpec(
                         2,
-                        new STId(new T_IDENTIFIER(2, "ss")),
-                        new List<STStructDeclaration> {
-                            new STStructDeclaration(
-                                new List<STTypeSpecQual> {
-                                    new STTypeKeySpec(3, STTypeSpec.Kind.INT)
-                                },
-                                new List<STStructDeclarator> {
-                                    new STStructDeclarator(
-                                        new STDeclarator(
-                                            new List<STPtr>(),
-                                            new STIdDeclarator(
-                                                new STId(new T_IDENTIFIER(3, "n")))),
+                        new Id(new T_IDENTIFIER(2, "ss")),
+                        new List<StructDeclaration> {
+                            new StructDeclaration(
+                                ProcessSS(new List<TypeSpecQual> {
+                                    new STTypeKeySpec(3, TypeSpec.Kind.INT)
+                                }),
+                                new List<StructDeclarator> {
+                                    new StructDeclarator(
+                                        new Declarator(
+                                            new List<Ptr>(),
+                                            new IdDeclarator(
+                                                new Id(new T_IDENTIFIER(3, "n")))),
                                         null)
                                 }),
-                            new STStructDeclaration(
-                                new List<STTypeSpecQual> {
-                                    new STTypeQual(4, STTypeQual.Kind.CONST),
-                                    new STEnumSpec(4, new STId(new T_IDENTIFIER(4, "what")), null)
-                                },
-                                new List<STStructDeclarator> {
-                                    new STStructDeclarator(
-                                        new STDeclarator(
-                                            new List<STPtr>(),
-                                            new STIdDeclarator(new STId(new T_IDENTIFIER(4, "x")))),
+                            new StructDeclaration(
+                                ProcessSS(new List<TypeSpecQual> {
+                                    new TypeQual(4, TypeQual.Kind.CONST),
+                                    new STEnumSpec(4, new Id(new T_IDENTIFIER(4, "what")), null)
+                                }),
+                                new List<StructDeclarator> {
+                                    new StructDeclarator(
+                                        new Declarator(
+                                            new List<Ptr>(),
+                                            new IdDeclarator(new Id(new T_IDENTIFIER(4, "x")))),
                                         null),
-                                    new STStructDeclarator(
-                                        new STDeclarator(
-                                            new List<STPtr>(),
-                                            new STIdDeclarator(new STId(new T_IDENTIFIER(4, "y")))),
+                                    new StructDeclarator(
+                                        new Declarator(
+                                            new List<Ptr>(),
+                                            new IdDeclarator(new Id(new T_IDENTIFIER(4, "y")))),
                                         null),
-                                    new STStructDeclarator(
-                                        new STDeclarator(
-                                            new List<STPtr>(),
-                                            new STIdDeclarator(new STId(new T_IDENTIFIER(4, "z")))),
+                                    new StructDeclarator(
+                                        new Declarator(
+                                            new List<Ptr>(),
+                                            new IdDeclarator(new Id(new T_IDENTIFIER(4, "z")))),
                                         null),
                                 })
                         },
-                        STTypeSpec.Kind.STRUCT)
+                        TypeSpec.Kind.STRUCT)
                 },
             };
 
@@ -519,15 +554,15 @@ struct ss {
                 {
                     "int a",
                     new STParam(
-                        new STDeclSpecs(
-                            new List<STDeclSpec> {
-                                new STTypeKeySpec(1, STTypeSpec.Kind.INT)
+                        new DeclSpecs(
+                            new List<DeclSpec> {
+                                new STTypeKeySpec(1, TypeSpec.Kind.INT)
                             },
                             STStoreSpec.Kind.NONE,
-                            new List<STTypeSpec.Kind> { STTypeSpec.Kind.INT }),
-                        new STDeclarator(
-                            new List<STPtr>(),
-                            new STIdDeclarator(new STId(new T_IDENTIFIER(1, "a")))))
+                            new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
+                        new Declarator(
+                            new List<Ptr>(),
+                            new IdDeclarator(new Id(new T_IDENTIFIER(1, "a")))))
                 }
             };
             foreach (var test in tests) {
@@ -542,35 +577,35 @@ struct ss {
                     "int a, int b, double c",
                     new List<STParam> {
                             new STParam(
-                                new STDeclSpecs(
-                                    new List<STDeclSpec> {
-                                        new STTypeKeySpec(1, STTypeSpec.Kind.INT)
+                                new DeclSpecs(
+                                    new List<DeclSpec> {
+                                        new STTypeKeySpec(1, TypeSpec.Kind.INT)
                                     },
                                     STStoreSpec.Kind.NONE,
-                                    new List<STTypeSpec.Kind> { STTypeSpec.Kind.INT }),
-                                new STDeclarator(
-                                    new List<STPtr>(),
-                                    new STIdDeclarator(new STId(new T_IDENTIFIER(1, "a"))))),
+                                    new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
+                                new Declarator(
+                                    new List<Ptr>(),
+                                    new IdDeclarator(new Id(new T_IDENTIFIER(1, "a"))))),
                             new STParam(
-                                new STDeclSpecs(
-                                    new List<STDeclSpec> {
-                                        new STTypeKeySpec(1, STTypeSpec.Kind.INT)
+                                new DeclSpecs(
+                                    new List<DeclSpec> {
+                                        new STTypeKeySpec(1, TypeSpec.Kind.INT)
                                     },
                                     STStoreSpec.Kind.NONE,
-                                    new List<STTypeSpec.Kind> { STTypeSpec.Kind.INT }),
-                                new STDeclarator(
-                                    new List<STPtr>(),
-                                    new STIdDeclarator(new STId(new T_IDENTIFIER(1, "b"))))),
+                                    new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
+                                new Declarator(
+                                    new List<Ptr>(),
+                                    new IdDeclarator(new Id(new T_IDENTIFIER(1, "b"))))),
                             new STParam(
-                                new STDeclSpecs(
-                                    new List<STDeclSpec> {
-                                        new STTypeKeySpec(1, STTypeSpec.Kind.DOUBLE)
+                                new DeclSpecs(
+                                    new List<DeclSpec> {
+                                        new STTypeKeySpec(1, TypeSpec.Kind.DOUBLE)
                                     },
                                     STStoreSpec.Kind.NONE,
-                                    new List<STTypeSpec.Kind> { STTypeSpec.Kind.DOUBLE }),
-                                new STDeclarator(
-                                    new List<STPtr>(),
-                                    new STIdDeclarator(new STId(new T_IDENTIFIER(1, "c"))))),
+                                    new List<TypeSpec.Kind> { TypeSpec.Kind.DOUBLE }),
+                                new Declarator(
+                                    new List<Ptr>(),
+                                    new IdDeclarator(new Id(new T_IDENTIFIER(1, "c"))))),
                         }
                 }
             };
@@ -590,35 +625,35 @@ int a, int b, double c, ...
                     new Tuple<IEnumerable<STParam>, bool>(
                         new List<STParam> {
                             new STParam(
-                                new STDeclSpecs(
-                                    new List<STDeclSpec> {
-                                        new STTypeKeySpec(2, STTypeSpec.Kind.INT)
+                                new DeclSpecs(
+                                    new List<DeclSpec> {
+                                        new STTypeKeySpec(2, TypeSpec.Kind.INT)
                                     },
                                     STStoreSpec.Kind.NONE,
-                                    new List<STTypeSpec.Kind> { STTypeSpec.Kind.INT }),
-                                new STDeclarator(
-                                    new List<STPtr>(),
-                                    new STIdDeclarator(new STId(new T_IDENTIFIER(2, "a"))))),
+                                    new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
+                                new Declarator(
+                                    new List<Ptr>(),
+                                    new IdDeclarator(new Id(new T_IDENTIFIER(2, "a"))))),
                             new STParam(
-                                new STDeclSpecs(
-                                    new List<STDeclSpec> {
-                                        new STTypeKeySpec(2, STTypeSpec.Kind.INT)
+                                new DeclSpecs(
+                                    new List<DeclSpec> {
+                                        new STTypeKeySpec(2, TypeSpec.Kind.INT)
                                     },
                                     STStoreSpec.Kind.NONE,
-                                    new List<STTypeSpec.Kind> { STTypeSpec.Kind.INT }),
-                                new STDeclarator(
-                                    new List<STPtr>(),
-                                    new STIdDeclarator(new STId(new T_IDENTIFIER(2, "b"))))),
+                                    new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
+                                new Declarator(
+                                    new List<Ptr>(),
+                                    new IdDeclarator(new Id(new T_IDENTIFIER(2, "b"))))),
                             new STParam(
-                                new STDeclSpecs(
-                                    new List<STDeclSpec> {
-                                        new STTypeKeySpec(2, STTypeSpec.Kind.DOUBLE)
+                                new DeclSpecs(
+                                    new List<DeclSpec> {
+                                        new STTypeKeySpec(2, TypeSpec.Kind.DOUBLE)
                                     },
                                     STStoreSpec.Kind.NONE,
-                                    new List<STTypeSpec.Kind> { STTypeSpec.Kind.DOUBLE }),
-                                new STDeclarator(
-                                    new List<STPtr>(),
-                                    new STIdDeclarator(new STId(new T_IDENTIFIER(2, "c"))))),
+                                    new List<TypeSpec.Kind> { TypeSpec.Kind.DOUBLE }),
+                                new Declarator(
+                                    new List<Ptr>(),
+                                    new IdDeclarator(new Id(new T_IDENTIFIER(2, "c"))))),
                         },
                         true)
                 },
@@ -637,37 +672,37 @@ int a, int b, double c, ...
 
         [TestMethod]
         public void LCCParserArrayDeclarator() {
-            var tests = new Dictionary<string, STArrDeclarator> {
+            var tests = new Dictionary<string, ArrDeclarator> {
                 {
                     "fa[11]",
-                    new STArrDeclarator(
-                        new STIdDeclarator(new STId(new T_IDENTIFIER(1, "fa"))),
-                        new List<STTypeQual>(),
-                        new STConstInt(new T_CONST_INT(1, "11", 10)),
+                    new ArrDeclarator(
+                        new IdDeclarator(new Id(new T_IDENTIFIER(1, "fa"))),
+                        new List<TypeQual>(),
+                        new ConstInt(new T_CONST_INT(1, "11", 10)),
                         false)
                 },
                 {
                     "y[]",
-                    new STArrDeclarator(
-                        new STIdDeclarator(new STId(new T_IDENTIFIER(1, "y"))),
-                        new List<STTypeQual>(),
+                    new ArrDeclarator(
+                        new IdDeclarator(new Id(new T_IDENTIFIER(1, "y"))),
+                        new List<TypeQual>(),
                         null,
                         false)
                 },
                 {
                     "a[n][6][m]",
-                    new STArrDeclarator(
-                        new STArrDeclarator(
-                            new STArrDeclarator(
-                                new STIdDeclarator(new STId(new T_IDENTIFIER(1, "a"))),
-                                new List<STTypeQual>(),
-                                new STId(new T_IDENTIFIER(1, "n")),
+                    new ArrDeclarator(
+                        new ArrDeclarator(
+                            new ArrDeclarator(
+                                new IdDeclarator(new Id(new T_IDENTIFIER(1, "a"))),
+                                new List<TypeQual>(),
+                                new Id(new T_IDENTIFIER(1, "n")),
                                 false),
-                            new List<STTypeQual>(),
-                            new STConstInt(new T_CONST_INT(1, "6", 10)),
+                            new List<TypeQual>(),
+                            new ConstInt(new T_CONST_INT(1, "6", 10)),
                             false),
-                        new List<STTypeQual>(),
-                        new STId(new T_IDENTIFIER(1, "m")),
+                        new List<TypeQual>(),
+                        new Id(new T_IDENTIFIER(1, "m")),
                         false)
                 }
             };
@@ -679,145 +714,145 @@ int a, int b, double c, ...
 
         [TestMethod]
         public void LCCParserTypeName() {
-            var tests = new Dictionary<string, ASTTypeName> {
+            var tests = new Dictionary<string, TypeName> {
                 {
                     "int",
-                    new ASTTypeName(
-                        new List<STTypeSpecQual> {
-                            new STTypeKeySpec(1, STTypeSpec.Kind.INT)
-                        })
+                    new TypeName(
+                        ProcessSS(new List<TypeSpecQual> {
+                            new STTypeKeySpec(1, TypeSpec.Kind.INT)
+                        }))
                 },
                 {
                     "int *",
-                    new ASTTypeName(
-                        new List<STTypeSpecQual> {
-                            new STTypeKeySpec(1, STTypeSpec.Kind.INT)
-                        },
+                    new TypeName(
+                        ProcessSS(new List<TypeSpecQual> {
+                            new STTypeKeySpec(1, TypeSpec.Kind.INT)
+                        }),
                         new STAbsDeclarator(
-                            new List<STPtr> {
-                                new STPtr(1, new List<STTypeQual>())
+                            new List<Ptr> {
+                                new Ptr(1, new List<TypeQual>())
                             },
                             null))
                 },
                 {
                     "int *[3]",
-                    new ASTTypeName(
-                        new List<STTypeSpecQual> {
-                            new STTypeKeySpec(1, STTypeSpec.Kind.INT)
-                        },
+                    new TypeName(
+                        ProcessSS(new List<TypeSpecQual> {
+                            new STTypeKeySpec(1, TypeSpec.Kind.INT)
+                        }),
                         new STAbsDeclarator(
-                            new List<STPtr> {
-                                new STPtr(1, new List<STTypeQual>())
+                            new List<Ptr> {
+                                new Ptr(1, new List<TypeQual>())
                             },
                             new STAbsArrDeclarator(
                                 new STAbsDirDeclaratorNil(1),
-                                new List<STTypeQual>(),
-                                new STConstInt(new T_CONST_INT(1, "3", 10)),
+                                new List<TypeQual>(),
+                                new ConstInt(new T_CONST_INT(1, "3", 10)),
                                 false)))
                 },
                 {
                     "int (*)[3]",
-                    new ASTTypeName(
-                        new List<STTypeSpecQual> {
-                            new STTypeKeySpec(1, STTypeSpec.Kind.INT)
-                        },
+                    new TypeName(
+                        ProcessSS(new List<TypeSpecQual> {
+                            new STTypeKeySpec(1, TypeSpec.Kind.INT)
+                        }),
                         new STAbsDeclarator(
-                            new List<STPtr> {},
+                            new List<Ptr> {},
                             new STAbsArrDeclarator(
                                 new STAbsParDeclarator(new STAbsDeclarator(
-                                    new List<STPtr> {
-                                        new STPtr(1, new List<STTypeQual>())
+                                    new List<Ptr> {
+                                        new Ptr(1, new List<TypeQual>())
                                     },
                                     null)),
-                                new List<STTypeQual>(),
-                                new STConstInt(new T_CONST_INT(1, "3", 10)),
+                                new List<TypeQual>(),
+                                new ConstInt(new T_CONST_INT(1, "3", 10)),
                                 false)))
                 },
                 {
                     "int (*)[*]",
-                    new ASTTypeName(
-                        new List<STTypeSpecQual> {
-                            new STTypeKeySpec(1, STTypeSpec.Kind.INT)
-                        },
+                    new TypeName(
+                        ProcessSS(new List<TypeSpecQual> {
+                            new STTypeKeySpec(1, TypeSpec.Kind.INT)
+                        }),
                         new STAbsDeclarator(
-                            new List<STPtr> {},
+                            new List<Ptr> {},
                             new STAbsArrDeclarator(
                                 new STAbsParDeclarator(new STAbsDeclarator(
-                                    new List<STPtr> {
-                                        new STPtr(1, new List<STTypeQual>())
+                                    new List<Ptr> {
+                                        new Ptr(1, new List<TypeQual>())
                                     },
                                     null)))))
                 },
                 {
                     "int *[]",
-                    new ASTTypeName(
-                        new List<STTypeSpecQual> {
-                            new STTypeKeySpec(1, STTypeSpec.Kind.INT)
-                        },
+                    new TypeName(
+                        ProcessSS(new List<TypeSpecQual> {
+                            new STTypeKeySpec(1, TypeSpec.Kind.INT)
+                        }),
                         new STAbsDeclarator(
-                            new List<STPtr> {
-                                new STPtr(1, new List<STTypeQual>())
+                            new List<Ptr> {
+                                new Ptr(1, new List<TypeQual>())
                             },
                             new STAbsArrDeclarator(
                                 new STAbsDirDeclaratorNil(1),
-                                new List<STTypeQual>(),
+                                new List<TypeQual>(),
                                 null,
                                 false)))
                 },
                 {
                     "int (*)(void)",
-                    new ASTTypeName(
-                        new List<STTypeSpecQual> {
-                            new STTypeKeySpec(1, STTypeSpec.Kind.INT)
-                        },
+                    new TypeName(
+                        ProcessSS(new List<TypeSpecQual> {
+                            new STTypeKeySpec(1, TypeSpec.Kind.INT)
+                        }),
                         new STAbsDeclarator(
-                            new List<STPtr> {},
+                            new List<Ptr> {},
                             new STAbsFuncDeclarator(
                                 new STAbsParDeclarator(new STAbsDeclarator(
-                                    new List<STPtr> {
-                                        new STPtr(1, new List<STTypeQual>())
+                                    new List<Ptr> {
+                                        new Ptr(1, new List<TypeQual>())
                                     },
                                     null)),
                                 new List<STParam> {
                                     new STParam(
-                                        new STDeclSpecs(
-                                            new List<STDeclSpec> {
-                                                new STTypeKeySpec(1, STTypeSpec.Kind.VOID)
+                                        new DeclSpecs(
+                                            new List<DeclSpec> {
+                                                new STTypeKeySpec(1, TypeSpec.Kind.VOID)
                                             },
                                             STStoreSpec.Kind.NONE,
-                                            new List<STTypeSpec.Kind> { STTypeSpec.Kind.VOID }))
+                                            new List<TypeSpec.Kind> { TypeSpec.Kind.VOID }))
                                 },
                                 false)))
                 },
                 {
                     "int (*const []) (unsigned int, ...)",
-                    new ASTTypeName(
-                        new List<STTypeSpecQual> {
-                            new STTypeKeySpec(1, STTypeSpec.Kind.INT)
-                        },
+                    new TypeName(
+                        ProcessSS(new List<TypeSpecQual> {
+                            new STTypeKeySpec(1, TypeSpec.Kind.INT)
+                        }),
                         new STAbsDeclarator(
-                            new List<STPtr> {},
+                            new List<Ptr> {},
                             new STAbsFuncDeclarator(
                                 new STAbsParDeclarator(new STAbsDeclarator(
-                                    new List<STPtr> {
-                                        new STPtr(1, new List<STTypeQual> { new STTypeQual(1, STTypeQual.Kind.CONST) })
+                                    new List<Ptr> {
+                                        new Ptr(1, new List<TypeQual> { new TypeQual(1, TypeQual.Kind.CONST) })
                                     },
                                     new STAbsArrDeclarator(
                                         new STAbsDirDeclaratorNil(1),
-                                        new List<STTypeQual>(),
+                                        new List<TypeQual>(),
                                         null,
                                         false))),
                                 new List<STParam> {
                                     new STParam(
-                                        new STDeclSpecs(
-                                            new List<STDeclSpec> {
-                                                new STTypeKeySpec(1, STTypeSpec.Kind.UNSIGNED),
-                                                new STTypeKeySpec(1, STTypeSpec.Kind.INT)
+                                        new DeclSpecs(
+                                            new List<DeclSpec> {
+                                                new STTypeKeySpec(1, TypeSpec.Kind.UNSIGNED),
+                                                new STTypeKeySpec(1, TypeSpec.Kind.INT)
                                             },
                                             STStoreSpec.Kind.NONE,
-                                            new List<STTypeSpec.Kind> {
-                                                STTypeSpec.Kind.UNSIGNED,
-                                                STTypeSpec.Kind.INT
+                                            new List<TypeSpec.Kind> {
+                                                TypeSpec.Kind.UNSIGNED,
+                                                TypeSpec.Kind.INT
                                             })
                                         )
                                 },
@@ -838,49 +873,49 @@ int a, int b, double c, ...
 int foo(int a, int b, double c, ...);
 ",
                     new STDeclaration(
-                        new STDeclSpecs(
-                            new List<STDeclSpec> {
-                                new STTypeKeySpec(2, STTypeSpec.Kind.INT)
+                        new DeclSpecs(
+                            new List<DeclSpec> {
+                                new STTypeKeySpec(2, TypeSpec.Kind.INT)
                             },
                             STStoreSpec.Kind.NONE,
-                            new List<STTypeSpec.Kind> { STTypeSpec.Kind.INT }),
+                            new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
                         new List<STInitDeclarator> {
                             new STInitDeclarator(
-                                new STDeclarator(
-                                    new List<STPtr>(),
-                                    new STFuncDeclarator(
-                                        new STIdDeclarator(new STId(new T_IDENTIFIER(2, "foo"))),
+                                new Declarator(
+                                    new List<Ptr>(),
+                                    new FuncDeclarator(
+                                        new IdDeclarator(new Id(new T_IDENTIFIER(2, "foo"))),
                                         new List<STParam> {
                                             new STParam(
-                                                new STDeclSpecs(
-                                                    new List<STDeclSpec> {
-                                                        new STTypeKeySpec(2, STTypeSpec.Kind.INT)
+                                                new DeclSpecs(
+                                                    new List<DeclSpec> {
+                                                        new STTypeKeySpec(2, TypeSpec.Kind.INT)
                                                     },
                                                     STStoreSpec.Kind.NONE,
-                                                    new List<STTypeSpec.Kind> { STTypeSpec.Kind.INT }),
-                                                new STDeclarator(
-                                                    new List<STPtr>(),
-                                                    new STIdDeclarator(new STId(new T_IDENTIFIER(2, "a"))))),
+                                                    new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
+                                                new Declarator(
+                                                    new List<Ptr>(),
+                                                    new IdDeclarator(new Id(new T_IDENTIFIER(2, "a"))))),
                                             new STParam(
-                                                new STDeclSpecs(
-                                                    new List<STDeclSpec> {
-                                                        new STTypeKeySpec(2, STTypeSpec.Kind.INT)
+                                                new DeclSpecs(
+                                                    new List<DeclSpec> {
+                                                        new STTypeKeySpec(2, TypeSpec.Kind.INT)
                                                     },
                                                     STStoreSpec.Kind.NONE,
-                                                    new List<STTypeSpec.Kind> { STTypeSpec.Kind.INT }),
-                                                new STDeclarator(
-                                                    new List<STPtr>(),
-                                                    new STIdDeclarator(new STId(new T_IDENTIFIER(2, "b"))))),
+                                                    new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
+                                                new Declarator(
+                                                    new List<Ptr>(),
+                                                    new IdDeclarator(new Id(new T_IDENTIFIER(2, "b"))))),
                                             new STParam(
-                                                new STDeclSpecs(
-                                                    new List<STDeclSpec> {
-                                                        new STTypeKeySpec(2, STTypeSpec.Kind.DOUBLE)
+                                                new DeclSpecs(
+                                                    new List<DeclSpec> {
+                                                        new STTypeKeySpec(2, TypeSpec.Kind.DOUBLE)
                                                     },
                                                     STStoreSpec.Kind.NONE,
-                                                    new List<STTypeSpec.Kind> { STTypeSpec.Kind.DOUBLE }),
-                                                new STDeclarator(
-                                                    new List<STPtr>(),
-                                                    new STIdDeclarator(new STId(new T_IDENTIFIER(2, "c"))))),
+                                                    new List<TypeSpec.Kind> { TypeSpec.Kind.DOUBLE }),
+                                                new Declarator(
+                                                    new List<Ptr>(),
+                                                    new IdDeclarator(new Id(new T_IDENTIFIER(2, "c"))))),
                                         },
                                         true)),
                                 null)
@@ -891,22 +926,22 @@ int foo(int a, int b, double c, ...);
 int foo(a, b, c);
 ",
                     new STDeclaration(
-                        new STDeclSpecs(
-                            new List<STDeclSpec> {
-                                new STTypeKeySpec(2, STTypeSpec.Kind.INT)
+                        new DeclSpecs(
+                            new List<DeclSpec> {
+                                new STTypeKeySpec(2, TypeSpec.Kind.INT)
                             },
                             STStoreSpec.Kind.NONE,
-                            new List<STTypeSpec.Kind> { STTypeSpec.Kind.INT }),
+                            new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
                         new List<STInitDeclarator> {
                             new STInitDeclarator(
-                                new STDeclarator(
-                                    new List<STPtr>(),
-                                    new STFuncDeclarator(
-                                        new STIdDeclarator(new STId(new T_IDENTIFIER(2, "foo"))),
-                                        new List<STId> {
-                                            new STId(new T_IDENTIFIER(2, "a")),
-                                            new STId(new T_IDENTIFIER(2, "b")),
-                                            new STId(new T_IDENTIFIER(2, "c")),
+                                new Declarator(
+                                    new List<Ptr>(),
+                                    new FuncDeclarator(
+                                        new IdDeclarator(new Id(new T_IDENTIFIER(2, "foo"))),
+                                        new List<Id> {
+                                            new Id(new T_IDENTIFIER(2, "a")),
+                                            new Id(new T_IDENTIFIER(2, "b")),
+                                            new Id(new T_IDENTIFIER(2, "c")),
                                         })),
                                 null)
                         })
@@ -916,19 +951,19 @@ int foo(a, b, c);
 int foo();
 ",
                     new STDeclaration(
-                        new STDeclSpecs(
-                            new List<STDeclSpec> {
-                                new STTypeKeySpec(2, STTypeSpec.Kind.INT)
+                        new DeclSpecs(
+                            new List<DeclSpec> {
+                                new STTypeKeySpec(2, TypeSpec.Kind.INT)
                             },
                             STStoreSpec.Kind.NONE,
-                            new List<STTypeSpec.Kind> { STTypeSpec.Kind.INT }),
+                            new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
                         new List<STInitDeclarator> {
                             new STInitDeclarator(
-                                new STDeclarator(
-                                    new List<STPtr>(),
-                                    new STFuncDeclarator(
-                                        new STIdDeclarator(new STId(new T_IDENTIFIER(2, "foo"))),
-                                        new List<STId>())),
+                                new Declarator(
+                                    new List<Ptr>(),
+                                    new FuncDeclarator(
+                                        new IdDeclarator(new Id(new T_IDENTIFIER(2, "foo"))),
+                                        new List<Id>())),
                                 null)
                         })
                 }
@@ -945,20 +980,20 @@ int foo();
                 {
                     "2 = 3",
                     new STInitializer(new STAssignExpr(
-                        new STConstInt(new T_CONST_INT(1, "2", 10)),
-                        new STConstInt(new T_CONST_INT(1, "3", 10)),
+                        new ConstInt(new T_CONST_INT(1, "2", 10)),
+                        new ConstInt(new T_CONST_INT(1, "3", 10)),
                         STAssignExpr.Op.ASSIGN))
                 },
                 {
                     "{ .what = {1, 2, 3 }, }",
                     new STInitializer(new List<STInitItem> {
                         new STInitItem(new STInitializer(new List<STInitItem> {
-                            new STInitItem(new STInitializer(new STConstInt(new T_CONST_INT(1, "1", 10)))),
-                            new STInitItem(new STInitializer(new STConstInt(new T_CONST_INT(1, "2", 10)))),
-                            new STInitItem(new STInitializer(new STConstInt(new T_CONST_INT(1, "3", 10))))
+                            new STInitItem(new STInitializer(new ConstInt(new T_CONST_INT(1, "1", 10)))),
+                            new STInitItem(new STInitializer(new ConstInt(new T_CONST_INT(1, "2", 10)))),
+                            new STInitItem(new STInitializer(new ConstInt(new T_CONST_INT(1, "3", 10))))
                         }),
                         new List<STDesignator> {
-                            new STDesignator(new STId(new T_IDENTIFIER(1, "what")))
+                            new STDesignator(new Id(new T_IDENTIFIER(1, "what")))
                         })
                     })
                 }
@@ -975,9 +1010,9 @@ int foo();
                 {
                     ".ref[3].w = ",
                     new List<STDesignator> {
-                        new STDesignator(new STId(new T_IDENTIFIER(1, "ref"))),
-                        new STDesignator(new STConstInt(new T_CONST_INT(1, "3", 10))),
-                        new STDesignator(new STId(new T_IDENTIFIER(1, "w")))
+                        new STDesignator(new Id(new T_IDENTIFIER(1, "ref"))),
+                        new STDesignator(new ConstInt(new T_CONST_INT(1, "3", 10))),
+                        new STDesignator(new Id(new T_IDENTIFIER(1, "w")))
                     }
                 }
             };
@@ -988,66 +1023,66 @@ int foo();
 
         [TestMethod]
         public void LCCParserTypedef() {
-            Env.PushScope();
-            Env.AddTypedefName(1, "a");
+            lcc.Parser.Env.PushScope();
+            lcc.Parser.Env.AddTypedefName(1, "a");
             var tests = new Dictionary<string, STParam> {
                 {
                     "int a",
                     new STParam(
-                        new STDeclSpecs(
-                            new List<STDeclSpec> {
-                                new STTypeKeySpec(1, STTypeSpec.Kind.INT)
+                        new DeclSpecs(
+                            new List<DeclSpec> {
+                                new STTypeKeySpec(1, TypeSpec.Kind.INT)
                             },
                             STStoreSpec.Kind.NONE,
-                            new List<STTypeSpec.Kind> { STTypeSpec.Kind.INT }),
-                        new STDeclarator(
-                            new List<STPtr>(),
-                            new STIdDeclarator(new STId(new T_IDENTIFIER(1, "a")))))
+                            new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
+                        new Declarator(
+                            new List<Ptr>(),
+                            new IdDeclarator(new Id(new T_IDENTIFIER(1, "a")))))
                 },
                 {
                     "const a",
                     new STParam(
-                        new STDeclSpecs(
-                            new List<STDeclSpec> {
-                                new STTypeQual(1, STTypeQual.Kind.CONST),
-                                new STTypedefName(new STId(new T_IDENTIFIER(1, "a")))
+                        new DeclSpecs(
+                            new List<DeclSpec> {
+                                new TypeQual(1, TypeQual.Kind.CONST),
+                                new STTypedefName(new Id(new T_IDENTIFIER(1, "a")))
                             },
                             STStoreSpec.Kind.NONE,
-                            new STTypedefName(new STId(new T_IDENTIFIER(1, "a")))))
+                            new STTypedefName(new Id(new T_IDENTIFIER(1, "a")))))
                 }
             };
             foreach (var test in tests) {
                 Aux(test.Key, Parser.ParameterDeclaration().End(), test.Value);
             }
-            Env.PopScope();
+            lcc.Parser.Env.PopScope();
         }
 
         [TestMethod]
         [ExpectedException(typeof(TypedefRedefined), "Redefine typedef name.")]
         public void LCCParserTypeRedefined() {
-            Env.PushScope();
-            Env.AddTypedefName(1, "a");
+            lcc.Parser.Env.PushScope();
+            lcc.Parser.Env.AddTypedefName(1, "a");
             var tests = new Dictionary<string, STDeclaration> {
                 {
                     "typedef int a;",
                     new STDeclaration(
-                        new STDeclSpecs(
-                            new List<STDeclSpec> {
-                                new STTypeKeySpec(1, STTypeSpec.Kind.INT)
+                        new DeclSpecs(
+                            new List<DeclSpec> {
+                                new STTypeKeySpec(1, TypeSpec.Kind.INT)
                             },
                             STStoreSpec.Kind.NONE,
-                            new List<STTypeSpec.Kind> { STTypeSpec.Kind.INT }),
+                            new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
                         new List<STInitDeclarator> {
                             new STInitDeclarator(
-                                new STDeclarator(new List<STPtr>(),
-                                new STIdDeclarator(new STId(new T_IDENTIFIER(1, "a")))))
+                                new Declarator(new List<Ptr>(),
+                                new IdDeclarator(new Id(new T_IDENTIFIER(1, "a")))))
                         })
                 }
             };
             foreach (var test in tests) {
                 Aux(test.Key, Parser.Declaration().End(), test.Value);
             }
-            Env.PopScope();
+            lcc.Parser.Env.PopScope();
 
         }
     }
