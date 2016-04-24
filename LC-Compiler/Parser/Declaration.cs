@@ -446,10 +446,10 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, Tuple<IEnumerable<STParam>, bool>> ParameterTypeList() {
+        public static Parserc.Parser<T, Tuple<IEnumerable<Param>, bool>> ParameterTypeList() {
             return ParameterList().Bind(parameters => Match<T_PUNC_COMMA>()
                 .Then(Match<T_PUNC_ELLIPSIS>()).Return(true).ElseReturn(false)
-                .Select(isEllipis => new Tuple<IEnumerable<STParam>, bool>(parameters, isEllipis)));
+                .Select(isEllipis => new Tuple<IEnumerable<Param>, bool>(parameters, isEllipis)));
         }
 
         /// <summary>
@@ -459,7 +459,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, IEnumerable<STParam>> ParameterList() {
+        public static Parserc.Parser<T, IEnumerable<Param>> ParameterList() {
             return ParameterDeclaration().PlusSeperatedBy(Match<T_PUNC_COMMA>());
         }
 
@@ -470,11 +470,11 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STParam> ParameterDeclaration() {
+        public static Parserc.Parser<T, Param> ParameterDeclaration() {
             return Ref(DeclarationSpecifiers)
                 .Bind(specifiers => Ref(Declarator)
-                .Select(declarator => new STParam(specifiers, declarator))
-                .Else(AbstractDeclarator().ElseNull().Select(absDeclarator => new STParam(specifiers, absDeclarator))));
+                .Select(declarator => new Param(specifiers, declarator))
+                .Else(AbstractDeclarator().ElseNull().Select(absDeclarator => new Param(specifiers, absDeclarator))));
         }
 
         /// <summary>

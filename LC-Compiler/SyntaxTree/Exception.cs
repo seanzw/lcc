@@ -28,6 +28,11 @@ namespace lcc.SyntaxTree {
             : base(pos, string.Format("redefine tag {0}, previous defined at {1}", tag, previous)) { }
     }
 
+    public sealed class ErrRedefineSymbol : Error {
+        public ErrRedefineSymbol(Position pos, string symbol, Position previous)
+            : base(pos, string.Format("redefine symbol {0}, previous defined at {1}", symbol, previous)) { }
+    }
+
     public sealed class ErrDeclareTagAsDifferentType : Error {
         public ErrDeclareTagAsDifferentType(Position pos, string tag, Position previous, TUnqualified previoudType)
             : base(pos, string.Format("declare tag {0} as different type, previous declared at {1} as {2}", tag, previous, previoudType)) { }

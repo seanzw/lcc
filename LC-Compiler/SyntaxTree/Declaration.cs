@@ -131,8 +131,11 @@ namespace lcc.SyntaxTree {
         /// <param name="env"></param>
         /// <returns></returns>
         public T GetT(Env env) {
-            return GetTUnqualified(env).Qualify(qualifiers, T.LR.L, storage);
+            return GetTUnqualified(env).Qualify(qualifiers, T.LR.L, T.Store.NONE);
         }
+
+        public bool IsTypeDef => storage == STStoreSpec.Kind.TYPEDEF;
+        public T.Store Storage => GetStore(storage);
 
         /// <summary>
         /// Evaluate the type specifiers and get the unqualified type.
@@ -163,6 +166,18 @@ namespace lcc.SyntaxTree {
                 qualifiers.Contains(TypeQual.Kind.RESTRICT), 
                 qualifiers.Contains(TypeQual.Kind.VOLATILE));
             return TQualifiers.dict[tuple];
+        }
+
+        public static T.Store GetStore(STStoreSpec.Kind storage) {
+            switch (storage) {
+                case STStoreSpec.Kind.NONE: return T.Store.NONE;
+                case STStoreSpec.Kind.EXTERN: return T.Store.EXTERN;
+                case STStoreSpec.Kind.REGISTER: return T.Store.REGISTER;
+                case STStoreSpec.Kind.STATIC: return T.Store.STATIC;
+                case STStoreSpec.Kind.AUTO: return T.Store.AUTO;
+                default:
+                    throw new ArgumentException("Unknown storage specifier.");
+            }
         }
 
         private readonly Position pos;
@@ -1067,7 +1082,7 @@ namespace lcc.SyntaxTree {
 
         public FuncDeclarator(
             DirDeclarator direct,
-            IEnumerable<STParam> parameters,
+            IEnumerable<Param> parameters,
             bool isEllipis
             ) {
             this.direct = direct;
@@ -1103,10 +1118,50 @@ namespace lcc.SyntaxTree {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Get the type of the function and the name of the parameters.
+        /// 
+        /// Constraints:
+        ///     1. If the declarator is part of function definition, all the parameter should have name.
+        /// 
+        /// Notice that the caller should handle the scopes of the function.
+        /// </summary>
+        /// <param name="env"></param>
+        /// <param name="type"></param>
+        /// <param name="parameters"></param>
+        /// <param name="isEllipis"></param>
+        /// <param name="pos"></param>
+        /// <returns></returns>
+        public static T Declare(Env env, T type, IEnumerable<Param> parameters, bool isEllipis, Position pos) {
+
+            // A function declarator shall not specify a return type that is a function type or an array type.
+            if (type.IsFunc) {
+                throw new Error(pos,
+                    string.Format("A function declaration shall not specify a return type that is a function type: {0}.", type));
+            }
+            if (type.IsArray) {
+                throw new Error(pos,
+                    string.Format("A function declaration shall not specify a return type that is an array type: {0}.", type));
+            }
+
+            // Evaluate each parameter.
+            foreach (var parameter in parameters) {
+                var param = parameter.Declare(env);
+                if (env.IsFuncDef) {
+
+                    // All the parameter should have name.
+                    if (param.Item1 == null) {
+                        throw new Error(parameter.Pos, )
+                    }
+                }
+            }
+
+        }
+
         public readonly DirDeclarator direct;
 
         // ( parameter-type-list )
-        public readonly IEnumerable<STParam> parameters;
+        public readonly IEnumerable<Param> parameters;
         public readonly bool isEllipis;
 
         // ( identifier-list_opt )
@@ -1230,14 +1285,14 @@ namespace lcc.SyntaxTree {
         public readonly TQualifiers qualifiers;
     }
 
-    public sealed class STParam : Node, IEquatable<STParam> {
+    public sealed class Param : Node, IEquatable<Param> {
 
-        public STParam(DeclSpecs specifiers, Declarator declarator) {
+        public Param(DeclSpecs specifiers, Declarator declarator) {
             this.specifiers = specifiers;
             this.declarator = declarator;
         }
 
-        public STParam(DeclSpecs specifiers, AbsDeclarator absDeclarator = null) {
+        public Param(DeclSpecs specifiers, AbsDeclarator absDeclarator = null) {
             this.specifiers = specifiers;
             this.absDeclarator = absDeclarator;
         }
@@ -1245,16 +1300,76 @@ namespace lcc.SyntaxTree {
         public override Position Pos => specifiers.Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STParam);
+            return Equals(obj as Param);
         }
 
-        public bool Equals(STParam x) {
+        public bool Equals(Param x) {
             return x != null && specifiers.Equals(x.specifiers) && NullableEquals(x.declarator, declarator)
                 && NullableEquals(x.absDeclarator, absDeclarator);
         }
 
         public override int GetHashCode() {
             return specifiers.GetHashCode();
+        }
+
+        /// <summary>
+        /// Get the parameter name and type.
+        /// If this is an abstract declarator, the parameter name is set to null.
+        /// 
+        /// Constraints:
+        ///     1. The only storage-class specifier that shall occur in a parameter declaration is register.
+        ///     2. A declaration of a parameter as "array of type" shall be adjusted to "qualified pointer to type".
+        ///     3. A declaration of a parameter as "function returning type" shall be adjusted to "pointer to function returning type".
+        ///     4. All the parameter names shall be different.
+        /// </summary>
+        /// <param name="env"></param>
+        /// <returns></returns>
+        public Tuple<string, T> Declare(Env env) {
+
+            // Turn on the env.IsFuncParam switch.
+            env.IsFuncParam = true;
+
+            // 1. The only storage-class specifier that shall occur in a parameter declaration is register.
+            if (specifiers.storage != STStoreSpec.Kind.NONE && specifiers.storage != STStoreSpec.Kind.REGISTER) {
+                throw new Error(Pos, string.Format("Illegal storage-class specifier in a parameter declaration: {0}", specifiers.storage));
+            }
+
+            T type = specifiers.GetT(env);
+            string name = null;
+
+            if (declarator != null) {
+                // parameter-declaration: declaration-sepcifiers declarator
+                var declaration = declarator.Declare(env, type);
+                name = declaration.Item1;
+                type = declaration.Item2;
+
+                // 4. All the parameter name shall be different.
+                var entry = env.GetSymbol(name, true);
+                if (env.GetSymbol(name, true) != null) {
+                    throw new ErrRedefineSymbol(Pos, name, entry.Value.node.Pos);
+                }
+
+            } else if (absDeclarator != null) {
+                // parameter-declaration: declaration-specifiers abstract-declarator
+            } 
+
+            // 2. A declaration of a parameter as "array of type" shall be adjusted to "qualified pointer to type".
+            if (type.IsArray) {
+                type = (type.nake as TArray).element.Ptr(type.qualifiers, T.LR.L, specifiers.Storage);
+            }
+
+            // 3. A declaration of a parameter as "function returning type" shall be adjusted to "pointer to function returning type".
+            if (type.IsFunc) {
+                type = type.Ptr();
+            }
+
+            // Push the name into the environment.
+            env.AddSymbol(name, type, SymbolKind.PARAMETER, this);
+
+            // Turn off the env.IsFuncParam switch.
+            env.IsFuncParam = false;
+
+            return new Tuple<string, T>(name, type);
         }
 
         public readonly DeclSpecs specifiers;
@@ -1414,7 +1529,7 @@ namespace lcc.SyntaxTree {
 
         public STAbsFuncDeclarator(
             STAbsDirDeclarator direct,
-            IEnumerable<STParam> parameters,
+            IEnumerable<Param> parameters,
             bool isEllipis
             ) {
             this.direct = direct;
@@ -1441,7 +1556,7 @@ namespace lcc.SyntaxTree {
         public readonly STAbsDirDeclarator direct;
 
         // ( parameter-type-list )
-        public readonly IEnumerable<STParam> parameters;
+        public readonly IEnumerable<Param> parameters;
         public readonly bool isEllipis;
     }
 

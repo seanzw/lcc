@@ -73,7 +73,7 @@ namespace LC_CompilerTests {
                 },
                 {
                     new TArray(TChar.Instance.None(T.LR.R), 3),
-                    "char[3]"
+                    "(char)[3]"
                 }
             };
 

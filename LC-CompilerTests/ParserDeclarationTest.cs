@@ -326,8 +326,8 @@ foo(int a, int b, double c, ...)
 ",
                     new FuncDeclarator(
                         new IdDeclarator(new Id(new T_IDENTIFIER(2, "foo"))),
-                        new List<STParam> {
-                            new STParam(
+                        new List<Param> {
+                            new Param(
                                 new DeclSpecs(
                                     new List<DeclSpec> {
                                         new STTypeKeySpec(2, TypeSpec.Kind.INT)
@@ -337,7 +337,7 @@ foo(int a, int b, double c, ...)
                                 new Declarator(
                                     new List<Ptr>(),
                                     new IdDeclarator(new Id(new T_IDENTIFIER(2, "a"))))),
-                            new STParam(
+                            new Param(
                                 new DeclSpecs(
                                     new List<DeclSpec> {
                                         new STTypeKeySpec(2, TypeSpec.Kind.INT)
@@ -347,7 +347,7 @@ foo(int a, int b, double c, ...)
                                 new Declarator(
                                     new List<Ptr>(),
                                     new IdDeclarator(new Id(new T_IDENTIFIER(2, "b"))))),
-                            new STParam(
+                            new Param(
                                 new DeclSpecs(
                                     new List<DeclSpec> {
                                         new STTypeKeySpec(2, TypeSpec.Kind.DOUBLE)
@@ -550,10 +550,10 @@ struct ss {
 
         [TestMethod]
         public void LCCParserParameterDeclaration() {
-            var tests = new Dictionary<string, STParam> {
+            var tests = new Dictionary<string, Param> {
                 {
                     "int a",
-                    new STParam(
+                    new Param(
                         new DeclSpecs(
                             new List<DeclSpec> {
                                 new STTypeKeySpec(1, TypeSpec.Kind.INT)
@@ -572,11 +572,11 @@ struct ss {
 
         [TestMethod]
         public void LCCParserParameterList() {
-            var tests = new Dictionary<string, IEnumerable<STParam>> {
+            var tests = new Dictionary<string, IEnumerable<Param>> {
                 {
                     "int a, int b, double c",
-                    new List<STParam> {
-                            new STParam(
+                    new List<Param> {
+                            new Param(
                                 new DeclSpecs(
                                     new List<DeclSpec> {
                                         new STTypeKeySpec(1, TypeSpec.Kind.INT)
@@ -586,7 +586,7 @@ struct ss {
                                 new Declarator(
                                     new List<Ptr>(),
                                     new IdDeclarator(new Id(new T_IDENTIFIER(1, "a"))))),
-                            new STParam(
+                            new Param(
                                 new DeclSpecs(
                                     new List<DeclSpec> {
                                         new STTypeKeySpec(1, TypeSpec.Kind.INT)
@@ -596,7 +596,7 @@ struct ss {
                                 new Declarator(
                                     new List<Ptr>(),
                                     new IdDeclarator(new Id(new T_IDENTIFIER(1, "b"))))),
-                            new STParam(
+                            new Param(
                                 new DeclSpecs(
                                     new List<DeclSpec> {
                                         new STTypeKeySpec(1, TypeSpec.Kind.DOUBLE)
@@ -617,14 +617,14 @@ struct ss {
 
         [TestMethod]
         public void LCCParserParameterTypeList() {
-            var dict = new Dictionary<string, Tuple<IEnumerable<STParam>, bool>> {
+            var dict = new Dictionary<string, Tuple<IEnumerable<Param>, bool>> {
                 {
                     @"
 int a, int b, double c, ...
 ",
-                    new Tuple<IEnumerable<STParam>, bool>(
-                        new List<STParam> {
-                            new STParam(
+                    new Tuple<IEnumerable<Param>, bool>(
+                        new List<Param> {
+                            new Param(
                                 new DeclSpecs(
                                     new List<DeclSpec> {
                                         new STTypeKeySpec(2, TypeSpec.Kind.INT)
@@ -634,7 +634,7 @@ int a, int b, double c, ...
                                 new Declarator(
                                     new List<Ptr>(),
                                     new IdDeclarator(new Id(new T_IDENTIFIER(2, "a"))))),
-                            new STParam(
+                            new Param(
                                 new DeclSpecs(
                                     new List<DeclSpec> {
                                         new STTypeKeySpec(2, TypeSpec.Kind.INT)
@@ -644,7 +644,7 @@ int a, int b, double c, ...
                                 new Declarator(
                                     new List<Ptr>(),
                                     new IdDeclarator(new Id(new T_IDENTIFIER(2, "b"))))),
-                            new STParam(
+                            new Param(
                                 new DeclSpecs(
                                     new List<DeclSpec> {
                                         new STTypeKeySpec(2, TypeSpec.Kind.DOUBLE)
@@ -813,8 +813,8 @@ int a, int b, double c, ...
                                         new Ptr(1, new List<TypeQual>())
                                     },
                                     null)),
-                                new List<STParam> {
-                                    new STParam(
+                                new List<Param> {
+                                    new Param(
                                         new DeclSpecs(
                                             new List<DeclSpec> {
                                                 new STTypeKeySpec(1, TypeSpec.Kind.VOID)
@@ -842,8 +842,8 @@ int a, int b, double c, ...
                                         new List<TypeQual>(),
                                         null,
                                         false))),
-                                new List<STParam> {
-                                    new STParam(
+                                new List<Param> {
+                                    new Param(
                                         new DeclSpecs(
                                             new List<DeclSpec> {
                                                 new STTypeKeySpec(1, TypeSpec.Kind.UNSIGNED),
@@ -885,8 +885,8 @@ int foo(int a, int b, double c, ...);
                                     new List<Ptr>(),
                                     new FuncDeclarator(
                                         new IdDeclarator(new Id(new T_IDENTIFIER(2, "foo"))),
-                                        new List<STParam> {
-                                            new STParam(
+                                        new List<Param> {
+                                            new Param(
                                                 new DeclSpecs(
                                                     new List<DeclSpec> {
                                                         new STTypeKeySpec(2, TypeSpec.Kind.INT)
@@ -896,7 +896,7 @@ int foo(int a, int b, double c, ...);
                                                 new Declarator(
                                                     new List<Ptr>(),
                                                     new IdDeclarator(new Id(new T_IDENTIFIER(2, "a"))))),
-                                            new STParam(
+                                            new Param(
                                                 new DeclSpecs(
                                                     new List<DeclSpec> {
                                                         new STTypeKeySpec(2, TypeSpec.Kind.INT)
@@ -906,7 +906,7 @@ int foo(int a, int b, double c, ...);
                                                 new Declarator(
                                                     new List<Ptr>(),
                                                     new IdDeclarator(new Id(new T_IDENTIFIER(2, "b"))))),
-                                            new STParam(
+                                            new Param(
                                                 new DeclSpecs(
                                                     new List<DeclSpec> {
                                                         new STTypeKeySpec(2, TypeSpec.Kind.DOUBLE)
@@ -1025,10 +1025,10 @@ int foo();
         public void LCCParserTypedef() {
             lcc.Parser.Env.PushScope();
             lcc.Parser.Env.AddTypedefName(1, "a");
-            var tests = new Dictionary<string, STParam> {
+            var tests = new Dictionary<string, Param> {
                 {
                     "int a",
-                    new STParam(
+                    new Param(
                         new DeclSpecs(
                             new List<DeclSpec> {
                                 new STTypeKeySpec(1, TypeSpec.Kind.INT)
@@ -1041,7 +1041,7 @@ int foo();
                 },
                 {
                     "const a",
-                    new STParam(
+                    new Param(
                         new DeclSpecs(
                             new List<DeclSpec> {
                                 new TypeQual(1, TypeQual.Kind.CONST),

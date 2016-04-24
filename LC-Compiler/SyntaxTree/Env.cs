@@ -11,10 +11,11 @@ namespace lcc.SyntaxTree {
     public enum ScopeKind {
         BLOCK,
         FUNC,
-        FILE
+        FILE,
     }
 
     public enum SymbolKind {
+        PARAMETER,
         OBJECT,
         TYPEDEF,
         FUNCTION
@@ -93,6 +94,7 @@ namespace lcc.SyntaxTree {
         public Env() {
             scopes = new Stack<Scope>();
             PushScope(ScopeKind.FILE);
+            IsFuncDef = false;
         }
 
         /// <summary>
@@ -119,8 +121,8 @@ namespace lcc.SyntaxTree {
         /// <param name="symbol"></param>
         /// <param name="type"></param>
         /// <param name="line"></param>
-        public void AddSymbol(string symbol, SymbolEntry signature) {
-            scopes.Peek().AddSymbol(symbol, signature);
+        public void AddSymbol(string symbol, T type, SymbolKind kind, Node node) {
+            scopes.Peek().AddSymbol(symbol, new SymbolEntry(type, kind, node));
         }
 
         /// <summary>
@@ -173,6 +175,9 @@ namespace lcc.SyntaxTree {
         /// Get the current scope kind.
         /// </summary>
         public ScopeKind WhatScope => scopes.Peek().kind;
+
+        public bool IsFuncDef;
+        public bool IsFuncParam;
 
         private Stack<Scope> scopes;
     }

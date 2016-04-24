@@ -5,8 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Store = lcc.SyntaxTree.STStoreSpec.Kind;
-
 namespace lcc.TypeSystem {
 
     /**
@@ -142,7 +140,7 @@ namespace lcc.TypeSystem {
         /// <param name="qualifiers"></param>
         /// <param name="lr"></param>
         /// <returns></returns>
-        public T Qualify(TQualifiers qualifiers, T.LR lr, Store store) {
+        public T Qualify(TQualifiers qualifiers, T.LR lr, T.Store store) {
             return new T(this, qualifiers, lr, store);
         }
 
@@ -151,7 +149,7 @@ namespace lcc.TypeSystem {
         /// </summary>
         /// <param name="lr"></param>
         /// <returns></returns>
-        public T Const(T.LR lr = T.LR.L, Store store = Store.NONE) {
+        public T Const(T.LR lr = T.LR.L, T.Store store = T.Store.NONE) {
             return Qualify(TQualifiers.C, lr, store);
         }
 
@@ -160,7 +158,7 @@ namespace lcc.TypeSystem {
         /// </summary>
         /// <param name="lr"></param>
         /// <returns></returns>
-        public T None(T.LR lr = T.LR.L, Store store = Store.NONE) {
+        public T None(T.LR lr = T.LR.L, T.Store store = T.Store.NONE) {
             return Qualify(TQualifiers.N, lr, store);
         }
 
@@ -282,6 +280,14 @@ namespace lcc.TypeSystem {
             R
         }
 
+        public enum Store {
+            NONE,
+            AUTO,
+            REGISTER,
+            STATIC,
+            EXTERN
+        }
+
         public T(TUnqualified nake, TQualifiers qualifiers, LR lr, Store store) {
             this.nake = nake;
             this.qualifiers = qualifiers;
@@ -353,10 +359,11 @@ namespace lcc.TypeSystem {
         /// <summary>
         /// Pointer derivation.
         /// </summary>
-        /// <param name="qualifier"></param>
+        /// <param name="qualifiers"></param>
         /// <param name="lr"></param>
+        /// <param name="store"></param>
         /// <returns></returns>
-        public T Ptr(TQualifiers qualifiers = null, Store store = Store.NONE) {
+        public T Ptr(TQualifiers qualifiers = null, LR lr = LR.L, Store store = Store.NONE) {
             qualifiers = qualifiers ?? TQualifiers.N;
             return new T(new TPointer(this), qualifiers, LR.L, store);
         }
@@ -444,7 +451,7 @@ namespace lcc.TypeSystem {
         public static T IntPromote(this T t) {
             TArithmetic ta = t.nake as TArithmetic;
             if (ta.Rank < TInt.Instance.Rank) {
-                return TInt.Instance.Qualify(t.qualifiers, T.LR.R, Store.NONE);
+                return TInt.Instance.Qualify(t.qualifiers, T.LR.R, T.Store.NONE);
             } else {
                 return t;
             }

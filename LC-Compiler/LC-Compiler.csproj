@@ -71,7 +71,7 @@
     <Compile Include="TypeSystem\TBitField.cs" />
     <Compile Include="TypeSystem\T.cs" />
     <Compile Include="TypeSystem\TArr.cs" />
-    <Compile Include="TypeSystem\TypeBool.cs" />
+    <Compile Include="TypeSystem\TBool.cs" />
     <Compile Include="TypeSystem\TypeEnum.cs" />
     <Compile Include="TypeSystem\TypeFloat.cs" />
     <Compile Include="TypeSystem\TypeFunc.cs" />
