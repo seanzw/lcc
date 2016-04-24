@@ -728,7 +728,7 @@ int a, int b, double c, ...
                         ProcessSS(new List<TypeSpecQual> {
                             new STTypeKeySpec(1, TypeSpec.Kind.INT)
                         }),
-                        new STAbsDeclarator(
+                        new AbsDeclarator(
                             new List<Ptr> {
                                 new Ptr(1, new List<TypeQual>())
                             },
@@ -740,7 +740,7 @@ int a, int b, double c, ...
                         ProcessSS(new List<TypeSpecQual> {
                             new STTypeKeySpec(1, TypeSpec.Kind.INT)
                         }),
-                        new STAbsDeclarator(
+                        new AbsDeclarator(
                             new List<Ptr> {
                                 new Ptr(1, new List<TypeQual>())
                             },
@@ -756,10 +756,10 @@ int a, int b, double c, ...
                         ProcessSS(new List<TypeSpecQual> {
                             new STTypeKeySpec(1, TypeSpec.Kind.INT)
                         }),
-                        new STAbsDeclarator(
+                        new AbsDeclarator(
                             new List<Ptr> {},
                             new STAbsArrDeclarator(
-                                new STAbsParDeclarator(new STAbsDeclarator(
+                                new STAbsParDeclarator(new AbsDeclarator(
                                     new List<Ptr> {
                                         new Ptr(1, new List<TypeQual>())
                                     },
@@ -774,10 +774,10 @@ int a, int b, double c, ...
                         ProcessSS(new List<TypeSpecQual> {
                             new STTypeKeySpec(1, TypeSpec.Kind.INT)
                         }),
-                        new STAbsDeclarator(
+                        new AbsDeclarator(
                             new List<Ptr> {},
                             new STAbsArrDeclarator(
-                                new STAbsParDeclarator(new STAbsDeclarator(
+                                new STAbsParDeclarator(new AbsDeclarator(
                                     new List<Ptr> {
                                         new Ptr(1, new List<TypeQual>())
                                     },
@@ -789,7 +789,7 @@ int a, int b, double c, ...
                         ProcessSS(new List<TypeSpecQual> {
                             new STTypeKeySpec(1, TypeSpec.Kind.INT)
                         }),
-                        new STAbsDeclarator(
+                        new AbsDeclarator(
                             new List<Ptr> {
                                 new Ptr(1, new List<TypeQual>())
                             },
@@ -805,10 +805,10 @@ int a, int b, double c, ...
                         ProcessSS(new List<TypeSpecQual> {
                             new STTypeKeySpec(1, TypeSpec.Kind.INT)
                         }),
-                        new STAbsDeclarator(
+                        new AbsDeclarator(
                             new List<Ptr> {},
                             new STAbsFuncDeclarator(
-                                new STAbsParDeclarator(new STAbsDeclarator(
+                                new STAbsParDeclarator(new AbsDeclarator(
                                     new List<Ptr> {
                                         new Ptr(1, new List<TypeQual>())
                                     },
@@ -830,10 +830,10 @@ int a, int b, double c, ...
                         ProcessSS(new List<TypeSpecQual> {
                             new STTypeKeySpec(1, TypeSpec.Kind.INT)
                         }),
-                        new STAbsDeclarator(
+                        new AbsDeclarator(
                             new List<Ptr> {},
                             new STAbsFuncDeclarator(
-                                new STAbsParDeclarator(new STAbsDeclarator(
+                                new STAbsParDeclarator(new AbsDeclarator(
                                     new List<Ptr> {
                                         new Ptr(1, new List<TypeQual> { new TypeQual(1, TypeQual.Kind.CONST) })
                                     },

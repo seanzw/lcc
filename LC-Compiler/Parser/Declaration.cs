@@ -495,10 +495,10 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STAbsDeclarator> AbstractDeclarator() {
-            return Pointer().Plus().Select(pointers => new STAbsDeclarator(pointers, null))
+        public static Parserc.Parser<T, AbsDeclarator> AbstractDeclarator() {
+            return Pointer().Plus().Select(pointers => new AbsDeclarator(pointers, null))
                 .Or(Pointer().Many().Bind(pointers => DirectAbstractDeclarator()
-                .Select(direct => new STAbsDeclarator(pointers, direct))));
+                .Select(direct => new AbsDeclarator(pointers, direct))));
         }
 
 

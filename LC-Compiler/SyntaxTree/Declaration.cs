@@ -1237,7 +1237,7 @@ namespace lcc.SyntaxTree {
             this.declarator = declarator;
         }
 
-        public STParam(DeclSpecs specifiers, STAbsDeclarator absDeclarator = null) {
+        public STParam(DeclSpecs specifiers, AbsDeclarator absDeclarator = null) {
             this.specifiers = specifiers;
             this.absDeclarator = absDeclarator;
         }
@@ -1259,12 +1259,12 @@ namespace lcc.SyntaxTree {
 
         public readonly DeclSpecs specifiers;
         public readonly Declarator declarator;
-        public readonly STAbsDeclarator absDeclarator;
+        public readonly AbsDeclarator absDeclarator;
     }
 
     public sealed class TypeName : Node, IEquatable<TypeName> {
 
-        public TypeName(DeclSpecs specifiers, STAbsDeclarator declarator = null) {
+        public TypeName(DeclSpecs specifiers, AbsDeclarator declarator = null) {
             this.specifiers = specifiers;
             this.declarator = declarator;
         }
@@ -1284,22 +1284,22 @@ namespace lcc.SyntaxTree {
         public override Position Pos => specifiers.Pos;
 
         public readonly DeclSpecs specifiers;
-        public readonly STAbsDeclarator declarator;
+        public readonly AbsDeclarator declarator;
     }
 
-    public sealed class STAbsDeclarator : Node, IEquatable<STAbsDeclarator> {
+    public sealed class AbsDeclarator : Node, IEquatable<AbsDeclarator> {
 
-        public STAbsDeclarator(IEnumerable<Ptr> pointers, STAbsDirDeclarator direct) {
+        public AbsDeclarator(IEnumerable<Ptr> pointers, STAbsDirDeclarator direct) {
             this.pointers = pointers;
             this.direct = direct;
         }
 
-        public bool Equals(STAbsDeclarator x) {
+        public bool Equals(AbsDeclarator x) {
             return x != null && x.pointers.SequenceEqual(pointers) && NullableEquals(x.direct, direct);
         }
 
         public override bool Equals(object obj) {
-            return Equals(obj as STAbsDeclarator);
+            return Equals(obj as AbsDeclarator);
         }
 
         public override int GetHashCode() {
@@ -1341,7 +1341,7 @@ namespace lcc.SyntaxTree {
 
     public sealed class STAbsParDeclarator : STAbsDirDeclarator, IEquatable<STAbsParDeclarator> {
 
-        public STAbsParDeclarator(STAbsDeclarator declarator) {
+        public STAbsParDeclarator(AbsDeclarator declarator) {
             this.declarator = declarator;
         }
 
@@ -1359,7 +1359,7 @@ namespace lcc.SyntaxTree {
 
         public override Position Pos => declarator.Pos;
 
-        public readonly STAbsDeclarator declarator;
+        public readonly AbsDeclarator declarator;
     }
 
     public sealed class STAbsArrDeclarator : STAbsDirDeclarator, IEquatable<STAbsArrDeclarator> {
