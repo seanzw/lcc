@@ -46,7 +46,7 @@ namespace lcc.TypeSystem {
             if (isEllipis) {
                 paramsStr = paramsStr == "" ? "..." : paramsStr + ", ...";
             }
-            return string.Format("({1} -> {0})", ret, paramsStr);
+            return string.Format("{1} -> {0}", ret, paramsStr);
         }
 
         public readonly T ret;

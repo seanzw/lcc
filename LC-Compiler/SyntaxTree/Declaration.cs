@@ -1260,33 +1260,36 @@ namespace lcc.SyntaxTree {
         /// <param name="type"></param>
         /// <returns></returns>
         public override Tuple<string, T> Declare(Env env, T type) {
+            return direct.Declare(env, Declare(env, type, expr, Pos));
+        }
 
+        public static T Declare(Env env, T type, Expr expr, Position pos) {
             // The element type shall not be an incomplete type.
             if (!type.IsComplete) {
-                throw new Error(Pos, string.Format("use incomplete type as array element: {0}.", type));
+                throw new Error(pos, string.Format("array has incomplete element type: {0}.", type));
             }
 
             // The element type shall not be a function type.
             if (type.IsFunc) {
-                throw new Error(Pos, string.Format("use function type as array element: {0}.", type));
+                throw new Error(pos, string.Format("use function type as array element: {0}.", type));
             }
 
             // Check the expression is const integer expression.
             if (expr != null) {
-                AST.ConstIntExpr expr = this.expr.ToAST(env) as AST.ConstIntExpr;
-                if (expr == null) {
-                    throw new Error(Pos, "use non-constant expression as array length.");
+                AST.ConstIntExpr ast = expr.ToAST(env) as AST.ConstIntExpr;
+                if (ast == null) {
+                    throw new Error(pos, "use non-constant expression as array length.");
                 }
-                if (expr.value <= 0) {
-                    throw new Error(Pos, "array length should be greater than zero.");
+                if (ast.value <= 0) {
+                    throw new Error(pos, "array length should be greater than zero.");
                 }
-                if (expr.value > TInt.Instance.MAX) {
-                    throw new Error(Pos, string.Format("sorry we can't handle such long array: {0}.", expr.value));
+                if (ast.value > TInt.Instance.MAX) {
+                    throw new Error(pos, string.Format("sorry we can't handle such long array: {0}.", ast.value));
                 }
-                return direct.Declare(env, type.Arr((int)expr.value));
+                return type.Arr((int)ast.value);
             } else {
                 // Set this as incomplete array.
-                return direct.Declare(env, type.IArr());
+                return type.IArr();
             }
         }
 
@@ -1395,6 +1398,7 @@ namespace lcc.SyntaxTree {
 
             } else if (absDeclarator != null) {
                 // parameter-declaration: declaration-specifiers abstract-declarator
+                type = absDeclarator.Declare(env, type);
             } 
 
             // 2. A declaration of a parameter as "array of type" shall be adjusted to "qualified pointer to type".
@@ -1408,7 +1412,9 @@ namespace lcc.SyntaxTree {
             }
 
             // Push the name into the environment.
-            env.AddSymbol(name, type, SymbolKind.PARAMETER, this);
+            if (name != null) {
+                env.AddSymbol(name, type, SymbolKind.PARAMETER, this);
+            }
 
             // Turn off the env.IsFuncParam switch.
             env.IsFuncParam = false;
@@ -1448,7 +1454,7 @@ namespace lcc.SyntaxTree {
 
     public sealed class AbsDeclarator : Node, IEquatable<AbsDeclarator> {
 
-        public AbsDeclarator(IEnumerable<Ptr> pointers, STAbsDirDeclarator direct) {
+        public AbsDeclarator(IEnumerable<Ptr> pointers, AbsDirDeclarator direct) {
             this.pointers = pointers;
             this.direct = direct;
         }
@@ -1465,6 +1471,16 @@ namespace lcc.SyntaxTree {
             return Pos.GetHashCode();
         }
 
+        public T Declare(Env env, T type) {
+
+            // Add the pointer derivation.
+            foreach (var ptr in pointers) {
+                type = ptr.GetPtr(type);
+            }
+
+            return direct != null ? direct.Declare(env, type) : type;
+        }
+
         public override Position Pos => direct == null ? pointers.First().Pos : direct.Pos;
 
         public IEnumerable<Ptr> pointers;
@@ -1472,48 +1488,58 @@ namespace lcc.SyntaxTree {
         /// <summary>
         /// Nullable.
         /// </summary>
-        public STAbsDirDeclarator direct;
+        public AbsDirDeclarator direct;
     }
 
-    public abstract class STAbsDirDeclarator : Node { }
+    public abstract class AbsDirDeclarator : Node {
+        public abstract T Declare(Env env, T type);
+    }
 
-    public sealed class STAbsDirDeclaratorNil : STAbsDirDeclarator {
-        public STAbsDirDeclaratorNil(int line) {
+    public sealed class AbsDirDeclaratorNil : AbsDirDeclarator {
+        public AbsDirDeclaratorNil(int line) {
             pos = new Position { line = line };
         }
 
-        public bool Equals(STAbsDirDeclaratorNil x) {
+        public bool Equals(AbsDirDeclaratorNil x) {
             return x != null && x.pos.Equals(pos);
         }
 
         public override bool Equals(object obj) {
-            return Equals(obj as STAbsDirDeclaratorNil);
+            return Equals(obj as AbsDirDeclaratorNil);
         }
 
         public override int GetHashCode() {
             return Pos.GetHashCode();
         }
 
+        public override T Declare(Env env, T type) {
+            return type;
+        }
+
         public override Position Pos => pos;
         private readonly Position pos;
     }
 
-    public sealed class STAbsParDeclarator : STAbsDirDeclarator, IEquatable<STAbsParDeclarator> {
+    public sealed class AbsParDeclarator : AbsDirDeclarator, IEquatable<AbsParDeclarator> {
 
-        public STAbsParDeclarator(AbsDeclarator declarator) {
+        public AbsParDeclarator(AbsDeclarator declarator) {
             this.declarator = declarator;
         }
 
-        public bool Equals(STAbsParDeclarator x) {
+        public bool Equals(AbsParDeclarator x) {
             return x != null && x.declarator.Equals(declarator);
         }
 
         public override bool Equals(object obj) {
-            return Equals(obj as STAbsParDeclarator);
+            return Equals(obj as AbsParDeclarator);
         }
 
         public override int GetHashCode() {
             return declarator.GetHashCode();
+        }
+
+        public override T Declare(Env env, T type) {
+            return declarator.Declare(env, type);
         }
 
         public override Position Pos => declarator.Pos;
@@ -1521,10 +1547,10 @@ namespace lcc.SyntaxTree {
         public readonly AbsDeclarator declarator;
     }
 
-    public sealed class STAbsArrDeclarator : STAbsDirDeclarator, IEquatable<STAbsArrDeclarator> {
+    public sealed class AbsArrDeclarator : AbsDirDeclarator, IEquatable<AbsArrDeclarator> {
 
-        public STAbsArrDeclarator(
-            STAbsDirDeclarator direct,
+        public AbsArrDeclarator(
+            AbsDirDeclarator direct,
             IEnumerable<TypeQual> qualifiers,
             Expr expr,
             bool isStatic
@@ -1536,7 +1562,7 @@ namespace lcc.SyntaxTree {
             this.isStar = false;
         }
 
-        public STAbsArrDeclarator(STAbsDirDeclarator direct) {
+        public AbsArrDeclarator(AbsDirDeclarator direct) {
             this.direct = direct;
             this.qualifiers = new List<TypeQual>();
             this.expr = null;
@@ -1544,7 +1570,7 @@ namespace lcc.SyntaxTree {
             this.isStatic = false;
         }
 
-        public bool Equals(STAbsArrDeclarator x) {
+        public bool Equals(AbsArrDeclarator x) {
             return x != null && NullableEquals(x.direct, direct)
                 && x.qualifiers.SequenceEqual(qualifiers)
                 && x.isStatic == isStatic && x.isStar == isStar
@@ -1552,16 +1578,20 @@ namespace lcc.SyntaxTree {
         }
 
         public override bool Equals(object obj) {
-            return Equals(obj as STAbsArrDeclarator);
+            return Equals(obj as AbsArrDeclarator);
         }
 
         public override int GetHashCode() {
             return direct.GetHashCode();
         }
 
+        public override T Declare(Env env, T type) {
+            return ArrDeclarator.Declare(env, type, expr, Pos);
+        }
+
         public override Position Pos => direct.Pos;
 
-        public readonly STAbsDirDeclarator direct;
+        public readonly AbsDirDeclarator direct;
 
         public readonly Expr expr;
         public readonly IEnumerable<TypeQual> qualifiers;
@@ -1569,10 +1599,10 @@ namespace lcc.SyntaxTree {
         public readonly bool isStar;
     }
 
-    public sealed class STAbsFuncDeclarator : STAbsDirDeclarator, IEquatable<STAbsFuncDeclarator> {
+    public sealed class AbsFuncDeclarator : AbsDirDeclarator, IEquatable<AbsFuncDeclarator> {
 
-        public STAbsFuncDeclarator(
-            STAbsDirDeclarator direct,
+        public AbsFuncDeclarator(
+            AbsDirDeclarator direct,
             IEnumerable<Param> parameters,
             bool isEllipis
             ) {
@@ -1584,10 +1614,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => direct.Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STAbsFuncDeclarator);
+            return Equals(obj as AbsFuncDeclarator);
         }
 
-        public bool Equals(STAbsFuncDeclarator x) {
+        public bool Equals(AbsFuncDeclarator x) {
             return x != null && NullableEquals(x.direct, direct)
                 && NullableEquals(x.parameters, parameters)
                 && x.isEllipis == isEllipis;
@@ -1597,7 +1627,26 @@ namespace lcc.SyntaxTree {
             return direct.GetHashCode();
         }
 
-        public readonly STAbsDirDeclarator direct;
+        /// <summary>
+        /// Get the function derivation.
+        /// </summary>
+        /// <param name="env"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public override T Declare(Env env, T type) {
+
+            if (parameters == null) {
+                return direct.Declare(env, type.Func(Enumerable.Empty<T>(), false));
+            } else {
+                env.PushScope(ScopeKind.FUNC);
+                type = FuncDeclarator.Declare(env, type, parameters, isEllipis, Pos);
+                env.PopScope();
+                return direct.Declare(env, type);
+            }
+
+        }
+
+        public readonly AbsDirDeclarator direct;
 
         // ( parameter-type-list )
         public readonly IEnumerable<Param> parameters;

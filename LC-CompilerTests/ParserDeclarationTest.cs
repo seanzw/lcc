@@ -744,8 +744,8 @@ int a, int b, double c, ...
                             new List<Ptr> {
                                 new Ptr(1, new List<TypeQual>())
                             },
-                            new STAbsArrDeclarator(
-                                new STAbsDirDeclaratorNil(1),
+                            new AbsArrDeclarator(
+                                new AbsDirDeclaratorNil(1),
                                 new List<TypeQual>(),
                                 new ConstInt(new T_CONST_INT(1, "3", 10)),
                                 false)))
@@ -758,8 +758,8 @@ int a, int b, double c, ...
                         }),
                         new AbsDeclarator(
                             new List<Ptr> {},
-                            new STAbsArrDeclarator(
-                                new STAbsParDeclarator(new AbsDeclarator(
+                            new AbsArrDeclarator(
+                                new AbsParDeclarator(new AbsDeclarator(
                                     new List<Ptr> {
                                         new Ptr(1, new List<TypeQual>())
                                     },
@@ -776,8 +776,8 @@ int a, int b, double c, ...
                         }),
                         new AbsDeclarator(
                             new List<Ptr> {},
-                            new STAbsArrDeclarator(
-                                new STAbsParDeclarator(new AbsDeclarator(
+                            new AbsArrDeclarator(
+                                new AbsParDeclarator(new AbsDeclarator(
                                     new List<Ptr> {
                                         new Ptr(1, new List<TypeQual>())
                                     },
@@ -793,8 +793,8 @@ int a, int b, double c, ...
                             new List<Ptr> {
                                 new Ptr(1, new List<TypeQual>())
                             },
-                            new STAbsArrDeclarator(
-                                new STAbsDirDeclaratorNil(1),
+                            new AbsArrDeclarator(
+                                new AbsDirDeclaratorNil(1),
                                 new List<TypeQual>(),
                                 null,
                                 false)))
@@ -807,8 +807,8 @@ int a, int b, double c, ...
                         }),
                         new AbsDeclarator(
                             new List<Ptr> {},
-                            new STAbsFuncDeclarator(
-                                new STAbsParDeclarator(new AbsDeclarator(
+                            new AbsFuncDeclarator(
+                                new AbsParDeclarator(new AbsDeclarator(
                                     new List<Ptr> {
                                         new Ptr(1, new List<TypeQual>())
                                     },
@@ -832,13 +832,13 @@ int a, int b, double c, ...
                         }),
                         new AbsDeclarator(
                             new List<Ptr> {},
-                            new STAbsFuncDeclarator(
-                                new STAbsParDeclarator(new AbsDeclarator(
+                            new AbsFuncDeclarator(
+                                new AbsParDeclarator(new AbsDeclarator(
                                     new List<Ptr> {
                                         new Ptr(1, new List<TypeQual> { new TypeQual(1, TypeQual.Kind.CONST) })
                                     },
-                                    new STAbsArrDeclarator(
-                                        new STAbsDirDeclaratorNil(1),
+                                    new AbsArrDeclarator(
+                                        new AbsDirDeclaratorNil(1),
                                         new List<TypeQual>(),
                                         null,
                                         false))),

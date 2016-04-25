@@ -509,10 +509,10 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STAbsDirDeclarator> DirectAbstractDeclarator() {
-            return Ref(AbstractDeclarator).ParentLR().Bind(declarator => DirectAbstractDeclaratorPrime(new STAbsParDeclarator(declarator)))
+        public static Parserc.Parser<T, AbsDirDeclarator> DirectAbstractDeclarator() {
+            return Ref(AbstractDeclarator).ParentLR().Bind(declarator => DirectAbstractDeclaratorPrime(new AbsParDeclarator(declarator)))
                 .Else(Peek<T>()
-                    .Bind(t => DirectAbstractDeclaratorPrime(new STAbsDirDeclaratorNil(t.line))));
+                    .Bind(t => DirectAbstractDeclaratorPrime(new AbsDirDeclaratorNil(t.line))));
         }
 
         /// <summary>
@@ -527,29 +527,29 @@ namespace lcc.Parser {
         /// </summary>
         /// <param name="direct"></param>
         /// <returns></returns>
-        public static Parserc.Parser<T, STAbsDirDeclarator> DirectAbstractDeclaratorPrime(STAbsDirDeclarator direct) {
+        public static Parserc.Parser<T, AbsDirDeclarator> DirectAbstractDeclaratorPrime(AbsDirDeclarator direct) {
             return Ref(ParameterTypeList).ParentLR()
-                    .Bind(tuple => DirectAbstractDeclaratorPrime(new STAbsFuncDeclarator(direct, tuple.Item1, tuple.Item2)))
+                    .Bind(tuple => DirectAbstractDeclaratorPrime(new AbsFuncDeclarator(direct, tuple.Item1, tuple.Item2)))
                 .Or(Match<T_PUNC_PARENTL>().Then(Match<T_PUNC_PARENTR>())
-                    .Bind(_ => DirectAbstractDeclaratorPrime(new STAbsFuncDeclarator(direct, null, false))))
+                    .Bind(_ => DirectAbstractDeclaratorPrime(new AbsFuncDeclarator(direct, null, false))))
                 .Or(Match<T_PUNC_SUBSCRIPTL>().Then(TypeQualifier().Many())
                     .Bind(qualifiers => AssignmentExpression().ElseNull()
                     .Bind(expr => Match<T_PUNC_SUBSCRIPTR>()
-                    .Then(DirectAbstractDeclaratorPrime(new STAbsArrDeclarator(direct, qualifiers, expr, false))))))
+                    .Then(DirectAbstractDeclaratorPrime(new AbsArrDeclarator(direct, qualifiers, expr, false))))))
                 .Or(Match<T_PUNC_SUBSCRIPTL>().Then(Match<T_KEY_STATIC>())
                     .Then(TypeQualifier().Many())
                     .Bind(qualifiers => AssignmentExpression()
                     .Bind(expr => Match<T_PUNC_SUBSCRIPTR>()
-                    .Then(DirectAbstractDeclaratorPrime(new STAbsArrDeclarator(direct, qualifiers, expr, true))))))
+                    .Then(DirectAbstractDeclaratorPrime(new AbsArrDeclarator(direct, qualifiers, expr, true))))))
                 .Or(Match<T_PUNC_SUBSCRIPTL>().Then(TypeQualifier().Plus())
                     .Bind(qualifiers => Match<T_KEY_STATIC>()
                     .Then(AssignmentExpression())
                     .Bind(expr => Match<T_PUNC_SUBSCRIPTR>()
-                    .Then(DirectAbstractDeclaratorPrime(new STAbsArrDeclarator(direct, qualifiers, expr, true))))))
+                    .Then(DirectAbstractDeclaratorPrime(new AbsArrDeclarator(direct, qualifiers, expr, true))))))
                 .Or(Match<T_PUNC_SUBSCRIPTL>().Then(Match<T_PUNC_STAR>())
                     .Then(Match<T_PUNC_SUBSCRIPTR>())
-                    .Bind(_ => DirectAbstractDeclaratorPrime(new STAbsArrDeclarator(direct))))
-                .Else(direct is STAbsDirDeclaratorNil ? Zero<T, STAbsDirDeclarator>() : Result<T, STAbsDirDeclarator>(direct));
+                    .Bind(_ => DirectAbstractDeclaratorPrime(new AbsArrDeclarator(direct))))
+                .Else(direct is AbsDirDeclaratorNil ? Zero<T, AbsDirDeclarator>() : Result<T, AbsDirDeclarator>(direct));
         }
 
         /// <summary>

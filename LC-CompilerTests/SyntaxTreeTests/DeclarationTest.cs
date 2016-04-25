@@ -57,6 +57,42 @@ namespace LC_CompilerTests {
                         TInt.Instance.None().Ptr()
                     }, true))
                 },
+                {
+                    "f(void)",
+                    new Tuple<string, T>("f", TInt.Instance.None().Func(new List<T>(), false))
+                },
+                {
+                    "f(int [], ...)",
+                    new Tuple<string, T>("f", TInt.Instance.None().Func(new List<T> {
+                        TInt.Instance.None().Ptr()
+                    }, true))
+                },
+                {
+                    "(*pfi)()",
+                    new Tuple<string, T>("pfi", TInt.Instance.None().Func(new List<T>(), false).Ptr())
+                },
+                {
+                    "*fip()",
+                    new Tuple<string, T>("fip", TInt.Instance.None().Ptr().Func(new List<T>(), false))
+                },
+                {
+                    "(*apfi[3])(int *x, int *y)",
+                    new Tuple<string, T>("apfi", TInt.Instance.None().Func(new List<T> {
+                        TInt.Instance.None().Ptr(),
+                        TInt.Instance.None().Ptr()
+                    }, false).Ptr().Arr(3))
+                },
+                {
+                    "(*fpfi(int (*)(long), int))(int, ...)",
+                    new Tuple<string, T>("fpfi", TInt.Instance.None().Func(new List<T> {
+                        TInt.Instance.None()
+                    }, true).Ptr().Func(new List<T> {
+                        TInt.Instance.None().Func(new List<T> {
+                            TLong.Instance.None()
+                        }, false).Ptr(),
+                        TInt.Instance.None()
+                    }, false))
+                }
             };
             
             foreach (var test in tests) {
