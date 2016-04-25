@@ -5,10 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.TypeSystem {
-    public sealed class TypeVoid : TUnqualified {
+    public sealed class TVoid : TUnqualified {
 
-        private static readonly TypeVoid instance = new TypeVoid();
-        public static TypeVoid Instance => instance;
+        private static readonly TVoid instance = new TVoid();
+        public static TVoid Instance => instance;
         public override int Bits => 8;
         public override bool IsComplete => false;
         /// <summary>

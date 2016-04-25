@@ -7,9 +7,10 @@ using System.Threading.Tasks;
 namespace lcc.TypeSystem {
     public sealed class TFunc : TUnqualified {
 
-        public TFunc(T ret, IEnumerable<T> parameters) {
+        public TFunc(T ret, IEnumerable<T> parameters, bool isEllipis) {
             this.ret = ret;
             this.parameters = parameters;
+            this.isEllipis = isEllipis;
             isDefined = false;
         }
 
@@ -41,15 +42,16 @@ namespace lcc.TypeSystem {
         }
 
         public override string ToString() {
-            string paramsStr = "";
-            foreach (var param in parameters) {
-                paramsStr = string.Format("{0}{1}, ", paramsStr, param);
+            string paramsStr = parameters.Aggregate("", (str, param) => str == "" ? param.ToString() : str + ", " + param.ToString());
+            if (isEllipis) {
+                paramsStr = paramsStr == "" ? "..." : paramsStr + ", ...";
             }
-            return string.Format("(({1}) -> {0})", ret, paramsStr);
+            return string.Format("({1} -> {0})", ret, paramsStr);
         }
 
         public readonly T ret;
         public readonly IEnumerable<T> parameters;
+        public readonly bool isEllipis;
 
         /// <summary>
         /// Whether the definition of this function has been detected.

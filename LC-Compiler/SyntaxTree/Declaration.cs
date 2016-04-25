@@ -204,7 +204,7 @@ namespace lcc.SyntaxTree {
                     from s in new List<TypeSpec.Kind> {
                         TypeSpec.Kind.VOID
                     } orderby s ascending select s,
-                    TypeVoid.Instance
+                    TVoid.Instance
                 },
                 {
                     // char
@@ -1114,8 +1114,39 @@ namespace lcc.SyntaxTree {
             return direct.GetHashCode();
         }
 
+        /// <summary>
+        /// Get the name and the type of the function.
+        /// 
+        /// This function will handle the scope if this is not a part of function definition.
+        /// </summary>
+        /// <param name="env"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public override Tuple<string, T> Declare(Env env, T type) {
-            throw new NotImplementedException();
+            if (parameters == null) {
+
+                // This is an identifier list.
+                if (identifiers.Count() == 0) {
+                    return direct.Declare(env, type.Func(Enumerable.Empty<T>(), false));
+                }
+
+                if (!env.IsFuncDef) {
+                    throw new Error(Pos, "an identifier list in a function declarator that is not part of a definition of that function shall be empty.");
+                } else {
+                    throw new Error(Pos, "sorry identifier list in a function definition is not supported yet.");
+                }
+
+            } else {
+
+                if (!env.IsFuncDef) {
+                    env.PushScope(ScopeKind.FUNC);
+                }
+                type = Declare(env, type, parameters, isEllipis, Pos);
+                if (!env.IsFuncDef) {
+                    env.PopScope();
+                }
+                return direct.Declare(env, type);
+            }
         }
 
         /// <summary>
@@ -1144,27 +1175,40 @@ namespace lcc.SyntaxTree {
                     string.Format("A function declaration shall not specify a return type that is an array type: {0}.", type));
             }
 
-            // Evaluate each parameter.
-            foreach (var parameter in parameters) {
-                var param = parameter.Declare(env);
-                if (env.IsFuncDef) {
+            LinkedList<T> ps = new LinkedList<T>();
 
-                    // All the parameter should have name.
-                    if (param.Item1 == null) {
-                        throw new Error(parameter.Pos, )
+            // Special case for (void).
+            if (parameters.Count() == 1) {
+                var param = parameters.First().Declare(env);
+                if (env.IsFuncDef && param.Item1 == null && !param.Item2.nake.Equals(TVoid.Instance)) {
+                    throw new Error(parameters.First().Pos, "parameter for function definition should have a name.");
+                }
+                if (!param.Item2.nake.Equals(TVoid.Instance)) {
+                    ps.AddLast(param.Item2);
+                }
+            } else {
+                // Evaluate each parameter.
+                foreach (var parameter in parameters) {
+                    var param = parameter.Declare(env);
+                    if (env.IsFuncDef && param.Item1 == null) {
+                        throw new Error(parameter.Pos, "parameter for function definition should have a name.");
                     }
+                    ps.AddLast(param.Item2);
                 }
             }
 
+            return type.Func(ps, isEllipis);
         }
 
         public readonly DirDeclarator direct;
 
         // ( parameter-type-list )
+        // Maybe null.
         public readonly IEnumerable<Param> parameters;
         public readonly bool isEllipis;
 
         // ( identifier-list_opt )
+        // Maybe null or empty.
         public readonly IEnumerable<Id> identifiers;
     }
 

@@ -368,6 +368,10 @@ namespace lcc.TypeSystem {
             return new T(new TPointer(this), qualifiers, LR.L, store);
         }
 
+        public T Func(IEnumerable<T> parameters, bool isEllipis) {
+            return new T(new TFunc(this, parameters, isEllipis), TQualifiers.N, LR.L, Store.NONE);
+        }
+
         /// <summary>
         /// Complete array derivation.
         /// </summary>

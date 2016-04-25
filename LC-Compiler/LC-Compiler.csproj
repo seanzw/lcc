@@ -74,11 +74,11 @@
     <Compile Include="TypeSystem\TBool.cs" />
     <Compile Include="TypeSystem\TypeEnum.cs" />
     <Compile Include="TypeSystem\TypeFloat.cs" />
-    <Compile Include="TypeSystem\TypeFunc.cs" />
+    <Compile Include="TypeSystem\TFunc.cs" />
     <Compile Include="TypeSystem\TypeInt.cs" />
     <Compile Include="TypeSystem\TPtr.cs" />
     <Compile Include="TypeSystem\TypeStructUnion.cs" />
-    <Compile Include="TypeSystem\TypeVoid.cs" />
+    <Compile Include="TypeSystem\TVoid.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

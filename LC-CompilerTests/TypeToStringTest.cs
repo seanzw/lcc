@@ -24,7 +24,7 @@ namespace LC_CompilerTests {
                     "unsigned char"
                 },
                 {
-                    TypeVoid.Instance,
+                    TVoid.Instance,
                     "void"
                 },
                 {

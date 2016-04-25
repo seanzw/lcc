@@ -33,7 +33,30 @@ namespace LC_CompilerTests {
                 {
                     "a[2][4]",
                     new Tuple<string, T>("a", TInt.Instance.None().Arr(4).Arr(2))
-                }
+                },
+                {
+                    "f(int a)",
+                    new Tuple<string, T>("f", TInt.Instance.None().Func(new List<T> {
+                        TInt.Instance.None()
+                    }, false))
+                },
+                {
+                    "f(int a, int b, ...)",
+                    new Tuple<string, T>("f", TInt.Instance.None().Func(new List<T> {
+                        TInt.Instance.None(),
+                        TInt.Instance.None(),
+                    }, true))
+                },
+                {
+                    "f()",
+                    new Tuple<string, T>("f", TInt.Instance.None().Func(new List<T>(), false))
+                },
+                {
+                    "f(int a[10], ...)",
+                    new Tuple<string, T>("f", TInt.Instance.None().Func(new List<T> {
+                        TInt.Instance.None().Ptr()
+                    }, true))
+                },
             };
             
             foreach (var test in tests) {
