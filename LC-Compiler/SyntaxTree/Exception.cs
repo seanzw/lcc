@@ -28,9 +28,14 @@ namespace lcc.SyntaxTree {
             : base(pos, string.Format("redefine tag {0}, previous defined at {1}", tag, previous)) { }
     }
 
-    public sealed class ErrRedefineSymbol : Error {
-        public ErrRedefineSymbol(Position pos, string symbol, Position previous)
-            : base(pos, string.Format("redefine symbol {0}, previous defined at {1}", symbol, previous)) { }
+    public sealed class ERedefineSymbolAsDiffKind : Error {
+        public ERedefineSymbolAsDiffKind(Position pos, string symbol, Position previous)
+            : base(pos, string.Format("redefine symbol {0} as different kind, previous defined at {1}", symbol, previous)) { }
+    }
+
+    public sealed class ERedefineObject : Error {
+        public ERedefineObject(Position pos, string symbol, Position previous)
+            : base(pos, string.Format("redefinition of object '{0}', previous at {1}.", symbol, previous)) { }
     }
 
     public sealed class ErrDeclareTagAsDifferentType : Error {
@@ -38,8 +43,22 @@ namespace lcc.SyntaxTree {
             : base(pos, string.Format("declare tag {0} as different type, previous declared at {1} as {2}", tag, previous, previoudType)) { }
     }
 
-    public sealed class ErrUnknownType : Error {
-        public ErrUnknownType(Position pos, string name) 
+    public sealed class ErrIllegalInitializer : Error {
+        public ErrIllegalInitializer(Position pos) : base(pos, "Illegal initializer (only variables can be initialized") { }
+    }
+
+    public sealed class ErrTypeRedefinition : Error {
+        public ErrTypeRedefinition(Position pos, T previous, T now)
+            : base(pos, string.Format("typedef redefinition with different types ({0} vs {1}).", previous, now)) { }
+    }
+
+    public sealed class ERedefineSymbolTypeConflict : Error {
+        public ERedefineSymbolTypeConflict(Position pos, string symbol, T previous, T now)
+            : base(pos, string.Format("conflict type for '{0}', previous {1}, now {2}", symbol, previous, now)) { }
+    }
+
+    public sealed class EUnknownType : Error {
+        public EUnknownType(Position pos, string name) 
             : base(pos, "unknown type " + name) { }
     }
 

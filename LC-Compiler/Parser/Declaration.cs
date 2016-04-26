@@ -110,7 +110,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, LinkedList<STInitDeclarator>> InitDeclaratorList() {
+        public static Parserc.Parser<T, LinkedList<InitDeclarator>> InitDeclaratorList() {
             return InitDeclarator().PlusSeperatedBy(Match<T_PUNC_COMMA>());
         }
 
@@ -121,9 +121,9 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STInitDeclarator> InitDeclarator() {
+        public static Parserc.Parser<T, InitDeclarator> InitDeclarator() {
             return Declarator().Bind(declarator => Match<T_PUNC_ASSIGN>().Then(Initializer()).ElseNull()
-                .Select(initializer => new STInitDeclarator(declarator, initializer)));
+                .Select(initializer => new InitDeclarator(declarator, initializer)));
         }
 
         /// <summary>
@@ -565,11 +565,11 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STInitializer> Initializer() {
-            return AssignmentExpression().Select(expr => new STInitializer(expr))
+        public static Parserc.Parser<T, Initializer> Initializer() {
+            return AssignmentExpression().Select(expr => new Initializer(expr))
                 .Else(InitItem()
                     .PlusSeperatedBy(Match<T_PUNC_COMMA>()).Option(Match<T_PUNC_COMMA>())
-                    .BracelLR().Select(items => new STInitializer(items)));
+                    .BracelLR().Select(items => new Initializer(items)));
         }
 
         /// <summary>

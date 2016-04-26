@@ -229,16 +229,16 @@ namespace lcc.SyntaxTree {
             return expr.GetHashCode();
         }
 
-        public override T TypeCheck(Env env) {
-            T t = expr.TypeCheck(env);
-            if (!t.IsArithmetic && !t.IsPointer) {
-                throw new Error(expr.Pos, string.Format("{0} on type {1}", kind, t));
-            }
-            if (!t.IsModifiable) {
-                throw new Error(expr.Pos, string.Format("cannot assign to type {0}", t));
-            }
-            return t.R();
-        }
+        //public override T TypeCheck(Env env) {
+        //    T t = expr.TypeCheck(env);
+        //    if (!t.IsArithmetic && !t.IsPointer) {
+        //        throw new Error(expr.Pos, string.Format("{0} on type {1}", kind, t));
+        //    }
+        //    if (!t.IsModifiable) {
+        //        throw new Error(expr.Pos, string.Format("cannot assign to type {0}", t));
+        //    }
+        //    return t.R();
+        //}
 
         public readonly Expr expr;
         public readonly Kind kind;
@@ -295,34 +295,34 @@ namespace lcc.SyntaxTree {
             return expr.GetHashCode();
         }
 
-        public override T TypeCheck(Env env) {
-            T t = expr.TypeCheck(env);
-            switch (op) {
-                case Op.REF:
-                    if (t.IsRValue)
-                        throw new Error(expr.Pos, string.Format("cannot take address of rvalue of {0}", t));
-                    return t.Ptr().R();
-                case Op.STAR:
-                    if (!t.IsPointer)
-                        throw new Error(expr.Pos, string.Format("indirection requires pointer type ({0} provided)", t));
-                    return (t.nake as TPointer).element;
-                case Op.PLUS:
-                case Op.MINUS:
-                    if (!t.IsArithmetic)
-                        throw new Error(expr.Pos, string.Format("invalid argument type '{0}' to unary expression", t));
-                    return t.IntPromote().R();
-                case Op.REVERSE:
-                    if (!t.IsInteger)
-                        throw new Error(expr.Pos, string.Format("invalid argument type '{0}' to unary expression", t));
-                    return t.IntPromote().R();
-                case Op.NOT:
-                    if (!t.IsScalar)
-                        throw new Error(expr.Pos, string.Format("invalid argument type '{0}' to unary expression", t));
-                    return TInt.Instance.None(T.LR.R);
-                default:
-                    throw new InvalidOperationException("Unrecognized unary operator");
-            }
-        }
+        //public override T TypeCheck(Env env) {
+        //    T t = expr.TypeCheck(env);
+        //    switch (op) {
+        //        case Op.REF:
+        //            if (t.IsRValue)
+        //                throw new Error(expr.Pos, string.Format("cannot take address of rvalue of {0}", t));
+        //            return t.Ptr().R();
+        //        case Op.STAR:
+        //            if (!t.IsPointer)
+        //                throw new Error(expr.Pos, string.Format("indirection requires pointer type ({0} provided)", t));
+        //            return (t.nake as TPointer).element;
+        //        case Op.PLUS:
+        //        case Op.MINUS:
+        //            if (!t.IsArithmetic)
+        //                throw new Error(expr.Pos, string.Format("invalid argument type '{0}' to unary expression", t));
+        //            return t.IntPromote().R();
+        //        case Op.REVERSE:
+        //            if (!t.IsInteger)
+        //                throw new Error(expr.Pos, string.Format("invalid argument type '{0}' to unary expression", t));
+        //            return t.IntPromote().R();
+        //        case Op.NOT:
+        //            if (!t.IsScalar)
+        //                throw new Error(expr.Pos, string.Format("invalid argument type '{0}' to unary expression", t));
+        //            return TInt.Instance.None(T.LR.R);
+        //        default:
+        //            throw new InvalidOperationException("Unrecognized unary operator");
+        //    }
+        //}
 
         public readonly Expr expr;
         public readonly Op op;
@@ -469,31 +469,31 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        public override T TypeCheck(Env env) {
-            T aggType = agg.TypeCheck(env);
+        //public override T TypeCheck(Env env) {
+        //    T aggType = agg.TypeCheck(env);
 
-            if (kind == Kind.PTR) {
-                if (!aggType.IsPointer)
-                    throw new Error(agg.Pos, "member reference base type is not a pointer");
-                aggType = (aggType.nake as TPointer).element;
-            }
+        //    if (kind == Kind.PTR) {
+        //        if (!aggType.IsPointer)
+        //            throw new Error(agg.Pos, "member reference base type is not a pointer");
+        //        aggType = (aggType.nake as TPointer).element;
+        //    }
 
-            if (!aggType.IsStruct && !aggType.IsUnion)
-                throw new Error(agg.Pos, "member reference base type is not a struct or union");
+        //    if (!aggType.IsStruct && !aggType.IsUnion)
+        //        throw new Error(agg.Pos, "member reference base type is not a struct or union");
 
-            TStructUnion s = aggType.nake as TStructUnion;
+        //    TStructUnion s = aggType.nake as TStructUnion;
 
-            T m = s.GetType(field);
-            if (m == null) {
-                throw new Error(agg.Pos, string.Format("no member named {0} in {1}", field, s.ToString()));
-            }
+        //    T m = s.GetType(field);
+        //    if (m == null) {
+        //        throw new Error(agg.Pos, string.Format("no member named {0} in {1}", field, s.ToString()));
+        //    }
 
-            if (kind == Kind.DOT) {
-                return aggType.Unnest(m, aggType.lr);
-            } else {
-                return aggType.Unnest(m, T.LR.L);
-            }
-        }
+        //    if (kind == Kind.DOT) {
+        //        return aggType.Unnest(m, aggType.lr);
+        //    } else {
+        //        return aggType.Unnest(m, T.LR.L);
+        //    }
+        //}
 
         public readonly Expr agg;
         public readonly string field;
@@ -543,19 +543,19 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        public override T TypeCheck(Env env) {
+        //public override T TypeCheck(Env env) {
 
-            T t = expr.TypeCheck(env);
-            if (!t.IsPointer && !t.IsArithmetic) {
-                throw new Error(expr.Pos, string.Format("{0} on type {1}", kind, t));
-            }
+        //    T t = expr.TypeCheck(env);
+        //    if (!t.IsPointer && !t.IsArithmetic) {
+        //        throw new Error(expr.Pos, string.Format("{0} on type {1}", kind, t));
+        //    }
 
-            if (!t.IsModifiable) {
-                throw new Error(expr.Pos, string.Format("cannot assign to type {0}", t));
-            }
+        //    if (!t.IsModifiable) {
+        //        throw new Error(expr.Pos, string.Format("cannot assign to type {0}", t));
+        //    }
 
-            return t.R();
-        }
+        //    return t.R();
+        //}
 
         public readonly Expr expr;
         public readonly Kind kind;
@@ -823,14 +823,14 @@ namespace lcc.SyntaxTree {
 
             // Do not support multi-character characer.
             if (token.prefix == T_CONST_CHAR.Prefix.L) {
-                throw new ErrUnknownType(pos, "multi-character");
+                throw new EUnknownType(pos, "multi-character");
             }
 
             values = Evaluate(pos, token.text);
 
             // Do not support multi-character characer.
             if (values.Count() > 1) {
-                throw new ErrUnknownType(pos, "multi-character");
+                throw new EUnknownType(pos, "multi-character");
             }
         }
 
@@ -1086,8 +1086,7 @@ namespace lcc.SyntaxTree {
         public Str(LinkedList<T_STRING_LITERAL> tokens) {
             pos = new Position { line = tokens.First().line };
             values = Evaluate(tokens);
-            var arrType = new TArray(TChar.Instance.None(T.LR.L), values.Count());
-            type = arrType.None(T.LR.L);
+            type = TChar.Instance.None().Arr(values.Count());
         }
 
         public override Position Pos => pos;
@@ -1115,7 +1114,7 @@ namespace lcc.SyntaxTree {
             foreach (var t in tokens) {
                 Position pos = new Position { line = t.line };
                 if (t.prefix == T_STRING_LITERAL.Prefix.L) {
-                    throw new ErrUnknownType(pos, "multi-character");
+                    throw new EUnknownType(pos, "multi-character");
                 }
                 values = values.Concat(ConstChar.Evaluate(pos, t.text));
             }

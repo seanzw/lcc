@@ -154,7 +154,7 @@ namespace LC_CompilerTests {
                             ProcessSS(new List<TypeSpecQual> { new STTypeKeySpec(1, TypeSpec.Kind.INT) })
                         ),
                         new List<STInitItem> {
-                            new STInitItem(new STInitializer(new ConstInt(new T_CONST_INT(1, "1", 10))))
+                            new STInitItem(new Initializer(new ConstInt(new T_CONST_INT(1, "1", 10))))
                         })
                 }
             };

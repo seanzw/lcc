@@ -80,7 +80,7 @@ namespace LC_CompilerTests {
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ErrUnknownType), "Multi-character")]
+        [ExpectedException(typeof(EUnknownType), "Multi-character")]
         public void LCCTCConstCharIllegalMultiChar1() {
             string src = "'\\0223'";
             var ast = new ConstChar(new T_CONST_CHAR(1, src));
@@ -88,7 +88,7 @@ namespace LC_CompilerTests {
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ErrUnknownType), "Multi-character")]
+        [ExpectedException(typeof(EUnknownType), "Multi-character")]
         public void LCCTCConstCharIllegalMultiChar2() {
             string src = "L'\\0223'";
             var ast = new ConstChar(new T_CONST_CHAR(1, src));

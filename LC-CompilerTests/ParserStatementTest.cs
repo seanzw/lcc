@@ -83,8 +83,8 @@ namespace LC_CompilerTests {
                                     new List<TypeSpec.Kind> {
                                         TypeSpec.Kind.INT
                                     }),
-                                new List<STInitDeclarator> {
-                                    new STInitDeclarator(
+                                new List<InitDeclarator> {
+                                    new InitDeclarator(
                                         new Declarator(
                                             new List<Ptr>(),
                                             new IdDeclarator(new Id(new T_IDENTIFIER(4, "x")))))

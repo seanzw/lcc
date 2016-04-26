@@ -140,8 +140,8 @@ namespace lcc.TypeSystem {
         /// <param name="qualifiers"></param>
         /// <param name="lr"></param>
         /// <returns></returns>
-        public T Qualify(TQualifiers qualifiers, T.LR lr, T.Store store) {
-            return new T(this, qualifiers, lr, store);
+        public T Qualify(TQualifiers qualifiers) {
+            return new T(this, qualifiers);
         }
 
         /// <summary>
@@ -149,8 +149,8 @@ namespace lcc.TypeSystem {
         /// </summary>
         /// <param name="lr"></param>
         /// <returns></returns>
-        public T Const(T.LR lr = T.LR.L, T.Store store = T.Store.NONE) {
-            return Qualify(TQualifiers.C, lr, store);
+        public T Const() {
+            return Qualify(TQualifiers.C);
         }
 
         /// <summary>
@@ -158,8 +158,8 @@ namespace lcc.TypeSystem {
         /// </summary>
         /// <param name="lr"></param>
         /// <returns></returns>
-        public T None(T.LR lr = T.LR.L, T.Store store = T.Store.NONE) {
-            return Qualify(TQualifiers.N, lr, store);
+        public T None() {
+            return Qualify(TQualifiers.N);
         }
 
         public abstract int Bits { get; }
@@ -275,24 +275,9 @@ namespace lcc.TypeSystem {
     /// </summary>
     public sealed class T {
 
-        public enum LR {
-            L,
-            R
-        }
-
-        public enum Store {
-            NONE,
-            AUTO,
-            REGISTER,
-            STATIC,
-            EXTERN
-        }
-
-        public T(TUnqualified nake, TQualifiers qualifiers, LR lr, Store store) {
+        public T(TUnqualified nake, TQualifiers qualifiers) {
             this.nake = nake;
             this.qualifiers = qualifiers;
-            this.lr = lr;
-            this.store = store;
         }
 
         public override bool Equals(object obj) {
@@ -301,9 +286,7 @@ namespace lcc.TypeSystem {
 
         public bool Equals(T t) {
             return t == null ? false : t.nake.Equals(nake)
-                && t.qualifiers.Equals(qualifiers)
-                && t.store == store
-                && t.lr == lr;
+                && t.qualifiers.Equals(qualifiers);
         }
 
         public override int GetHashCode() {
@@ -311,15 +294,7 @@ namespace lcc.TypeSystem {
         }
 
         public override string ToString() {
-            string storeStr;
-            switch (store) {
-                case Store.AUTO:        storeStr = "auto ";     break;
-                case Store.EXTERN:      storeStr = "extern ";   break;
-                case Store.REGISTER:    storeStr = "register "; break;
-                case Store.STATIC:      storeStr = "static ";   break;
-                default:                storeStr = "";          break;
-            }
-            return storeStr + qualifiers.ToString() + nake.ToString();
+            return qualifiers.ToString() + nake.ToString();
         }
 
         /// <summary>
@@ -342,18 +317,8 @@ namespace lcc.TypeSystem {
         /// <param name="nested"> Nested member type. </param>
         /// <param name="lr"> LRValue. </param>
         /// <returns> A new type. </returns>
-        public T Unnest(T nested, LR lr = LR.L) {
-            return new T(nested.nake, qualifiers | nested.qualifiers, lr, store);
-        }
-
-        /// <summary>
-        /// Return the same type but as an rvalue.
-        /// 
-        /// Notice for RValue, there is no storage specifier.
-        /// </summary>
-        /// <returns></returns>
-        public T R() {
-            return IsRValue ? this : new T(nake, qualifiers, LR.R, Store.NONE);
+        public T Unnest(T nested) {
+            return new T(nested.nake, qualifiers | nested.qualifiers);
         }
 
         /// <summary>
@@ -363,13 +328,13 @@ namespace lcc.TypeSystem {
         /// <param name="lr"></param>
         /// <param name="store"></param>
         /// <returns></returns>
-        public T Ptr(TQualifiers qualifiers = null, LR lr = LR.L, Store store = Store.NONE) {
+        public T Ptr(TQualifiers qualifiers = null) {
             qualifiers = qualifiers ?? TQualifiers.N;
-            return new T(new TPointer(this), qualifiers, LR.L, store);
+            return new T(new TPointer(this), qualifiers);
         }
 
         public T Func(IEnumerable<T> parameters, bool isEllipis) {
-            return new T(new TFunc(this, parameters, isEllipis), TQualifiers.N, LR.L, Store.NONE);
+            return new T(new TFunc(this, parameters, isEllipis), TQualifiers.N);
         }
 
         /// <summary>
@@ -378,9 +343,9 @@ namespace lcc.TypeSystem {
         /// <param name="qualifiers"></param>
         /// <param name="lr"></param>
         /// <returns></returns>
-        public T Arr(int n, TQualifiers qualifiers = null, Store store = Store.NONE) {
+        public T Arr(int n, TQualifiers qualifiers = null) {
             qualifiers = qualifiers ?? TQualifiers.N;
-            return new T(new TArray(this, n), qualifiers, LR.L, store);
+            return new T(new TArray(this, n), qualifiers);
         }
 
         /// <summary>
@@ -389,9 +354,9 @@ namespace lcc.TypeSystem {
         /// <param name="qualifiers"></param>
         /// <param name="store"></param>
         /// <returns></returns>
-        public T IArr(TQualifiers qualifiers = null, Store store = Store.NONE) {
+        public T IArr(TQualifiers qualifiers = null) {
             qualifiers = qualifiers ?? TQualifiers.N;
-            return new T(new TArray(this), qualifiers, LR.L, store);
+            return new T(new TArray(this), qualifiers);
         }
 
         /// <summary>
@@ -400,9 +365,9 @@ namespace lcc.TypeSystem {
         /// <param name="qualifiers"></param>
         /// <param name="store"></param>
         /// <returns></returns>
-        public T VArr(TQualifiers qualifiers = null, Store store = Store.NONE) {
+        public T VArr(TQualifiers qualifiers = null) {
             qualifiers = qualifiers ?? TQualifiers.N;
-            return new T(new TVarArray(this), qualifiers, LR.L, store);
+            return new T(new TVarArray(this), qualifiers);
         }
 
         public void DefArr(int n) { nake.DefArr(n); }
@@ -432,14 +397,8 @@ namespace lcc.TypeSystem {
         public int Size => nake.Size;
         public int Align => nake.Align;
 
-        public bool IsLValue => lr == LR.L;
-        public bool IsRValue => lr == LR.R;
-        public bool IsModifiable => IsLValue && (!qualifiers.isConstant);
-
         public readonly TUnqualified nake;
         public readonly TQualifiers qualifiers;
-        public readonly LR lr;
-        public readonly Store store;
     }
 
     public static class TPromotion {
@@ -455,7 +414,7 @@ namespace lcc.TypeSystem {
         public static T IntPromote(this T t) {
             TArithmetic ta = t.nake as TArithmetic;
             if (ta.Rank < TInt.Instance.Rank) {
-                return TInt.Instance.Qualify(t.qualifiers, T.LR.R, T.Store.NONE);
+                return TInt.Instance.Qualify(t.qualifiers);
             } else {
                 return t;
             }

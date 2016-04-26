@@ -12,7 +12,7 @@ namespace lcc.SyntaxTree {
 
         public Declaration(
             DeclSpecs specifiers,
-            IEnumerable<STInitDeclarator> declarators
+            IEnumerable<InitDeclarator> declarators
             ) {
             this.specifiers = specifiers;
             this.declarators = declarators;
@@ -44,14 +44,88 @@ namespace lcc.SyntaxTree {
             return specifiers.GetHashCode();
         }
 
-        public readonly DeclSpecs specifiers;
-        public readonly IEnumerable<STInitDeclarator> declarators;
-        
-        public AST.Node ToAst(Env env) {
+        public IEnumerable<AST.Node> ToAST(Env env) {
+            T baseType = specifiers.GetT(env);
 
-            T type = specifiers.GetT(env);
+            var nodes = new LinkedList<AST.Node>();
+            foreach (var declarator in declarators) {
+                var result = declarator.Declare(env, baseType);
 
+                if (specifiers.storage == STStoreSpec.Kind.TYPEDEF) {
+                    // This is a typedef declaration.
+                    // Check the inline specifier.
+                    if (specifiers.function != STFuncSpec.Kind.NONE) {
+                        throw new Error(Pos, "inline can only appear on functions.");
+                    }
+
+                    // There is no initializer for a typedef.
+                    if (result.Item3 != null) {
+                        throw new ErrIllegalInitializer(declarator.Pos);
+                    }
+                    // Check if there is already a definition.
+                    SymbolEntry entry = env.GetSymbol(result.Item1, true);
+                    if (entry != null) {
+                        // Check whether this is a duplicate typedef.
+                        // If yes, ignore it.
+                        if (entry.kind != SymbolEntry.Kind.TYPEDEF) {
+                            throw new ERedefineSymbolAsDiffKind(declarator.Pos, result.Item1, entry.Pos);
+                        }
+                        if (!entry.type.Equals(result.Item2)) {
+                            throw new ErrTypeRedefinition(declarator.Pos, entry.type, result.Item2);
+                        }
+                    } else {
+                        // Add the typedef to the environment.
+                        env.AddTypeDef(result.Item1, result.Item2, this);
+                    }
+                } else if (result.Item2.IsFunc) {
+                    // This is a function declaration.
+                    // There is no initializer for a function.
+                    if (result.Item3 != null) {
+                        throw new ErrIllegalInitializer(declarator.Pos);
+                    }
+                    // Check if there is already a definition.
+                    SymbolEntry entry = env.GetSymbol(result.Item1, true);
+                    if (entry != null) {
+                        if (entry.kind != SymbolEntry.Kind.FUNCTION) {
+                            throw new ERedefineSymbolAsDiffKind(declarator.Pos, result.Item1, entry.Pos);
+                        }
+                        if (!entry.type.Equals(result.Item2)) {
+                            throw new ERedefineSymbolTypeConflict(declarator.Pos, result.Item1, entry.type, result.Item2);
+                        }
+                    } else {
+
+                    }
+                } else {
+                    // This is a object.
+                    // Check the inline specifier.
+                    if (specifiers.function != STFuncSpec.Kind.NONE) {
+                        throw new Error(Pos, "inline can only appear on functions.");
+                    }
+
+                    // Check if there is already a definition.
+                    SymbolEntry entry = env.GetSymbol(result.Item1, true);
+                    if (entry != null) {
+                        if (entry.kind != SymbolEntry.Kind.OBJECT) {
+                            throw new ERedefineSymbolAsDiffKind(declarator.Pos, result.Item1, entry.Pos);
+                        }
+                        throw new ERedefineObject(declarator.Pos, result.Item1, entry.Pos);
+                    } else {
+                        // Add this to the environment.
+                        env.AddObj(result.Item1, result.Item2, this, specifiers.Storage);
+                        // Push the ast node.
+                        nodes.AddLast(new AST.Declaration(result.Item2, result.Item3));
+                    }
+                }
+                
+            }
+
+            // Return the nodes.
+            return nodes;
         }
+
+        public readonly DeclSpecs specifiers;
+        public readonly IEnumerable<InitDeclarator> declarators;
+        
     }
 
     public sealed class DeclSpecs : Node, IEquatable<DeclSpecs> {
@@ -132,11 +206,11 @@ namespace lcc.SyntaxTree {
         /// <param name="env"></param>
         /// <returns></returns>
         public T GetT(Env env) {
-            return GetTUnqualified(env).Qualify(qualifiers, T.LR.L, T.Store.NONE);
+            return GetTUnqualified(env).Qualify(qualifiers);
         }
 
         public bool IsTypeDef => storage == STStoreSpec.Kind.TYPEDEF;
-        public T.Store Storage => GetStore(storage);
+        public ObjEntry.Store Storage => GetStore(storage);
 
         /// <summary>
         /// Evaluate the type specifiers and get the unqualified type.
@@ -169,13 +243,13 @@ namespace lcc.SyntaxTree {
             return TQualifiers.dict[tuple];
         }
 
-        public static T.Store GetStore(STStoreSpec.Kind storage) {
+        public static ObjEntry.Store GetStore(STStoreSpec.Kind storage) {
             switch (storage) {
-                case STStoreSpec.Kind.NONE: return T.Store.NONE;
-                case STStoreSpec.Kind.EXTERN: return T.Store.EXTERN;
-                case STStoreSpec.Kind.REGISTER: return T.Store.REGISTER;
-                case STStoreSpec.Kind.STATIC: return T.Store.STATIC;
-                case STStoreSpec.Kind.AUTO: return T.Store.AUTO;
+                case STStoreSpec.Kind.NONE: return ObjEntry.Store.NONE;
+                case STStoreSpec.Kind.EXTERN: return ObjEntry.Store.EXTERN;
+                case STStoreSpec.Kind.REGISTER: return ObjEntry.Store.REGISTER;
+                case STStoreSpec.Kind.STATIC: return ObjEntry.Store.STATIC;
+                case STStoreSpec.Kind.AUTO: return ObjEntry.Store.AUTO;
                 default:
                     throw new ArgumentException("Unknown storage specifier.");
             }
@@ -453,29 +527,41 @@ namespace lcc.SyntaxTree {
         #endregion
     }
 
-    public sealed class STInitDeclarator : Node, IEquatable<STInitDeclarator> {
+    public sealed class InitDeclarator : Node, IEquatable<InitDeclarator> {
 
-        public STInitDeclarator(Declarator declarator, STInitializer initializer = null) {
+        public InitDeclarator(Declarator declarator, Initializer initializer = null) {
             this.declarator = declarator;
             this.initializer = initializer;
         }
 
-        public bool Equals(STInitDeclarator x) {
+        public bool Equals(InitDeclarator x) {
             return x != null && x.declarator.Equals(declarator) && NullableEquals(x.initializer, initializer);
         }
 
         public override bool Equals(object obj) {
-            return Equals(obj as STInitDeclarator);
+            return Equals(obj as InitDeclarator);
         }
 
         public override int GetHashCode() {
             return declarator.GetHashCode();
         }
 
+        /// <summary>
+        /// Get the name, the type and (optional) initializer expression.
+        /// TODO: Support initializer.
+        /// </summary>
+        /// <param name="env"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public Tuple<string, T, IEnumerable<AST.Expr>> Declare(Env env, T type) {
+            var result = declarator.Declare(env, type, null);
+            return new Tuple<string, T, IEnumerable<AST.Expr>>(result.Item1, result.Item2, null);
+        }
+
         public override Position Pos => declarator.Pos;
 
         public readonly Declarator declarator;
-        public readonly STInitializer initializer;
+        public readonly Initializer initializer;
     }
 
     public abstract class DeclSpec : Node { }
@@ -1384,7 +1470,7 @@ namespace lcc.SyntaxTree {
                 // 4. All the parameter name shall be different.
                 var entry = env.GetSymbol(name, true);
                 if (env.GetSymbol(name, true) != null) {
-                    throw new ErrRedefineSymbol(Pos, name, entry.Pos);
+                    throw new ERedefineSymbolAsDiffKind(Pos, name, entry.Pos);
                 }
 
             } else if (absDeclarator != null) {
@@ -1394,7 +1480,7 @@ namespace lcc.SyntaxTree {
 
             // 2. A declaration of a parameter as "array of type" shall be adjusted to "qualified pointer to type".
             if (type.IsArray) {
-                type = (type.nake as TArray).element.Ptr(type.qualifiers, T.LR.L, specifiers.Storage);
+                type = (type.nake as TArray).element.Ptr(type.qualifiers);
             }
 
             // 3. A declaration of a parameter as "function returning type" shall be adjusted to "pointer to function returning type".
@@ -1683,23 +1769,23 @@ namespace lcc.SyntaxTree {
     ///     | { initializer-list , }
     ///     ;
     /// </summary>
-    public sealed class STInitializer : Node, IEquatable<STInitializer> {
+    public sealed class Initializer : Node, IEquatable<Initializer> {
 
         /// <summary>
         /// initializer : assignment-expression;
         /// </summary>
         /// <param name="expr"></param>
-        public STInitializer(Expr expr) { this.expr = expr; }
-        public STInitializer(IEnumerable<STInitItem> items) { this.items = items; }
+        public Initializer(Expr expr) { this.expr = expr; }
+        public Initializer(IEnumerable<STInitItem> items) { this.items = items; }
 
-        public bool Equals(STInitializer x) {
+        public bool Equals(Initializer x) {
             return x != null
                 && NullableEquals(x.expr, expr)
                 && NullableEquals(x.items, items);
         }
 
         public override bool Equals(object obj) {
-            return Equals(obj as STInitializer);
+            return Equals(obj as Initializer);
         }
 
         public override int GetHashCode() {
@@ -1717,7 +1803,7 @@ namespace lcc.SyntaxTree {
     /// </summary>
     public sealed class STInitItem : Node, IEquatable<STInitItem> {
 
-        public STInitItem(STInitializer initializer, IEnumerable<STDesignator> designators = null) {
+        public STInitItem(Initializer initializer, IEnumerable<STDesignator> designators = null) {
             this.initializer = initializer;
             this.designators = designators;
         }
@@ -1738,7 +1824,7 @@ namespace lcc.SyntaxTree {
 
         public override Position Pos => designators == null ? initializer.Pos : designators.First().Pos;
 
-        public readonly STInitializer initializer;
+        public readonly Initializer initializer;
         public readonly IEnumerable<STDesignator> designators;
     }
 

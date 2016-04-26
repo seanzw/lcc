@@ -879,8 +879,8 @@ int foo(int a, int b, double c, ...);
                             },
                             STStoreSpec.Kind.NONE,
                             new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
-                        new List<STInitDeclarator> {
-                            new STInitDeclarator(
+                        new List<InitDeclarator> {
+                            new InitDeclarator(
                                 new Declarator(
                                     new List<Ptr>(),
                                     new FuncDeclarator(
@@ -932,8 +932,8 @@ int foo(a, b, c);
                             },
                             STStoreSpec.Kind.NONE,
                             new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
-                        new List<STInitDeclarator> {
-                            new STInitDeclarator(
+                        new List<InitDeclarator> {
+                            new InitDeclarator(
                                 new Declarator(
                                     new List<Ptr>(),
                                     new FuncDeclarator(
@@ -957,8 +957,8 @@ int foo();
                             },
                             STStoreSpec.Kind.NONE,
                             new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
-                        new List<STInitDeclarator> {
-                            new STInitDeclarator(
+                        new List<InitDeclarator> {
+                            new InitDeclarator(
                                 new Declarator(
                                     new List<Ptr>(),
                                     new FuncDeclarator(
@@ -976,21 +976,21 @@ int foo();
 
         [TestMethod]
         public void LCCParserInitializer() {
-            var tests = new Dictionary<string, STInitializer> {
+            var tests = new Dictionary<string, Initializer> {
                 {
                     "2 = 3",
-                    new STInitializer(new STAssignExpr(
+                    new Initializer(new STAssignExpr(
                         new ConstInt(new T_CONST_INT(1, "2", 10)),
                         new ConstInt(new T_CONST_INT(1, "3", 10)),
                         STAssignExpr.Op.ASSIGN))
                 },
                 {
                     "{ .what = {1, 2, 3 }, }",
-                    new STInitializer(new List<STInitItem> {
-                        new STInitItem(new STInitializer(new List<STInitItem> {
-                            new STInitItem(new STInitializer(new ConstInt(new T_CONST_INT(1, "1", 10)))),
-                            new STInitItem(new STInitializer(new ConstInt(new T_CONST_INT(1, "2", 10)))),
-                            new STInitItem(new STInitializer(new ConstInt(new T_CONST_INT(1, "3", 10))))
+                    new Initializer(new List<STInitItem> {
+                        new STInitItem(new Initializer(new List<STInitItem> {
+                            new STInitItem(new Initializer(new ConstInt(new T_CONST_INT(1, "1", 10)))),
+                            new STInitItem(new Initializer(new ConstInt(new T_CONST_INT(1, "2", 10)))),
+                            new STInitItem(new Initializer(new ConstInt(new T_CONST_INT(1, "3", 10))))
                         }),
                         new List<STDesignator> {
                             new STDesignator(new Id(new T_IDENTIFIER(1, "what")))
@@ -1072,8 +1072,8 @@ int foo();
                             },
                             STStoreSpec.Kind.NONE,
                             new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
-                        new List<STInitDeclarator> {
-                            new STInitDeclarator(
+                        new List<InitDeclarator> {
+                            new InitDeclarator(
                                 new Declarator(new List<Ptr>(),
                                 new IdDeclarator(new Id(new T_IDENTIFIER(1, "a")))))
                         })

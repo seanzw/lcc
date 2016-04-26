@@ -32,9 +32,18 @@ namespace lcc.SyntaxTree {
     }
 
     public sealed class ObjEntry : SymbolEntry {
+        public enum Store {
+            NONE,
+            AUTO,
+            EXTERN,
+            STATIC,
+            REGISTER,
+        }
         public readonly Declaration declaration;
-        public ObjEntry(T type, Declaration declaration) : base(Kind.OBJECT, type) {
+        public readonly Store store;
+        public ObjEntry(T type, Declaration declaration, Store store) : base(Kind.OBJECT, type) {
             this.declaration = declaration;
+            this.store = store;
         }
         public override Position Pos => declaration.Pos;
     }
@@ -42,6 +51,22 @@ namespace lcc.SyntaxTree {
     public sealed class ParamEntry : SymbolEntry {
         public readonly Param declaration;
         public ParamEntry(T type, Param declaration) : base(Kind.PARAMETER, type) {
+            this.declaration = declaration;
+        }
+        public override Position Pos => declaration.Pos;
+    }
+
+    public sealed class TypeEntry : SymbolEntry {
+        public readonly Declaration declaration;
+        public TypeEntry(T type, Declaration declaration) : base(Kind.TYPEDEF, type) {
+            this.declaration = declaration;
+        }
+        public override Position Pos => declaration.Pos;
+    }
+
+    public sealed class FuncEntry : SymbolEntry {
+        public readonly Declaration declaration;
+        public FuncEntry(T type, Declaration declaration) : base(Kind.FUNCTION, type) {
             this.declaration = declaration;
         }
         public override Position Pos => declaration.Pos;
@@ -137,12 +162,20 @@ namespace lcc.SyntaxTree {
         /// <param name="symbol"></param>
         /// <param name="type"></param>
         /// <param name="declaration"></param>
-        public void AddObj(string symbol, T type, Declaration declaration) {
-            scopes.Peek().AddSymbol(symbol, new ObjEntry(type, declaration));
+        public void AddObj(string symbol, T type, Declaration declaration, ObjEntry.Store store) {
+            scopes.Peek().AddSymbol(symbol, new ObjEntry(type, declaration, store));
         }
 
         public void AddParam(string symbol, T type, Param declaration) {
             scopes.Peek().AddSymbol(symbol, new ParamEntry(type, declaration));
+        }
+
+        public void AddTypeDef(string symbol, T type, Declaration declaration) {
+            scopes.Peek().AddSymbol(symbol, new TypeEntry(type, declaration));
+        }
+
+        public void AddFunc(string symbol, T type, Declaration declaration) {
+            scopes.Peek().AddSymbol(symbol, new FuncEntry(type, declaration));
         }
 
         /// <summary>

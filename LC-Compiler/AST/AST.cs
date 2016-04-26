@@ -70,8 +70,17 @@ namespace lcc.AST {
         }
     }
 
+    /// <summary>
+    /// Declare an object and (optional) initial assignments.
+    /// </summary>
     public sealed class Declaration : Node {
 
-        public readonly Tuple<T, >
+        public readonly T type;
+        public readonly IEnumerable<Expr> exprs;
+        
+        public Declaration(T type, IEnumerable<Expr> exprs) {
+            this.type = type;
+            this.exprs = exprs;
+        }
     }
 }
