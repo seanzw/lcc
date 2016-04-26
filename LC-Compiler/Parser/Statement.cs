@@ -28,8 +28,8 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STStmt> Statement() {
-            return LabeledStatement().Cast<T, STStmt, STLabeled>()
+        public static Parserc.Parser<T, Stmt> Statement() {
+            return LabeledStatement().Cast<T, Stmt, STLabeled>()
                 .Or(CaseStatement())
                 .Or(DefaultStatement())
                 .Or(CompoundStatement())
@@ -109,8 +109,8 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STStmt> ExpressionStatement() {
-            return Expression().Bind(expr => Match<T_PUNC_SEMICOLON>().Return(expr as STStmt))
+        public static Parserc.Parser<T, Stmt> ExpressionStatement() {
+            return Expression().Bind(expr => Match<T_PUNC_SEMICOLON>().Return(expr as Stmt))
                 .Or(Get<T_PUNC_SEMICOLON>().Select(t => new STVoidStmt(t.line)));
         }
 
@@ -197,21 +197,21 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STStmt> JumpStatement() {
+        public static Parserc.Parser<T, Stmt> JumpStatement() {
             return Get<T_KEY_GOTO>()
                     .Bind(t => Identifier()
                     .Bind(label => Match<T_PUNC_SEMICOLON>()
-                    .Return(new STGoto(t.line, label) as STStmt)))
+                    .Return(new STGoto(t.line, label) as Stmt)))
                 .Else(Get<T_KEY_CONTINUE>()
                     .Bind(t => Match<T_PUNC_SEMICOLON>()
-                    .Return(new STContinue(t.line) as STStmt)))
+                    .Return(new STContinue(t.line) as Stmt)))
                 .Else(Get<T_KEY_BREAK>()
                     .Bind(t => Match<T_PUNC_SEMICOLON>()
-                    .Return(new STBreak(t.line) as STStmt)))
+                    .Return(new STBreak(t.line) as Stmt)))
                 .Else(Get<T_KEY_RETURN>()
                     .Bind(t => Expression().ElseNull()
                     .Bind(expr => Match<T_PUNC_SEMICOLON>()
-                    .Return(new STReturn(t.line, expr) as STStmt))));
+                    .Return(new STReturn(t.line, expr) as Stmt))));
         }
 
     }

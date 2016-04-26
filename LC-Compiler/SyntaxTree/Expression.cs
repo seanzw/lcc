@@ -13,7 +13,7 @@ namespace lcc.SyntaxTree {
     /// <summary>
     /// The base class for all expression.
     /// </summary>
-    public abstract class Expr : STStmt {
+    public abstract class Expr : Stmt {
 
         public virtual T TypeCheck(Env env) {
             throw new NotImplementedException();
@@ -644,9 +644,9 @@ namespace lcc.SyntaxTree {
         /// <param name="env"></param>
         /// <returns></returns>
         public override T TypeCheck(Env env) {
-            var signature = env.GetSymbol(name);
-            if (!signature.HasValue) throw new ErrUndefinedIdentifier(pos, name);
-            else return signature.Value.t;
+            var entry = env.GetSymbol(name);
+            if (entry == null) throw new ErrUndefinedIdentifier(pos, name);
+            else return entry.type;
         }
 
         public readonly string name;

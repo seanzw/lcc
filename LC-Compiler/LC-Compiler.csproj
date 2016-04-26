@@ -45,7 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AST\Env.cs" />
-    <Compile Include="AST\Expression.cs" />
+    <Compile Include="AST\AST.cs" />
     <Compile Include="SyntaxTree\Env.cs" />
     <Compile Include="SyntaxTree\Exception.cs" />
     <Compile Include="SyntaxTree\Node.cs" />

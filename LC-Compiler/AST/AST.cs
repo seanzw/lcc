@@ -8,7 +8,11 @@ using System.Threading.Tasks;
 using lcc.TypeSystem;
 
 namespace lcc.AST {
-    public abstract class Expr {
+    public abstract class Node {
+
+    }
+
+    public abstract class Expr : Node {
 
     }
 
@@ -64,5 +68,10 @@ namespace lcc.AST {
         public ConstAddrObj(Entry entry) {
             this.entry = entry;
         }
+    }
+
+    public sealed class Declaration : Node {
+
+        public readonly Tuple<T, >
     }
 }

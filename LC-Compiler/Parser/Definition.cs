@@ -24,7 +24,7 @@ namespace lcc.Parser {
         /// <returns></returns>
         public static Parserc.Parser<Token.Token, STProgram> TranslationUnit() {
             return FunctionDefintion().Cast<Token.Token, Node, STFuncDef>()
-                .Or(Declaration().Cast<Token.Token, Node, STDeclaration>()).Plus()
+                .Or(Declaration().Cast<Token.Token, Node, Declaration>()).Plus()
                 .Select(nodes => new STProgram(nodes));
         }
 

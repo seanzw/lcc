@@ -12,24 +12,39 @@ namespace lcc.SyntaxTree {
         BLOCK,
         FUNC,
         FILE,
+        PARAM,
     }
 
-    public enum SymbolKind {
-        PARAMETER,
-        OBJECT,
-        TYPEDEF,
-        FUNCTION
-    }
-
-    public struct SymbolEntry {
-        public readonly T t;
-        public readonly SymbolKind kind;
-        public readonly Node node;
-        public SymbolEntry(T t, SymbolKind kind, Node node) {
-            this.t = t;
-            this.kind = kind;
-            this.node = node;
+    public abstract class SymbolEntry {
+        public enum Kind {
+            PARAMETER,
+            OBJECT,
+            TYPEDEF,
+            FUNCTION
         }
+        public readonly Kind kind;
+        public readonly T type;
+        public SymbolEntry(Kind kind, T type) {
+            this.kind = kind;
+            this.type = type;
+        }
+        public abstract Position Pos { get; }
+    }
+
+    public sealed class ObjEntry : SymbolEntry {
+        public readonly Declaration declaration;
+        public ObjEntry(T type, Declaration declaration) : base(Kind.OBJECT, type) {
+            this.declaration = declaration;
+        }
+        public override Position Pos => declaration.Pos;
+    }
+
+    public sealed class ParamEntry : SymbolEntry {
+        public readonly Param declaration;
+        public ParamEntry(T type, Param declaration) : base(Kind.PARAMETER, type) {
+            this.declaration = declaration;
+        }
+        public override Position Pos => declaration.Pos;
     }
 
     public struct TagEntry {
@@ -68,7 +83,7 @@ namespace lcc.SyntaxTree {
             /// </summary>
             /// <param name="symbol"></param>
             /// <returns></returns>
-            public SymbolEntry? GetSymbol(string symbol) {
+            public SymbolEntry GetSymbol(string symbol) {
                 if (symbols.ContainsKey(symbol)) return symbols[symbol];
                 else return null;
             }
@@ -95,6 +110,7 @@ namespace lcc.SyntaxTree {
             scopes = new Stack<Scope>();
             PushScope(ScopeKind.FILE);
             IsFuncDef = false;
+            IsFuncParam = false;
         }
 
         /// <summary>
@@ -112,7 +128,7 @@ namespace lcc.SyntaxTree {
         }
 
         /// <summary>
-        /// Add a symbol to the current scope.
+        /// Add an object symbol to the current scope.
         /// Note: 
         ///     This method won't check if the symbol is redefined,
         ///     although in this situation Add() will throw an exception.
@@ -120,9 +136,13 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <param name="symbol"></param>
         /// <param name="type"></param>
-        /// <param name="line"></param>
-        public void AddSymbol(string symbol, T type, SymbolKind kind, Node node) {
-            scopes.Peek().AddSymbol(symbol, new SymbolEntry(type, kind, node));
+        /// <param name="declaration"></param>
+        public void AddObj(string symbol, T type, Declaration declaration) {
+            scopes.Peek().AddSymbol(symbol, new ObjEntry(type, declaration));
+        }
+
+        public void AddParam(string symbol, T type, Param declaration) {
+            scopes.Peek().AddSymbol(symbol, new ParamEntry(type, declaration));
         }
 
         /// <summary>
@@ -143,7 +163,7 @@ namespace lcc.SyntaxTree {
         /// <param name="symbol"> The name of the symbol. </param>
         /// <param name="here"> Restrict the search area to the current scope. </param>
         /// <returns></returns>
-        public SymbolEntry? GetSymbol(string symbol, bool here = false) {
+        public SymbolEntry GetSymbol(string symbol, bool here = false) {
             if (here) return scopes.Peek().GetSymbol(symbol);
             else {
                 foreach (var scope in scopes) {
@@ -176,8 +196,8 @@ namespace lcc.SyntaxTree {
         /// </summary>
         public ScopeKind WhatScope => scopes.Peek().kind;
 
-        public bool IsFuncDef;
         public bool IsFuncParam;
+        public bool IsFuncDef;
 
         private Stack<Scope> scopes;
     }

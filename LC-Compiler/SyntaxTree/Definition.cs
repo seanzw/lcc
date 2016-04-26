@@ -33,8 +33,8 @@ namespace lcc.SyntaxTree {
         public STFuncDef(
             DeclSpecs specifiers,
             Declarator declarator,
-            IEnumerable<STDeclaration> declarations,
-            STStmt statement
+            IEnumerable<Declaration> declarations,
+            Stmt statement
             ) {
             this.specifiers = specifiers;
             this.declarator = declarator;
@@ -63,7 +63,7 @@ namespace lcc.SyntaxTree {
 
         public readonly DeclSpecs specifiers;
         public readonly Declarator declarator;
-        public readonly IEnumerable<STDeclaration> declarations;
-        public readonly STStmt statement;
+        public readonly IEnumerable<Declaration> declarations;
+        public readonly Stmt statement;
     }
 }

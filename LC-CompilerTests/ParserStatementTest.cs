@@ -72,9 +72,9 @@ namespace LC_CompilerTests {
     int x;
 }",
                     new STCompoundStmt(
-                        new List<STStmt> {
+                        new List<Stmt> {
                             new Id(new T_IDENTIFIER(3, "a")),
-                            new STDeclaration(
+                            new Declaration(
                                 new DeclSpecs(
                                     new List<DeclSpec> {
                                         new STTypeKeySpec(4, TypeSpec.Kind.INT)
@@ -100,7 +100,7 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserExpressionStatement() {
-            var tests = new Dictionary<string, STStmt> {
+            var tests = new Dictionary<string, Stmt> {
                 {
                     ";",
                     new STVoidStmt(1)
@@ -168,7 +168,7 @@ default: c;
                     new STSwitch(
                         2,
                         new Id(new T_IDENTIFIER(2, "x")),
-                        new STCompoundStmt(new LinkedList<STStmt>(new List<STStmt> {
+                        new STCompoundStmt(new LinkedList<Stmt>(new List<Stmt> {
                             new STCase(
                                 new ConstInt(new T_CONST_INT(3, "0", 8)),
                                 new Id(new T_IDENTIFIER(3, "a"))),
@@ -196,7 +196,7 @@ while (x < length) {
                             new Id(new T_IDENTIFIER(2, "length")),
                             STBiExpr.Op.LT),
                         new STCompoundStmt(
-                            new List<STStmt> {
+                            new List<Stmt> {
                                 new STPostStep(
                                     new Id(new T_IDENTIFIER(3, "x")),
                                     STPostStep.Kind.INC)
@@ -223,7 +223,7 @@ do {
                             new Id(new T_IDENTIFIER(4, "length")),
                             STBiExpr.Op.LT),
                         new STCompoundStmt(
-                            new List<STStmt> {
+                            new List<Stmt> {
                                 new STPostStep(
                                     new Id(new T_IDENTIFIER(3, "x")),
                                     STPostStep.Kind.INC)
@@ -258,7 +258,7 @@ for (i = 0; i < length; ++i) {
                             new Id(new T_IDENTIFIER(2, "i")),
                             STPreStep.Kind.INC),
                         new STCompoundStmt(
-                            new List<STStmt> {
+                            new List<Stmt> {
                                 new STAssignExpr(
                                     new Id(new T_IDENTIFIER(3, "x")),
                                     new Id(new T_IDENTIFIER(3, "i")),
@@ -284,7 +284,7 @@ for (;1;) ;",
 
         [TestMethod]
         public void LCCParserJumpStatement() {
-            var tests = new Dictionary<string, STStmt> {
+            var tests = new Dictionary<string, Stmt> {
                 {
                     "continue;",
                     new STContinue(1)

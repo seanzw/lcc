@@ -5,11 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.SyntaxTree {
-    public abstract class STStmt : Node {}
+    public abstract class Stmt : Node {}
 
-    public sealed class STLabeled : STStmt, IEquatable<STLabeled> {
+    public sealed class STLabeled : Stmt, IEquatable<STLabeled> {
 
-        public STLabeled(Id identifier, STStmt statement) {
+        public STLabeled(Id identifier, Stmt statement) {
             this.identifier = identifier;
             this.statement = statement;
         }
@@ -31,12 +31,12 @@ namespace lcc.SyntaxTree {
         }
 
         public readonly Id identifier;
-        public readonly STStmt statement;
+        public readonly Stmt statement;
     }
 
-    public sealed class STCase : STStmt, IEquatable<STCase> {
+    public sealed class STCase : Stmt, IEquatable<STCase> {
 
-        public STCase(Expr expr, STStmt statement) {
+        public STCase(Expr expr, Stmt statement) {
             this.expr = expr;
             this.statement = statement;
         }
@@ -58,12 +58,12 @@ namespace lcc.SyntaxTree {
         }
 
         public readonly Expr expr;
-        public readonly STStmt statement;
+        public readonly Stmt statement;
     }
 
-    public sealed class STDefault : STStmt, IEquatable<STDefault> {
+    public sealed class STDefault : Stmt, IEquatable<STDefault> {
 
-        public STDefault(STStmt statement) {
+        public STDefault(Stmt statement) {
             this.statement = statement;
         }
 
@@ -81,12 +81,12 @@ namespace lcc.SyntaxTree {
             return statement.GetHashCode();
         }
 
-        public readonly STStmt statement;
+        public readonly Stmt statement;
     }
 
-    public sealed class STCompoundStmt : STStmt, IEquatable<STCompoundStmt> {
+    public sealed class STCompoundStmt : Stmt, IEquatable<STCompoundStmt> {
 
-        public STCompoundStmt(IEnumerable<STStmt> stmts) {
+        public STCompoundStmt(IEnumerable<Stmt> stmts) {
             this.stmts = stmts;
         }
 
@@ -104,17 +104,17 @@ namespace lcc.SyntaxTree {
             return Pos.GetHashCode();
         }
 
-        public readonly IEnumerable<STStmt> stmts;
+        public readonly IEnumerable<Stmt> stmts;
     }
 
-    public sealed class STIf : STStmt, IEquatable<STIf> {
+    public sealed class STIf : Stmt, IEquatable<STIf> {
 
 
         public STIf(
             int line,
             Expr expr,
-            STStmt then,
-            STStmt other
+            Stmt then,
+            Stmt other
             ) {
             this.pos = new Position { line = line };
             this.expr = expr;
@@ -142,16 +142,16 @@ namespace lcc.SyntaxTree {
 
         private readonly Position pos;
         public readonly Expr expr;
-        public readonly STStmt then;
-        public readonly STStmt other;
+        public readonly Stmt then;
+        public readonly Stmt other;
     }
 
-    public sealed class STSwitch : STStmt, IEquatable<STSwitch> {
+    public sealed class STSwitch : Stmt, IEquatable<STSwitch> {
 
         public STSwitch(
             int line,
             Expr expr,
-            STStmt statement
+            Stmt statement
             ) {
             this.pos = new Position { line = line };
             this.expr = expr;
@@ -177,12 +177,12 @@ namespace lcc.SyntaxTree {
 
         private readonly Position pos;
         public readonly Expr expr;
-        public readonly STStmt statement;
+        public readonly Stmt statement;
     }
 
-    public sealed class STWhile : STStmt, IEquatable<STWhile> {
+    public sealed class STWhile : Stmt, IEquatable<STWhile> {
 
-        public STWhile(Expr expr, STStmt statement) {
+        public STWhile(Expr expr, Stmt statement) {
             this.expr = expr;
             this.statement = statement;
         }
@@ -204,12 +204,12 @@ namespace lcc.SyntaxTree {
         }
 
         public readonly Expr expr;
-        public readonly STStmt statement;
+        public readonly Stmt statement;
     }
 
-    public sealed class STDo : STStmt, IEquatable<STDo> {
+    public sealed class STDo : Stmt, IEquatable<STDo> {
 
-        public STDo(Expr expr, STStmt statement) {
+        public STDo(Expr expr, Stmt statement) {
             this.expr = expr;
             this.statement = statement;
         }
@@ -232,10 +232,10 @@ namespace lcc.SyntaxTree {
         }
 
         public readonly Expr expr;
-        public readonly STStmt statement;
+        public readonly Stmt statement;
     }
 
-    public sealed class STFor : STStmt, IEquatable<STFor> {
+    public sealed class STFor : Stmt, IEquatable<STFor> {
 
 
         public STFor(
@@ -243,7 +243,7 @@ namespace lcc.SyntaxTree {
             Expr init,
             Expr pred,
             Expr iter,
-            STStmt statement) {
+            Stmt statement) {
             this.pos = new Position { line = line };
             this.init = init;
             this.pred = pred;
@@ -274,10 +274,10 @@ namespace lcc.SyntaxTree {
         public readonly Expr init;
         public readonly Expr pred;
         public readonly Expr iter;
-        public readonly STStmt statement;
+        public readonly Stmt statement;
     }
 
-    public sealed class STContinue : STStmt, IEquatable<STContinue> {
+    public sealed class STContinue : Stmt, IEquatable<STContinue> {
 
         public STContinue(
             int line
@@ -302,7 +302,7 @@ namespace lcc.SyntaxTree {
         private readonly Position pos;
     }
 
-    public sealed class STBreak : STStmt, IEquatable<STBreak> {
+    public sealed class STBreak : Stmt, IEquatable<STBreak> {
 
         public STBreak(
             int line
@@ -327,7 +327,7 @@ namespace lcc.SyntaxTree {
         private readonly Position pos;
     }
 
-    public sealed class STReturn : STStmt, IEquatable<STReturn> {
+    public sealed class STReturn : Stmt, IEquatable<STReturn> {
 
         public STReturn(
             int line,
@@ -356,7 +356,7 @@ namespace lcc.SyntaxTree {
         public readonly Expr expr;
     }
 
-    public sealed class STGoto : STStmt, IEquatable<STGoto> {
+    public sealed class STGoto : Stmt, IEquatable<STGoto> {
 
         public STGoto(
             int line,
@@ -385,7 +385,7 @@ namespace lcc.SyntaxTree {
         public readonly Id label;
     }
 
-    public sealed class STVoidStmt : STStmt {
+    public sealed class STVoidStmt : Stmt {
 
         public STVoidStmt(int line) {
             this.pos = new Position { line = line };

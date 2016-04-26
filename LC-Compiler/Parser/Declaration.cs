@@ -22,16 +22,16 @@ namespace lcc.Parser {
         /// If the declaration is a typedef, add the name into the environment.
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STDeclaration> Declaration() {
+        public static Parserc.Parser<T, Declaration> Declaration() {
             return DeclarationSpecifiers()
                 .Bind(specifiers => InitDeclaratorList()
                 .Bind(declarators => Match<T_PUNC_SEMICOLON>()
                 .Bind(_ => {
-                    var decl = new STDeclaration(specifiers, declarators);
+                    var decl = new Declaration(specifiers, declarators);
                     if (decl.IsTypedef)
                         foreach (var name in decl.DeclNames)
                             Env.AddTypedefName(decl.Pos.line, name);
-                    return Result<T, STDeclaration>(decl);
+                    return Result<T, Declaration>(decl);
                 })));
         }
 

@@ -8,9 +8,9 @@ using lcc.TypeSystem;
 
 namespace lcc.SyntaxTree {
 
-    public sealed class STDeclaration : STStmt, IEquatable<STDeclaration> {
+    public sealed class Declaration : Stmt, IEquatable<Declaration> {
 
-        public STDeclaration(
+        public Declaration(
             DeclSpecs specifiers,
             IEnumerable<STInitDeclarator> declarators
             ) {
@@ -32,10 +32,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => specifiers.Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STDeclaration);
+            return Equals(obj as Declaration);
         }
 
-        public bool Equals(STDeclaration x) {
+        public bool Equals(Declaration x) {
             return x != null && x.specifiers.Equals(specifiers)
                 && x.declarators.SequenceEqual(declarators);
         }
@@ -46,10 +46,11 @@ namespace lcc.SyntaxTree {
 
         public readonly DeclSpecs specifiers;
         public readonly IEnumerable<STInitDeclarator> declarators;
+        
+        public AST.Node ToAst(Env env) {
 
-        public T TypeCheck(Env env) {
+            T type = specifiers.GetT(env);
 
-            return null;
         }
     }
 
@@ -998,7 +999,7 @@ namespace lcc.SyntaxTree {
         /// <param name="env"> Environment </param>
         /// <param name="type"> Type specified by declaration specifiers. </param>
         /// <returns></returns>
-        public Tuple<string, T> Declare(Env env, T type) {
+        public Tuple<string, T, IEnumerable<Tuple<string, T>>> Declare(Env env, T type, IEnumerable<Tuple<string, T>> ps = null) {
 
             // Add the pointer derivation.
             foreach (var pointer in pointers) {
@@ -1006,7 +1007,7 @@ namespace lcc.SyntaxTree {
             }
 
             // Get the declaration from direct declarator.
-            return direct.Declare(env, type);
+            return direct.Declare(env, type, ps);
         }
 
         public override Position Pos => direct.Pos;
@@ -1020,7 +1021,7 @@ namespace lcc.SyntaxTree {
 
     public abstract class DirDeclarator : Node {
         public abstract string Name { get; }
-        public abstract Tuple<string, T> Declare(Env env, T type);
+        public abstract Tuple<string, T, IEnumerable<Tuple<string, T>>> Declare(Env env, T type, IEnumerable<Tuple<string, T>> ps);
     }
 
     public sealed class IdDeclarator : DirDeclarator, IEquatable<IdDeclarator> {
@@ -1044,8 +1045,8 @@ namespace lcc.SyntaxTree {
             return id.GetHashCode();
         }
 
-        public override Tuple<string, T> Declare(Env env, T type) {
-            return new Tuple<string, T>(id.name, type);
+        public override Tuple<string, T, IEnumerable<Tuple<string, T>>> Declare(Env env, T type, IEnumerable<Tuple<string, T>> ps) {
+            return new Tuple<string, T, IEnumerable<Tuple<string, T>>>(id.name, type, ps);
         }
 
         public readonly Id id;
@@ -1071,8 +1072,8 @@ namespace lcc.SyntaxTree {
         public override int GetHashCode() {
             return declarator.GetHashCode();
         }
-        public override Tuple<string, T> Declare(Env env, T type) {
-            return declarator.Declare(env, type);
+        public override Tuple<string, T, IEnumerable<Tuple<string, T>>> Declare(Env env, T type, IEnumerable<Tuple<string, T>> ps) {
+            return declarator.Declare(env, type, ps);
         }
 
         public readonly Declarator declarator;
@@ -1115,37 +1116,24 @@ namespace lcc.SyntaxTree {
         }
 
         /// <summary>
-        /// Get the name and the type of the function.
-        /// 
-        /// This function will handle the scope if this is not a part of function definition.
+        /// Get the name and the type of the function, as well as the parameter names.
         /// </summary>
         /// <param name="env"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override Tuple<string, T> Declare(Env env, T type) {
+        public override Tuple<string, T, IEnumerable<Tuple<string, T>>> Declare(Env env, T type, IEnumerable<Tuple<string, T>> ps) {
             if (parameters == null) {
-
                 // This is an identifier list.
                 if (identifiers.Count() == 0) {
-                    return direct.Declare(env, type.Func(Enumerable.Empty<T>(), false));
-                }
-
-                if (!env.IsFuncDef) {
-                    throw new Error(Pos, "an identifier list in a function declarator that is not part of a definition of that function shall be empty.");
-                } else {
+                    return direct.Declare(env, type.Func(Enumerable.Empty<T>(), false), Enumerable.Empty<Tuple<string, T>>());
+                } else if (env.IsFuncDef) {
                     throw new Error(Pos, "sorry identifier list in a function definition is not supported yet.");
+                } else {
+                    throw new Error(Pos, "an identifier list in a function declarator that is not part of a definition of that function shall be empty.");
                 }
-
             } else {
-
-                if (!env.IsFuncDef) {
-                    env.PushScope(ScopeKind.FUNC);
-                }
-                type = Declare(env, type, parameters, isEllipis, Pos);
-                if (!env.IsFuncDef) {
-                    env.PopScope();
-                }
-                return direct.Declare(env, type);
+                var result = GetT(env, type, parameters, isEllipis, Pos);
+                return direct.Declare(env, result.Item1, result.Item2);
             }
         }
 
@@ -1155,7 +1143,6 @@ namespace lcc.SyntaxTree {
         /// Constraints:
         ///     1. If the declarator is part of function definition, all the parameter should have name.
         /// 
-        /// Notice that the caller should handle the scopes of the function.
         /// </summary>
         /// <param name="env"></param>
         /// <param name="type"></param>
@@ -1163,7 +1150,7 @@ namespace lcc.SyntaxTree {
         /// <param name="isEllipis"></param>
         /// <param name="pos"></param>
         /// <returns></returns>
-        public static T Declare(Env env, T type, IEnumerable<Param> parameters, bool isEllipis, Position pos) {
+        public static Tuple<T, IEnumerable<Tuple<string, T>>> GetT(Env env, T type, IEnumerable<Param> parameters, bool isEllipis, Position pos) {
 
             // A function declarator shall not specify a return type that is a function type or an array type.
             if (type.IsFunc) {
@@ -1175,7 +1162,9 @@ namespace lcc.SyntaxTree {
                     string.Format("A function declaration shall not specify a return type that is an array type: {0}.", type));
             }
 
-            LinkedList<T> ps = new LinkedList<T>();
+            // Start evaluate the parameters.
+            env.PushScope(ScopeKind.PARAM);
+            LinkedList<Tuple<string, T>> ps = new LinkedList<Tuple<string, T>>();
 
             // Special case for (void).
             if (parameters.Count() == 1) {
@@ -1184,7 +1173,7 @@ namespace lcc.SyntaxTree {
                     throw new Error(parameters.First().Pos, "parameter for function definition should have a name.");
                 }
                 if (!param.Item2.nake.Equals(TVoid.Instance)) {
-                    ps.AddLast(param.Item2);
+                    ps.AddLast(param);
                 }
             } else {
                 // Evaluate each parameter.
@@ -1193,11 +1182,13 @@ namespace lcc.SyntaxTree {
                     if (env.IsFuncDef && param.Item1 == null) {
                         throw new Error(parameter.Pos, "parameter for function definition should have a name.");
                     }
-                    ps.AddLast(param.Item2);
+                    ps.AddLast(param);
                 }
             }
 
-            return type.Func(ps, isEllipis);
+            env.PopScope();
+
+            return new Tuple<T, IEnumerable<Tuple<string, T>>>(type.Func(from p in ps select p.Item2, isEllipis), ps);
         }
 
         public readonly DirDeclarator direct;
@@ -1259,8 +1250,8 @@ namespace lcc.SyntaxTree {
         /// <param name="env"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override Tuple<string, T> Declare(Env env, T type) {
-            return direct.Declare(env, Declare(env, type, expr, Pos));
+        public override Tuple<string, T, IEnumerable<Tuple<string, T>>> Declare(Env env, T type, IEnumerable<Tuple<string, T>> ps) {
+            return direct.Declare(env, Declare(env, type, expr, Pos), null);
         }
 
         public static T Declare(Env env, T type, Expr expr, Position pos) {
@@ -1393,7 +1384,7 @@ namespace lcc.SyntaxTree {
                 // 4. All the parameter name shall be different.
                 var entry = env.GetSymbol(name, true);
                 if (env.GetSymbol(name, true) != null) {
-                    throw new ErrRedefineSymbol(Pos, name, entry.Value.node.Pos);
+                    throw new ErrRedefineSymbol(Pos, name, entry.Pos);
                 }
 
             } else if (absDeclarator != null) {
@@ -1413,7 +1404,7 @@ namespace lcc.SyntaxTree {
 
             // Push the name into the environment.
             if (name != null) {
-                env.AddSymbol(name, type, SymbolKind.PARAMETER, this);
+                env.AddParam(name, type, this);
             }
 
             // Turn off the env.IsFuncParam switch.
@@ -1444,6 +1435,11 @@ namespace lcc.SyntaxTree {
 
         public override int GetHashCode() {
             return specifiers.GetHashCode();
+        }
+
+        public T GetT(Env env) {
+            T type = specifiers.GetT(env);
+            return declarator == null ? type : declarator.Declare(env, type);
         }
 
         public override Position Pos => specifiers.Pos;
@@ -1638,9 +1634,7 @@ namespace lcc.SyntaxTree {
             if (parameters == null) {
                 return direct.Declare(env, type.Func(Enumerable.Empty<T>(), false));
             } else {
-                env.PushScope(ScopeKind.FUNC);
-                type = FuncDeclarator.Declare(env, type, parameters, isEllipis, Pos);
-                env.PopScope();
+                type = FuncDeclarator.GetT(env, type, parameters, isEllipis, Pos).Item1;
                 return direct.Declare(env, type);
             }
 

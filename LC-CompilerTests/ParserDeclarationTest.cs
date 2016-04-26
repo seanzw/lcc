@@ -867,12 +867,12 @@ int a, int b, double c, ...
 
         [TestMethod]
         public void LCCParserDeclaration() {
-            var dict = new Dictionary<string, STDeclaration> {
+            var dict = new Dictionary<string, Declaration> {
                 {
                     @"
 int foo(int a, int b, double c, ...);
 ",
-                    new STDeclaration(
+                    new Declaration(
                         new DeclSpecs(
                             new List<DeclSpec> {
                                 new STTypeKeySpec(2, TypeSpec.Kind.INT)
@@ -925,7 +925,7 @@ int foo(int a, int b, double c, ...);
                     @"
 int foo(a, b, c);
 ",
-                    new STDeclaration(
+                    new Declaration(
                         new DeclSpecs(
                             new List<DeclSpec> {
                                 new STTypeKeySpec(2, TypeSpec.Kind.INT)
@@ -950,7 +950,7 @@ int foo(a, b, c);
                     @"
 int foo();
 ",
-                    new STDeclaration(
+                    new Declaration(
                         new DeclSpecs(
                             new List<DeclSpec> {
                                 new STTypeKeySpec(2, TypeSpec.Kind.INT)
@@ -1062,10 +1062,10 @@ int foo();
         public void LCCParserTypeRedefined() {
             lcc.Parser.Env.PushScope();
             lcc.Parser.Env.AddTypedefName(1, "a");
-            var tests = new Dictionary<string, STDeclaration> {
+            var tests = new Dictionary<string, Declaration> {
                 {
                     "typedef int a;",
-                    new STDeclaration(
+                    new Declaration(
                         new DeclSpecs(
                             new List<DeclSpec> {
                                 new STTypeKeySpec(1, TypeSpec.Kind.INT)
