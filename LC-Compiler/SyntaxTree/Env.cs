@@ -10,9 +10,9 @@ namespace lcc.SyntaxTree {
 
     public enum ScopeKind {
         BLOCK,
-        FUNC,
+        FUNCTION,
         FILE,
-        PARAM,
+        PROTOTYPE,
     }
 
     public abstract class SymbolEntry {
@@ -22,60 +22,94 @@ namespace lcc.SyntaxTree {
             TYPEDEF,
             FUNCTION
         }
+        public enum Link {
+            NONE,
+            INTERNAL,
+            EXTERNAL
+        }
+        public readonly string symbol;
         public readonly Kind kind;
         public readonly T type;
-        public SymbolEntry(Kind kind, T type) {
+        public readonly Link link;
+        public SymbolEntry(string symbol, Kind kind, T type, Link link) {
+            this.symbol = symbol;
             this.kind = kind;
             this.type = type;
+            this.link = link;
         }
         public abstract Position Pos { get; }
     }
 
     public sealed class ObjEntry : SymbolEntry {
-        public enum Store {
-            NONE,
+        public enum Storage {
             AUTO,
-            EXTERN,
+            EXTERNAL,
             STATIC,
             REGISTER,
         }
         public readonly Declaration declaration;
-        public readonly Store store;
-        public ObjEntry(T type, Declaration declaration, Store store) : base(Kind.OBJECT, type) {
+        public readonly Storage storage;
+        public ObjEntry(string symbol, T type, Declaration declaration, Link link, Storage storage)
+            : base(symbol, Kind.OBJECT, type, link) {
             this.declaration = declaration;
-            this.store = store;
+            this.storage = storage;
+        }
+        public override string ToString() {
+            return string.Format("{0,-12} {1,-20} {2,-10} {3,-10}\n", symbol, type, link, storage);
         }
         public override Position Pos => declaration.Pos;
     }
 
+    /// <summary>
+    /// Represent a parameter.
+    /// An identifier declared to be a function parameter has no linkage.
+    /// </summary>
     public sealed class ParamEntry : SymbolEntry {
         public readonly Param declaration;
-        public ParamEntry(T type, Param declaration) : base(Kind.PARAMETER, type) {
+        public ParamEntry(string symbol, T type, Param declaration)
+            : base(symbol, Kind.PARAMETER, type, Link.NONE) {
             this.declaration = declaration;
+        }
+        public override string ToString() {
+            return string.Format("{0,-12} {1,-20}\n", symbol, type);
         }
         public override Position Pos => declaration.Pos;
     }
 
+    /// <summary>
+    /// An identifier declared to be anything other than an object or a function has no linkage.
+    /// </summary>
     public sealed class TypeEntry : SymbolEntry {
         public readonly Declaration declaration;
-        public TypeEntry(T type, Declaration declaration) : base(Kind.TYPEDEF, type) {
+        public TypeEntry(string symbol, T type, Declaration declaration)
+            : base(symbol, Kind.TYPEDEF, type, Link.NONE) {
             this.declaration = declaration;
+        }
+        public override string ToString() {
+            return string.Format("{0,-12} {1,-20}\n", symbol, type);
         }
         public override Position Pos => declaration.Pos;
     }
 
     public sealed class FuncEntry : SymbolEntry {
         public readonly Declaration declaration;
-        public FuncEntry(T type, Declaration declaration) : base(Kind.FUNCTION, type) {
+        public FuncEntry(string symbol, T type, Declaration declaration, Link link)
+            : base(symbol, Kind.FUNCTION, type, link) {
+            if (link == Link.NONE) throw new ArgumentException("Linkage for a function can only be internal or external.");
             this.declaration = declaration;
+        }
+        public override string ToString() {
+            return string.Format("{0,-12} {1,-20} {2,-10}\n", symbol, type, link);
         }
         public override Position Pos => declaration.Pos;
     }
 
-    public struct TagEntry {
-        public TUnqualified type;
+    public class TagEntry {
+        public readonly string tag;
+        public readonly TUnqualified type;
         public TypeUserSpec node;
-        public TagEntry(TUnqualified type, TypeUserSpec node) {
+        public TagEntry(string tag, TUnqualified type, TypeUserSpec node) {
+            this.tag = tag;
             this.type = type;
             this.node = node;
         }
@@ -93,14 +127,14 @@ namespace lcc.SyntaxTree {
         private sealed class Scope {
             public Scope(ScopeKind kind) {
                 this.kind = kind;
-                symbols = new Dictionary<string, SymbolEntry>();
-                tags = new Dictionary<string, TagEntry>();
+                symbols = new LinkedList<SymbolEntry>();
+                tags = new LinkedList<TagEntry>();
             }
-            public void AddSymbol(string symbol, SymbolEntry signature) {
-                symbols.Add(symbol, signature);
+            public void AddSymbol(SymbolEntry entry) {
+                symbols.AddLast(entry);
             }
-            public void AddTag(string tag, TagEntry signature) {
-                tags.Add(tag, signature);
+            public void AddTag(TagEntry signature) {
+                tags.AddLast(signature);
             }
 
             /// <summary>
@@ -109,8 +143,9 @@ namespace lcc.SyntaxTree {
             /// <param name="symbol"></param>
             /// <returns></returns>
             public SymbolEntry GetSymbol(string symbol) {
-                if (symbols.ContainsKey(symbol)) return symbols[symbol];
-                else return null;
+                foreach (var s in symbols)
+                    if (s.symbol == symbol) return s;
+                return null;
             }
 
             /// <summary>
@@ -118,14 +153,32 @@ namespace lcc.SyntaxTree {
             /// </summary>
             /// <param name="tag"></param>
             /// <returns></returns>
-            public TagEntry? GetTag(string tag) {
-                if (tags.ContainsKey(tag)) return tags[tag];
-                else return null;
+            public TagEntry GetTag(string tag) {
+                foreach (var t in tags)
+                    if (t.tag == tag) return t;
+                return null;
+            }
+
+            public void Dump(int tab, StringBuilder builder) {
+                StringBuilder sb = new StringBuilder();
+                string tt = "";
+                while (tab > 0) { tt += "  "; tab--; }
+                Action<SymbolEntry.Kind> dumpSymbol = (kind) => {
+                    sb.Append(tt + kind.ToString() + "\n");
+                    foreach (var s in symbols)
+                        if (s.kind == kind)
+                            sb.Append(tt + s.ToString());
+                };
+                dumpSymbol(SymbolEntry.Kind.TYPEDEF);
+                dumpSymbol(SymbolEntry.Kind.FUNCTION);
+                dumpSymbol(SymbolEntry.Kind.PARAMETER);
+                dumpSymbol(SymbolEntry.Kind.OBJECT);
+                builder.Insert(0, sb.ToString());
             }
 
             public readonly ScopeKind kind;
-            private readonly Dictionary<string, SymbolEntry> symbols;
-            private readonly Dictionary<string, TagEntry> tags;
+            private readonly LinkedList<SymbolEntry> symbols;
+            private readonly LinkedList<TagEntry> tags;
         }
 
         /// <summary>
@@ -162,20 +215,20 @@ namespace lcc.SyntaxTree {
         /// <param name="symbol"></param>
         /// <param name="type"></param>
         /// <param name="declaration"></param>
-        public void AddObj(string symbol, T type, Declaration declaration, ObjEntry.Store store) {
-            scopes.Peek().AddSymbol(symbol, new ObjEntry(type, declaration, store));
+        public void AddObj(string symbol, T type, SymbolEntry.Link link, ObjEntry.Storage storage, Declaration declaration) {
+            scopes.Peek().AddSymbol(new ObjEntry(symbol, type, declaration, link, storage));
         }
 
         public void AddParam(string symbol, T type, Param declaration) {
-            scopes.Peek().AddSymbol(symbol, new ParamEntry(type, declaration));
+            scopes.Peek().AddSymbol(new ParamEntry(symbol, type, declaration));
         }
 
         public void AddTypeDef(string symbol, T type, Declaration declaration) {
-            scopes.Peek().AddSymbol(symbol, new TypeEntry(type, declaration));
+            scopes.Peek().AddSymbol(new TypeEntry(symbol, type, declaration));
         }
 
-        public void AddFunc(string symbol, T type, Declaration declaration) {
-            scopes.Peek().AddSymbol(symbol, new FuncEntry(type, declaration));
+        public void AddFunc(string symbol, T type, SymbolEntry.Link link, Declaration declaration) {
+            scopes.Peek().AddSymbol(new FuncEntry(symbol, type, declaration, link));
         }
 
         /// <summary>
@@ -185,8 +238,8 @@ namespace lcc.SyntaxTree {
         /// <param name="t"></param>
         /// <param name="definition"></param>
         public TagEntry AddTag(string tag, TUnqualified type, TypeUserSpec node) {
-            var entry = new TagEntry(type, node);
-            scopes.Peek().AddTag(tag, entry);
+            var entry = new TagEntry(tag, type, node);
+            scopes.Peek().AddTag(entry);
             return entry;
         }
 
@@ -213,7 +266,7 @@ namespace lcc.SyntaxTree {
         /// <param name="tag"> Name of the tag. </param>
         /// <param name="here"> Retrict the search area to the current scope. </param>
         /// <returns></returns>
-        public TagEntry? GetTag(string tag, bool here = false) {
+        public TagEntry GetTag(string tag, bool here = false) {
             if (here) return scopes.Peek().GetTag(tag);
             else {
                 foreach (var scope in scopes) {
@@ -228,6 +281,19 @@ namespace lcc.SyntaxTree {
         /// Get the current scope kind.
         /// </summary>
         public ScopeKind WhatScope => scopes.Peek().kind;
+
+        /// <summary>
+        /// Dump the environment.
+        /// </summary>
+        /// <returns></returns>
+        public string Dump() {
+            int n = scopes.Count - 1;
+            StringBuilder builder = new StringBuilder();
+            foreach (var scope in scopes) {
+                scope.Dump(n--, builder);
+            }
+            return builder.ToString();
+        }
 
         public bool IsFuncParam;
         public bool IsFuncDef;

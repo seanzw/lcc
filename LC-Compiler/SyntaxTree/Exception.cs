@@ -44,7 +44,16 @@ namespace lcc.SyntaxTree {
     }
 
     public sealed class ErrIllegalInitializer : Error {
-        public ErrIllegalInitializer(Position pos) : base(pos, "Illegal initializer (only variables can be initialized") { }
+        public ErrIllegalInitializer(Position pos) : base(pos, "illegal initializer (only variables can be initialized.") { }
+    }
+
+    public sealed class EIllegalStorageSpecifier : Error {
+        public EIllegalStorageSpecifier(Position pos) : base(pos, "illegal storage specifier.") { }
+    }
+
+    public sealed class EInternalAfterExternal : Error {
+        public EInternalAfterExternal(Position pos, Position previous)
+            : base(pos, string.Format("internal linkage after prior external linkage declaration at {0}", previous)) { }
     }
 
     public sealed class ErrTypeRedefinition : Error {

@@ -83,6 +83,36 @@ namespace lcc.SyntaxTree {
                     if (result.Item3 != null) {
                         throw new ErrIllegalInitializer(declarator.Pos);
                     }
+
+                    // Do not support 'inline' function now.
+                    if (specifiers.function == STFuncSpec.Kind.INLINE) {
+                        throw new Error(Pos, "sorry we do not support inline function now.");
+                    }
+
+                    // Determine the linkage of the function.
+                    // In file scope, if the declaration contains 'static', then the linkage is set to internal.
+                    // Otherwise, the only legal storage specifier is extern or none, in which case the linkage is external.
+                    SymbolEntry.Link link;
+                    if (env.WhatScope == ScopeKind.FILE) {
+                        switch (specifiers.storage) {
+                            case STStoreSpec.Kind.STATIC: link = SymbolEntry.Link.INTERNAL; break;
+                            case STStoreSpec.Kind.NONE:
+                            case STStoreSpec.Kind.EXTERN: link = SymbolEntry.Link.EXTERNAL; break;
+                            case STStoreSpec.Kind.AUTO:
+                            case STStoreSpec.Kind.REGISTER: throw new EIllegalStorageSpecifier(Pos);
+                            default: throw new InvalidOperationException("Unknown storage specifier!");
+                        }
+                    } else {
+                        switch (specifiers.storage) {
+                            case STStoreSpec.Kind.NONE:
+                            case STStoreSpec.Kind.EXTERN: link = SymbolEntry.Link.EXTERNAL; break;
+                            case STStoreSpec.Kind.STATIC:
+                            case STStoreSpec.Kind.AUTO:
+                            case STStoreSpec.Kind.REGISTER: throw new EIllegalStorageSpecifier(Pos);
+                            default: throw new InvalidOperationException("Unknown storage specifier!");
+                        }
+                    }
+
                     // Check if there is already a definition.
                     SymbolEntry entry = env.GetSymbol(result.Item1, true);
                     if (entry != null) {
@@ -92,14 +122,79 @@ namespace lcc.SyntaxTree {
                         if (!entry.type.Equals(result.Item2)) {
                             throw new ERedefineSymbolTypeConflict(declarator.Pos, result.Item1, entry.type, result.Item2);
                         }
-                    } else {
 
+                        // There is a prior declaration, determine the linkage with following table.
+                        // Legend: i = interal, e external, / = or
+                        // Current          Prior           Result-Linkage
+                        // e                i / e           same as prior
+                        // i                i               i
+                        // i                e               undefined behavior, I choose to throw an error.
+                        if (link == SymbolEntry.Link.INTERNAL && entry.link == SymbolEntry.Link.EXTERNAL) {
+                            throw new EInternalAfterExternal(Pos, entry.Pos);
+                        }
+                    } else {
+                        // This is a new declaration.
+                        env.AddFunc(result.Item1, result.Item2, link, this);
                     }
                 } else {
                     // This is a object.
                     // Check the inline specifier.
                     if (specifiers.function != STFuncSpec.Kind.NONE) {
                         throw new Error(Pos, "inline can only appear on functions.");
+                    }
+
+                    // Determine the linkage and storage of the object.
+                    SymbolEntry.Link link;
+                    ObjEntry.Storage storage;
+                    if (env.WhatScope == ScopeKind.FILE) {
+                        // This is file scope.
+                        switch (specifiers.storage) {
+                            case STStoreSpec.Kind.STATIC:
+                                link = SymbolEntry.Link.INTERNAL;
+                                storage = ObjEntry.Storage.STATIC;
+                                break;
+                            case STStoreSpec.Kind.EXTERN:
+                                // A little hack to set the storage to extern (which should be static) when explicitly using extern specifier.
+                                link = SymbolEntry.Link.EXTERNAL;
+                                storage = ObjEntry.Storage.EXTERNAL;
+                                break;
+                            case STStoreSpec.Kind.NONE:
+                                // By default the object in file scope has external linkage.
+                                link = SymbolEntry.Link.EXTERNAL;
+                                storage = ObjEntry.Storage.STATIC;
+                                break;
+                            case STStoreSpec.Kind.REGISTER:
+                            case STStoreSpec.Kind.AUTO:
+                                throw new EIllegalStorageSpecifier(Pos);
+                            default:
+                                throw new InvalidOperationException("Unknown storage specifier!");
+                        }
+                    } else {
+                        // This is other scope.
+                        switch (specifiers.storage) {
+                            case STStoreSpec.Kind.STATIC:
+                                link = SymbolEntry.Link.INTERNAL;
+                                storage = ObjEntry.Storage.STATIC;
+                                break;
+                            case STStoreSpec.Kind.EXTERN:
+                                link = SymbolEntry.Link.EXTERNAL;
+                                storage = ObjEntry.Storage.EXTERNAL;
+                                break;
+                            case STStoreSpec.Kind.AUTO:
+                            case STStoreSpec.Kind.NONE:
+                                // By default the object in block scope has none linkage and auto storage.
+                                link = SymbolEntry.Link.NONE;
+                                storage = ObjEntry.Storage.AUTO;
+                                break;
+                            case STStoreSpec.Kind.REGISTER:
+                                // In this implementation, register is the same as auto.
+                                // But we need the information to make sure that objects declared with 'register' will not be taken address.
+                                link = SymbolEntry.Link.NONE;
+                                storage = ObjEntry.Storage.REGISTER;
+                                break;
+                            default:
+                                throw new InvalidOperationException("Unknown storage specifier!");
+                        }
                     }
 
                     // Check if there is already a definition.
@@ -111,12 +206,11 @@ namespace lcc.SyntaxTree {
                         throw new ERedefineObject(declarator.Pos, result.Item1, entry.Pos);
                     } else {
                         // Add this to the environment.
-                        env.AddObj(result.Item1, result.Item2, this, specifiers.Storage);
+                        env.AddObj(result.Item1, result.Item2, link, storage, this);
                         // Push the ast node.
                         nodes.AddLast(new AST.Declaration(result.Item2, result.Item3));
                     }
                 }
-                
             }
 
             // Return the nodes.
@@ -210,7 +304,6 @@ namespace lcc.SyntaxTree {
         }
 
         public bool IsTypeDef => storage == STStoreSpec.Kind.TYPEDEF;
-        public ObjEntry.Store Storage => GetStore(storage);
 
         /// <summary>
         /// Evaluate the type specifiers and get the unqualified type.
@@ -241,18 +334,6 @@ namespace lcc.SyntaxTree {
                 qualifiers.Contains(TypeQual.Kind.RESTRICT), 
                 qualifiers.Contains(TypeQual.Kind.VOLATILE));
             return TQualifiers.dict[tuple];
-        }
-
-        public static ObjEntry.Store GetStore(STStoreSpec.Kind storage) {
-            switch (storage) {
-                case STStoreSpec.Kind.NONE: return ObjEntry.Store.NONE;
-                case STStoreSpec.Kind.EXTERN: return ObjEntry.Store.EXTERN;
-                case STStoreSpec.Kind.REGISTER: return ObjEntry.Store.REGISTER;
-                case STStoreSpec.Kind.STATIC: return ObjEntry.Store.STATIC;
-                case STStoreSpec.Kind.AUTO: return ObjEntry.Store.AUTO;
-                default:
-                    throw new ArgumentException("Unknown storage specifier.");
-            }
         }
 
         private readonly Position pos;
@@ -718,10 +799,10 @@ namespace lcc.SyntaxTree {
                 var tagEntry = env.GetTag(tag, false);
                 if (tagEntry != null) {
                     // This tag has been declaraed, check if this is the same type.
-                    if (IsSameType(tagEntry.Value))
-                        return tagEntry.Value.type;
+                    if (IsSameType(tagEntry))
+                        return tagEntry.type;
                     else
-                        throw new ErrDeclareTagAsDifferentType(pos, tag, tagEntry.Value.node.Pos, tagEntry.Value.type);
+                        throw new ErrDeclareTagAsDifferentType(pos, tag, tagEntry.node.Pos, tagEntry.type);
                 } else {
                     // This tag has not been declaraed, make it an incomplete type.
                     TStructUnion type = kind == Kind.STRUCT ? new TStruct(tag) as TStructUnion : new TUnion(tag);
@@ -744,12 +825,12 @@ namespace lcc.SyntaxTree {
                     var tmp = env.GetTag(tag, true);
                     if (tmp != null) {
                         // This tag has been declaraed, check if this is the same type
-                        if (!IsSameType(tmp.Value))
-                            throw new ErrDeclareTagAsDifferentType(pos, tag, tmp.Value.node.Pos, tmp.Value.type);
+                        if (!IsSameType(tmp))
+                            throw new ErrDeclareTagAsDifferentType(pos, tag, tmp.node.Pos, tmp.type);
                         // Check if this type is already complete.
-                        if (tmp.Value.type.IsComplete)
-                            throw new ErrRedefineTag(pos, tag, tmp.Value.node.Pos);
-                        entry = tmp.Value;
+                        if (tmp.type.IsComplete)
+                            throw new ErrRedefineTag(pos, tag, tmp.node.Pos);
+                        entry = tmp;
                         type = entry.type as TStructUnion;
                     } else {
                         type = kind == Kind.STRUCT ? new TStruct(tag) as TStructUnion : new TUnion(tag);
@@ -1249,7 +1330,7 @@ namespace lcc.SyntaxTree {
             }
 
             // Start evaluate the parameters.
-            env.PushScope(ScopeKind.PARAM);
+            env.PushScope(ScopeKind.PROTOTYPE);
             LinkedList<Tuple<string, T>> ps = new LinkedList<Tuple<string, T>>();
 
             // Special case for (void).
@@ -1856,5 +1937,4 @@ namespace lcc.SyntaxTree {
         public readonly Expr expr;
         public readonly Id id;
     }
-
 }

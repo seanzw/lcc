@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using lcc.TypeSystem;
 using lcc.Token;
 using lcc.SyntaxTree;
+using Parserc;
 
 namespace LC_CompilerTests {
     public partial class SyntaxTreeTest {
@@ -128,6 +129,28 @@ namespace LC_CompilerTests {
                 else
                     Assert.IsNull(type.Item3);
             }
+        }
+
+        [TestMethod]
+        public void LCCTCEnvDump() {
+            string source = @"
+typedef int x;
+typedef double xx;
+int a;
+extern int b;
+static int c;
+int foo();
+static int bar();
+x foo2(x);
+";
+            var env = new Env();
+            var result = Utility.parse(source, lcc.Parser.Parser.Declaration().Plus().End());
+            Assert.AreEqual(1, result.Count());
+            Assert.IsFalse(result.First().Remain.More());
+            foreach (var declaration in result.First().Value) {
+                declaration.ToAST(env);
+            }
+            Console.WriteLine(env.Dump());
         }
     }
 }

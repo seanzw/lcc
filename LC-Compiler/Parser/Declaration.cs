@@ -399,12 +399,16 @@ namespace lcc.Parser {
         ///     : identifier
         ///     | identifier , identifier-list
         ///     ;
+        ///     
+        /// Notice that in parameter, if an identifier can be treated either as a typedef name or as a parameter name,
+        /// it shall be taken as a typedef name.
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<T, DirDeclarator> DirectDeclaratorPrime(DirDeclarator direct) {
+            var paramterIdentifier = Identifier().Bind(id => Env.IsTypedefName(id.name) ? Zero<T, Id>() : Result<T, Id>(id));
             return ParameterTypeList().ParentLR()
                     .Bind(tuple => DirectDeclaratorPrime(new FuncDeclarator(direct, tuple.Item1, tuple.Item2)))
-                .Or(Identifier().ManySeperatedBy(Match<T_PUNC_COMMA>()).ParentLR()
+                .Or(paramterIdentifier.ManySeperatedBy(Match<T_PUNC_COMMA>()).ParentLR()
                     .Bind(identifiers => DirectDeclaratorPrime(new FuncDeclarator(direct, identifiers))))
                 .Or(Match<T_PUNC_SUBSCRIPTL>().Then(TypeQualifier().Many())
                     .Bind(qualifiers => AssignmentExpression().ElseNull()
