@@ -191,5 +191,25 @@ struct Node {
             Console.WriteLine(t.Dump());
             Console.WriteLine(t.Bits);
         }
+
+        [TestMethod]
+        public void LCCTCEnumDecl() {
+            string source = @"
+enum hue {
+    chartreuse,
+    burgundy,
+    claret = 20,
+    winedark
+}";
+            var env = new Env();
+            var result = Utility.parse(source, lcc.Parser.Parser.EnumSpecifier().End());
+            Assert.AreEqual(1, result.Count());
+            Assert.IsFalse(result.First().Remain.More());
+            TEnum t = result.First().Value.GetT(env).nake as TEnum;
+            Assert.IsNotNull(t);
+            Console.WriteLine(env.Dump());
+            Console.WriteLine(t.Dump());
+            Console.WriteLine(t.Bits);
+        }
     }
 }

@@ -70,6 +70,10 @@ namespace lcc.TypeSystem {
             return tag.GetHashCode();
         }
 
+        public virtual void Define(IEnumerable<Tuple<string, T>> fields) {
+            throw new InvalidOperationException("Can't define a struct which is not an undefined struct!");
+        }
+
         public string Dump() {
             if (!IsComplete) {
                 return "incomplete struct " + tag;
@@ -103,7 +107,7 @@ namespace lcc.TypeSystem {
             return string.Format("struct {0}", tag);
         }
 
-        public override void DefStructUnion(IEnumerable<Tuple<string, T>> fields) {
+        public override void Define(IEnumerable<Tuple<string, T>> fields) {
             if (this.fields != null)
                 throw new InvalidOperationException("Can't complete a complete struct.");
             var tmp = new LinkedList<Field>();
@@ -152,7 +156,7 @@ namespace lcc.TypeSystem {
                 else return size;
             }
         }
-        public override void DefStructUnion(IEnumerable<Tuple<string, T>> fields) {
+        public override void Define(IEnumerable<Tuple<string, T>> fields) {
             if (this.fields != null) throw new InvalidOperationException("Can't define a union which is alread defined.");
             this.fields = from field in fields select new Field(field.Item1, field.Item2, 0);
             size = this.fields.Aggregate(0, (size, field) => Math.Max(size, field.type.Bits));

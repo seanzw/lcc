@@ -187,14 +187,14 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserEnumerator() {
-            Dictionary<string, STEnum> dict = new Dictionary<string, STEnum> {
+            Dictionary<string, lcc.SyntaxTree.Enum> dict = new Dictionary<string, lcc.SyntaxTree.Enum> {
                 {
                     "ZERO",
-                    new STEnum(new Id(new T_IDENTIFIER(1, "ZERO")), null)
+                    new lcc.SyntaxTree.Enum(new Id(new T_IDENTIFIER(1, "ZERO")), null)
                 },
                 {
                     "ZERO = 1",
-                    new STEnum(
+                    new lcc.SyntaxTree.Enum(
                         new Id(new T_IDENTIFIER(1, "ZERO")),
                         new ConstInt(new T_CONST_INT(1, "1", 10))
                     )
@@ -208,15 +208,15 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserEnumeratorList() {
-            var dict = new Dictionary<string, IEnumerable<STEnum>> {
+            var dict = new Dictionary<string, IEnumerable<lcc.SyntaxTree.Enum>> {
                 {
                     "ZERO, ONE = 1, TWO",
-                    new List<STEnum> {
-                        new STEnum(new Id(new T_IDENTIFIER(1, "ZERO")), null),
-                        new STEnum(
+                    new List<lcc.SyntaxTree.Enum> {
+                        new lcc.SyntaxTree.Enum(new Id(new T_IDENTIFIER(1, "ZERO")), null),
+                        new lcc.SyntaxTree.Enum(
                             new Id(new T_IDENTIFIER(1, "ONE")),
                             new ConstInt(new T_CONST_INT(1, "1", 10))),
-                        new STEnum(new Id(new T_IDENTIFIER(1, "TWO")), null),
+                        new lcc.SyntaxTree.Enum(new Id(new T_IDENTIFIER(1, "TWO")), null),
                     }
                 },
             };
@@ -228,7 +228,7 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserEnumSpecifier() {
-            Dictionary<string, STEnumSpec> dict = new Dictionary<string, STEnumSpec> {
+            Dictionary<string, EnumSpec> dict = new Dictionary<string, EnumSpec> {
                 {
                     @"
 enum Foo {
@@ -236,22 +236,22 @@ enum Foo {
     ONE = 1,
     TWO
 }",
-                    new STEnumSpec(
+                    new EnumSpec(
                         2,
                         new Id(new T_IDENTIFIER(2, "Foo")),
-                        new LinkedList<STEnum>(new List<STEnum> {
-                            new STEnum(new Id(new T_IDENTIFIER(3, "ZERO")), null),
-                            new STEnum(
+                        new LinkedList<lcc.SyntaxTree.Enum>(new List<lcc.SyntaxTree.Enum> {
+                            new lcc.SyntaxTree.Enum(new Id(new T_IDENTIFIER(3, "ZERO")), null),
+                            new lcc.SyntaxTree.Enum(
                                 new Id(new T_IDENTIFIER(4, "ONE")),
                                 new ConstInt(new T_CONST_INT(4, "1", 10))),
-                            new STEnum(new Id(new T_IDENTIFIER(5, "TWO")), null),
+                            new lcc.SyntaxTree.Enum(new Id(new T_IDENTIFIER(5, "TWO")), null),
                         }))
                 },
                 {
                     @"
 enum what
 ",
-                    new STEnumSpec(
+                    new EnumSpec(
                         2,
                         new Id(new T_IDENTIFIER(2, "what")),
                         null)
@@ -263,20 +263,20 @@ enum {
     ONE = 1,
     TWO,
 }",
-                    new STEnumSpec(
+                    new EnumSpec(
                         2,
                         null,
-                        new LinkedList<STEnum>(new List<STEnum> {
-                            new STEnum(new Id(new T_IDENTIFIER(3, "ZERO")), null),
-                            new STEnum(
+                        new LinkedList<lcc.SyntaxTree.Enum>(new List<lcc.SyntaxTree.Enum> {
+                            new lcc.SyntaxTree.Enum(new Id(new T_IDENTIFIER(3, "ZERO")), null),
+                            new lcc.SyntaxTree.Enum(
                                 new Id(new T_IDENTIFIER(4, "ONE")),
                                 new ConstInt(new T_CONST_INT(4, "1", 10))),
-                            new STEnum(new Id(new T_IDENTIFIER(5, "TWO")), null),
+                            new lcc.SyntaxTree.Enum(new Id(new T_IDENTIFIER(5, "TWO")), null),
                         }))
                 },
                 {
                     "enum test",
-                    new STEnumSpec(1, new Id(new T_IDENTIFIER(1, "test")), null)
+                    new EnumSpec(1, new Id(new T_IDENTIFIER(1, "test")), null)
                 },
             };
 
@@ -442,7 +442,7 @@ foo(int a, int b, double c, ...)
                     ProcessSS(
                         new List<TypeSpecQual> {
                             new TypeQual(1, TypeQual.Kind.CONST),
-                            new STEnumSpec(1, new Id(new T_IDENTIFIER(1, "what")), null)
+                            new EnumSpec(1, new Id(new T_IDENTIFIER(1, "what")), null)
                         })
                 },
             };
@@ -461,7 +461,7 @@ foo(int a, int b, double c, ...)
                         ProcessSS(
                             new List<TypeSpecQual> {
                                 new TypeQual(1, TypeQual.Kind.CONST),
-                                new STEnumSpec(1, new Id(new T_IDENTIFIER(1, "what")), null)
+                                new EnumSpec(1, new Id(new T_IDENTIFIER(1, "what")), null)
                             }),
                         new List<StructDeclarator> {
                             new StructDeclarator(
@@ -519,7 +519,7 @@ struct ss {
                             new StructDeclaration(
                                 ProcessSS(new List<TypeSpecQual> {
                                     new TypeQual(4, TypeQual.Kind.CONST),
-                                    new STEnumSpec(4, new Id(new T_IDENTIFIER(4, "what")), null)
+                                    new EnumSpec(4, new Id(new T_IDENTIFIER(4, "what")), null)
                                 }),
                                 new List<StructDeclarator> {
                                     new StructDeclarator(

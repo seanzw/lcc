@@ -69,24 +69,6 @@ namespace lcc.TypeSystem {
         }
 
         /// <summary>
-        /// Gives the definition of a struct by specifying its fields.
-        /// This also completes the incomplete struct.
-        /// </summary>
-        /// <param name="fields"></param>
-        public virtual void DefStructUnion(IEnumerable<Tuple<string, T>> fields) {
-            throw new InvalidOperationException("Can't define a struct which is not an undefined struct!");
-        }
-
-        /// <summary>
-        /// Gives the definition of a enum by specifying the enumerators.
-        /// Notice that even without definition, a enum type is still a complete type, but is not defined.
-        /// </summary>
-        /// <param name="enums"></param>
-        public virtual void DefEnum(IDictionary<string, int> enums) {
-            throw new InvalidOperationException("Can't define a enum which is not an undefined enum!");
-        }
-
-        /// <summary>
         /// Gives the definition of a function.
         /// Notice that even without definition, a function type is still a complete type.
         /// </summary>
@@ -123,6 +105,7 @@ namespace lcc.TypeSystem {
         public virtual bool IsVarArray => false;
         public virtual bool IsStruct => false;
         public virtual bool IsUnion => false;
+        public virtual bool IsEnum => false;
         public virtual bool IsBitField => false;
 
         /// <summary>
@@ -375,8 +358,6 @@ namespace lcc.TypeSystem {
         }
 
         public void DefArr(int n) { nake.DefArr(n); }
-        public void DefStructUnion(IEnumerable<Tuple<string, T>> fields) { nake.DefStructUnion(fields); }
-        public void DefEnum(IDictionary<string, int> enums) { nake.DefEnum(enums); }
         public void DefFunc() { nake.DefFunc(); }
 
         public bool IsComplete => nake.IsComplete;

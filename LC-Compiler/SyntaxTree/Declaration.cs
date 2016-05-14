@@ -140,7 +140,7 @@ namespace lcc.SyntaxTree {
                     // This is a object.
                     // Check the inline specifier.
                     if (specifiers.function != FuncSpec.Kind.NONE) {
-                        throw new Error(Pos, "inline can only appear on functions.");
+                        throw new Error(Pos, "inline can only appear on functions");
                     }
 
                     // Determine the linkage and storage of the object.
@@ -231,10 +231,10 @@ namespace lcc.SyntaxTree {
             FuncSpec.Kind function = FuncSpec.Kind.NONE
             ) {
             this.storage = storage;
-            this.keys = keys;
+            this.keys = keys.OrderBy(key => key); // Sort the key for comparing in the dictionary.
             this.function = function;
-            qualifiers = GetQualifiers(from s in all.OfType<TypeQual>() select s.kind);
-            pos = all.First().Pos;
+            this.qualifiers = GetQualifiers(from s in all.OfType<TypeQual>() select s.kind);
+            this.pos = all.First().Pos;
         }
 
         public DeclSpecs(
@@ -246,8 +246,8 @@ namespace lcc.SyntaxTree {
             this.storage = storage;
             this.function = function;
             this.specifier = specifier;
-            qualifiers = GetQualifiers(from s in all.OfType<TypeQual>() select s.kind);
-            pos = all.First().Pos;
+            this.qualifiers = GetQualifiers(from s in all.OfType<TypeQual>() select s.kind);
+            this.pos = all.First().Pos;
         }
 
         public bool Equals(DeclSpecs x) {
@@ -333,7 +333,7 @@ namespace lcc.SyntaxTree {
         #region TypeSpecifier Map
         private class ListComparer : IEqualityComparer<IEnumerable<TypeSpec.Kind>> {
             public bool Equals(IEnumerable<TypeSpec.Kind> x, IEnumerable<TypeSpec.Kind> y) {
-                return (from s in y orderby s ascending select s).SequenceEqual(x);
+                return y.SequenceEqual(x);
             }
 
             public int GetHashCode(IEnumerable<TypeSpec.Kind> x) {
@@ -744,7 +744,7 @@ namespace lcc.SyntaxTree {
             if (kind != Kind.STRUCT && kind != Kind.UNION)
                 throw new ArgumentException("This must be either struct or union!");
             pos = new Position { line = line };
-            this.identifier = identifier;
+            this.id = identifier;
             this.declarations = declarations;
         }
 
@@ -756,7 +756,7 @@ namespace lcc.SyntaxTree {
 
         public bool Equals(StructUnionSpec x) {
             return x != null
-                && NullableEquals(x.identifier, identifier)
+                && NullableEquals(x.id, id)
                 && NullableEquals(x.declarations, declarations);
         }
 
@@ -785,7 +785,7 @@ namespace lcc.SyntaxTree {
 
             if (declarations == null) {
                 // struct/union tag
-                var tag = identifier.name;
+                var tag = id.name;
                 
                 // Check the tag in all scopes.
                 var tagEntry = env.GetTag(tag, false);
@@ -798,14 +798,14 @@ namespace lcc.SyntaxTree {
                 } else {
                     // This tag has not been declaraed, make it an incomplete type.
                     TStructUnion type = kind == Kind.STRUCT ? new TStruct(tag) as TStructUnion : new TUnion(tag);
-                    env.AddTag(identifier.name, type, this);
+                    env.AddTag(tag, type, this);
                     return type.None();
                 }
             } else {
                 TStructUnion type;
                 TagEntry entry;
 
-                if (identifier == null) {
+                if (id == null) {
                     // struct/union { ... }
                     // should declare a unique new type.
                     type = kind == Kind.STRUCT ? new TStruct() as TStructUnion : new TUnion();
@@ -813,7 +813,7 @@ namespace lcc.SyntaxTree {
                 } else {
                     // struct/union tag { ... }
                     // Check if this tag has been declared in the current scope.
-                    var tag = identifier.name;
+                    var tag = id.name;
                     var tmp = env.GetTag(tag, true);
                     if (tmp != null) {
                         // This tag has been declaraed, check if this is the same type
@@ -839,7 +839,7 @@ namespace lcc.SyntaxTree {
                     (acc, decl) => acc.Concat(decl.GetFields(env)));
 
                 // Complete the definition of the struct/union with all these structs.
-                type.DefStructUnion(fields);
+                type.Define(fields);
 
                 // If the struct-declaration-list contains no named members, the behavior is undefined.
                 // I choose to throw an error.
@@ -862,7 +862,7 @@ namespace lcc.SyntaxTree {
         /// <summary>
         /// Nullable.
         /// </summary>
-        public readonly Id identifier;
+        public readonly Id id;
         /// <summary>
         /// Nullable.
         /// </summary>
@@ -1016,9 +1016,9 @@ namespace lcc.SyntaxTree {
         public readonly Expr expr;
     }
 
-    public sealed class STEnumSpec : TypeUserSpec, IEquatable<STEnumSpec> {
+    public sealed class EnumSpec : TypeUserSpec, IEquatable<EnumSpec> {
 
-        public STEnumSpec(int line, Id id, IEnumerable<STEnum> enums)
+        public EnumSpec(int line, Id id, IEnumerable<Enum> enums)
             : base(Kind.ENUM) {
             pos = new Position { line = line };
             this.id = id;
@@ -1028,10 +1028,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STEnumSpec);
+            return Equals(obj as EnumSpec);
         }
 
-        public bool Equals(STEnumSpec x) {
+        public bool Equals(EnumSpec x) {
             return x != null
                 && NullableEquals(x.id, id)
                 && NullableEquals(x.enums, enums);
@@ -1042,55 +1042,76 @@ namespace lcc.SyntaxTree {
         }
 
         public override T GetT(Env env) {
-            throw new NotImplementedException();
+            if (enums == null) {
+                // enum identifier
+                var tag = id.name;
+
+                // Check the tag in all scopes.
+                var tagEntry = env.GetTag(tag, false);
+                if (tagEntry != null) {
+                    // This tag has been declaraed, check if this is the same type.
+                    if (tagEntry.type.IsEnum)
+                        return tagEntry.type.None();
+                    else
+                        throw new ErrDeclareTagAsDifferentType(pos, tag, tagEntry.node.Pos, tagEntry.type);
+                } else {
+                    // This tag has not been declaraed, add it to the env.
+                    TEnum type = new TEnum(tag);
+                    env.AddTag(tag, type, this);
+                    return type.None();
+                }
+            } else {
+                TEnum type;
+                TagEntry entry;
+
+                if (id == null) {
+                    // enum { ... }
+                    // Declare a unique new enum type.
+                    type = new TEnum();
+                    entry = env.AddTag(type.tag, type, this);
+                } else {
+                    // enum id { ... }
+                    // Check if the tag has been declared.
+                    entry = env.GetTag(id.name, true);
+                    if (entry != null) {
+                        // This tag has been declaraed, check if this is the same type
+                        if (!entry.type.IsEnum)
+                            throw new ErrDeclareTagAsDifferentType(pos, id.name, entry.node.Pos, entry.type);
+                        // Check if this type is already defined.
+                        if (entry.type.IsDefined)
+                            throw new ErrRedefineTag(pos, id.name, entry.node.Pos);
+                        type = entry.type as TEnum;
+                    } else {
+                        type = new TEnum(id.name);
+                        entry = env.AddTag(type.tag, type, this);
+                    }
+                }
+
+                // Add all the constant enums.
+                int v = 0;
+                LinkedList<Tuple<string, int>> results = new LinkedList<Tuple<string, int>>();
+                foreach (var item in enums) {
+                    var result = item.Evaluate(env, type, v);
+                    results.AddLast(result);
+                    v = result.Item2 + 1;
+                }
+
+                // Define the enum type.
+                type.Define(results);
+                entry.node = this;
+
+                return type.None();
+            }
         }
-
-        //public override TUnqualified GetTUnqualified(ASTEnv env) {
-        //    if (enums == null) {
-        //        // enum identifier
-        //    } else {
-
-        //        // If the type has a tag, check if redeclared.
-        //        if (id != null && env.ContainsSymbolInCurrentScope(id.name)) {
-
-        //        }
-
-        //        // Make the new enum type.
-        //        TypeEnum type = id == null ? new TypeEnum() : new TypeEnum(id.name);
-
-        //        // Make the complete type for all the enums.
-        //        T constType = new lcc.Type.Type(type, new lcc.Type.Type.Qualifier(true, false, false));
-
-        //        foreach (var enumerator in enums) {
-
-        //            ASTid id = enumerator.id;
-
-        //            // First check if the name has been defined.
-        //            if (env.ContainsSymbolInCurrentScope(id.name)) {
-        //                Utility.TCErrRedecl(env.GetDeclaration(id.name), id);
-        //            }
-
-        //            // Check if the enumverator has an initializer.
-        //            if (enumerator.expr != null) {
-
-        //            }
-
-        //            // Add every enumerator into the environment.
-        //            env.AddSymbol(id.name, type, id.line);
-        //        }
-
-        //        return type;
-        //    }
-        //}
 
         private readonly Position pos;
         public readonly Id id;
-        public readonly IEnumerable<STEnum> enums;
+        public readonly IEnumerable<Enum> enums;
     }
 
-    public sealed class STEnum : Node, IEquatable<STEnum> {
+    public sealed class Enum : Node, IEquatable<Enum> {
 
-        public STEnum(Id id, Expr expr) {
+        public Enum(Id id, Expr expr) {
             this.id = id;
             this.expr = expr;
         }
@@ -1098,10 +1119,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => id.Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STEnum);
+            return Equals(obj as Enum);
         }
 
-        public bool Equals(STEnum x) {
+        public bool Equals(Enum x) {
             return x != null
                 && x.id.Equals(id)
                 && NullableEquals(expr, x.expr);
@@ -1109,6 +1130,32 @@ namespace lcc.SyntaxTree {
 
         public override int GetHashCode() {
             return id.GetHashCode();
+        }
+
+        public Tuple<string, int> Evaluate(Env env, TEnum type, int v) {
+
+            // Check the id.
+            var entry = env.GetSymbol(id.name, true);
+            if (entry != null) {
+                throw new ERedefineSymbolAsDiffKind(Pos, id.name, entry.Pos);
+            }
+
+            AST.ConstIntExpr e;
+            if (expr != null) {
+                e = expr.GetConstExpr(env) as AST.ConstIntExpr;
+                if (e == null) {
+                    throw new Error(Pos, "enumeration constant requires constant integer");
+                }
+            } else {
+                e = new AST.ConstIntExpr(TInt.Instance, v);
+            }
+
+            if (e.value > TInt.Instance.MAX || e.value < TInt.Instance.MIN) {
+                throw new Error(Pos, "enumeration constant shall be representable as an int");
+            }
+
+            env.AddEnum(id.name, type, e, this);
+            return new Tuple<string, int>(id.name, (int)(e.value));
         }
 
         public readonly Id id;

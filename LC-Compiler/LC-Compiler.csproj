@@ -72,7 +72,7 @@
     <Compile Include="TypeSystem\T.cs" />
     <Compile Include="TypeSystem\TArr.cs" />
     <Compile Include="TypeSystem\TBool.cs" />
-    <Compile Include="TypeSystem\TypeEnum.cs" />
+    <Compile Include="TypeSystem\TEnum.cs" />
     <Compile Include="TypeSystem\TypeFloat.cs" />
     <Compile Include="TypeSystem\TFunc.cs" />
     <Compile Include="TypeSystem\TInt.cs" />

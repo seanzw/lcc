@@ -302,15 +302,15 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STEnumSpec> EnumSpecifier() {
+        public static Parserc.Parser<T, EnumSpec> EnumSpecifier() {
             return Get<T_KEY_ENUM>().Bind(e =>
                 Identifier().Bind(identifier =>
                     EnumeratorList().Option(Match<T_PUNC_COMMA>()).BracelLR()
-                        .Select(enumerators => new STEnumSpec(e.line, identifier, enumerators))
-                    .Or(Result<T, STEnumSpec>(new STEnumSpec(e.line, identifier, null))))
+                        .Select(enumerators => new EnumSpec(e.line, identifier, enumerators))
+                    .Or(Result<T, EnumSpec>(new EnumSpec(e.line, identifier, null))))
                 .Or(EnumeratorList().Option(Match<T_PUNC_COMMA>()).Bracket(
                         Match<T_PUNC_BRACEL>(),
-                        Match<T_PUNC_BRACER>()).Select(enumerators => new STEnumSpec(e.line, null, enumerators))));
+                        Match<T_PUNC_BRACER>()).Select(enumerators => new EnumSpec(e.line, null, enumerators))));
         }
 
         /// <summary>
@@ -320,7 +320,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, IEnumerable<STEnum>> EnumeratorList() {
+        public static Parserc.Parser<T, IEnumerable<SyntaxTree.Enum>> EnumeratorList() {
             return Enumerator().PlusSeperatedBy(Match<T_PUNC_COMMA>());
         }
 
@@ -331,9 +331,9 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STEnum> Enumerator() {
+        public static Parserc.Parser<T, SyntaxTree.Enum> Enumerator() {
             return Identifier().Bind(i => Match<T_PUNC_ASSIGN>().Then(ConstantExpression()).ElseNull()
-                .Select(expr => new STEnum(i, expr)));
+                .Select(expr => new SyntaxTree.Enum(i, expr)));
         }
 
         /// <summary>
