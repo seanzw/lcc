@@ -48,8 +48,8 @@ namespace lcc.Parser {
             else if (stors.Count() == 1) storage = stors.First().kind;
 
             // At most one function specifier.
-            var funcs = ss.OfType<STFuncSpec>();
-            STFuncSpec.Kind function = STFuncSpec.Kind.NONE;
+            var funcs = ss.OfType<FuncSpec>();
+            FuncSpec.Kind function = FuncSpec.Kind.NONE;
             if (funcs.Count() > 1) return Zero<T, DeclSpecs>();
             else if (funcs.Count() == 1) function = funcs.First().kind;
 
@@ -162,7 +162,7 @@ namespace lcc.Parser {
                 .Else(StructUnionSpecifier())
                 .Else(EnumSpecifier())
                 .Else(Identifier().Bind(identifier => {
-                    return Env.IsTypedefName(identifier.name) ? Result<T, TypeSpec>(new STTypedefName(identifier))
+                    return Env.IsTypedefName(identifier.name) ? Result<T, TypeSpec>(new TypedefName(identifier))
                         : Zero<T, TypeSpec>();
                 }));
         }
@@ -356,8 +356,8 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STFuncSpec> FunctionSpecifier() {
-            return Get<T_KEY_INLINE>().Select(t => new STFuncSpec(t.line, STFuncSpec.Kind.INLINE));
+        public static Parserc.Parser<T, FuncSpec> FunctionSpecifier() {
+            return Get<T_KEY_INLINE>().Select(t => new FuncSpec(t.line, FuncSpec.Kind.INLINE));
         }
 
 

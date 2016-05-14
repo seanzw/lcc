@@ -35,6 +35,12 @@ namespace lcc.TypeSystem {
         public override int GetHashCode() {
             return bits;
         }
+        public override string ToString() {
+            return string.Format("_Bool({0})", bits);
+        }
+        public static TBoolBit New(int bits) {
+            return new TBoolBit(bits);
+        }
     }
 
     public sealed class TIntBit : TBitField {
@@ -51,6 +57,12 @@ namespace lcc.TypeSystem {
         public override int GetHashCode() {
             return bits;
         }
+        public override string ToString() {
+            return string.Format("int({0})", bits);
+        }
+        public static TIntBit New(int bits) {
+            return new TIntBit(bits);
+        }
     }
 
     public sealed class TUIntBit : TBitField {
@@ -66,6 +78,12 @@ namespace lcc.TypeSystem {
         }
         public override int GetHashCode() {
             return bits;
+        }
+        public override string ToString() {
+            return string.Format("unsigned int({0})", bits);
+        }
+        public static TUIntBit New(int bits) {
+            return new TUIntBit(bits);
         }
     }
 }

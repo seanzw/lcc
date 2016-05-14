@@ -20,7 +20,8 @@ namespace lcc.SyntaxTree {
             PARAMETER,
             OBJECT,
             TYPEDEF,
-            FUNCTION
+            FUNCTION,
+            MEMBER
         }
         public enum Link {
             NONE,
@@ -58,6 +59,18 @@ namespace lcc.SyntaxTree {
             return string.Format("{0,-12} {1,-20} {2,-10} {3,-10}\n", symbol, type, link, storage);
         }
         public override Position Pos => declaration.Pos;
+    }
+
+    public sealed class MemEntry : SymbolEntry {
+        public readonly StructDeclarator declarator;
+        public MemEntry(string symbol, T type, StructDeclarator declarator)
+            : base(symbol, Kind.MEMBER, type, Link.NONE) {
+            this.declarator = declarator;
+        }
+        public override string ToString() {
+            return string.Format("{0,-12} {1,-20} {2,-10}\n", symbol, type, link);
+        }
+        public override Position Pos => declarator.Pos;
     }
 
     /// <summary>
@@ -173,6 +186,7 @@ namespace lcc.SyntaxTree {
                 dumpSymbol(SymbolEntry.Kind.FUNCTION);
                 dumpSymbol(SymbolEntry.Kind.PARAMETER);
                 dumpSymbol(SymbolEntry.Kind.OBJECT);
+                dumpSymbol(SymbolEntry.Kind.MEMBER);
                 builder.Insert(0, sb.ToString());
             }
 
@@ -217,6 +231,10 @@ namespace lcc.SyntaxTree {
         /// <param name="declaration"></param>
         public void AddObj(string symbol, T type, SymbolEntry.Link link, ObjEntry.Storage storage, Declaration declaration) {
             scopes.Peek().AddSymbol(new ObjEntry(symbol, type, declaration, link, storage));
+        }
+
+        public void AddMem(string symbol, T type, StructDeclarator declarator) {
+            scopes.Peek().AddSymbol(new MemEntry(symbol, type, declarator));
         }
 
         public void AddParam(string symbol, T type, Param declaration) {

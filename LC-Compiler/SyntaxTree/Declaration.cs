@@ -54,7 +54,7 @@ namespace lcc.SyntaxTree {
                 if (specifiers.storage == STStoreSpec.Kind.TYPEDEF) {
                     // This is a typedef declaration.
                     // Check the inline specifier.
-                    if (specifiers.function != STFuncSpec.Kind.NONE) {
+                    if (specifiers.function != FuncSpec.Kind.NONE) {
                         throw new Error(Pos, "inline can only appear on functions.");
                     }
 
@@ -85,7 +85,7 @@ namespace lcc.SyntaxTree {
                     }
 
                     // Do not support 'inline' function now.
-                    if (specifiers.function == STFuncSpec.Kind.INLINE) {
+                    if (specifiers.function == FuncSpec.Kind.INLINE) {
                         throw new Error(Pos, "sorry we do not support inline function now.");
                     }
 
@@ -139,7 +139,7 @@ namespace lcc.SyntaxTree {
                 } else {
                     // This is a object.
                     // Check the inline specifier.
-                    if (specifiers.function != STFuncSpec.Kind.NONE) {
+                    if (specifiers.function != FuncSpec.Kind.NONE) {
                         throw new Error(Pos, "inline can only appear on functions.");
                     }
 
@@ -228,7 +228,7 @@ namespace lcc.SyntaxTree {
             IEnumerable<DeclSpec> all,
             STStoreSpec.Kind storage,
             IEnumerable<TypeSpec.Kind> keys,
-            STFuncSpec.Kind function = STFuncSpec.Kind.NONE
+            FuncSpec.Kind function = FuncSpec.Kind.NONE
             ) {
             this.storage = storage;
             this.keys = keys;
@@ -241,7 +241,7 @@ namespace lcc.SyntaxTree {
             IEnumerable<DeclSpec> all,
             STStoreSpec.Kind storage,
             TypeUserSpec specifier,
-            STFuncSpec.Kind function = STFuncSpec.Kind.NONE
+            FuncSpec.Kind function = FuncSpec.Kind.NONE
             ) {
             this.storage = storage;
             this.function = function;
@@ -282,7 +282,7 @@ namespace lcc.SyntaxTree {
         /// <summary>
         /// At most one function specifier (inline).
         /// </summary>
-        public readonly STFuncSpec.Kind function;
+        public readonly FuncSpec.Kind function;
 
         /// <summary>
         /// All the type specifiers EXCEPT struct, union, enum, typedef.
@@ -295,34 +295,26 @@ namespace lcc.SyntaxTree {
         public readonly TypeUserSpec specifier;
 
         /// <summary>
-        /// Get the qualified type as LValue.
+        /// Get the qualified type.
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
         public T GetT(Env env) {
-            return GetTUnqualified(env).Qualify(qualifiers);
-        }
 
-        public bool IsTypeDef => storage == STStoreSpec.Kind.TYPEDEF;
-
-        /// <summary>
-        /// Evaluate the type specifiers and get the unqualified type.
-        /// </summary>
-        /// <param name="env"></param>
-        /// <returns></returns>
-        private TUnqualified GetTUnqualified(Env env) {
             if (keys != null) {
                 // This is built-in type.
-                if (dict.ContainsKey(keys)) return dict[keys];
+                if (dict.ContainsKey(keys)) return dict[keys].Qualify(qualifiers);
                 else throw new Error(pos, string.Format("Unkown type: {0}", keys.Aggregate("", (str, key) => str + " " + key)));
             } else if (specifier != null) {
                 // This is a user-defined type.
-                return specifier.GetTUnqualified(env);
+                return specifier.GetT(env).Qualify(qualifiers);
             } else {
                 // Error!
                 throw new Error(pos, "At least one type specifier should be given.");
             }
         }
+
+        public bool IsTypeDef => storage == STStoreSpec.Kind.TYPEDEF;
 
         /// <summary>
         /// Evaluate the type qualifiers.
@@ -341,7 +333,7 @@ namespace lcc.SyntaxTree {
         #region TypeSpecifier Map
         private class ListComparer : IEqualityComparer<IEnumerable<TypeSpec.Kind>> {
             public bool Equals(IEnumerable<TypeSpec.Kind> x, IEnumerable<TypeSpec.Kind> y) {
-                return x.SequenceEqual(y);
+                return (from s in y orderby s ascending select s).SequenceEqual(x);
             }
 
             public int GetHashCode(IEnumerable<TypeSpec.Kind> x) {
@@ -738,7 +730,7 @@ namespace lcc.SyntaxTree {
     /// </summary>
     public abstract class TypeUserSpec : TypeSpec {
         public TypeUserSpec(Kind kind) : base(kind) { }
-        public abstract TUnqualified GetTUnqualified(Env env);
+        public abstract T GetT(Env env);
     }
 
     public sealed class StructUnionSpec : TypeUserSpec, IEquatable<StructUnionSpec> {
@@ -784,7 +776,7 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        public override TUnqualified GetTUnqualified(Env env) {
+        public override T GetT(Env env) {
 
             Func<TagEntry, bool> IsSameType = (tagEntry) => {
                 if (kind == Kind.STRUCT) return tagEntry.type.IsStruct;
@@ -800,14 +792,14 @@ namespace lcc.SyntaxTree {
                 if (tagEntry != null) {
                     // This tag has been declaraed, check if this is the same type.
                     if (IsSameType(tagEntry))
-                        return tagEntry.type;
+                        return tagEntry.type.None();
                     else
                         throw new ErrDeclareTagAsDifferentType(pos, tag, tagEntry.node.Pos, tagEntry.type);
                 } else {
                     // This tag has not been declaraed, make it an incomplete type.
                     TStructUnion type = kind == Kind.STRUCT ? new TStruct(tag) as TStructUnion : new TUnion(tag);
                     env.AddTag(identifier.name, type, this);
-                    return type;
+                    return type.None();
                 }
             } else {
                 TStructUnion type;
@@ -847,19 +839,21 @@ namespace lcc.SyntaxTree {
                     (acc, decl) => acc.Concat(decl.GetFields(env)));
 
                 // Complete the definition of the struct/union with all these structs.
-                if (kind == Kind.STRUCT) {
-                    type.DefStruct(fields);
-                } else {
-                    type.DefUnion(fields);
+                type.DefStructUnion(fields);
+
+                // If the struct-declaration-list contains no named members, the behavior is undefined.
+                // I choose to throw an error.
+                if (type.fields.Count() == 0) {
+                    throw new Error(Pos, "no named members in the declaration list");
                 }
 
                 // Update the entry and set the node to this syntax tree node.
                 entry.node = this;
 
-                // Pop a new scope.
+                // Pop to the outer scope.
                 env.PopScope();
 
-                return type;
+                return type.None();
             }
         }
 
@@ -961,19 +955,61 @@ namespace lcc.SyntaxTree {
         /// <returns></returns>
         public Tuple<string, T> GetField(Env env, T type) {
 
-
+            string name = null;
             if (declarator != null) {
-
+                var result = declarator.Declare(env, type);
+                if (result.Item2.IsFunc) {
+                    throw new Error(Pos, "Function type in a struct.");
+                }
+                if (!result.Item2.IsComplete) {
+                    throw new Error(Pos, "Incomplete type in a struct.");
+                }
+                // Check the name.
+                var entry = env.GetSymbol(result.Item1, true);
+                if (entry != null) {
+                    throw new ERedefineObject(Pos, result.Item1, entry.Pos);
+                }
+                name = result.Item1;
+                type = result.Item2;
             }
 
             // Whether a bit field.
-            if (expr == null) {
+            if (expr != null) {
 
-            } else {
+                // A bit-field shall have a type that is a qualified or unqualified version of
+                // _Bool, signed int, unsigned int.
+                if (!type.nake.Equals(TInt.Instance) && !type.nake.Equals(TUInt.Instance) && !type.nake.Equals(TBool.Instance)) {
+                    throw new Error(Pos, string.Format("illegal bit-field type: {0}", type));
+                }
 
+                AST.ConstIntExpr c = expr.GetConstExpr(env) as AST.ConstIntExpr;
+                if (c == null) {
+                    throw new Error(Pos, "bit-field width should be a constant integer");
+                }
+                if (c.value < 0) {
+                    throw new Error(Pos, "bit-field width should be a nonnegative value");
+                }
+                if (c.value > type.Bits) {
+                    throw new Error(Pos, "bit-field width should not exceed the width of the object type");
+                }
+                if (c.value == 0 && declarator != null) {
+                    throw new Error(Pos, "bit-field width 0 shall have no declarator");
+                }
+                
+                if (type.nake.Equals(TInt.Instance)) {
+                    type = TIntBit.New((int)(c.value)).Qualify(type.qualifiers);
+                } else if (type.nake.Equals(TUInt.Instance)) {
+                    type = TUIntBit.New((int)(c.value)).Qualify(type.qualifiers);
+                } else {
+                    type = TBoolBit.New((int)(c.value)).Qualify(type.qualifiers);
+                }
             }
 
-            throw new NotImplementedException();
+            // Declare the field in the environment.
+            if (name != null) {
+                env.AddMem(name, type, this);
+            }
+            return new Tuple<string, T>(name, type);
         }
 
         public readonly Declarator declarator;
@@ -1005,7 +1041,7 @@ namespace lcc.SyntaxTree {
             return Pos.GetHashCode();
         }
 
-        public override TUnqualified GetTUnqualified(Env env) {
+        public override T GetT(Env env) {
             throw new NotImplementedException();
         }
 
@@ -1110,14 +1146,14 @@ namespace lcc.SyntaxTree {
         private readonly Position pos;
     }
 
-    public sealed class STFuncSpec : DeclSpec, IEquatable<STFuncSpec> {
+    public sealed class FuncSpec : DeclSpec, IEquatable<FuncSpec> {
 
         public enum Kind {
             NONE,
             INLINE
         }
 
-        public STFuncSpec(int line, Kind kind) {
+        public FuncSpec(int line, Kind kind) {
             this.pos = new Position { line = line };
             this.kind = kind;
         }
@@ -1125,10 +1161,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STFuncSpec);
+            return Equals(obj as FuncSpec);
         }
 
-        public bool Equals(STFuncSpec x) {
+        public bool Equals(FuncSpec x) {
             return x != null && x.pos.Equals(pos) && x.kind == kind;
         }
 
@@ -1814,27 +1850,34 @@ namespace lcc.SyntaxTree {
         public readonly bool isEllipis;
     }
 
-    public sealed class STTypedefName : TypeUserSpec, IEquatable<STTypedefName> {
+    public sealed class TypedefName : TypeUserSpec, IEquatable<TypedefName> {
 
-        public STTypedefName(Id identifier) : base(Kind.TYPEDEF) {
+        public TypedefName(Id identifier) : base(Kind.TYPEDEF) {
             name = identifier.name;
             pos = identifier.Pos;
         }
 
-        public bool Equals(STTypedefName x) {
+        public bool Equals(TypedefName x) {
             return x != null && x.name.Equals(name) && x.pos.Equals(pos);
         }
 
         public override bool Equals(object obj) {
-            return Equals(obj as STTypedefName);
+            return Equals(obj as TypedefName);
         }
 
         public override int GetHashCode() {
             return Pos.GetHashCode();
         }
 
-        public override TUnqualified GetTUnqualified(Env env) {
-            throw new NotImplementedException();
+        public override T GetT(Env env) {
+            var entry = env.GetSymbol(name);
+            if (entry == null) {
+                throw new Error(Pos, "unknown typedef name: " + name);
+            } else if (entry.kind != SymbolEntry.Kind.TYPEDEF) {
+                throw new Error(Pos, string.Format("symbol {0} is not a typedef name.", name));
+            } else {
+                return entry.type;
+            }
         }
 
         public override Position Pos => pos;

@@ -152,5 +152,44 @@ x foo2(x);
             }
             Console.WriteLine(env.Dump());
         }
+
+        [TestMethod]
+        public void LCCTCStructDecl() {
+            string source = @"
+struct A {
+    int a;
+    char f;
+    int c;
+    int x:3, :0;
+    int y:30, z:4;
+    unsigned int w:3, ww:5;
+}";
+            var env = new Env();
+            var result = Utility.parse(source, lcc.Parser.Parser.StructUnionSpecifier().End());
+            Assert.AreEqual(1, result.Count());
+            Assert.IsFalse(result.First().Remain.More());
+            TStruct t = result.First().Value.GetT(env).nake as TStruct;
+            Assert.IsNotNull(t);
+            Console.WriteLine(env.Dump());
+            Console.WriteLine(t.Dump());
+            Console.WriteLine(t.Bits);
+        }
+
+        [TestMethod]
+        public void LCCTCStructRecursiveDecl() {
+            string source = @"
+struct Node {
+    struct Node* next;
+}";
+            var env = new Env();
+            var result = Utility.parse(source, lcc.Parser.Parser.StructUnionSpecifier().End());
+            Assert.AreEqual(1, result.Count());
+            Assert.IsFalse(result.First().Remain.More());
+            TStruct t = result.First().Value.GetT(env).nake as TStruct;
+            Assert.IsNotNull(t);
+            Console.WriteLine(env.Dump());
+            Console.WriteLine(t.Dump());
+            Console.WriteLine(t.Bits);
+        }
     }
 }

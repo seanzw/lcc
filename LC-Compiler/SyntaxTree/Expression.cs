@@ -22,6 +22,10 @@ namespace lcc.SyntaxTree {
         public virtual AST.Expr ToAST(Env env) {
             throw new NotImplementedException();
         }
+
+        public virtual AST.ConstExpr GetConstExpr(Env env) {
+            return null;
+        }
     }
 
     public sealed class STCommaExpr : Expr, IEquatable<STCommaExpr> {
@@ -660,6 +664,15 @@ namespace lcc.SyntaxTree {
             this.pos = pos;
         }
 
+        /// <summary>
+        /// For constant, ToAST is the same as GetConstExpr.
+        /// </summary>
+        /// <param name="env"></param>
+        /// <returns></returns>
+        public override AST.Expr ToAST(Env env) {
+            return GetConstExpr(env);
+        }
+
         public override Position Pos => pos;
 
         protected static Func<char, bool> IsOctal = (char c) => c >= '0' && c <= '7';
@@ -780,7 +793,7 @@ namespace lcc.SyntaxTree {
             return pos.GetHashCode();
         }
 
-        public override AST.Expr ToAST(Env env) {
+        public override AST.ConstExpr GetConstExpr(Env env) {
             return new AST.ConstIntExpr(type, value);
         }
 
@@ -847,7 +860,7 @@ namespace lcc.SyntaxTree {
             return pos.GetHashCode();
         }
 
-        public override AST.Expr ToAST(Env env) {
+        public override AST.ConstExpr GetConstExpr(Env env) {
             return new AST.ConstIntExpr(TChar.Instance, values.First());
         }
 
@@ -1020,7 +1033,7 @@ namespace lcc.SyntaxTree {
                 && x.t.Equals(t);
         }
 
-        public override AST.Expr ToAST(Env env) {
+        public override AST.ConstExpr GetConstExpr(Env env) {
             return new AST.ConstFloatExpr(t, value);
         }
 

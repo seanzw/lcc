@@ -73,17 +73,8 @@ namespace lcc.TypeSystem {
         /// This also completes the incomplete struct.
         /// </summary>
         /// <param name="fields"></param>
-        public virtual void DefStruct(IEnumerable<Tuple<string, T>> fields) {
+        public virtual void DefStructUnion(IEnumerable<Tuple<string, T>> fields) {
             throw new InvalidOperationException("Can't define a struct which is not an undefined struct!");
-        }
-
-        /// <summary>
-        /// Gives the definition of a union by specifying its fields.
-        /// This also completes the incomplete union.
-        /// </summary>
-        /// <param name="fields"></param>
-        public virtual void DefUnion(IEnumerable<Tuple<string, T>> fields) {
-            throw new InvalidOperationException("Can't define a union which is not an undefined union!");
         }
 
         /// <summary>
@@ -164,17 +155,21 @@ namespace lcc.TypeSystem {
 
         public abstract int Bits { get; }
         public virtual int Size => Bits / 8;
-        public int Align => _Align(Bits);
 
         /// <summary>
-        /// Align the size with 4.
+        /// Get the alignment in bits.
+        /// </summary>
+        public int Align => AlignTo(Bits);
+
+        /// <summary>
+        /// Align the size with 32.
         /// </summary>
         /// <param name="size"></param>
         /// <returns></returns>
-        protected static int _Align(int size) {
-            return ((size - 1) / _alignment + 1) * _alignment;
+        protected static int AlignTo(int bits) {
+            return (bits / _alignment + (bits % _alignment == 0 ? 0 : 1)) * _alignment;
         }
-        protected static int _alignment = 4;
+        protected static int _alignment = 32;
     }
 
     public abstract class TObject : TUnqualified {
@@ -322,6 +317,15 @@ namespace lcc.TypeSystem {
         }
 
         /// <summary>
+        /// XOR the qualifiers.
+        /// </summary>
+        /// <param name="qualifiers"></param>
+        /// <returns></returns>
+        public T Qualify(TQualifiers qualifiers) {
+            return new T(nake, qualifiers | this.qualifiers);
+        }
+
+        /// <summary>
         /// Pointer derivation.
         /// </summary>
         /// <param name="qualifiers"></param>
@@ -371,8 +375,7 @@ namespace lcc.TypeSystem {
         }
 
         public void DefArr(int n) { nake.DefArr(n); }
-        public void DefStruct(IEnumerable<Tuple<string, T>> fields) { nake.DefStruct(fields); }
-        public void DefUnion(IEnumerable<Tuple<string, T>> fields) { nake.DefUnion(fields); }
+        public void DefStructUnion(IEnumerable<Tuple<string, T>> fields) { nake.DefStructUnion(fields); }
         public void DefEnum(IDictionary<string, int> enums) { nake.DefEnum(enums); }
         public void DefFunc() { nake.DefFunc(); }
 
@@ -395,6 +398,10 @@ namespace lcc.TypeSystem {
 
         public int Bits => nake.Bits;
         public int Size => nake.Size;
+
+        /// <summary>
+        /// Get the alignment in bits.
+        /// </summary>
         public int Align => nake.Align;
 
         public readonly TUnqualified nake;

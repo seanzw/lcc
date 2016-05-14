@@ -20,8 +20,8 @@ namespace LC_CompilerTests {
             else if (stors.Count() == 1) storage = stors.First().kind;
 
             // At most one function specifier.
-            var funcs = ss.OfType<STFuncSpec>();
-            STFuncSpec.Kind function = STFuncSpec.Kind.NONE;
+            var funcs = ss.OfType<FuncSpec>();
+            FuncSpec.Kind function = FuncSpec.Kind.NONE;
             if (funcs.Count() > 1) return null;
             else if (funcs.Count() == 1) function = funcs.First().kind;
 
@@ -146,10 +146,10 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserFunctionSpecifier() {
-            Dictionary<string, STFuncSpec> dict = new Dictionary<string, STFuncSpec> {
+            Dictionary<string, FuncSpec> dict = new Dictionary<string, FuncSpec> {
                 {
                     "inline",
-                    new STFuncSpec(1, STFuncSpec.Kind.INLINE)
+                    new FuncSpec(1, FuncSpec.Kind.INLINE)
                 }
             };
 
@@ -169,14 +169,14 @@ namespace LC_CompilerTests {
                             new TypeQual(1, TypeQual.Kind.CONST),
                             new STTypeKeySpec(1, TypeSpec.Kind.INT),
                             new STTypeKeySpec(1, TypeSpec.Kind.CHAR),
-                            new STFuncSpec(1, STFuncSpec.Kind.INLINE)
+                            new FuncSpec(1, FuncSpec.Kind.INLINE)
                         },
                         STStoreSpec.Kind.STATIC,
                         new List<TypeSpec.Kind> {
                             TypeSpec.Kind.INT,
                             TypeSpec.Kind.CHAR
                         },
-                        STFuncSpec.Kind.INLINE)
+                        FuncSpec.Kind.INLINE)
                 }
             };
 
@@ -1045,10 +1045,10 @@ int foo();
                         new DeclSpecs(
                             new List<DeclSpec> {
                                 new TypeQual(1, TypeQual.Kind.CONST),
-                                new STTypedefName(new Id(new T_IDENTIFIER(1, "a")))
+                                new TypedefName(new Id(new T_IDENTIFIER(1, "a")))
                             },
                             STStoreSpec.Kind.NONE,
-                            new STTypedefName(new Id(new T_IDENTIFIER(1, "a")))))
+                            new TypedefName(new Id(new T_IDENTIFIER(1, "a")))))
                 }
             };
             foreach (var test in tests) {
