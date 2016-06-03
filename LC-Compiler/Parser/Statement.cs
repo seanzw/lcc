@@ -99,8 +99,8 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STCompoundStmt> CompoundStatement() {
-            return Ref(Statement).Or(Declaration()).Many().BracelLR().Select(ss => new STCompoundStmt(ss));
+        public static Parserc.Parser<T, CompoundStmt> CompoundStatement() {
+            return Ref(Statement).Or(Declaration()).Many().BracelLR().Select(ss => new CompoundStmt(ss));
         }
 
         /// <summary>

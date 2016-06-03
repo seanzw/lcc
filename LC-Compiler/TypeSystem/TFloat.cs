@@ -5,10 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.TypeSystem {
-    public sealed class TFloat : TArithmetic {
+    public sealed class TSingle : TFloat {
 
-        private static readonly TFloat instance = new TFloat();
-        public static TFloat Instance => instance;
+        private static readonly TSingle instance = new TSingle();
+        public static TSingle Instance => instance;
         public override int Rank => 6;
         public override int Bits => 32;
 
@@ -21,7 +21,7 @@ namespace lcc.TypeSystem {
         }
     }
 
-    public sealed class TDouble : TArithmetic {
+    public sealed class TDouble : TFloat {
 
         private static readonly TDouble instance = new TDouble();
 
@@ -38,7 +38,7 @@ namespace lcc.TypeSystem {
         }
     }
 
-    public sealed class TLDouble : TArithmetic {
+    public sealed class TLDouble : TFloat {
 
         private static readonly TLDouble instance = new TLDouble();
         public static TLDouble Instance => instance;

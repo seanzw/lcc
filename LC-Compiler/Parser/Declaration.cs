@@ -111,7 +111,7 @@ namespace lcc.Parser {
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<T, LinkedList<InitDeclarator>> InitDeclaratorList() {
-            return InitDeclarator().PlusSeperatedBy(Match<T_PUNC_COMMA>());
+            return InitDeclarator().ManySeperatedBy(Match<T_PUNC_COMMA>());
         }
 
         /// <summary>
@@ -158,11 +158,11 @@ namespace lcc.Parser {
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<T, TypeSpec> TypeSpecifier() {
-            return TypeKeySpecifier().Cast<T, TypeSpec, STTypeKeySpec>()
+            return TypeKeySpecifier().Cast<T, TypeSpec, TypeKeySpec>()
                 .Else(StructUnionSpecifier())
                 .Else(EnumSpecifier())
                 .Else(Identifier().Bind(identifier => {
-                    return Env.IsTypedefName(identifier.name) ? Result<T, TypeSpec>(new TypedefName(identifier))
+                    return Env.IsTypedefName(identifier.symbol) ? Result<T, TypeSpec>(new TypedefName(identifier))
                         : Zero<T, TypeSpec>();
                 }));
         }
@@ -183,18 +183,18 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STTypeKeySpec> TypeKeySpecifier() {
-            return Get<T_KEY_VOID>().Select(t => new STTypeKeySpec(t.line, TypeSpec.Kind.VOID))
-                .Else(Get<T_KEY_CHAR>().Select(t => new STTypeKeySpec(t.line, TypeSpec.Kind.CHAR)))
-                .Else(Get<T_KEY_SHORT>().Select(t => new STTypeKeySpec(t.line, TypeSpec.Kind.SHORT)))
-                .Else(Get<T_KEY_INT>().Select(t => new STTypeKeySpec(t.line, TypeSpec.Kind.INT)))
-                .Else(Get<T_KEY_LONG>().Select(t => new STTypeKeySpec(t.line, TypeSpec.Kind.LONG)))
-                .Else(Get<T_KEY_FLOAT>().Select(t => new STTypeKeySpec(t.line, TypeSpec.Kind.FLOAT)))
-                .Else(Get<T_KEY_DOUBLE>().Select(t => new STTypeKeySpec(t.line, TypeSpec.Kind.DOUBLE)))
-                .Else(Get<T_KEY_SIGNED>().Select(t => new STTypeKeySpec(t.line, TypeSpec.Kind.SIGNED)))
-                .Else(Get<T_KEY_UNSIGNED>().Select(t => new STTypeKeySpec(t.line, TypeSpec.Kind.UNSIGNED)))
-                .Else(Get<T_KEY__BOOL>().Select(t => new STTypeKeySpec(t.line, TypeSpec.Kind.BOOL)))
-                .Else(Get<T_KEY__COMPLEX>().Select(t => new STTypeKeySpec(t.line, TypeSpec.Kind.COMPLEX)));
+        public static Parserc.Parser<T, TypeKeySpec> TypeKeySpecifier() {
+            return Get<T_KEY_VOID>().Select(t => new TypeKeySpec(t.line, TypeSpec.Kind.VOID))
+                .Else(Get<T_KEY_CHAR>().Select(t => new TypeKeySpec(t.line, TypeSpec.Kind.CHAR)))
+                .Else(Get<T_KEY_SHORT>().Select(t => new TypeKeySpec(t.line, TypeSpec.Kind.SHORT)))
+                .Else(Get<T_KEY_INT>().Select(t => new TypeKeySpec(t.line, TypeSpec.Kind.INT)))
+                .Else(Get<T_KEY_LONG>().Select(t => new TypeKeySpec(t.line, TypeSpec.Kind.LONG)))
+                .Else(Get<T_KEY_FLOAT>().Select(t => new TypeKeySpec(t.line, TypeSpec.Kind.FLOAT)))
+                .Else(Get<T_KEY_DOUBLE>().Select(t => new TypeKeySpec(t.line, TypeSpec.Kind.DOUBLE)))
+                .Else(Get<T_KEY_SIGNED>().Select(t => new TypeKeySpec(t.line, TypeSpec.Kind.SIGNED)))
+                .Else(Get<T_KEY_UNSIGNED>().Select(t => new TypeKeySpec(t.line, TypeSpec.Kind.UNSIGNED)))
+                .Else(Get<T_KEY__BOOL>().Select(t => new TypeKeySpec(t.line, TypeSpec.Kind.BOOL)))
+                .Else(Get<T_KEY__COMPLEX>().Select(t => new TypeKeySpec(t.line, TypeSpec.Kind.COMPLEX)));
         }
 
         /// <summary>
@@ -405,7 +405,7 @@ namespace lcc.Parser {
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<T, DirDeclarator> DirectDeclaratorPrime(DirDeclarator direct) {
-            var paramterIdentifier = Identifier().Bind(id => Env.IsTypedefName(id.name) ? Zero<T, Id>() : Result<T, Id>(id));
+            var paramterIdentifier = Identifier().Bind(id => Env.IsTypedefName(id.symbol) ? Zero<T, Id>() : Result<T, Id>(id));
             return ParameterTypeList().ParentLR()
                     .Bind(tuple => DirectDeclaratorPrime(new FuncDeclarator(direct, tuple.Item1, tuple.Item2)))
                 .Or(paramterIdentifier.ManySeperatedBy(Match<T_PUNC_COMMA>()).ParentLR()

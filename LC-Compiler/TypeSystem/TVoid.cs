@@ -11,6 +11,7 @@ namespace lcc.TypeSystem {
         public static TVoid Instance => instance;
         public override int Bits => 8;
         public override bool IsComplete => false;
+        public override bool IsVoid => true;
         /// <summary>
         /// void is always defined.
         /// </summary>

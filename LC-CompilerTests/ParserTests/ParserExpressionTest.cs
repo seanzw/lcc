@@ -24,8 +24,14 @@ namespace LC_CompilerTests {
         private static void Aux<R>(
             string src,
             Parser<Token, R> parser,
-            R truth
+            R truth,
+            bool clear = true
             ) {
+            // Clear the parser environment.
+            if (clear) {
+                lcc.Parser.Env.PopScope();
+                lcc.Parser.Env.PushScope();
+            }
             var result = Utility.parse(src, parser);
 
             // Check the first result.
@@ -84,55 +90,55 @@ namespace LC_CompilerTests {
             Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "abc[123]",
-                    new STArrSub(
+                    new ArrSub(
                         new Id(new T_IDENTIFIER(1, "abc")),
                         new ConstInt(new T_CONST_INT(1, "123", 10))
                     )
                 },
                 {
                     "abc.x",
-                    new STAccess(
+                    new Access(
                         new Id(new T_IDENTIFIER(1, "abc")),
                         new T_IDENTIFIER(1, "x"),
-                        STAccess.Kind.DOT
+                        Access.Kind.DOT
                     )
                 },
                 {
                     "arr[2].value",
-                    new STAccess(
-                        new STArrSub(
+                    new Access(
+                        new ArrSub(
                             new Id(new T_IDENTIFIER(1, "arr")),
                             new ConstInt(new T_CONST_INT(1, "2", 10))
                         ),
                         new T_IDENTIFIER(1, "value"),
-                        STAccess.Kind.DOT
+                        Access.Kind.DOT
                     )
                 },
                 {
                     "abc->x",
-                    new STAccess(
+                    new Access(
                         new Id(new T_IDENTIFIER(1, "abc")),
                         new T_IDENTIFIER(1, "x"),
-                        STAccess.Kind.PTR
+                        Access.Kind.PTR
                     )
                 },
                 {
                     "x++",
-                    new STPostStep(
+                    new PostStep(
                         new Id(new T_IDENTIFIER(1, "x")),
-                        STPostStep.Kind.INC
+                        PostStep.Kind.INC
                     )
                 },
                 {
                     "x--",
-                    new STPostStep(
+                    new PostStep(
                         new Id(new T_IDENTIFIER(1, "x")),
-                        STPostStep.Kind.DEC
+                        PostStep.Kind.DEC
                     )
                 },
                 {
                     "printf(x)",
-                    new STFuncCall(
+                    new FuncCall(
                         new Id(new T_IDENTIFIER(1, "printf")),
                         new List<Expr> {
                             new Id(new T_IDENTIFIER(1, "x"))
@@ -141,7 +147,7 @@ namespace LC_CompilerTests {
                 },
                 {
                     "printf()",
-                    new STFuncCall(
+                    new FuncCall(
                         new Id(new T_IDENTIFIER(1, "printf")),
                         new List<Expr> {
                         }
@@ -151,7 +157,7 @@ namespace LC_CompilerTests {
                     "(int) { 1 }",
                     new STCompound(
                         new TypeName(
-                            ProcessSS(new List<TypeSpecQual> { new STTypeKeySpec(1, TypeSpec.Kind.INT) })
+                            ProcessSS(new List<TypeSpecQual> { new TypeKeySpec(1, TypeSpec.Kind.INT) })
                         ),
                         new List<STInitItem> {
                             new STInitItem(new Initializer(new ConstInt(new T_CONST_INT(1, "1", 10))))
@@ -170,85 +176,85 @@ namespace LC_CompilerTests {
             Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "++x--",
-                    new STPreStep(
-                        new STPostStep(
+                    new PreStep(
+                        new PostStep(
                             new Id(new T_IDENTIFIER(1, "x")),
-                            STPostStep.Kind.DEC),
-                        STPreStep.Kind.INC
+                            PostStep.Kind.DEC),
+                        PreStep.Kind.INC
                     )
                 },
                 {
                     "--x[2]",
-                    new STPreStep(
-                        new STArrSub(
+                    new PreStep(
+                        new ArrSub(
                             new Id(new T_IDENTIFIER(1, "x")),
                             new ConstInt(new T_CONST_INT(1, "2", 10))),
-                        STPreStep.Kind.DEC
+                        PreStep.Kind.DEC
                     )
                 },
                 {
                     "&x[2]",
-                    new STUnaryOp(
-                        new STArrSub(
+                    new UnaryOp(
+                        new ArrSub(
                             new Id(new T_IDENTIFIER(1, "x")),
                             new ConstInt(new T_CONST_INT(1, "2", 10))),
-                        STUnaryOp.Op.REF
+                        UnaryOp.Op.REF
                     )
                 },
                 {
                     "*x[2]",
-                    new STUnaryOp(
-                        new STArrSub(
+                    new UnaryOp(
+                        new ArrSub(
                             new Id(new T_IDENTIFIER(1, "x")),
                             new ConstInt(new T_CONST_INT(1, "2", 10))),
-                        STUnaryOp.Op.STAR
+                        UnaryOp.Op.STAR
                     )
                 },
                 {
                     "+x[2]",
-                    new STUnaryOp(
-                        new STArrSub(
+                    new UnaryOp(
+                        new ArrSub(
                             new Id(new T_IDENTIFIER(1, "x")),
                             new ConstInt(new T_CONST_INT(1, "2", 10))),
-                        STUnaryOp.Op.PLUS
+                        UnaryOp.Op.PLUS
                     )
                 },
                 {
                     "-x[2]",
-                    new STUnaryOp(
-                        new STArrSub(
+                    new UnaryOp(
+                        new ArrSub(
                             new Id(new T_IDENTIFIER(1, "x")),
                             new ConstInt(new T_CONST_INT(1, "2", 10))),
-                        STUnaryOp.Op.MINUS
+                        UnaryOp.Op.MINUS
                     )
                 },
                 {
                     "~x[2]",
-                    new STUnaryOp(
-                        new STArrSub(
+                    new UnaryOp(
+                        new ArrSub(
                             new Id(new T_IDENTIFIER(1, "x")),
                             new ConstInt(new T_CONST_INT(1, "2", 10))),
-                        STUnaryOp.Op.REVERSE
+                        UnaryOp.Op.REVERSE
                     )
                 },
                 {
                     "!x[2]",
-                    new STUnaryOp(
-                        new STArrSub(
+                    new UnaryOp(
+                        new ArrSub(
                             new Id(new T_IDENTIFIER(1, "x")),
                             new ConstInt(new T_CONST_INT(1, "2", 10))),
-                        STUnaryOp.Op.NOT
+                        UnaryOp.Op.NOT
                     )
                 },
                 {
                     "sizeof a",
-                    new STSizeOf(new Id(new T_IDENTIFIER(1, "a")))
+                    new SizeOf(new Id(new T_IDENTIFIER(1, "a")))
                 },
                 {
                     "sizeof (int)",
-                    new STSizeOf(
+                    new SizeOf(
                         new TypeName(
-                            ProcessSS(new List<TypeSpecQual> { new STTypeKeySpec(1, TypeSpec.Kind.INT) })
+                            ProcessSS(new List<TypeSpecQual> { new TypeKeySpec(1, TypeSpec.Kind.INT) })
                         ))
                 }
             };
@@ -263,18 +269,18 @@ namespace LC_CompilerTests {
             Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "++x--",
-                    new STPreStep(
-                        new STPostStep(
+                    new PreStep(
+                        new PostStep(
                             new Id(new T_IDENTIFIER(1, "x")),
-                            STPostStep.Kind.DEC),
-                        STPreStep.Kind.INC
+                            PostStep.Kind.DEC),
+                        PreStep.Kind.INC
                     )
                 },
                 {
                     "(int)what",
-                    new STCast(
+                    new Cast(
                         new TypeName(
-                            ProcessSS(new List<TypeSpecQual> { new STTypeKeySpec(1, TypeSpec.Kind.INT) })
+                            ProcessSS(new List<TypeSpecQual> { new TypeKeySpec(1, TypeSpec.Kind.INT) })
                         ),
                         new Id(new T_IDENTIFIER(1, "what")))
                 }
@@ -290,16 +296,16 @@ namespace LC_CompilerTests {
             Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a * b / c % d",
-                    new STBiExpr(
-                        new STBiExpr(
-                            new STBiExpr(
+                    new BiExpr(
+                        new BiExpr(
+                            new BiExpr(
                                 new Id(new T_IDENTIFIER(1, "a")),
                                 new Id(new T_IDENTIFIER(1, "b")),
-                                STBiExpr.Op.MULT),
+                                BiExpr.Op.MULT),
                             new Id(new T_IDENTIFIER(1, "c")),
-                            STBiExpr.Op.DIV),
+                            BiExpr.Op.DIV),
                         new Id(new T_IDENTIFIER(1, "d")),
-                        STBiExpr.Op.MOD)
+                        BiExpr.Op.MOD)
                 }
             };
 
@@ -313,26 +319,26 @@ namespace LC_CompilerTests {
             Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a + b * 3",
-                    new STBiExpr(
+                    new BiExpr(
                         new Id(new T_IDENTIFIER(1, "a")),
-                        new STBiExpr(
+                        new BiExpr(
                             new Id(new T_IDENTIFIER(1, "b")),
                             new ConstInt(new T_CONST_INT(1, "3", 10)),
-                            STBiExpr.Op.MULT),
-                        STBiExpr.Op.PLUS)
+                            BiExpr.Op.MULT),
+                        BiExpr.Op.PLUS)
                 },
                 {
                     "1 + 2 \n * c \n - 5",
-                    new STBiExpr(
-                        new STBiExpr(
+                    new BiExpr(
+                        new BiExpr(
                             new ConstInt(new T_CONST_INT(1, "1", 10)),
-                            new STBiExpr(
+                            new BiExpr(
                                 new ConstInt(new T_CONST_INT(1, "2", 10)),
                                 new Id(new T_IDENTIFIER(2, "c")),
-                                STBiExpr.Op.MULT),
-                            STBiExpr.Op.PLUS),
+                                BiExpr.Op.MULT),
+                            BiExpr.Op.PLUS),
                         new ConstInt(new T_CONST_INT(3, "5", 10)),
-                        STBiExpr.Op.MINUS)
+                        BiExpr.Op.MINUS)
                 }
             };
 
@@ -346,10 +352,10 @@ namespace LC_CompilerTests {
             Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a << 1",
-                    new STBiExpr(
+                    new BiExpr(
                         new Id(new T_IDENTIFIER(1, "a")),
                         new ConstInt(new T_CONST_INT(1, "1", 10)),
-                        STBiExpr.Op.LEFT)
+                        BiExpr.Op.LEFT)
                 }
             };
             foreach (var test in dict) {
@@ -362,13 +368,13 @@ namespace LC_CompilerTests {
             Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a << 1 >= 23",
-                    new STBiExpr(
-                        new STBiExpr(
+                    new BiExpr(
+                        new BiExpr(
                             new Id(new T_IDENTIFIER(1, "a")),
                             new ConstInt(new T_CONST_INT(1, "1", 10)),
-                            STBiExpr.Op.LEFT),
+                            BiExpr.Op.LEFT),
                         new ConstInt(new T_CONST_INT(1, "23", 10)),
-                        STBiExpr.Op.GE)
+                        BiExpr.Op.GE)
                 }
             };
             foreach (var test in dict) {
@@ -381,13 +387,13 @@ namespace LC_CompilerTests {
             Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a << 1 != 23",
-                    new STBiExpr(
-                        new STBiExpr(
+                    new BiExpr(
+                        new BiExpr(
                             new Id(new T_IDENTIFIER(1, "a")),
                             new ConstInt(new T_CONST_INT(1, "1", 10)),
-                            STBiExpr.Op.LEFT),
+                            BiExpr.Op.LEFT),
                         new ConstInt(new T_CONST_INT(1, "23", 10)),
-                        STBiExpr.Op.NEQ)
+                        BiExpr.Op.NEQ)
                 }
             };
             foreach (var test in dict) {
@@ -400,13 +406,13 @@ namespace LC_CompilerTests {
             Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a >> 1 & 0x1",
-                    new STBiExpr(
-                        new STBiExpr(
+                    new BiExpr(
+                        new BiExpr(
                             new Id(new T_IDENTIFIER(1, "a")),
                             new ConstInt(new T_CONST_INT(1, "1", 10)),
-                            STBiExpr.Op.RIGHT),
+                            BiExpr.Op.RIGHT),
                         new ConstInt(new T_CONST_INT(1, "1", 16)),
-                        STBiExpr.Op.AND)
+                        BiExpr.Op.AND)
                 }
             };
             foreach (var test in dict) {
@@ -419,13 +425,13 @@ namespace LC_CompilerTests {
             Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a >> 1 ^ 0x1",
-                    new STBiExpr(
-                        new STBiExpr(
+                    new BiExpr(
+                        new BiExpr(
                             new Id(new T_IDENTIFIER(1, "a")),
                             new ConstInt(new T_CONST_INT(1, "1", 10)),
-                            STBiExpr.Op.RIGHT),
+                            BiExpr.Op.RIGHT),
                         new ConstInt(new T_CONST_INT(1, "1", 16)),
-                        STBiExpr.Op.XOR)
+                        BiExpr.Op.XOR)
                 }
             };
             foreach (var test in dict) {
@@ -438,13 +444,13 @@ namespace LC_CompilerTests {
             Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a >> 1 | 0x1",
-                    new STBiExpr(
-                        new STBiExpr(
+                    new BiExpr(
+                        new BiExpr(
                             new Id(new T_IDENTIFIER(1, "a")),
                             new ConstInt(new T_CONST_INT(1, "1", 10)),
-                            STBiExpr.Op.RIGHT),
+                            BiExpr.Op.RIGHT),
                         new ConstInt(new T_CONST_INT(1, "1", 16)),
-                        STBiExpr.Op.OR)
+                        BiExpr.Op.OR)
                 }
             };
             foreach (var test in dict) {
@@ -457,19 +463,19 @@ namespace LC_CompilerTests {
             Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a >> 1 == 0x1 && b == 0",
-                    new STBiExpr(
-                        new STBiExpr(
-                            new STBiExpr(
+                    new BiExpr(
+                        new BiExpr(
+                            new BiExpr(
                                 new Id(new T_IDENTIFIER(1, "a")),
                                 new ConstInt(new T_CONST_INT(1, "1", 10)),
-                                STBiExpr.Op.RIGHT),
+                                BiExpr.Op.RIGHT),
                             new ConstInt(new T_CONST_INT(1, "1", 16)),
-                            STBiExpr.Op.EQ),
-                        new STBiExpr(
+                            BiExpr.Op.EQ),
+                        new BiExpr(
                             new Id(new T_IDENTIFIER(1, "b")),
                             new ConstInt(new T_CONST_INT(1, "0", 8)),
-                            STBiExpr.Op.EQ),
-                        STBiExpr.Op.LOGAND)
+                            BiExpr.Op.EQ),
+                        BiExpr.Op.LOGAND)
                 }
             };
             foreach (var test in dict) {
@@ -482,19 +488,19 @@ namespace LC_CompilerTests {
             Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a >> 1 == 0x1 || b == 0",
-                    new STBiExpr(
-                        new STBiExpr(
-                            new STBiExpr(
+                    new BiExpr(
+                        new BiExpr(
+                            new BiExpr(
                                 new Id(new T_IDENTIFIER(1, "a")),
                                 new ConstInt(new T_CONST_INT(1, "1", 10)),
-                                STBiExpr.Op.RIGHT),
+                                BiExpr.Op.RIGHT),
                             new ConstInt(new T_CONST_INT(1, "1", 16)),
-                            STBiExpr.Op.EQ),
-                        new STBiExpr(
+                            BiExpr.Op.EQ),
+                        new BiExpr(
                             new Id(new T_IDENTIFIER(1, "b")),
                             new ConstInt(new T_CONST_INT(1, "0", 8)),
-                            STBiExpr.Op.EQ),
-                        STBiExpr.Op.LOGOR)
+                            BiExpr.Op.EQ),
+                        BiExpr.Op.LOGOR)
                 }
             };
             foreach (var test in dict) {
@@ -508,10 +514,10 @@ namespace LC_CompilerTests {
                 {
                     "a == 0 ? c : d",
                     new STCondExpr(
-                        new STBiExpr(
+                        new BiExpr(
                             new Id(new T_IDENTIFIER(1, "a")),
                             new ConstInt(new T_CONST_INT(1, "0", 10)),
-                            STBiExpr.Op.EQ),
+                            BiExpr.Op.EQ),
                         new Id(new T_IDENTIFIER(1, "c")),
                         new Id(new T_IDENTIFIER(1, "d")))
                 }
@@ -527,10 +533,10 @@ namespace LC_CompilerTests {
                 {
                     "a == 0 ? c : d",
                     new STCondExpr(
-                        new STBiExpr(
+                        new BiExpr(
                             new Id(new T_IDENTIFIER(1, "a")),
                             new ConstInt(new T_CONST_INT(1, "0", 10)),
-                            STBiExpr.Op.EQ),
+                            BiExpr.Op.EQ),
                         new Id(new T_IDENTIFIER(1, "c")),
                         new Id(new T_IDENTIFIER(1, "d")))
                 },
@@ -561,14 +567,14 @@ namespace LC_CompilerTests {
         public void LCCParserCommaExpressionEquals() {
             var e11 = new Id(new T_IDENTIFIER(1, "a"));
             var e21 = new Id(new T_IDENTIFIER(1, "a"));
-            var e12 = new STBiExpr(
+            var e12 = new BiExpr(
                     new Id(new T_IDENTIFIER(2, "b")),
                     new ConstInt(new T_CONST_INT(2, "4", 10)),
-                    STBiExpr.Op.PLUS);
-            var e22 = new STBiExpr(
+                    BiExpr.Op.PLUS);
+            var e22 = new BiExpr(
                     new Id(new T_IDENTIFIER(2, "b")),
                     new ConstInt(new T_CONST_INT(2, "4", 10)),
-                    STBiExpr.Op.PLUS);
+                    BiExpr.Op.PLUS);
             var l1 = new LinkedList<Expr>();
             var l2 = new LinkedList<Expr>();
             var l3 = new LinkedList<Expr>();
@@ -623,10 +629,10 @@ namespace LC_CompilerTests {
                 {
                     "a == 0 ? c : d",
                     new STCondExpr(
-                        new STBiExpr(
+                        new BiExpr(
                             new Id(new T_IDENTIFIER(1, "a")),
                             new ConstInt(new T_CONST_INT(1, "0", 10)),
-                            STBiExpr.Op.EQ),
+                            BiExpr.Op.EQ),
                         new Id(new T_IDENTIFIER(1, "c")),
                         new Id(new T_IDENTIFIER(1, "d")))
                 }

@@ -46,6 +46,8 @@
   <ItemGroup>
     <Compile Include="AST\Env.cs" />
     <Compile Include="AST\AST.cs" />
+    <Compile Include="AST\Expression.cs" />
+    <Compile Include="AST\Statement.cs" />
     <Compile Include="SyntaxTree\Env.cs" />
     <Compile Include="SyntaxTree\Exception.cs" />
     <Compile Include="SyntaxTree\Node.cs" />
@@ -73,7 +75,7 @@
     <Compile Include="TypeSystem\TArr.cs" />
     <Compile Include="TypeSystem\TBool.cs" />
     <Compile Include="TypeSystem\TEnum.cs" />
-    <Compile Include="TypeSystem\TypeFloat.cs" />
+    <Compile Include="TypeSystem\TFloat.cs" />
     <Compile Include="TypeSystem\TFunc.cs" />
     <Compile Include="TypeSystem\TInt.cs" />
     <Compile Include="TypeSystem\TPtr.cs" />

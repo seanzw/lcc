@@ -42,10 +42,10 @@ namespace lcc.Parser {
         /// <returns></returns>
         public static Parserc.Parser<T, Expr> ChainBinaryExpr(
             this Parserc.Parser<T, Expr> parser,
-            Parserc.Parser<T, STBiExpr.Op> sep
+            Parserc.Parser<T, BiExpr.Op> sep
             ) {
             return parser.ChainPlus(sep.Select(op => {
-                Func<Expr, Expr, Expr> f = (lhs, rhs) => new STBiExpr(lhs, rhs, op);
+                Func<Expr, Expr, Expr> f = (lhs, rhs) => new BiExpr(lhs, rhs, op);
                 return f;
             }));
         }

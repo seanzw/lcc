@@ -54,13 +54,14 @@
   </Choose>
   <ItemGroup>
     <Compile Include="LexerTest.cs" />
-    <Compile Include="ParserDeclarationTest.cs" />
-    <Compile Include="ParserExpressionTest.cs" />
-    <Compile Include="ParserStatementTest.cs" />
+    <Compile Include="ParserTests\ParserDeclarationTest.cs" />
+    <Compile Include="ParserTests\ParserExpressionTest.cs" />
+    <Compile Include="ParserTests\ParserStatementTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SyntaxTreeTests\ExpressionTest.cs" />
     <Compile Include="SyntaxTreeTests\PrimExprTest.cs" />
     <Compile Include="SyntaxTreeTests\DeclarationTest.cs" />
-    <Compile Include="TypeToStringTest.cs" />
+    <Compile Include="TypeTest.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>
   <ItemGroup>

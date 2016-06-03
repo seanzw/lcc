@@ -28,13 +28,13 @@ namespace lcc.SyntaxTree {
         public readonly IEnumerable<Node> nodes;
     }
 
-    public sealed class STFuncDef : Node, IEquatable<STFuncDef> {
+    public sealed class FuncDef : Node, IEquatable<FuncDef> {
 
-        public STFuncDef(
+        public FuncDef(
             DeclSpecs specifiers,
             Declarator declarator,
             IEnumerable<Declaration> declarations,
-            Stmt statement
+            CompoundStmt statement
             ) {
             this.specifiers = specifiers;
             this.declarator = declarator;
@@ -45,11 +45,11 @@ namespace lcc.SyntaxTree {
         public override Position Pos => declarator.Pos;
 
         public override bool Equals(object obj) {
-            STFuncDef x = obj as STFuncDef;
+            FuncDef x = obj as FuncDef;
             return Equals(x);
         }
 
-        public bool Equals(STFuncDef x) {
+        public bool Equals(FuncDef x) {
             return x == null ? false : base.Equals(x)
                 && x.specifiers.Equals(specifiers)
                 && x.declarator.Equals(declarator)
@@ -64,6 +64,6 @@ namespace lcc.SyntaxTree {
         public readonly DeclSpecs specifiers;
         public readonly Declarator declarator;
         public readonly IEnumerable<Declaration> declarations;
-        public readonly Stmt statement;
+        public readonly CompoundStmt statement;
     }
 }

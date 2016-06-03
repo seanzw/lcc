@@ -96,12 +96,14 @@ namespace lcc.TypeSystem {
         public TStruct(string tag) : base(tag, null) {}
         public TStruct() : base("struct@" + (idx++), null) {}
         public override bool IsStruct => true;
+        public override bool IsAggregate => true;
         public override int Bits {
             get {
                 if (fields == null) throw new InvalidOperationException("Can't take size of an incomplete struct.");
                 else return size;
             }
         }
+
 
         public override string ToString() {
             return string.Format("struct {0}", tag);

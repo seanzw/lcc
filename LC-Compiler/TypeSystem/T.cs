@@ -42,6 +42,7 @@ namespace lcc.TypeSystem {
                                 - [signed/unsigned] int
                                 - [signed/unsigned] long
                                 - [signed/unsigned] long long
+                                - _Bool
                         - complex
      */
 
@@ -76,6 +77,10 @@ namespace lcc.TypeSystem {
             throw new InvalidOperationException("Can't define a function which is not an undefined function!");
         }
 
+        public virtual TUnqualified IntPromote() {
+            throw new InvalidOperationException("Can't perform integer promotion on non-arithmetic type!");
+        }
+
         /// <summary>
         /// Whether this is a complete type.
         /// Incomplete type can be:
@@ -96,6 +101,7 @@ namespace lcc.TypeSystem {
         public virtual bool IsObject => false;
         public virtual bool IsCharacter => false;
         public virtual bool IsInteger => false;
+        public virtual bool IsFloat => false;
         public virtual bool IsReal => false;
         public virtual bool IsArithmetic => false;
         public virtual bool IsScalar => false;
@@ -107,6 +113,7 @@ namespace lcc.TypeSystem {
         public virtual bool IsUnion => false;
         public virtual bool IsEnum => false;
         public virtual bool IsBitField => false;
+        public virtual bool IsVoid => false;
 
         /// <summary>
         /// Qualify this type.
@@ -167,6 +174,15 @@ namespace lcc.TypeSystem {
 
     public abstract class TArithmetic : TScalar {
         public override bool IsArithmetic => true;
+
+        /// <summary>
+        /// Integer promotion, by default the original type.
+        /// </summary>
+        /// <returns></returns>
+        public override TUnqualified IntPromote() {
+            return this;
+        }
+
         public abstract int Rank { get; }
     }
 
@@ -174,10 +190,30 @@ namespace lcc.TypeSystem {
         public override bool IsReal => true;
     }
 
+    public abstract class TFloat : TReal {
+        public override bool IsFloat => true;
+    }
     public abstract class TInteger : TReal {
         public override bool IsInteger => true;
         public abstract BigInteger MAX { get; }
         public abstract BigInteger MIN { get; }
+        /// <summary>
+        /// Integer promotion.
+        /// If an int can represent all values of the original type,
+        /// the value is converted to an int;
+        /// otherwise, it is converted to an unsigned int.
+        /// All other types remain unchanged.
+        /// </summary>
+        /// <returns></returns>
+        public override TUnqualified IntPromote() {
+            if (MAX < TInt.Instance.MAX && MIN > TInt.Instance.MIN) {
+                return TInt.Instance;
+            }
+            if (MAX < TUInt.Instance.MAX && MIN > TUInt.Instance.MIN) {
+                return TUInt.Instance;
+            }
+            return this;
+        }
     }
 
     public abstract class TCharacter : TInteger {
@@ -360,12 +396,17 @@ namespace lcc.TypeSystem {
         public void DefArr(int n) { nake.DefArr(n); }
         public void DefFunc() { nake.DefFunc(); }
 
+        public T IntPromote() {
+            return nake.IntPromote().None();
+        }
+
         public bool IsComplete => nake.IsComplete;
         public bool IsDefined => nake.IsDefined;
         public bool IsFunc => nake.IsFunc;
         public bool IsObject => nake.IsObject;
         public bool IsCharacter => nake.IsCharacter;
         public bool IsInteger => nake.IsInteger;
+        public bool IsFloat => nake.IsFloat;
         public bool IsReal => nake.IsReal;
         public bool IsArithmetic => nake.IsArithmetic;
         public bool IsScalar => nake.IsScalar;
@@ -376,6 +417,7 @@ namespace lcc.TypeSystem {
         public bool IsStruct => nake.IsStruct;
         public bool IsUnion => nake.IsUnion;
         public bool IsBitField => nake.IsBitField;
+        public bool IsVoid => nake.IsVoid;
 
         public int Bits => nake.Bits;
         public int Size => nake.Size;
@@ -387,26 +429,5 @@ namespace lcc.TypeSystem {
 
         public readonly TUnqualified nake;
         public readonly TQualifiers qualifiers;
-    }
-
-    public static class TPromotion {
-
-        /// <summary>
-        /// Integer promotion.
-        /// Those type with rank less than int will be promoted to int.
-        /// 
-        /// The promoted type should be rvalue.
-        /// </summary>
-        /// <param name="t"></param>
-        /// <returns></returns>
-        public static T IntPromote(this T t) {
-            TArithmetic ta = t.nake as TArithmetic;
-            if (ta.Rank < TInt.Instance.Rank) {
-                return TInt.Instance.Qualify(t.qualifiers);
-            } else {
-                return t;
-            }
-        }
-     
     }
 }

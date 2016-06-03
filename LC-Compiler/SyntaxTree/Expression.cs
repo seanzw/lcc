@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 using lcc.TypeSystem;
 using lcc.Token;
+using lcc.AST;
 
 namespace lcc.SyntaxTree {
 
@@ -15,16 +16,12 @@ namespace lcc.SyntaxTree {
     /// </summary>
     public abstract class Expr : Stmt {
 
-        public virtual T TypeCheck(Env env) {
-            throw new NotImplementedException();
+        public override IEnumerable<AST.Stmt> ToAST(Env env) {
+            return new List<AST.Stmt> { GetASTExpr(env) };
         }
 
-        public virtual AST.Expr ToAST(Env env) {
+        public virtual AST.Expr GetASTExpr(Env env) {
             throw new NotImplementedException();
-        }
-
-        public virtual AST.ConstExpr GetConstExpr(Env env) {
-            return null;
         }
     }
 
@@ -124,7 +121,7 @@ namespace lcc.SyntaxTree {
         public readonly Expr falseExpr;
     }
 
-    public sealed class STBiExpr : Expr, IEquatable<STBiExpr> {
+    public sealed class BiExpr : Expr, IEquatable<BiExpr> {
 
         public enum Op {
             MULT,   // *
@@ -147,7 +144,7 @@ namespace lcc.SyntaxTree {
             LOGOR   // ||
         }
 
-        public STBiExpr(Expr lhs, Expr rhs, Op op) {
+        public BiExpr(Expr lhs, Expr rhs, Op op) {
             this.lhs = lhs;
             this.rhs = rhs;
             this.op = op;
@@ -156,10 +153,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => lhs.Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STBiExpr);
+            return Equals(obj as BiExpr);
         }
 
-        public bool Equals(STBiExpr x) {
+        public bool Equals(BiExpr x) {
             return x != null
                 && x.lhs.Equals(lhs)
                 && x.rhs.Equals(rhs)
@@ -177,26 +174,79 @@ namespace lcc.SyntaxTree {
 
 
     /// <summary>
-    /// ( type-name ) expr
+    /// ( type-name ) cast-expression
     /// </summary>
-    public sealed class STCast : Expr, IEquatable<STCast> {
+    public sealed class Cast : Expr, IEquatable<Cast> {
 
-        public STCast(TypeName name, Expr expr) {
+        public Cast(TypeName name, Expr expr) {
             this.name = name;
             this.expr = expr;
         }
 
         public override Position Pos => name.Pos;
-        public bool Equals(STCast x) {
+        public bool Equals(Cast x) {
             return x != null && x.name.Equals(name) && x.expr.Equals(expr);
         }
 
         public override bool Equals(object obj) {
-            return Equals(obj as STCast);
+            return Equals(obj as Cast);
         }
 
         public override int GetHashCode() {
             return name.GetHashCode() ^ expr.GetHashCode();
+        }
+
+        public override AST.Expr GetASTExpr(Env env) {
+            AST.Expr e = expr.GetASTExpr(env);
+            if (e == null) {
+                return null;
+            }
+
+            T type = name.GetT(env);
+
+            /// Unless the type name specifies a void type, the type name shall specify qualified or unqualified
+            /// scalar type and the operand shall have scalar type.
+            if (!type.IsVoid) {
+                if (!type.IsScalar) {
+                    throw new Error(Pos, "the type name shall specify scalar type");
+                }
+                if (!e.Type.IsScalar) {
+                    throw new Error(Pos, "the operand shall have scalar type");
+                }
+            }
+
+            /// The following cast is illegal.
+            /// 1. Conversions between pointers and floating types.
+            /// 2. Conversions between pointers to functions and pointers to objects (including void*)
+            /// 3. Conversions between pointers to functions and integers.
+            /// http://en.cppreference.com/w/c/language/cast
+            CheckIllegalCast(type.nake, e.Type.nake);
+            CheckIllegalCast(e.Type.nake, type.nake);
+
+            /// If the value of the expression is represented with greater precision or range than
+            /// required by the type named by the cast, then the cast specifies a conversion even
+            /// if the type of the expression is the same as the named type.
+            /// NOTE: This is used for constant expression that has float type. In this implementation
+            /// all constant float expression are represented in double.
+
+            /// A cast that specifies no conversion has no effect on the type or value of an expression.
+            /// However, the result of a cast is always rvalue, therefore we still need to new VarExpr.
+            /// Notice that since the result is rvalue, the qualifiers will be discarded.
+            return new AST.Cast(type.nake, env.GetASTEnv(), e);
+        }
+
+        private void CheckIllegalCast(TUnqualified s, TUnqualified t) {
+            TPointer p = s as TPointer;
+            if (p != null && t.IsFloat) {
+                throw new Error(Pos, "cannot cast between pointers and floating types");
+            }
+            if (p != null && p.element.IsFunc && t.IsInteger) {
+                throw new Error(Pos, "cannot cast between pointers to functions and integers");
+            }
+            TPointer q = t as TPointer;
+            if (p != null && p.element.IsFunc && q != null && q.element.IsObject) {
+                throw new Error(Pos, "cannot cast between pointers to functions and pointers to objects");
+            }
         }
 
         public readonly TypeName name;
@@ -207,14 +257,14 @@ namespace lcc.SyntaxTree {
     /// ++i
     /// --i
     /// </summary>
-    public sealed class STPreStep : Expr, IEquatable<STPreStep> {
+    public sealed class PreStep : Expr, IEquatable<PreStep> {
 
         public enum Kind {
             INC,
             DEC
         }
 
-        public STPreStep(Expr expr, Kind kind) {
+        public PreStep(Expr expr, Kind kind) {
             this.expr = expr;
             this.kind = kind;
         }
@@ -222,10 +272,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => expr.Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STPreStep);
+            return Equals(obj as PreStep);
         }
 
-        public bool Equals(STPreStep x) {
+        public bool Equals(PreStep x) {
             return x != null && x.expr.Equals(expr) && x.kind == kind;
         }
 
@@ -233,16 +283,19 @@ namespace lcc.SyntaxTree {
             return expr.GetHashCode();
         }
 
-        //public override T TypeCheck(Env env) {
-        //    T t = expr.TypeCheck(env);
-        //    if (!t.IsArithmetic && !t.IsPointer) {
-        //        throw new Error(expr.Pos, string.Format("{0} on type {1}", kind, t));
-        //    }
-        //    if (!t.IsModifiable) {
-        //        throw new Error(expr.Pos, string.Format("cannot assign to type {0}", t));
-        //    }
-        //    return t.R();
-        //}
+        public override AST.Expr GetASTExpr(Env env) {
+            AST.Expr e = expr.GetASTExpr(env);
+            if (!e.Type.IsReal && !e.Type.IsPointer) {
+                throw new Error(expr.Pos, string.Format("{0} on type {1}", kind, e.Type));
+            }
+            if (!e.IsLValue) {
+                throw new Error(Pos, "cannot modify rvalue");
+            }
+            if (e.Type.qualifiers.isConstant) {
+                throw new Error(Pos, "cannot modify constant value");
+            }
+            return new AST.PreStep(e.Type, env.GetASTEnv(), e, kind);
+        }
 
         public readonly Expr expr;
         public readonly Kind kind;
@@ -251,7 +304,7 @@ namespace lcc.SyntaxTree {
     /// <summary>
     /// & * + - ~ !
     /// </summary>
-    public sealed class STUnaryOp : Expr, IEquatable<STUnaryOp> {
+    public sealed class UnaryOp : Expr, IEquatable<UnaryOp> {
 
         public enum Op {
             /// <summary>
@@ -280,7 +333,7 @@ namespace lcc.SyntaxTree {
             NOT
         }
 
-        public STUnaryOp(Expr expr, Op op) {
+        public UnaryOp(Expr expr, Op op) {
             this.expr = expr;
             this.op = op;
         }
@@ -288,10 +341,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => expr.Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STUnaryOp);
+            return Equals(obj as UnaryOp);
         }
 
-        public bool Equals(STUnaryOp x) {
+        public bool Equals(UnaryOp x) {
             return x != null && x.expr.Equals(expr) && x.op == op;
         }
 
@@ -299,34 +352,68 @@ namespace lcc.SyntaxTree {
             return expr.GetHashCode();
         }
 
-        //public override T TypeCheck(Env env) {
-        //    T t = expr.TypeCheck(env);
-        //    switch (op) {
-        //        case Op.REF:
-        //            if (t.IsRValue)
-        //                throw new Error(expr.Pos, string.Format("cannot take address of rvalue of {0}", t));
-        //            return t.Ptr().R();
-        //        case Op.STAR:
-        //            if (!t.IsPointer)
-        //                throw new Error(expr.Pos, string.Format("indirection requires pointer type ({0} provided)", t));
-        //            return (t.nake as TPointer).element;
-        //        case Op.PLUS:
-        //        case Op.MINUS:
-        //            if (!t.IsArithmetic)
-        //                throw new Error(expr.Pos, string.Format("invalid argument type '{0}' to unary expression", t));
-        //            return t.IntPromote().R();
-        //        case Op.REVERSE:
-        //            if (!t.IsInteger)
-        //                throw new Error(expr.Pos, string.Format("invalid argument type '{0}' to unary expression", t));
-        //            return t.IntPromote().R();
-        //        case Op.NOT:
-        //            if (!t.IsScalar)
-        //                throw new Error(expr.Pos, string.Format("invalid argument type '{0}' to unary expression", t));
-        //            return TInt.Instance.None(T.LR.R);
-        //        default:
-        //            throw new InvalidOperationException("Unrecognized unary operator");
-        //    }
-        //}
+        public override AST.Expr GetASTExpr(Env env) {
+            AST.Expr e = expr.GetASTExpr(env);
+            switch (op) {
+                case Op.REF:
+                    /// The operand of the unary & operator shall be either a function designator, 
+                    /// the result of a [] or unary * operator, or an lvalue that designates an object
+                    /// that is not as bit-FieldAccessException and is not declared with the register
+                    /// storage-class specifier.
+                    if (e is AST.ArrSub) {
+                        // The & operator is removed and the [] operator were changed to a + operator.
+                        AST.ArrSub x = e as AST.ArrSub;
+                        return new AST.BiExpr(x.arr.Type, env.GetASTEnv(), x.arr, x.idx, BiExpr.Op.PLUS);
+                    }
+                    if (e is AST.UnaryOp && (e as AST.UnaryOp).op == Op.STAR) {
+                        // If the operand is the result of a unary * operator, neither that operator nor the &
+                        // operator is evaluated and the result is as if both were omitted, except that the constraints
+                        // on the opoerators still apply and the result is not an lvalue.
+                        // To make sure the result is an rvalue, change the & and * operator to + operator with the second
+                        // operand 0.
+                        AST.UnaryOp x = e as AST.UnaryOp;
+                        return new AST.BiExpr(x.expr.Type, env.GetASTEnv(), x.expr, new AST.ConstIntExpr(TInt.Instance, 0), BiExpr.Op.PLUS);
+                    }
+                    if (!e.IsLValue) {
+                        throw new Error(Pos, "cannot take address of rvalue");
+                    }
+                    if (e.Type.IsBitField) {
+                        throw new Error(Pos, "cannot take address of bit-field");
+                    }
+                    // TODO: Check register storage-class specifier.
+                    return new AST.UnaryOp(e.Type.Ptr(), env.GetASTEnv(), e, Op.REF);
+                case Op.STAR:
+                    /// The operand of the uanry * operator shall have pointer type.
+                    if (!e.Type.IsPointer) {
+                        throw new Error(Pos, "cannot deref none pointer type");
+                    }
+                    return new AST.UnaryOp((e.Type.nake as TPointer).element, env.GetASTEnv(), e, Op.STAR);
+                case Op.PLUS:
+                case Op.MINUS:
+                    /// The operand of the unary + or - operator shall have arithmetic type.
+                    /// The result has integer promoted type.
+                    if (!e.Type.IsArithmetic) {
+                        throw new Error(Pos, "the operand of the unary + or - operator shall have arithmetic type");
+                    }
+                    return new AST.UnaryOp(e.Type.IntPromote(), env.GetASTEnv(), e, op);
+                case Op.REVERSE:
+                    /// Of the ~ operator, integer type.
+                    /// The result has integer promoted type.
+                    if (!e.Type.IsInteger) {
+                        throw new Error(Pos, "the operand of the unary ~ operator shall have integer type");
+                    }
+                    return new AST.UnaryOp(e.Type.IntPromote(), env.GetASTEnv(), e, Op.REVERSE);
+                case Op.NOT:
+                    /// Of the ! operator, scalar type.
+                    /// The result has type int.
+                    if (!e.Type.IsScalar) {
+                        throw new Error(Pos, "the operand of the unary ! operator shall have scalar type");
+                    }
+                    return new AST.UnaryOp(TInt.Instance.None(), env.GetASTEnv(), e, Op.NOT);
+                default:
+                    throw new InvalidOperationException("Unknown unary opeartor");
+            }
+        }
 
         public readonly Expr expr;
         public readonly Op op;
@@ -337,29 +424,62 @@ namespace lcc.SyntaxTree {
     /// sizeof unary-expression
     /// sizeof ( type-name )
     /// </summary>
-    public sealed class STSizeOf : Expr, IEquatable<STSizeOf> {
+    public sealed class SizeOf : Expr, IEquatable<SizeOf> {
 
-        public STSizeOf(Expr expr) {
+        public SizeOf(Expr expr) {
             this.expr = expr;
         }
 
-        public STSizeOf(TypeName name) {
+        public SizeOf(TypeName name) {
             this.name = name;
         }
 
         public override Position Pos => expr == null ? name.Pos : expr.Pos;
 
 
-        public bool Equals(STSizeOf x) {
+        public bool Equals(SizeOf x) {
             return x != null && NullableEquals(x.name, name) && NullableEquals(x.expr, expr);
         }
 
         public override bool Equals(object obj) {
-            return Equals(obj as STSizeOf);
+            return Equals(obj as SizeOf);
         }
 
         public override int GetHashCode() {
             return Pos.GetHashCode();
+        }
+
+        public override AST.Expr GetASTExpr(Env env) {
+            T type;
+            AST.Expr e;
+            if (name != null) {
+                type = name.GetT(env);
+            } else {
+                e = expr.GetASTExpr(env);
+                type = e.Type;
+            }
+
+            if (type.IsVarArray) {
+                throw new Error(Pos, "do not support variable length array");
+            }
+
+            /// The sizeof operator shall not be applied to an expression that has function type or an imcomplete type,
+            /// to the parenthesized name of such a type, or to an expression that designates a bit-field member.
+            if (type.IsFunc) {
+                throw new Error(Pos, "cannot apply sizeof to function type");
+            }
+            if (!type.IsComplete) {
+                throw new Error(Pos, "cannot apply sizeof to imcomplete type");
+            }
+            if (type.IsBitField) {
+                throw new Error(Pos, "cannot apply sizeof to bit-field member");
+            }
+
+            /// The sizeof operator yields the size (in bytes) of its operand.
+            /// The result has type an unsigned integer type size_t, which is defined in "stddef.h".
+            /// Here I take unsigned int.
+            return new AST.ConstIntExpr(TUInt.Instance, type.Size);
+
         }
 
         /// <summary>
@@ -376,9 +496,9 @@ namespace lcc.SyntaxTree {
     /// <summary>
     /// arr[idx].
     /// </summary>
-    public sealed class STArrSub : Expr, IEquatable<STArrSub> {
+    public sealed class ArrSub : Expr, IEquatable<ArrSub> {
 
-        public STArrSub(Expr arr, Expr idx) {
+        public ArrSub(Expr arr, Expr idx) {
             this.arr = arr;
             this.idx = idx;
         }
@@ -386,10 +506,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => arr.Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STArrSub);
+            return Equals(obj as ArrSub);
         }
 
-        public bool Equals(STArrSub x) {
+        public bool Equals(ArrSub x) {
             return x != null && x.arr.Equals(arr) && x.idx.Equals(idx);
         }
 
@@ -402,25 +522,25 @@ namespace lcc.SyntaxTree {
         ///     - arr -> pointer to object T
         ///     - idx -> integer type
         /// 
-        /// Returns T
+        /// Returns AST expr.
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        public override T TypeCheck(Env env) {
-            T arrType = arr.TypeCheck(env);
-            if (!arrType.IsPointer && !arrType.IsArray) {
+        public override AST.Expr GetASTExpr(Env env) {
+            AST.Expr arrExpr = arr.GetASTExpr(env);
+            if (!arrExpr.Type.IsPointer && !arrExpr.Type.IsArray) {
                 throw new Error(arr.Pos, "subscripting none pointer type");
             }
 
-            T idxType = idx.TypeCheck(env);
-            if (!idxType.IsInteger) {
+            AST.Expr idxExpr = idx.GetASTExpr(env);
+            if (!idxExpr.Type.IsInteger) {
                 throw new Error(idx.Pos, "subscripting none integer type");
             }
 
-            if (arrType.IsPointer)
-                return (arrType.nake as TPointer).element;
-            else
-                return (arrType.nake as TArray).element;
+            T type = arrExpr.Type.IsPointer ?
+                (arrExpr.Type.nake as TPointer).element :
+                (arrExpr.Type.nake as TArray).element;
+            return new AST.ArrSub(type, env.GetASTEnv(), arrExpr, idxExpr);
         }
 
         public readonly Expr arr;
@@ -431,14 +551,14 @@ namespace lcc.SyntaxTree {
     /// s.i
     /// p->i
     /// </summary>
-    public sealed class STAccess : Expr, IEquatable<STAccess> {
+    public sealed class Access : Expr, IEquatable<Access> {
 
         public enum Kind {
             DOT,
             PTR
         }
 
-        public STAccess(Expr aggregation, T_IDENTIFIER token, Kind type) {
+        public Access(Expr aggregation, T_IDENTIFIER token, Kind type) {
             this.agg = aggregation;
             this.field = token.name;
             this.kind = type;
@@ -447,10 +567,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => agg.Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STAccess);
+            return Equals(obj as Access);
         }
 
-        public bool Equals(STAccess x) {
+        public bool Equals(Access x) {
             return x != null && x.agg.Equals(agg)
                 && x.field.Equals(field)
                 && x.kind == kind;
@@ -473,31 +593,28 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        //public override T TypeCheck(Env env) {
-        //    T aggType = agg.TypeCheck(env);
+        public override AST.Expr GetASTExpr(Env env) {
+            AST.Expr aggExpr = agg.GetASTExpr(env);
+            T aggType = aggExpr.Type;
 
-        //    if (kind == Kind.PTR) {
-        //        if (!aggType.IsPointer)
-        //            throw new Error(agg.Pos, "member reference base type is not a pointer");
-        //        aggType = (aggType.nake as TPointer).element;
-        //    }
+            if (kind == Kind.PTR) {
+                if (!aggType.IsPointer)
+                    throw new Error(agg.Pos, "member reference base type is not a pointer");
+                aggType = (aggType.nake as TPointer).element;
+            }
 
-        //    if (!aggType.IsStruct && !aggType.IsUnion)
-        //        throw new Error(agg.Pos, "member reference base type is not a struct or union");
+            if (!aggType.IsStruct && !aggType.IsUnion)
+                throw new Error(agg.Pos, "member reference base type is not a struct or union");
 
-        //    TStructUnion s = aggType.nake as TStructUnion;
+            TStructUnion s = aggType.nake as TStructUnion;
 
-        //    T m = s.GetType(field);
-        //    if (m == null) {
-        //        throw new Error(agg.Pos, string.Format("no member named {0} in {1}", field, s.ToString()));
-        //    }
+            T m = s.GetType(field);
+            if (m == null) {
+                throw new Error(agg.Pos, string.Format("no member named {0} in {1}", field, s.ToString()));
+            }
 
-        //    if (kind == Kind.DOT) {
-        //        return aggType.Unnest(m, aggType.lr);
-        //    } else {
-        //        return aggType.Unnest(m, T.LR.L);
-        //    }
-        //}
+            return new AST.Access(aggType.Unnest(m), env.GetASTEnv(), aggExpr, field, kind);
+        }
 
         public readonly Expr agg;
         public readonly string field;
@@ -508,14 +625,14 @@ namespace lcc.SyntaxTree {
     /// i++
     /// i--
     /// </summary>
-    public sealed class STPostStep : Expr, IEquatable<STPostStep> {
+    public sealed class PostStep : Expr, IEquatable<PostStep> {
 
         public enum Kind {
             INC,
             DEC
         }
 
-        public STPostStep(Expr expr, Kind kind) {
+        public PostStep(Expr expr, Kind kind) {
             this.expr = expr;
             this.kind = kind;
         }
@@ -523,10 +640,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => expr.Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STPostStep);
+            return Equals(obj as PostStep);
         }
 
-        public bool Equals(STPostStep x) {
+        public bool Equals(PostStep x) {
             return x != null && x.expr.Equals(expr) && x.kind == kind;
         }
 
@@ -547,19 +664,22 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        //public override T TypeCheck(Env env) {
+        public override AST.Expr GetASTExpr(Env env) {
+            AST.Expr e = expr.GetASTExpr(env);
+            if (!e.Type.IsPointer && !e.Type.IsReal) {
+                throw new Error(expr.Pos, string.Format("{0} on type {1}", kind, e.Type));
+            }
 
-        //    T t = expr.TypeCheck(env);
-        //    if (!t.IsPointer && !t.IsArithmetic) {
-        //        throw new Error(expr.Pos, string.Format("{0} on type {1}", kind, t));
-        //    }
+            if (!e.IsLValue) {
+                throw new Error(expr.Pos, "cannot modify rvalue");
+            }
 
-        //    if (!t.IsModifiable) {
-        //        throw new Error(expr.Pos, string.Format("cannot assign to type {0}", t));
-        //    }
+            if (e.Type.qualifiers.isConstant) {
+                throw new Error(expr.Pos, "cannot modify constant value");
+            }
 
-        //    return t.R();
-        //}
+            return new AST.PostStep(e.Type, env.GetASTEnv(), e, kind);
+        }
 
         public readonly Expr expr;
         public readonly Kind kind;
@@ -593,21 +713,21 @@ namespace lcc.SyntaxTree {
         public readonly IEnumerable<STInitItem> inits;
     }
 
-    public sealed class STFuncCall : Expr, IEquatable<STFuncCall> {
+    public sealed class FuncCall : Expr, IEquatable<FuncCall> {
 
-        public STFuncCall(Expr expr, IEnumerable<Expr> args) {
+        public FuncCall(Expr expr, IEnumerable<Expr> args) {
             this.expr = expr;
             this.args = args;
         }
 
         public override Position Pos => expr.Pos;
 
-        public bool Equals(STFuncCall x) {
+        public bool Equals(FuncCall x) {
             return x != null && x.expr.Equals(expr) && x.args.SequenceEqual(args);
         }
 
         public override bool Equals(object obj) {
-            return Equals(obj as STFuncCall);
+            return Equals(obj as FuncCall);
         }
 
         public override int GetHashCode() {
@@ -625,7 +745,7 @@ namespace lcc.SyntaxTree {
 
         public Id(T_IDENTIFIER token) {
             pos = new Position { line = token.line };
-            name = token.name;
+            symbol = token.name;
         }
 
         public override Position Pos => pos;
@@ -635,25 +755,31 @@ namespace lcc.SyntaxTree {
         }
 
         public bool Equals(Id x) {
-            return x != null && x.name.Equals(name) && x.pos.Equals(pos);
+            return x != null && x.symbol.Equals(symbol) && x.pos.Equals(pos);
         }
 
         public override int GetHashCode() {
             return pos.GetHashCode();
         }
 
-        /// <summary>
-        /// Check that the identfifier is defined as variable.
-        /// </summary>
-        /// <param name="env"></param>
-        /// <returns></returns>
-        public override T TypeCheck(Env env) {
-            var entry = env.GetSymbol(name);
-            if (entry == null) throw new ErrUndefinedIdentifier(pos, name);
-            else return entry.type;
+        public override AST.Expr GetASTExpr(Env env) {
+            var entry = env.GetSymbol(symbol);
+            if (entry == null) {
+                // This is an undeclared identifier.
+                throw new ErrUndefinedIdentifier(pos, symbol);
+            } else {
+                switch (entry.kind) {
+                    case SymbolEntry.Kind.OBJECT:
+                        return new AST.ObjExpr(entry.type, env.GetASTEnv(), symbol);
+                    case SymbolEntry.Kind.FUNCTION:
+                        return new AST.FuncDesignator(entry.type, env.GetASTEnv(), symbol);
+                    default:
+                        throw new NotImplementedException();
+                }
+            }
         }
 
-        public readonly string name;
+        public readonly string symbol;
 
         private readonly Position pos;
     }
@@ -662,15 +788,6 @@ namespace lcc.SyntaxTree {
 
         public Constant(Position pos) {
             this.pos = pos;
-        }
-
-        /// <summary>
-        /// For constant, ToAST is the same as GetConstExpr.
-        /// </summary>
-        /// <param name="env"></param>
-        /// <returns></returns>
-        public override AST.Expr ToAST(Env env) {
-            return GetConstExpr(env);
         }
 
         public override Position Pos => pos;
@@ -793,7 +910,7 @@ namespace lcc.SyntaxTree {
             return pos.GetHashCode();
         }
 
-        public override AST.ConstExpr GetConstExpr(Env env) {
+        public override AST.Expr GetASTExpr(Env env) {
             return new AST.ConstIntExpr(type, value);
         }
 
@@ -860,7 +977,7 @@ namespace lcc.SyntaxTree {
             return pos.GetHashCode();
         }
 
-        public override AST.ConstExpr GetConstExpr(Env env) {
+        public override AST.Expr GetASTExpr(Env env) {
             return new AST.ConstIntExpr(TChar.Instance, values.First());
         }
 
@@ -1015,7 +1132,7 @@ namespace lcc.SyntaxTree {
                     t = TDouble.Instance;
                     break;
                 case T_CONST_FLOAT.Suffix.F:
-                    t = TFloat.Instance;
+                    t = TSingle.Instance;
                     break;
                 case T_CONST_FLOAT.Suffix.L:
                     t = TLDouble.Instance;
@@ -1033,7 +1150,7 @@ namespace lcc.SyntaxTree {
                 && x.t.Equals(t);
         }
 
-        public override AST.ConstExpr GetConstExpr(Env env) {
+        public override AST.Expr GetASTExpr(Env env) {
             return new AST.ConstFloatExpr(t, value);
         }
 
@@ -1114,10 +1231,6 @@ namespace lcc.SyntaxTree {
 
         public override int GetHashCode() {
             return values.First();
-        }
-
-        public override T TypeCheck(Env env) {
-            return type;
         }
 
         public static IEnumerable<ushort> Evaluate(LinkedList<T_STRING_LITERAL> tokens) {

@@ -19,10 +19,10 @@ namespace LC_CompilerTests {
                         new Id(new T_IDENTIFIER(1, "FOO")),
                         new STAssignExpr(
                             new Id(new T_IDENTIFIER(1, "x")),
-                            new STBiExpr(
+                            new BiExpr(
                                 new Id(new T_IDENTIFIER(1, "x")),
                                 new ConstInt(new T_CONST_INT(1, "2", 10)),
-                                STBiExpr.Op.PLUS),
+                                BiExpr.Op.PLUS),
                             STAssignExpr.Op.ASSIGN))
                 }
             };
@@ -64,20 +64,20 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserCompoundStatement() {
-            var tests = new Dictionary<string, STCompoundStmt> {
+            var tests = new Dictionary<string, CompoundStmt> {
                 {
                     @"
 {
     a;
     int x;
 }",
-                    new STCompoundStmt(
+                    new CompoundStmt(
                         new List<Stmt> {
                             new Id(new T_IDENTIFIER(3, "a")),
                             new Declaration(
                                 new DeclSpecs(
                                     new List<DeclSpec> {
-                                        new STTypeKeySpec(4, TypeSpec.Kind.INT)
+                                        new TypeKeySpec(4, TypeSpec.Kind.INT)
                                     },
                                     STStoreSpec.Kind.NONE,
                                     new List<TypeSpec.Kind> {
@@ -121,13 +121,13 @@ if (i < length)
     x++;",
                     new STIf(
                         2,
-                        new STBiExpr(
+                        new BiExpr(
                             new Id(new T_IDENTIFIER(2, "i")),
                             new Id(new T_IDENTIFIER(2, "length")),
-                            STBiExpr.Op.LT),
-                        new STPostStep(
+                            BiExpr.Op.LT),
+                        new PostStep(
                             new Id(new T_IDENTIFIER(3, "x")),
-                            STPostStep.Kind.INC),
+                            PostStep.Kind.INC),
                         null)
                 },
                 {
@@ -138,16 +138,16 @@ else
     x--;",
                     new STIf(
                         2,
-                        new STBiExpr(
+                        new BiExpr(
                             new Id(new T_IDENTIFIER(2, "i")),
                             new Id(new T_IDENTIFIER(2, "length")),
-                            STBiExpr.Op.LT),
-                        new STPostStep(
+                            BiExpr.Op.LT),
+                        new PostStep(
                             new Id(new T_IDENTIFIER(3, "x")),
-                            STPostStep.Kind.INC),
-                        new STPostStep(
+                            PostStep.Kind.INC),
+                        new PostStep(
                             new Id(new T_IDENTIFIER(5, "x")),
-                            STPostStep.Kind.DEC))
+                            PostStep.Kind.DEC))
                 }
             };
 
@@ -168,7 +168,7 @@ default: c;
                     new STSwitch(
                         2,
                         new Id(new T_IDENTIFIER(2, "x")),
-                        new STCompoundStmt(new LinkedList<Stmt>(new List<Stmt> {
+                        new CompoundStmt(new LinkedList<Stmt>(new List<Stmt> {
                             new STCase(
                                 new ConstInt(new T_CONST_INT(3, "0", 8)),
                                 new Id(new T_IDENTIFIER(3, "a"))),
@@ -191,15 +191,15 @@ while (x < length) {
     x++;
 }",
                     new STWhile(
-                        new STBiExpr(
+                        new BiExpr(
                             new Id(new T_IDENTIFIER(2, "x")),
                             new Id(new T_IDENTIFIER(2, "length")),
-                            STBiExpr.Op.LT),
-                        new STCompoundStmt(
+                            BiExpr.Op.LT),
+                        new CompoundStmt(
                             new List<Stmt> {
-                                new STPostStep(
+                                new PostStep(
                                     new Id(new T_IDENTIFIER(3, "x")),
-                                    STPostStep.Kind.INC)
+                                    PostStep.Kind.INC)
                             }))
                 }
             };
@@ -218,15 +218,15 @@ do {
     x++;
 } while (x < length);",
                     new STDo(
-                        new STBiExpr(
+                        new BiExpr(
                             new Id(new T_IDENTIFIER(4, "x")),
                             new Id(new T_IDENTIFIER(4, "length")),
-                            STBiExpr.Op.LT),
-                        new STCompoundStmt(
+                            BiExpr.Op.LT),
+                        new CompoundStmt(
                             new List<Stmt> {
-                                new STPostStep(
+                                new PostStep(
                                     new Id(new T_IDENTIFIER(3, "x")),
-                                    STPostStep.Kind.INC)
+                                    PostStep.Kind.INC)
                             }))
                 }
             };
@@ -250,14 +250,14 @@ for (i = 0; i < length; ++i) {
                             new Id(new T_IDENTIFIER(2, "i")),
                             new ConstInt(new T_CONST_INT(2, "0", 8)),
                             STAssignExpr.Op.ASSIGN),
-                        new STBiExpr(
+                        new BiExpr(
                             new Id(new T_IDENTIFIER(2, "i")),
                             new Id(new T_IDENTIFIER(2, "length")),
-                            STBiExpr.Op.LT),
-                        new STPreStep(
+                            BiExpr.Op.LT),
+                        new PreStep(
                             new Id(new T_IDENTIFIER(2, "i")),
-                            STPreStep.Kind.INC),
-                        new STCompoundStmt(
+                            PreStep.Kind.INC),
+                        new CompoundStmt(
                             new List<Stmt> {
                                 new STAssignExpr(
                                     new Id(new T_IDENTIFIER(3, "x")),

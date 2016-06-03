@@ -16,6 +16,7 @@ namespace lcc.TypeSystem {
             this.n = n;
         }
         public override bool IsArray => true;
+        public override bool IsAggregate => true;
         public override bool IsComplete => n != -1;
         public override bool IsDefined => IsComplete;
         public override int Bits {

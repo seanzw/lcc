@@ -5,7 +5,75 @@ using lcc.TypeSystem;
 
 namespace LC_CompilerTests {
     [TestClass]
-    public class TypeToStringTest {
+    public class TypeTest {
+
+        [TestMethod]
+        public void LCCIntPromote() {
+
+            var tests = new Dictionary<TUnqualified, string> {
+                {
+                    TChar.Instance,
+                    "int"
+                },
+                {
+                    TSChar.Instance,
+                    "int"
+                },
+                {
+                    TUChar.Instance,
+                    "int"
+                },
+                {
+                    TShort.Instance,
+                    "int"
+                },
+                {
+                    TUShort.Instance,
+                    "int"
+                },
+                {
+                    TInt.Instance,
+                    "int"
+                },
+                {
+                    TUInt.Instance,
+                    "unsigned int"
+                },
+                {
+                    TLong.Instance,
+                    "long"
+                },
+                {
+                    TULong.Instance,
+                    "unsigned long"
+                },
+                {
+                    TLLong.Instance,
+                    "long long"
+                },
+                {
+                    TULLong.Instance,
+                    "unsigned long long"
+                },
+                {
+                    TSingle.Instance,
+                    "float"
+                },
+                {
+                    TDouble.Instance,
+                    "double"
+                },
+                {
+                    TBool.Instance,
+                    "int"
+                },
+            };
+
+            foreach (var test in tests) {
+                System.Console.WriteLine(test.Key);
+                Assert.AreEqual(test.Value, test.Key.IntPromote().ToString());
+            }
+        }
 
         [TestMethod]
         public void LCCTypeToChar() {
@@ -60,7 +128,7 @@ namespace LC_CompilerTests {
                     "unsigned long long"
                 },
                 {
-                    TFloat.Instance,
+                    TSingle.Instance,
                     "float"
                 },
                 {

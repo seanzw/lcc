@@ -77,42 +77,42 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserTypeKeySpecifier() {
-            Dictionary<string, STTypeKeySpec> dict = new Dictionary<string, STTypeKeySpec> {
+            Dictionary<string, TypeKeySpec> dict = new Dictionary<string, TypeKeySpec> {
                 {
                     "void",
-                    new STTypeKeySpec(1, STTypeKeySpec.Kind.VOID)
+                    new TypeKeySpec(1, TypeKeySpec.Kind.VOID)
                 },
                 {
                     "char",
-                    new STTypeKeySpec(1, STTypeKeySpec.Kind.CHAR)
+                    new TypeKeySpec(1, TypeKeySpec.Kind.CHAR)
                 },
                 {
                     "short",
-                    new STTypeKeySpec(1, STTypeKeySpec.Kind.SHORT)
+                    new TypeKeySpec(1, TypeKeySpec.Kind.SHORT)
                 },
                 {
                     "int",
-                    new STTypeKeySpec(1, STTypeKeySpec.Kind.INT)
+                    new TypeKeySpec(1, TypeKeySpec.Kind.INT)
                 },
                 {
                     "long",
-                    new STTypeKeySpec(1, STTypeKeySpec.Kind.LONG)
+                    new TypeKeySpec(1, TypeKeySpec.Kind.LONG)
                 },
                 {
                     "float",
-                    new STTypeKeySpec(1, STTypeKeySpec.Kind.FLOAT)
+                    new TypeKeySpec(1, TypeKeySpec.Kind.FLOAT)
                 },
                 {
                     "double",
-                    new STTypeKeySpec(1, STTypeKeySpec.Kind.DOUBLE)
+                    new TypeKeySpec(1, TypeKeySpec.Kind.DOUBLE)
                 },
                 {
                     "unsigned",
-                    new STTypeKeySpec(1, STTypeKeySpec.Kind.UNSIGNED)
+                    new TypeKeySpec(1, TypeKeySpec.Kind.UNSIGNED)
                 },
                 {
                     "signed",
-                    new STTypeKeySpec(1, STTypeKeySpec.Kind.SIGNED)
+                    new TypeKeySpec(1, TypeKeySpec.Kind.SIGNED)
                 }
             };
 
@@ -167,8 +167,8 @@ namespace LC_CompilerTests {
                         new List<DeclSpec> {
                             new STStoreSpec(1, STStoreSpec.Kind.STATIC),
                             new TypeQual(1, TypeQual.Kind.CONST),
-                            new STTypeKeySpec(1, TypeSpec.Kind.INT),
-                            new STTypeKeySpec(1, TypeSpec.Kind.CHAR),
+                            new TypeKeySpec(1, TypeSpec.Kind.INT),
+                            new TypeKeySpec(1, TypeSpec.Kind.CHAR),
                             new FuncSpec(1, FuncSpec.Kind.INLINE)
                         },
                         STStoreSpec.Kind.STATIC,
@@ -330,7 +330,7 @@ foo(int a, int b, double c, ...)
                             new Param(
                                 new DeclSpecs(
                                     new List<DeclSpec> {
-                                        new STTypeKeySpec(2, TypeSpec.Kind.INT)
+                                        new TypeKeySpec(2, TypeSpec.Kind.INT)
                                     },
                                     STStoreSpec.Kind.NONE,
                                     new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
@@ -340,7 +340,7 @@ foo(int a, int b, double c, ...)
                             new Param(
                                 new DeclSpecs(
                                     new List<DeclSpec> {
-                                        new STTypeKeySpec(2, TypeSpec.Kind.INT)
+                                        new TypeKeySpec(2, TypeSpec.Kind.INT)
                                     },
                                     STStoreSpec.Kind.NONE,
                                     new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
@@ -350,7 +350,7 @@ foo(int a, int b, double c, ...)
                             new Param(
                                 new DeclSpecs(
                                     new List<DeclSpec> {
-                                        new STTypeKeySpec(2, TypeSpec.Kind.DOUBLE)
+                                        new TypeKeySpec(2, TypeSpec.Kind.DOUBLE)
                                     },
                                     STStoreSpec.Kind.NONE,
                                     new List<TypeSpec.Kind> { TypeSpec.Kind.DOUBLE }),
@@ -506,7 +506,7 @@ struct ss {
                         new List<StructDeclaration> {
                             new StructDeclaration(
                                 ProcessSS(new List<TypeSpecQual> {
-                                    new STTypeKeySpec(3, TypeSpec.Kind.INT)
+                                    new TypeKeySpec(3, TypeSpec.Kind.INT)
                                 }),
                                 new List<StructDeclarator> {
                                     new StructDeclarator(
@@ -541,6 +541,43 @@ struct ss {
                         },
                         TypeSpec.Kind.STRUCT)
                 },
+                {
+                    @"
+struct s {
+    int i;
+    const int ci;
+}",
+                    new StructUnionSpec(
+                        2,
+                        new Id(new T_IDENTIFIER(2, "s")),
+                        new List<StructDeclaration> {
+                            new StructDeclaration(
+                                ProcessSS(new List<TypeSpecQual> {
+                                    new TypeKeySpec(3, TypeSpec.Kind.INT)
+                                }),
+                                new List<StructDeclarator> {
+                                    new StructDeclarator(
+                                        new Declarator(
+                                            new List<Ptr>(),
+                                            new IdDeclarator(
+                                                new Id(new T_IDENTIFIER(3, "i")))),
+                                        null)
+                                }),
+                            new StructDeclaration(
+                                ProcessSS(new List<TypeSpecQual> {
+                                    new TypeQual(4, TypeQual.Kind.CONST),
+                                    new TypeKeySpec(4, TypeSpec.Kind.INT)
+                                }),
+                                new List<StructDeclarator> {
+                                    new StructDeclarator(
+                                        new Declarator(
+                                            new List<Ptr>(),
+                                            new IdDeclarator(new Id(new T_IDENTIFIER(4, "ci")))),
+                                        null)
+                                })
+                        },
+                        TypeSpec.Kind.STRUCT)
+                },
             };
 
             foreach (var test in dict) {
@@ -556,7 +593,7 @@ struct ss {
                     new Param(
                         new DeclSpecs(
                             new List<DeclSpec> {
-                                new STTypeKeySpec(1, TypeSpec.Kind.INT)
+                                new TypeKeySpec(1, TypeSpec.Kind.INT)
                             },
                             STStoreSpec.Kind.NONE,
                             new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
@@ -579,7 +616,7 @@ struct ss {
                             new Param(
                                 new DeclSpecs(
                                     new List<DeclSpec> {
-                                        new STTypeKeySpec(1, TypeSpec.Kind.INT)
+                                        new TypeKeySpec(1, TypeSpec.Kind.INT)
                                     },
                                     STStoreSpec.Kind.NONE,
                                     new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
@@ -589,7 +626,7 @@ struct ss {
                             new Param(
                                 new DeclSpecs(
                                     new List<DeclSpec> {
-                                        new STTypeKeySpec(1, TypeSpec.Kind.INT)
+                                        new TypeKeySpec(1, TypeSpec.Kind.INT)
                                     },
                                     STStoreSpec.Kind.NONE,
                                     new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
@@ -599,7 +636,7 @@ struct ss {
                             new Param(
                                 new DeclSpecs(
                                     new List<DeclSpec> {
-                                        new STTypeKeySpec(1, TypeSpec.Kind.DOUBLE)
+                                        new TypeKeySpec(1, TypeSpec.Kind.DOUBLE)
                                     },
                                     STStoreSpec.Kind.NONE,
                                     new List<TypeSpec.Kind> { TypeSpec.Kind.DOUBLE }),
@@ -627,7 +664,7 @@ int a, int b, double c, ...
                             new Param(
                                 new DeclSpecs(
                                     new List<DeclSpec> {
-                                        new STTypeKeySpec(2, TypeSpec.Kind.INT)
+                                        new TypeKeySpec(2, TypeSpec.Kind.INT)
                                     },
                                     STStoreSpec.Kind.NONE,
                                     new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
@@ -637,7 +674,7 @@ int a, int b, double c, ...
                             new Param(
                                 new DeclSpecs(
                                     new List<DeclSpec> {
-                                        new STTypeKeySpec(2, TypeSpec.Kind.INT)
+                                        new TypeKeySpec(2, TypeSpec.Kind.INT)
                                     },
                                     STStoreSpec.Kind.NONE,
                                     new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
@@ -647,7 +684,7 @@ int a, int b, double c, ...
                             new Param(
                                 new DeclSpecs(
                                     new List<DeclSpec> {
-                                        new STTypeKeySpec(2, TypeSpec.Kind.DOUBLE)
+                                        new TypeKeySpec(2, TypeSpec.Kind.DOUBLE)
                                     },
                                     STStoreSpec.Kind.NONE,
                                     new List<TypeSpec.Kind> { TypeSpec.Kind.DOUBLE }),
@@ -719,14 +756,14 @@ int a, int b, double c, ...
                     "int",
                     new TypeName(
                         ProcessSS(new List<TypeSpecQual> {
-                            new STTypeKeySpec(1, TypeSpec.Kind.INT)
+                            new TypeKeySpec(1, TypeSpec.Kind.INT)
                         }))
                 },
                 {
                     "int *",
                     new TypeName(
                         ProcessSS(new List<TypeSpecQual> {
-                            new STTypeKeySpec(1, TypeSpec.Kind.INT)
+                            new TypeKeySpec(1, TypeSpec.Kind.INT)
                         }),
                         new AbsDeclarator(
                             new List<Ptr> {
@@ -738,7 +775,7 @@ int a, int b, double c, ...
                     "int *[3]",
                     new TypeName(
                         ProcessSS(new List<TypeSpecQual> {
-                            new STTypeKeySpec(1, TypeSpec.Kind.INT)
+                            new TypeKeySpec(1, TypeSpec.Kind.INT)
                         }),
                         new AbsDeclarator(
                             new List<Ptr> {
@@ -754,7 +791,7 @@ int a, int b, double c, ...
                     "int (*)[3]",
                     new TypeName(
                         ProcessSS(new List<TypeSpecQual> {
-                            new STTypeKeySpec(1, TypeSpec.Kind.INT)
+                            new TypeKeySpec(1, TypeSpec.Kind.INT)
                         }),
                         new AbsDeclarator(
                             new List<Ptr> {},
@@ -772,7 +809,7 @@ int a, int b, double c, ...
                     "int (*)[*]",
                     new TypeName(
                         ProcessSS(new List<TypeSpecQual> {
-                            new STTypeKeySpec(1, TypeSpec.Kind.INT)
+                            new TypeKeySpec(1, TypeSpec.Kind.INT)
                         }),
                         new AbsDeclarator(
                             new List<Ptr> {},
@@ -787,7 +824,7 @@ int a, int b, double c, ...
                     "int *[]",
                     new TypeName(
                         ProcessSS(new List<TypeSpecQual> {
-                            new STTypeKeySpec(1, TypeSpec.Kind.INT)
+                            new TypeKeySpec(1, TypeSpec.Kind.INT)
                         }),
                         new AbsDeclarator(
                             new List<Ptr> {
@@ -803,7 +840,7 @@ int a, int b, double c, ...
                     "int (*)(void)",
                     new TypeName(
                         ProcessSS(new List<TypeSpecQual> {
-                            new STTypeKeySpec(1, TypeSpec.Kind.INT)
+                            new TypeKeySpec(1, TypeSpec.Kind.INT)
                         }),
                         new AbsDeclarator(
                             new List<Ptr> {},
@@ -817,7 +854,7 @@ int a, int b, double c, ...
                                     new Param(
                                         new DeclSpecs(
                                             new List<DeclSpec> {
-                                                new STTypeKeySpec(1, TypeSpec.Kind.VOID)
+                                                new TypeKeySpec(1, TypeSpec.Kind.VOID)
                                             },
                                             STStoreSpec.Kind.NONE,
                                             new List<TypeSpec.Kind> { TypeSpec.Kind.VOID }))
@@ -828,7 +865,7 @@ int a, int b, double c, ...
                     "int (*const []) (unsigned int, ...)",
                     new TypeName(
                         ProcessSS(new List<TypeSpecQual> {
-                            new STTypeKeySpec(1, TypeSpec.Kind.INT)
+                            new TypeKeySpec(1, TypeSpec.Kind.INT)
                         }),
                         new AbsDeclarator(
                             new List<Ptr> {},
@@ -846,8 +883,8 @@ int a, int b, double c, ...
                                     new Param(
                                         new DeclSpecs(
                                             new List<DeclSpec> {
-                                                new STTypeKeySpec(1, TypeSpec.Kind.UNSIGNED),
-                                                new STTypeKeySpec(1, TypeSpec.Kind.INT)
+                                                new TypeKeySpec(1, TypeSpec.Kind.UNSIGNED),
+                                                new TypeKeySpec(1, TypeSpec.Kind.INT)
                                             },
                                             STStoreSpec.Kind.NONE,
                                             new List<TypeSpec.Kind> {
@@ -875,7 +912,7 @@ int foo(int a, int b, double c, ...);
                     new Declaration(
                         new DeclSpecs(
                             new List<DeclSpec> {
-                                new STTypeKeySpec(2, TypeSpec.Kind.INT)
+                                new TypeKeySpec(2, TypeSpec.Kind.INT)
                             },
                             STStoreSpec.Kind.NONE,
                             new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
@@ -889,7 +926,7 @@ int foo(int a, int b, double c, ...);
                                             new Param(
                                                 new DeclSpecs(
                                                     new List<DeclSpec> {
-                                                        new STTypeKeySpec(2, TypeSpec.Kind.INT)
+                                                        new TypeKeySpec(2, TypeSpec.Kind.INT)
                                                     },
                                                     STStoreSpec.Kind.NONE,
                                                     new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
@@ -899,7 +936,7 @@ int foo(int a, int b, double c, ...);
                                             new Param(
                                                 new DeclSpecs(
                                                     new List<DeclSpec> {
-                                                        new STTypeKeySpec(2, TypeSpec.Kind.INT)
+                                                        new TypeKeySpec(2, TypeSpec.Kind.INT)
                                                     },
                                                     STStoreSpec.Kind.NONE,
                                                     new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
@@ -909,7 +946,7 @@ int foo(int a, int b, double c, ...);
                                             new Param(
                                                 new DeclSpecs(
                                                     new List<DeclSpec> {
-                                                        new STTypeKeySpec(2, TypeSpec.Kind.DOUBLE)
+                                                        new TypeKeySpec(2, TypeSpec.Kind.DOUBLE)
                                                     },
                                                     STStoreSpec.Kind.NONE,
                                                     new List<TypeSpec.Kind> { TypeSpec.Kind.DOUBLE }),
@@ -928,7 +965,7 @@ int foo(a, b, c);
                     new Declaration(
                         new DeclSpecs(
                             new List<DeclSpec> {
-                                new STTypeKeySpec(2, TypeSpec.Kind.INT)
+                                new TypeKeySpec(2, TypeSpec.Kind.INT)
                             },
                             STStoreSpec.Kind.NONE,
                             new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
@@ -953,7 +990,7 @@ int foo();
                     new Declaration(
                         new DeclSpecs(
                             new List<DeclSpec> {
-                                new STTypeKeySpec(2, TypeSpec.Kind.INT)
+                                new TypeKeySpec(2, TypeSpec.Kind.INT)
                             },
                             STStoreSpec.Kind.NONE,
                             new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
@@ -1031,7 +1068,7 @@ int foo();
                     new Param(
                         new DeclSpecs(
                             new List<DeclSpec> {
-                                new STTypeKeySpec(1, TypeSpec.Kind.INT)
+                                new TypeKeySpec(1, TypeSpec.Kind.INT)
                             },
                             STStoreSpec.Kind.NONE,
                             new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
@@ -1052,7 +1089,7 @@ int foo();
                 }
             };
             foreach (var test in tests) {
-                Aux(test.Key, Parser.ParameterDeclaration().End(), test.Value);
+                Aux(test.Key, Parser.ParameterDeclaration().End(), test.Value, false);
             }
             lcc.Parser.Env.PopScope();
         }
@@ -1068,7 +1105,7 @@ int foo();
                     new Declaration(
                         new DeclSpecs(
                             new List<DeclSpec> {
-                                new STTypeKeySpec(1, TypeSpec.Kind.INT)
+                                new TypeKeySpec(1, TypeSpec.Kind.INT)
                             },
                             STStoreSpec.Kind.NONE,
                             new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
@@ -1080,7 +1117,7 @@ int foo();
                 }
             };
             foreach (var test in tests) {
-                Aux(test.Key, Parser.Declaration().End(), test.Value);
+                Aux(test.Key, Parser.Declaration().End(), test.Value, false);
             }
             lcc.Parser.Env.PopScope();
 

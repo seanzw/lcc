@@ -3,9 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using lcc.AST;
 
 namespace lcc.SyntaxTree {
-    public abstract class Stmt : Node {}
+    public abstract class Stmt : Node {
+        public virtual IEnumerable<AST.Stmt> ToAST(Env env) {
+            throw new NotImplementedException();
+        }
+    }
 
     public sealed class STLabeled : Stmt, IEquatable<STLabeled> {
 
@@ -84,24 +89,31 @@ namespace lcc.SyntaxTree {
         public readonly Stmt statement;
     }
 
-    public sealed class STCompoundStmt : Stmt, IEquatable<STCompoundStmt> {
+    public sealed class CompoundStmt : Stmt, IEquatable<CompoundStmt> {
 
-        public STCompoundStmt(IEnumerable<Stmt> stmts) {
+        public CompoundStmt(IEnumerable<Stmt> stmts) {
             this.stmts = stmts;
         }
 
         public override Position Pos => stmts.First().Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STCompoundStmt);
+            return Equals(obj as CompoundStmt);
         }
 
-        public bool Equals(STCompoundStmt x) {
+        public bool Equals(CompoundStmt x) {
             return x != null && x.stmts.SequenceEqual(stmts);
         }
 
         public override int GetHashCode() {
             return Pos.GetHashCode();
+        }
+
+        public override IEnumerable<AST.Stmt> ToAST(Env env) {
+            env.PushScope(ScopeKind.BLOCK);
+            IEnumerable<AST.Stmt> results = stmts.Aggregate(Enumerable.Empty<AST.Stmt>(), (acc, stmt) => acc.Concat(stmt.ToAST(env)));
+            env.PopScope();
+            return new List<AST.Stmt> { new AST.CompoundStmt(results) };
         }
 
         public readonly IEnumerable<Stmt> stmts;

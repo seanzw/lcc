@@ -10,6 +10,7 @@ namespace lcc.SyntaxTree {
 
     public enum ScopeKind {
         BLOCK,
+        STRUCT,
         FUNCTION,
         FILE,
         PROTOTYPE,
@@ -191,6 +192,7 @@ namespace lcc.SyntaxTree {
                 StringBuilder sb = new StringBuilder();
                 string tt = "";
                 while (tab > 0) { tt += "  "; tab--; }
+                sb.Append(tt + "ScopeKind: " + kind.ToString() + "\n");
                 Action<SymbolEntry.Kind> dumpSymbol = (kind) => {
                     sb.Append(tt + kind.ToString() + "\n");
                     foreach (var s in symbols)
@@ -219,6 +221,8 @@ namespace lcc.SyntaxTree {
             PushScope(ScopeKind.FILE);
             IsFuncDef = false;
             IsFuncParam = false;
+            ASTEnvs = new Stack<AST.Env>();
+            ASTEnvs.Push(new AST.Env());
         }
 
         /// <summary>
@@ -226,12 +230,22 @@ namespace lcc.SyntaxTree {
         /// </summary>
         public void PushScope(ScopeKind kind) {
             scopes.Push(new Scope(kind));
+            
+            // Make a copy of the AST Env.
+            if (kind == ScopeKind.FUNCTION || kind == ScopeKind.BLOCK) {
+                var env = new AST.Env(ASTEnvs.Peek());
+                env.PushScope();
+                ASTEnvs.Push(env);
+            }
         }
 
         /// <summary>
         /// Exit this scope.
         /// </summary>
         public void PopScope() {
+            if (scopes.Peek().kind == ScopeKind.FUNCTION || scopes.Peek().kind == ScopeKind.BLOCK) {
+                ASTEnvs.Pop();
+            }
             scopes.Pop();
         }
 
@@ -247,6 +261,17 @@ namespace lcc.SyntaxTree {
         /// <param name="declaration"></param>
         public void AddObj(string symbol, T type, SymbolEntry.Link link, ObjEntry.Storage storage, Declaration declaration) {
             scopes.Peek().AddSymbol(new ObjEntry(symbol, type, declaration, link, storage));
+            if (storage == ObjEntry.Storage.AUTO || storage == ObjEntry.Storage.REGISTER) {
+                // This is a dynamic object.
+                // In this implementation, register and auto are the same.
+                ASTEnvs.Peek().AddDynamicObj(symbol, type);
+            } else if (storage == ObjEntry.Storage.STATIC) {
+                // This is a static object, check its linkage (either external or internal).
+                AST.Env.AddStaticObj(symbol, type, link == SymbolEntry.Link.EXTERNAL, false);
+            } else {
+                // This is an external object, the linkage must be external.
+                AST.Env.AddStaticObj(symbol, type, true, true);
+            }
         }
 
         public void AddMem(string symbol, T type, StructDeclarator declarator) {
@@ -333,8 +358,14 @@ namespace lcc.SyntaxTree {
             return builder.ToString();
         }
 
+        public AST.Env GetASTEnv() {
+            return ASTEnvs.Peek();
+        }
+
         public bool IsFuncParam;
         public bool IsFuncDef;
+
+        private Stack<AST.Env> ASTEnvs;
 
         private Stack<Scope> scopes;
     }

@@ -8,35 +8,68 @@ using lcc.TypeSystem;
 
 namespace lcc.AST {
 
-    public struct Entry {
-        public readonly string obj;
-        public readonly T t;
-        public Entry(string obj, T t) {
-            this.obj = obj;
-            this.t = t;
+    public abstract class Obj {
+        public readonly string symbol;
+        public readonly T type;
+        public Obj(string symbol, T type) {
+            this.symbol = symbol;
+            this.type = type;
         }
+    }
+
+    public class StaticObj : Obj {
+        public readonly string id;
+        /// <summary>
+        /// True if the linkage is external.
+        /// </summary>
+        public readonly bool linkage;
+        /// <summary>
+        /// True if the storage is external.
+        /// </summary>
+        public readonly bool storage;
+        public StaticObj(string symbol, T type, string id, bool linkage, bool storage)
+            : base(symbol, type) {
+            this.id = id;
+            this.linkage = linkage;
+            this.storage = storage;
+        }
+    }
+
+    public class DynamicObj : Obj {
+
+        /// <summary>
+        /// Offset to ebx reg.
+        /// </summary>
+        public readonly int ebx;
+
+        public DynamicObj(string symbol, T type, int ebx)
+            : base(symbol, type) {
+            this.ebx = ebx;
+        }
+    }
+
+    public enum ScopeKind {
+        BLOCK,
+        FUNCTION
     }
 
     public sealed class Env {
 
         private sealed class Scope {
-            public readonly LinkedList<Entry> entries;
-            public Scope() {
-                entries = new LinkedList<Entry>();
+            public ScopeKind kind;
+            public bool isVarLength;
+            public int ebx;
+            public readonly LinkedList<DynamicObj> objs;
+
+            public Scope(ScopeKind kind) {
+                this.kind = kind;
+                objs = new LinkedList<DynamicObj>();
+                isVarLength = false;
+                ebx = 0;
             }
-            public Scope(Scope s) {
-                entries = new LinkedList<Entry>(s.entries);
-            }
-            public void AddObj(Entry entry) {
-                entries.AddLast(entry);
-            }
-            public Entry? GetObj(string obj) {
-                foreach (var entry in entries) {
-                    if (entry.obj == obj) {
-                        return entry;
-                    }
-                }
-                return null;
+            public void AddObj(string symbol, T type) {
+                DynamicObj obj = new DynamicObj(symbol, type, ebx);
+                objs.AddLast(obj);
             }
         }
 
@@ -45,56 +78,49 @@ namespace lcc.AST {
         /// </summary>
         public Env() {
             scopes = new Stack<Scope>();
-            PushScope();
         }
 
         /// <summary>
         /// Copy constructor.
+        /// Only copy the stack.
         /// </summary>
         /// <param name="e"></param>
         public Env(Env e) {
-            scopes = new Stack<Scope>(from scope in e.scopes select new Scope(scope));
+            scopes = new Stack<Scope>(e.scopes);
         }
 
         public void PushScope() {
-            scopes.Push(new Scope());
+            if (scopes.Count == 0) {
+                // This is the first scope, should be function scope.
+                scopes.Push(new Scope(ScopeKind.FUNCTION));
+            } else {
+                // This is a block scope.
+                scopes.Push(new Scope(ScopeKind.BLOCK));
+            }
         }
 
         public void PopScope() {
             scopes.Pop();
         }
 
-        public static Entry AddStaticObj(string obj, T t) {
-            Entry entry = new Entry(string.Format("{0}_{1}", obj, static_id++), t);
-            statics.AddLast(entry);
-            return entry;
+        /// <summary>
+        /// Add a static object to the environment.
+        /// </summary>
+        /// <param name="symbol"> The name of the symbol. </param>
+        /// <param name="type"> The type of the symbol. </param>
+        /// <param name="linkage"> True if the linkage is external. </param>
+        /// <param name="storage"> True if the storage is external. </param>
+        public static void AddStaticObj(string symbol, T type, bool linkage, bool storage) {
+            StaticObj obj = new StaticObj(symbol,
+                type,
+                string.Format("__{0}_{1}", symbol, static_id++),
+                linkage,
+                storage);
+            statics.AddLast(obj);
         }
 
-        public static Entry? GetStaticObj(string obj) {
-            foreach (var entry in statics) {
-                if (entry.obj == obj) {
-                    return entry;
-                }
-            }
-            return null;
-        }
-
-        public Entry AddDynamicObj(string obj, T t) {
-            Entry entry = new Entry(obj, t);
-            scopes.Peek().AddObj(entry);
-            return entry;
-        }
-
-        public Entry? GetDynamicObj(string obj, bool here = false) {
-            if (here) return scopes.Peek().GetObj(obj);
-            else {
-                foreach (var scope in scopes) {
-                    var entry = scope.GetObj(obj);
-                    if (entry != null)
-                        return entry;
-                }
-                return null;
-            }
+        public void AddDynamicObj(string symbol, T type) {
+            scopes.Peek().AddObj(symbol, type);
         }
 
         private readonly Stack<Scope> scopes;
@@ -102,7 +128,7 @@ namespace lcc.AST {
         /// <summary>
         /// Static objects are global visible in AST, so use static.
         /// </summary>
-        private static LinkedList<Entry> statics = new LinkedList<Entry>();
+        private static LinkedList<StaticObj> statics = new LinkedList<StaticObj>();
 
         /// <summary>
         /// Internal used to index all the static objects.

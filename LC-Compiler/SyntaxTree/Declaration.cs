@@ -44,10 +44,10 @@ namespace lcc.SyntaxTree {
             return specifiers.GetHashCode();
         }
 
-        public IEnumerable<AST.Node> ToAST(Env env) {
+        public override IEnumerable<AST.Stmt> ToAST(Env env) {
             T baseType = specifiers.GetT(env);
 
-            var nodes = new LinkedList<AST.Node>();
+            var nodes = new LinkedList<AST.Stmt>();
             foreach (var declarator in declarators) {
                 var result = declarator.Declare(env, baseType);
 
@@ -207,8 +207,10 @@ namespace lcc.SyntaxTree {
                     } else {
                         // Add this to the environment.
                         env.AddObj(result.Item1, result.Item2, link, storage, this);
-                        // Push the ast node.
-                        nodes.AddLast(new AST.Declaration(result.Item2, result.Item3));
+
+                        // Declaration will be removed from AST.
+                        //// Push the ast node.
+                        //nodes.AddLast(new AST.Declaration(result.Item2, result.Item3));
                     }
                 }
             }
@@ -572,7 +574,7 @@ namespace lcc.SyntaxTree {
                     from s in new List<TypeSpec.Kind> {
                         TypeSpec.Kind.FLOAT
                     } orderby s ascending select s,
-                    TFloat.Instance
+                    TSingle.Instance
                 },
                 {
                     // double
@@ -702,19 +704,19 @@ namespace lcc.SyntaxTree {
         public readonly Kind kind;
     }
 
-    public sealed class STTypeKeySpec : TypeSpec, IEquatable<STTypeKeySpec> {
+    public sealed class TypeKeySpec : TypeSpec, IEquatable<TypeKeySpec> {
 
-        public STTypeKeySpec(int line, Kind kind) : base(kind) {
+        public TypeKeySpec(int line, Kind kind) : base(kind) {
             this.pos = new Position { line = line };
         }
 
         public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STTypeKeySpec);
+            return Equals(obj as TypeKeySpec);
         }
 
-        public bool Equals(STTypeKeySpec x) {
+        public bool Equals(TypeKeySpec x) {
             return x != null && x.pos.Equals(pos) && x.kind == kind;
         }
 
@@ -785,7 +787,7 @@ namespace lcc.SyntaxTree {
 
             if (declarations == null) {
                 // struct/union tag
-                var tag = id.name;
+                var tag = id.symbol;
                 
                 // Check the tag in all scopes.
                 var tagEntry = env.GetTag(tag, false);
@@ -813,7 +815,7 @@ namespace lcc.SyntaxTree {
                 } else {
                     // struct/union tag { ... }
                     // Check if this tag has been declared in the current scope.
-                    var tag = id.name;
+                    var tag = id.symbol;
                     var tmp = env.GetTag(tag, true);
                     if (tmp != null) {
                         // This tag has been declaraed, check if this is the same type
@@ -831,7 +833,7 @@ namespace lcc.SyntaxTree {
                 }
 
                 // Push a new scope.
-                env.PushScope(ScopeKind.BLOCK);
+                env.PushScope(ScopeKind.STRUCT);
 
                 // Get all the fields.
                 var fields = declarations.Aggregate(
@@ -982,7 +984,7 @@ namespace lcc.SyntaxTree {
                     throw new Error(Pos, string.Format("illegal bit-field type: {0}", type));
                 }
 
-                AST.ConstIntExpr c = expr.GetConstExpr(env) as AST.ConstIntExpr;
+                AST.ConstIntExpr c = expr.GetASTExpr(env) as AST.ConstIntExpr;
                 if (c == null) {
                     throw new Error(Pos, "bit-field width should be a constant integer");
                 }
@@ -1044,7 +1046,7 @@ namespace lcc.SyntaxTree {
         public override T GetT(Env env) {
             if (enums == null) {
                 // enum identifier
-                var tag = id.name;
+                var tag = id.symbol;
 
                 // Check the tag in all scopes.
                 var tagEntry = env.GetTag(tag, false);
@@ -1072,17 +1074,17 @@ namespace lcc.SyntaxTree {
                 } else {
                     // enum id { ... }
                     // Check if the tag has been declared.
-                    entry = env.GetTag(id.name, true);
+                    entry = env.GetTag(id.symbol, true);
                     if (entry != null) {
                         // This tag has been declaraed, check if this is the same type
                         if (!entry.type.IsEnum)
-                            throw new ErrDeclareTagAsDifferentType(pos, id.name, entry.node.Pos, entry.type);
+                            throw new ErrDeclareTagAsDifferentType(pos, id.symbol, entry.node.Pos, entry.type);
                         // Check if this type is already defined.
                         if (entry.type.IsDefined)
-                            throw new ErrRedefineTag(pos, id.name, entry.node.Pos);
+                            throw new ErrRedefineTag(pos, id.symbol, entry.node.Pos);
                         type = entry.type as TEnum;
                     } else {
-                        type = new TEnum(id.name);
+                        type = new TEnum(id.symbol);
                         entry = env.AddTag(type.tag, type, this);
                     }
                 }
@@ -1135,14 +1137,14 @@ namespace lcc.SyntaxTree {
         public Tuple<string, int> Evaluate(Env env, TEnum type, int v) {
 
             // Check the id.
-            var entry = env.GetSymbol(id.name, true);
+            var entry = env.GetSymbol(id.symbol, true);
             if (entry != null) {
-                throw new ERedefineSymbolAsDiffKind(Pos, id.name, entry.Pos);
+                throw new ERedefineSymbolAsDiffKind(Pos, id.symbol, entry.Pos);
             }
 
             AST.ConstIntExpr e;
             if (expr != null) {
-                e = expr.GetConstExpr(env) as AST.ConstIntExpr;
+                e = expr.GetASTExpr(env) as AST.ConstIntExpr;
                 if (e == null) {
                     throw new Error(Pos, "enumeration constant requires constant integer");
                 }
@@ -1154,8 +1156,8 @@ namespace lcc.SyntaxTree {
                 throw new Error(Pos, "enumeration constant shall be representable as an int");
             }
 
-            env.AddEnum(id.name, type, e, this);
-            return new Tuple<string, int>(id.name, (int)(e.value));
+            env.AddEnum(id.symbol, type, e, this);
+            return new Tuple<string, int>(id.symbol, (int)(e.value));
         }
 
         public readonly Id id;
@@ -1280,7 +1282,7 @@ namespace lcc.SyntaxTree {
             this.id = id;
         }
 
-        public override string Name => id.name;
+        public override string Name => id.symbol;
         public override Position Pos => id.Pos;
 
         public override bool Equals(object obj) {
@@ -1296,7 +1298,7 @@ namespace lcc.SyntaxTree {
         }
 
         public override Tuple<string, T, IEnumerable<Tuple<string, T>>> Declare(Env env, T type, IEnumerable<Tuple<string, T>> ps) {
-            return new Tuple<string, T, IEnumerable<Tuple<string, T>>>(id.name, type, ps);
+            return new Tuple<string, T, IEnumerable<Tuple<string, T>>>(id.symbol, type, ps);
         }
 
         public readonly Id id;
@@ -1517,7 +1519,7 @@ namespace lcc.SyntaxTree {
 
             // Check the expression is const integer expression.
             if (expr != null) {
-                AST.ConstIntExpr ast = expr.ToAST(env) as AST.ConstIntExpr;
+                AST.ConstIntExpr ast = expr.GetASTExpr(env) as AST.ConstIntExpr;
                 if (ast == null) {
                     throw new Error(pos, "use non-constant expression as array length.");
                 }
@@ -1900,7 +1902,7 @@ namespace lcc.SyntaxTree {
     public sealed class TypedefName : TypeUserSpec, IEquatable<TypedefName> {
 
         public TypedefName(Id identifier) : base(Kind.TYPEDEF) {
-            name = identifier.name;
+            name = identifier.symbol;
             pos = identifier.Pos;
         }
 
