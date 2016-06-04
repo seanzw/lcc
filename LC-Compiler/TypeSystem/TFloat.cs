@@ -5,12 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace lcc.TypeSystem {
-    public sealed class TSingle : TFloat {
+    public sealed class TSingle : TRealFloat {
 
         private static readonly TSingle instance = new TSingle();
         public static TSingle Instance => instance;
         public override int Rank => 6;
         public override int Bits => 32;
+        public override TComplex Complex => TCSingle.Instance;
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
@@ -21,13 +22,28 @@ namespace lcc.TypeSystem {
         }
     }
 
-    public sealed class TDouble : TFloat {
+    public sealed class TCSingle : TComplex {
+        private static readonly TCSingle instance = new TCSingle();
+        public static TCSingle Instance => instance;
+        public override int Rank => 6;
+        public override int Bits => 64;
+        public override TUnqualified Composite(TUnqualified other) {
+            throw new NotImplementedException();
+        }
+
+        public override string ToString() {
+            return "float _Complex";
+        }
+    }
+
+    public sealed class TDouble : TRealFloat {
 
         private static readonly TDouble instance = new TDouble();
 
         public static TDouble Instance => instance;
-        public override int Rank => 6;
+        public override int Rank => 7;
         public override int Bits => 64;
+        public override TComplex Complex => TCDouble.Instance;
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
@@ -38,12 +54,30 @@ namespace lcc.TypeSystem {
         }
     }
 
-    public sealed class TLDouble : TFloat {
+    public sealed class TCDouble : TComplex {
+
+        private static readonly TCDouble instance = new TCDouble();
+
+        public static TCDouble Instance => instance;
+        public override int Rank => 7;
+        public override int Bits => 128;
+
+        public override TUnqualified Composite(TUnqualified other) {
+            throw new NotImplementedException();
+        }
+
+        public override string ToString() {
+            return "double _Complex";
+        }
+    }
+
+    public sealed class TLDouble : TRealFloat {
 
         private static readonly TLDouble instance = new TLDouble();
         public static TLDouble Instance => instance;
-        public override int Rank => 7;
+        public override int Rank => 8;
         public override int Bits => 64;
+        public override TComplex Complex => TCLDouble.Instance;
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
@@ -51,6 +85,23 @@ namespace lcc.TypeSystem {
 
         public override string ToString() {
             return "long double";
+        }
+    }
+
+    public sealed class TCLDouble : TComplex {
+
+        private static readonly TCLDouble instance = new TCLDouble();
+
+        public static TCLDouble Instance => instance;
+        public override int Rank => 8;
+        public override int Bits => 128;
+
+        public override TUnqualified Composite(TUnqualified other) {
+            throw new NotImplementedException();
+        }
+
+        public override string ToString() {
+            return "long double _Complex";
         }
     }
 }

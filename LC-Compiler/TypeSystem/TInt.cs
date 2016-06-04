@@ -9,6 +9,7 @@ namespace lcc.TypeSystem {
 
     /// <summary>
     /// Built-in type char.
+    /// Here char is implemented with signed char.
     /// </summary>
     public sealed class TChar : TCharacter {
 
@@ -17,6 +18,9 @@ namespace lcc.TypeSystem {
         public override int Rank => 1;
         public override BigInteger MAX => TSChar.Instance.MAX;
         public override BigInteger MIN => TSChar.Instance.MIN;
+        public override bool IsSigned => true;
+        public override TInteger Signed => this;
+        public override TInteger Unsigned => TUChar.Instance;
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
@@ -34,6 +38,10 @@ namespace lcc.TypeSystem {
         public override int Rank => 1;
         public override BigInteger MAX => 255;
         public override BigInteger MIN => 0;
+        public override bool IsSigned => false;
+        public override TInteger Unsigned => this;
+        public override TInteger Signed => TSChar.Instance;
+
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
@@ -51,6 +59,9 @@ namespace lcc.TypeSystem {
         public override int Rank => 1;
         public override BigInteger MAX => 127;
         public override BigInteger MIN => -128;
+        public override bool IsSigned => true;
+        public override TInteger Signed => this;
+        public override TInteger Unsigned => TUChar.Instance;
 
 
         public override TUnqualified Composite(TUnqualified other) {
@@ -70,6 +81,9 @@ namespace lcc.TypeSystem {
         public override int Bits => 16;
         public override BigInteger MAX => short.MaxValue;
         public override BigInteger MIN => short.MinValue;
+        public override bool IsSigned => true;
+        public override TInteger Signed => this;
+        public override TInteger Unsigned => TUShort.Instance;
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
@@ -88,6 +102,10 @@ namespace lcc.TypeSystem {
         public override int Bits => 16;
         public override BigInteger MAX => ushort.MaxValue;
         public override BigInteger MIN => ushort.MinValue;
+        public override bool IsSigned => false;
+        public override TInteger Unsigned => this;
+        public override TInteger Signed => TShort.Instance;
+
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
@@ -109,6 +127,9 @@ namespace lcc.TypeSystem {
         public override int Bits => 32;
         public override BigInteger MAX => int.MaxValue;
         public override BigInteger MIN => int.MinValue;
+        public override bool IsSigned => true;
+        public override TInteger Signed => this;
+        public override TInteger Unsigned => TUInt.Instance;
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
@@ -128,6 +149,10 @@ namespace lcc.TypeSystem {
         public override int Bits => 32;
         public override BigInteger MAX => uint.MaxValue;
         public override BigInteger MIN => uint.MinValue;
+        public override bool IsSigned => false;
+        public override TInteger Unsigned => this;
+        public override TInteger Signed => TInt.Instance;
+
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
@@ -147,6 +172,9 @@ namespace lcc.TypeSystem {
         public override int Bits => 32;
         public override BigInteger MAX => TInt.Instance.MAX;
         public override BigInteger MIN => TInt.Instance.MIN;
+        public override bool IsSigned => true;
+        public override TInteger Signed => this;
+        public override TInteger Unsigned => TULong.Instance;
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
@@ -166,6 +194,10 @@ namespace lcc.TypeSystem {
         public override int Bits => 32;
         public override BigInteger MAX => TUInt.Instance.MAX;
         public override BigInteger MIN => TUInt.Instance.MIN;
+        public override bool IsSigned => false;
+        public override TInteger Unsigned => this;
+        public override TInteger Signed => TLong.Instance;
+
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
@@ -184,6 +216,9 @@ namespace lcc.TypeSystem {
         public override int Bits => 64;
         public override BigInteger MAX => long.MaxValue;
         public override BigInteger MIN => long.MinValue;
+        public override bool IsSigned => true;
+        public override TInteger Signed => this;
+        public override TInteger Unsigned => TULLong.Instance;
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
@@ -202,6 +237,11 @@ namespace lcc.TypeSystem {
         public override int Bits => 64;
         public override BigInteger MAX => ulong.MaxValue;
         public override BigInteger MIN => ulong.MinValue;
+        public override bool IsSigned => false;
+        public override TInteger Unsigned => this;
+        public override TInteger Signed => TLLong.Instance;
+
+
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();

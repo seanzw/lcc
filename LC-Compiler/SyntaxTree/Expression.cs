@@ -167,6 +167,33 @@ namespace lcc.SyntaxTree {
             return lhs.GetHashCode() ^ rhs.GetHashCode() ^ op.GetHashCode();
         }
 
+        public override AST.Expr GetASTExpr(Env env) {
+            AST.Expr lExpr = lhs.GetASTExpr(env);
+            AST.Expr rExpr = rhs.GetASTExpr(env);
+            switch (op) {
+                case Op.MULT:
+                case Op.DIV:
+                case Op.MOD:
+                    /// Multiplicative operators.
+                    /// Each of the operands shall have arithmetic type.
+                    if (!lExpr.Type.IsArithmetic || !rExpr.Type.IsArithmetic) {
+                        throw new Error(Pos, string.Format("operands of operator {0} shall have arithmetic type", op));
+                    }
+                    /// The operands of the % operator shall have integer type.
+                    if (op == Op.MOD) {
+                        if (!lExpr.Type.IsInteger || !rExpr.Type.IsInteger) {
+                            throw new Error(Pos, string.Format("operands of operator {0} shall have integer type", op));
+                        }
+                    }
+                    /// The usual arithmetic conversions are performed on the operands.
+                    T type = lExpr.Type.UsualArithConversion(rExpr.Type);
+                    return new AST.BiExpr(type, env.GetASTEnv(), lExpr, rExpr, op);
+
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
         public readonly Expr lhs;
         public readonly Expr rhs;
         public readonly Op op;
@@ -228,6 +255,7 @@ namespace lcc.SyntaxTree {
             /// if the type of the expression is the same as the named type.
             /// NOTE: This is used for constant expression that has float type. In this implementation
             /// all constant float expression are represented in double.
+            /// TODO: Support constant expression cast.
 
             /// A cast that specifies no conversion has no effect on the type or value of an expression.
             /// However, the result of a cast is always rvalue, therefore we still need to new VarExpr.

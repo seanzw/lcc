@@ -171,5 +171,67 @@ namespace LC_CompilerTests {
             }
         }
 
+        [TestMethod]
+        public void LCCTCUsualArithmeticConversion() {
+            Dictionary<Tuple<TArithmetic, TArithmetic>, TArithmetic> tests = new Dictionary<Tuple<TArithmetic, TArithmetic>, TArithmetic> {
+                {
+                    new Tuple<TArithmetic, TArithmetic>(TLDouble.Instance, TLDouble.Instance),
+                    TLDouble.Instance
+                },
+                {
+                    new Tuple<TArithmetic, TArithmetic>(TLDouble.Instance, TInt.Instance),
+                    TLDouble.Instance
+                },
+                {
+                    new Tuple<TArithmetic, TArithmetic>(TLDouble.Instance, TChar.Instance),
+                    TLDouble.Instance
+                },
+                {
+                    new Tuple<TArithmetic, TArithmetic>(TLDouble.Instance, TUShort.Instance),
+                    TLDouble.Instance
+                },
+                {
+                    new Tuple<TArithmetic, TArithmetic>(TLDouble.Instance, TLLong.Instance),
+                    TLDouble.Instance
+                },
+                {
+                    new Tuple<TArithmetic, TArithmetic>(TSingle.Instance, TLDouble.Instance),
+                    TLDouble.Instance
+                },
+                {
+                    new Tuple<TArithmetic, TArithmetic>(TLDouble.Instance, TCLDouble.Instance),
+                    TCLDouble.Instance
+                },
+                {
+                    new Tuple<TArithmetic, TArithmetic>(TLDouble.Instance, TCDouble.Instance),
+                    TCLDouble.Instance
+                },
+                {
+                    new Tuple<TArithmetic, TArithmetic>(TChar.Instance, TShort.Instance),
+                    TInt.Instance
+                },
+                {
+                    new Tuple<TArithmetic, TArithmetic>(TChar.Instance, TLong.Instance),
+                    TLong.Instance
+                },
+                {
+                    new Tuple<TArithmetic, TArithmetic>(TChar.Instance, TUInt.Instance),
+                    TUInt.Instance
+                },
+                {
+                    new Tuple<TArithmetic, TArithmetic>(TChar.Instance, TULLong.Instance),
+                    TULLong.Instance
+                },
+                {
+                    new Tuple<TArithmetic, TArithmetic>(TLLong.Instance, TULong.Instance),
+                    TLLong.Instance
+                },
+
+            };
+            foreach (var test in tests) {
+                Assert.AreEqual(test.Value, test.Key.Item1.UsualArithConversion(test.Key.Item2));
+            }
+        }
+
     }
 }

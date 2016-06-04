@@ -30,7 +30,7 @@ namespace lcc.TypeSystem {
                     - pointer
                     - arithmetic
                         - real
-                            - floating
+                            - real floating
                                 - float
                                 - double
                                 - long double
@@ -44,9 +44,16 @@ namespace lcc.TypeSystem {
                                 - [signed/unsigned] long long
                                 - _Bool
                         - complex
+                            - float complex
+                            - double complex
+                            - long double complex
      */
 
-
+    
+    public enum TDomain {
+        REAL,
+        COMPLEX
+    }
 
     /// <summary>
     /// Base type is a type without type qualifier.
@@ -77,8 +84,21 @@ namespace lcc.TypeSystem {
             throw new InvalidOperationException("Can't define a function which is not an undefined function!");
         }
 
-        public virtual TUnqualified IntPromote() {
+        /// <summary>
+        /// Perform integer promotion on arithmetic types.
+        /// Only call this method if IsArithmetic is true.
+        /// </summary>
+        /// <returns></returns>
+        public virtual TArithmetic IntPromote() {
             throw new InvalidOperationException("Can't perform integer promotion on non-arithmetic type!");
+        }
+
+        public virtual TDomain TypeDomain() {
+            throw new InvalidOperationException("Can't take type domain of non-arithmetic type!");
+        }
+
+        public virtual TArithmetic UsualArithConversion(TUnqualified other) {
+            throw new InvalidOperationException("Can't do usual arithmetic conversions on non-arithmetic type!");
         }
 
         /// <summary>
@@ -103,6 +123,7 @@ namespace lcc.TypeSystem {
         public virtual bool IsInteger => false;
         public virtual bool IsFloat => false;
         public virtual bool IsReal => false;
+        public virtual bool IsComplex => false;
         public virtual bool IsArithmetic => false;
         public virtual bool IsScalar => false;
         public virtual bool IsAggregate => false;
@@ -179,24 +200,125 @@ namespace lcc.TypeSystem {
         /// Integer promotion, by default the original type.
         /// </summary>
         /// <returns></returns>
-        public override TUnqualified IntPromote() {
+        public override TArithmetic IntPromote() {
             return this;
         }
 
+        public override TArithmetic UsualArithConversion(TUnqualified other) {
+            if (!other.IsArithmetic) {
+                throw new ArgumentException(string.Format("Usual arithmetic conversion should be performed on arithmetic types, not {0}!", other));
+            }
+            TArithmetic x = other as TArithmetic;
+
+            // First determine a common real type.
+            TReal crt = CommonRealType(x);
+
+            // Check if both type domain are real.
+            if (TypeDomain() == TDomain.REAL && other.TypeDomain() == TDomain.REAL) {
+                return crt;
+            } else {
+                // Convert the complex domain.
+                return crt.Complex;
+            }
+        }
+
+
+        private TReal CommonRealType(TArithmetic x) {
+            int rank = Math.Max(Rank, x.Rank);
+            if (rank == TLDouble.Instance.Rank) {
+                return TLDouble.Instance;
+            }
+            if (rank == TDouble.Instance.Rank) {
+                return TDouble.Instance;
+            }
+            if (rank == TSingle.Instance.Rank) {
+                return TSingle.Instance;
+            }
+
+            /// Otherwise, the integer promotions are performed on both operands.
+            /// Since both this and x are integer types, their promoted types are also integer types.
+            TInteger a = IntPromote() as TInteger;
+            TInteger b = x.IntPromote() as TInteger;
+            
+            /// Then the following rules are applied to the promoted operands.
+            /// 1. If both operands have the same type, then no further conversion is needed.
+            if (a.Equals(b)) {
+                return a;
+            }
+
+            /// 2. Otherwise, if both operands have signed integer types or both have unsigned integer types,
+            ///    the operand with the type of lesser integer conversion rank is converted to the type of the 
+            ///    operand with greater rank.
+            if (a.IsSigned == b.IsSigned) {
+                return a.Rank > b.Rank ? a : b;
+            }
+
+            /// 3. Otherwise, if the operand that has unsigned integer type has rank greater or equal to the
+            ///    rank  of the type of the other operand, then the operand with signed integer type is converted
+            ///    to the type of the operand with unsigned integer type.
+            TInteger u = a.IsSigned ? b : a;    // The unsigned integer type.
+            TInteger s = a.IsSigned ? a : b;    // The signed integer type.
+            if (u.Rank >= s.Rank) {
+                return u;
+            }
+
+            /// 4. Otherwise, if the type of the operand with signed integer type can represent all of the values
+            ///    of the type of the operand with unsigned integer type, then the operand with unsigned integer type
+            ///    is converted to the type of the operand with signed integer type.
+            if (u.MAX < s.MAX && u.MIN > s.MIN) {
+                return s;
+            }
+
+            /// 5. Otherwise, both operands are converted to the unsigned integer type corresponding to the type of the
+            ///    operand with signed integer type.
+            return s.Unsigned;
+        }
+        
         public abstract int Rank { get; }
     }
 
     public abstract class TReal : TArithmetic {
         public override bool IsReal => true;
+        public override TDomain TypeDomain() {
+            return TDomain.REAL;
+        }
+        public abstract TComplex Complex { get; }
     }
 
-    public abstract class TFloat : TReal {
+    /// <summary>
+    /// There are three complex types, designed ast float _Complex, double _Complex, and long double _Complex.
+    /// The real floating and complex types are collectively called the floating types.
+    /// </summary>
+    public abstract class TComplex : TArithmetic {
+        public override bool IsComplex => true;
+        public override bool IsFloat => true;
+        public override TDomain TypeDomain() {
+            return TDomain.COMPLEX;
+        }
+    }
+
+    public abstract class TRealFloat : TReal {
         public override bool IsFloat => true;
     }
     public abstract class TInteger : TReal {
         public override bool IsInteger => true;
         public abstract BigInteger MAX { get; }
         public abstract BigInteger MIN { get; }
+        public abstract bool IsSigned { get; }
+        /// <summary>
+        /// Get the corresponding signed integer type.
+        /// </summary>
+        public abstract TInteger Signed { get; }
+        /// <summary>
+        /// Get the corresponding unsigned integer type.
+        /// </summary>
+        public abstract TInteger Unsigned { get; }
+
+        public override TComplex Complex {
+            get {
+                throw new InvalidOperationException("There is no corresponding complex type for integer types.");
+            }
+        }
         /// <summary>
         /// Integer promotion.
         /// If an int can represent all values of the original type,
@@ -205,7 +327,7 @@ namespace lcc.TypeSystem {
         /// All other types remain unchanged.
         /// </summary>
         /// <returns></returns>
-        public override TUnqualified IntPromote() {
+        public override TArithmetic IntPromote() {
             if (MAX < TInt.Instance.MAX && MIN > TInt.Instance.MIN) {
                 return TInt.Instance;
             }
@@ -400,6 +522,14 @@ namespace lcc.TypeSystem {
             return nake.IntPromote().None();
         }
 
+        public TDomain TypeDomain() {
+            return nake.TypeDomain();
+        }
+
+        public T UsualArithConversion(T other) {
+            return nake.UsualArithConversion(other.nake).None();
+        }
+
         public bool IsComplete => nake.IsComplete;
         public bool IsDefined => nake.IsDefined;
         public bool IsFunc => nake.IsFunc;
@@ -408,6 +538,7 @@ namespace lcc.TypeSystem {
         public bool IsInteger => nake.IsInteger;
         public bool IsFloat => nake.IsFloat;
         public bool IsReal => nake.IsReal;
+        public bool IsComplex => nake.IsComplex;
         public bool IsArithmetic => nake.IsArithmetic;
         public bool IsScalar => nake.IsScalar;
         public bool IsAggregate => nake.IsAggregate;

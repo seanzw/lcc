@@ -14,6 +14,22 @@ namespace lcc.TypeSystem {
         public override int Bits => 8;
         public override BigInteger MIN => 0;
         public override BigInteger MAX => 1;
+        public override bool IsSigned {
+            get {
+                throw new InvalidOperationException("IsSigned method is invalid on bool type");
+            }
+        }
+        public override TInteger Signed {
+            get {
+                throw new InvalidOperationException("No corresponding signed integer type on Bool");
+            }
+        }
+
+        public override TInteger Unsigned {
+            get {
+                throw new InvalidOperationException("No corresponding signed integer type on Bool");
+            }
+        }
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
