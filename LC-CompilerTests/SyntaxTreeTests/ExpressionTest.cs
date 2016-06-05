@@ -134,11 +134,11 @@ namespace LC_CompilerTests {
 }
 ";
             List<T> types = new List<T> {
-                TUInt.Instance.Const(),
-                TUInt.Instance.Const(),
-                TUInt.Instance.Const(),
-                TUInt.Instance.Const(),
-                TUInt.Instance.Const()
+                TUInt.Instance.None(),
+                TUInt.Instance.None(),
+                TUInt.Instance.None(),
+                TUInt.Instance.None(),
+                TUInt.Instance.None()
             };
             List<int> values = new List<int> {
                 128,

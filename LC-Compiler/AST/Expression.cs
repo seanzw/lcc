@@ -9,21 +9,63 @@ using lcc.TypeSystem;
 
 namespace lcc.AST {
     public abstract class Expr : Stmt {
-        public abstract T Type { get; }
+        public T Type => type;
+        public Env Envrionment => env;
         public abstract bool IsLValue { get; }
-    }
 
-    public abstract class VarExpr : Expr {
         protected readonly T type;
-        public readonly Env env;
-        public override T Type => type;
-        public VarExpr(T type, Env env) {
+        protected readonly Env env;
+
+        public Expr(T type, Env env) {
             this.type = type;
             this.env = env;
         }
+
+        /// <summary>
+        /// Performs all the three implicit conversions by explicitly using cast operator.
+        /// </summary>
+        /// <returns></returns>
+        public Expr ImplicitCast() {
+            return CastLValue().CastArr().CastFunc();
+        }
+
+        /// <summary>
+        /// 
+        /// 
+        /// 1. An lvalue that does not have array type is converted to the value stored in the designated
+        ///    object (and is no longer an lvalue).
+        ///    If the lvalue has qualified type, the values has unqualified version of the type of the lvalue.
+        ///    Otherwise, the value has the type of the lvalue.
+        ///    EXCEPT: sizeof, unary &, ++, --, left operand of ., left operand of assignment operator.
+        /// </summary>
+        /// <returns></returns>
+        public Expr CastLValue() {
+            return (IsLValue && !type.IsArray) ? new Cast(type.nake, env, this) : this;
+        }
+
+        /// <summary>
+        /// 2. An expression that has type "array of type" is converted to an expression with type "pointer to type"
+        ///    that points to the initial element of the array object and is not an lvalue.
+        ///    If the array object has register storage class, the behavior is undefined.
+        ///    EXCEPT: sizeof, unary &, a string literal used to initialize an array.
+        /// </summary>
+        /// <returns></returns>
+        public Expr CastArr() {
+            return type.IsArray ? new Cast(new TPtr((type.nake as TArr).element), env, this) : this;
+        }
+
+        /// <summary>
+        /// 3. A function designator is an expression that has function type. A function designator with type
+        ///    "function returning type" is converted to an expression that has type "pointer to function returning type".
+        ///    EXCEPT: sizeof, unary &.
+        /// </summary>
+        /// <returns></returns>
+        public Expr CastFunc() {
+            return type.IsFunc ? new Cast(new TPtr(type), env, this) : this;
+        }
     }
 
-    public sealed class BiExpr : VarExpr {
+    public sealed class BiExpr : Expr {
         public readonly Expr lhs;
         public readonly Expr rhs;
         public readonly SyntaxTree.BiExpr.Op op;
@@ -35,15 +77,15 @@ namespace lcc.AST {
         }
     }
 
-    public sealed class Cast : VarExpr {
+    public sealed class Cast : Expr {
         public readonly Expr expr;
-        public override bool IsLValue => true;
+        public override bool IsLValue => false;
         public Cast(TUnqualified type, Env env, Expr expr) : base(type.None(), env) {
             this.expr = expr;
         }
     }
 
-    public sealed class UnaryOp : VarExpr {
+    public sealed class UnaryOp : Expr {
         public readonly Expr expr;
         public readonly SyntaxTree.UnaryOp.Op op;
         public override bool IsLValue => false;
@@ -53,7 +95,7 @@ namespace lcc.AST {
         }
     }
 
-    public sealed class PreStep : VarExpr {
+    public sealed class PreStep : Expr {
         public readonly Expr expr;
         public readonly SyntaxTree.PreStep.Kind kind;
         public override bool IsLValue => false;
@@ -63,7 +105,7 @@ namespace lcc.AST {
         }
     }
 
-    public sealed class ArrSub : VarExpr {
+    public sealed class ArrSub : Expr {
         public readonly Expr arr;
         public readonly Expr idx;
         public override bool IsLValue => true;
@@ -73,7 +115,7 @@ namespace lcc.AST {
         }
     }
 
-    public sealed class Access : VarExpr {
+    public sealed class Access : Expr {
         public readonly Expr agg;
         public readonly string field;
         public readonly SyntaxTree.Access.Kind kind;
@@ -86,7 +128,7 @@ namespace lcc.AST {
         }
     }
 
-    public sealed class PostStep : VarExpr {
+    public sealed class PostStep : Expr {
         public readonly Expr expr;
         public readonly SyntaxTree.PostStep.Kind kind;
         public override bool IsLValue => false;
@@ -96,7 +138,7 @@ namespace lcc.AST {
         }
     }
 
-    public sealed class FuncDesignator : VarExpr {
+    public sealed class FuncDesignator : Expr {
         public readonly string symbol;
         public override bool IsLValue => true;
         public FuncDesignator(T type, Env env, string symbol) : base(type, env) {
@@ -104,7 +146,7 @@ namespace lcc.AST {
         }
     }
 
-    public sealed class ObjExpr : VarExpr {
+    public sealed class ObjExpr : Expr {
         public readonly string symbol;
         public override bool IsLValue => true;
         public ObjExpr(T type, Env env, string symbol) : base(type, env) {
@@ -113,12 +155,8 @@ namespace lcc.AST {
     }
 
     public abstract class ConstExpr : Expr {
-        public readonly T type;
-        public override T Type => type;
         public override bool IsLValue => false;
-        public ConstExpr(TUnqualified type) {
-            this.type = type.Const();
-        }
+        public ConstExpr(TUnqualified type, Env env) : base(type.None(), env) { }
     }
 
     /// <summary>
@@ -127,7 +165,7 @@ namespace lcc.AST {
     ///     - float constant expression
     /// </summary>
     public abstract class ConstArithExpr : ConstExpr {
-        public ConstArithExpr(TUnqualified type) : base(type) { }
+        public ConstArithExpr(TUnqualified type, Env env) : base(type, env) { }
     }
 
     /// <summary>
@@ -136,11 +174,10 @@ namespace lcc.AST {
     public sealed class ConstIntExpr : ConstArithExpr {
         public readonly TInteger t;
         public readonly BigInteger value;
-        public ConstIntExpr(TInteger t, BigInteger value) : base(t) {
+        public ConstIntExpr(TInteger t, BigInteger value, Env env) : base(t, env) {
             this.t = t;
             this.value = value;
         }
-        public override T Type => t.Const();
     }
 
     /// <summary>
@@ -149,11 +186,10 @@ namespace lcc.AST {
     public sealed class ConstFloatExpr : ConstArithExpr {
         public readonly TArithmetic t;
         public readonly double value;
-        public ConstFloatExpr(TArithmetic t, double value) : base(t) {
+        public ConstFloatExpr(TArithmetic t, double value, Env env) : base(t, env) {
             this.t = t;
             this.value = value;
         }
-        public override T Type => t.Const();
     }
 
     ///// <summary>

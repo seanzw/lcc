@@ -1149,7 +1149,7 @@ namespace lcc.SyntaxTree {
                     throw new Error(Pos, "enumeration constant requires constant integer");
                 }
             } else {
-                e = new AST.ConstIntExpr(TInt.Instance, v);
+                e = new AST.ConstIntExpr(TInt.Instance, v, env.GetASTEnv());
             }
 
             if (e.value > TInt.Instance.MAX || e.value < TInt.Instance.MIN) {
@@ -1646,7 +1646,7 @@ namespace lcc.SyntaxTree {
 
             // 2. A declaration of a parameter as "array of type" shall be adjusted to "qualified pointer to type".
             if (type.IsArray) {
-                type = (type.nake as TArray).element.Ptr(type.qualifiers);
+                type = (type.nake as TCArr).element.Ptr(type.qualifiers);
             }
 
             // 3. A declaration of a parameter as "function returning type" shall be adjusted to "pointer to function returning type".

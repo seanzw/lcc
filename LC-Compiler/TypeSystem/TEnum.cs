@@ -38,10 +38,12 @@ namespace lcc.TypeSystem {
         }
 
         /// <summary>
-        /// Notice that enum type is always complete, but not always defined.
+        /// The enumerated type is incomplete untill after the } that terminates
+        /// the list of enumerator declarators.
+        /// Which means the enumerated type is complete when it is defined.
         /// </summary>
         /// <returns></returns>
-        public override bool IsComplete => true;
+        public override bool IsComplete => IsDefined;
 
         /// <summary>
         /// Whether this is a enum type.
@@ -54,9 +56,25 @@ namespace lcc.TypeSystem {
         public override bool IsDefined => enums != null;
 
         /// <summary>
-        /// Enumerator is represent as int.
+        /// Enumerator is represented as int.
         /// </summary>
         public override int Bits => 32;
+
+        /// <summary>
+        /// Each enumerated type shall be compatible with char, a signed integer type,
+        /// or an unsigned integer type. The choice of type is implementation-defined,
+        /// but shall be capable of representing the values of all the members of the
+        /// enumeration.
+        /// 
+        /// Here the enumerated type is represented as int, thus enum should be compatible
+        /// with int.
+        /// Notice that enum and int are NOT the same type, thus Equals should return false.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public override bool Compatible(TUnqualified other) {
+            return Equals(other) || other is TInt;
+        }
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();

@@ -140,7 +140,7 @@ namespace LC_CompilerTests {
                     "_Bool"
                 },
                 {
-                    new TArray(TChar.Instance.None(), 3),
+                    new TCArr(TChar.Instance.None(), 3),
                     "(char)[3]"
                 }
             };

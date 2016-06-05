@@ -131,6 +131,16 @@ namespace lcc.TypeSystem {
         public override TInteger Signed => this;
         public override TInteger Unsigned => TUInt.Instance;
 
+        /// <summary>
+        /// Notice that enum is represented as int, therefore int and enum are
+        /// compatible types.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public override bool Compatible(TUnqualified other) {
+            return Equals(other) || other.IsEnum;
+        }
+
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
         }

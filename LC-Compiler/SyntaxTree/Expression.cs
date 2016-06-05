@@ -168,8 +168,8 @@ namespace lcc.SyntaxTree {
         }
 
         public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr lExpr = lhs.GetASTExpr(env);
-            AST.Expr rExpr = rhs.GetASTExpr(env);
+            AST.Expr lExpr = lhs.GetASTExpr(env).ImplicitCast();
+            AST.Expr rExpr = rhs.GetASTExpr(env).ImplicitCast();
             switch (op) {
                 case Op.MULT:
                 case Op.DIV:
@@ -224,7 +224,7 @@ namespace lcc.SyntaxTree {
         }
 
         public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr e = expr.GetASTExpr(env);
+            AST.Expr e = expr.GetASTExpr(env).ImplicitCast();
             if (e == null) {
                 return null;
             }
@@ -264,14 +264,14 @@ namespace lcc.SyntaxTree {
         }
 
         private void CheckIllegalCast(TUnqualified s, TUnqualified t) {
-            TPointer p = s as TPointer;
+            TPtr p = s as TPtr;
             if (p != null && t.IsFloat) {
                 throw new Error(Pos, "cannot cast between pointers and floating types");
             }
             if (p != null && p.element.IsFunc && t.IsInteger) {
                 throw new Error(Pos, "cannot cast between pointers to functions and integers");
             }
-            TPointer q = t as TPointer;
+            TPtr q = t as TPtr;
             if (p != null && p.element.IsFunc && q != null && q.element.IsObject) {
                 throw new Error(Pos, "cannot cast between pointers to functions and pointers to objects");
             }
@@ -312,7 +312,7 @@ namespace lcc.SyntaxTree {
         }
 
         public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr e = expr.GetASTExpr(env);
+            AST.Expr e = expr.GetASTExpr(env).CastArr().CastFunc();
             if (!e.Type.IsReal && !e.Type.IsPointer) {
                 throw new Error(expr.Pos, string.Format("{0} on type {1}", kind, e.Type));
             }
@@ -381,7 +381,7 @@ namespace lcc.SyntaxTree {
         }
 
         public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr e = expr.GetASTExpr(env);
+            AST.Expr e = op == Op.REF ? expr.GetASTExpr(env) : expr.GetASTExpr(env).ImplicitCast();
             switch (op) {
                 case Op.REF:
                     /// The operand of the unary & operator shall be either a function designator, 
@@ -400,7 +400,7 @@ namespace lcc.SyntaxTree {
                         // To make sure the result is an rvalue, change the & and * operator to + operator with the second
                         // operand 0.
                         AST.UnaryOp x = e as AST.UnaryOp;
-                        return new AST.BiExpr(x.expr.Type, env.GetASTEnv(), x.expr, new AST.ConstIntExpr(TInt.Instance, 0), BiExpr.Op.PLUS);
+                        return new AST.BiExpr(x.expr.Type, env.GetASTEnv(), x.expr, new AST.ConstIntExpr(TInt.Instance, 0, env.GetASTEnv()), BiExpr.Op.PLUS);
                     }
                     if (!e.IsLValue) {
                         throw new Error(Pos, "cannot take address of rvalue");
@@ -415,7 +415,7 @@ namespace lcc.SyntaxTree {
                     if (!e.Type.IsPointer) {
                         throw new Error(Pos, "cannot deref none pointer type");
                     }
-                    return new AST.UnaryOp((e.Type.nake as TPointer).element, env.GetASTEnv(), e, Op.STAR);
+                    return new AST.UnaryOp((e.Type.nake as TPtr).element, env.GetASTEnv(), e, Op.STAR);
                 case Op.PLUS:
                 case Op.MINUS:
                     /// The operand of the unary + or - operator shall have arithmetic type.
@@ -506,7 +506,7 @@ namespace lcc.SyntaxTree {
             /// The sizeof operator yields the size (in bytes) of its operand.
             /// The result has type an unsigned integer type size_t, which is defined in "stddef.h".
             /// Here I take unsigned int.
-            return new AST.ConstIntExpr(TUInt.Instance, type.Size);
+            return new AST.ConstIntExpr(TUInt.Instance, type.Size, env.GetASTEnv());
 
         }
 
@@ -555,9 +555,14 @@ namespace lcc.SyntaxTree {
         /// <param name="env"></param>
         /// <returns></returns>
         public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr arrExpr = arr.GetASTExpr(env);
-            if (!arrExpr.Type.IsPointer && !arrExpr.Type.IsArray) {
+            AST.Expr arrExpr = arr.GetASTExpr(env).ImplicitCast();
+            if (!arrExpr.Type.IsPointer) {
                 throw new Error(arr.Pos, "subscripting none pointer type");
+            }
+
+            TPtr ptr = arrExpr.Type.nake as TPtr;
+            if (!ptr.element.IsObject) {
+                throw new Error(arr.Pos, "subscripting pointer to function");
             }
 
             AST.Expr idxExpr = idx.GetASTExpr(env);
@@ -565,10 +570,7 @@ namespace lcc.SyntaxTree {
                 throw new Error(idx.Pos, "subscripting none integer type");
             }
 
-            T type = arrExpr.Type.IsPointer ?
-                (arrExpr.Type.nake as TPointer).element :
-                (arrExpr.Type.nake as TArray).element;
-            return new AST.ArrSub(type, env.GetASTEnv(), arrExpr, idxExpr);
+            return new AST.ArrSub(ptr.element, env.GetASTEnv(), arrExpr, idxExpr);
         }
 
         public readonly Expr arr;
@@ -622,13 +624,13 @@ namespace lcc.SyntaxTree {
         /// <param name="env"></param>
         /// <returns></returns>
         public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr aggExpr = agg.GetASTExpr(env);
+            AST.Expr aggExpr = kind == Kind.DOT ? agg.GetASTExpr(env).CastArr().CastFunc() : agg.GetASTExpr(env).ImplicitCast();
             T aggType = aggExpr.Type;
 
             if (kind == Kind.PTR) {
                 if (!aggType.IsPointer)
                     throw new Error(agg.Pos, "member reference base type is not a pointer");
-                aggType = (aggType.nake as TPointer).element;
+                aggType = (aggType.nake as TPtr).element;
             }
 
             if (!aggType.IsStruct && !aggType.IsUnion)
@@ -693,7 +695,7 @@ namespace lcc.SyntaxTree {
         /// <param name="env"></param>
         /// <returns></returns>
         public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr e = expr.GetASTExpr(env);
+            AST.Expr e = expr.GetASTExpr(env).CastArr().CastFunc();
             if (!e.Type.IsPointer && !e.Type.IsReal) {
                 throw new Error(expr.Pos, string.Format("{0} on type {1}", kind, e.Type));
             }
@@ -939,7 +941,7 @@ namespace lcc.SyntaxTree {
         }
 
         public override AST.Expr GetASTExpr(Env env) {
-            return new AST.ConstIntExpr(type, value);
+            return new AST.ConstIntExpr(type, value, env.GetASTEnv());
         }
 
         /// <summary>
@@ -1006,7 +1008,7 @@ namespace lcc.SyntaxTree {
         }
 
         public override AST.Expr GetASTExpr(Env env) {
-            return new AST.ConstIntExpr(TChar.Instance, values.First());
+            return new AST.ConstIntExpr(TChar.Instance, values.First(), env.GetASTEnv());
         }
 
         /// <summary>
@@ -1179,7 +1181,7 @@ namespace lcc.SyntaxTree {
         }
 
         public override AST.Expr GetASTExpr(Env env) {
-            return new AST.ConstFloatExpr(t, value);
+            return new AST.ConstFloatExpr(t, value, env.GetASTEnv());
         }
 
         private static double Evaluate(T_CONST_FLOAT token) {

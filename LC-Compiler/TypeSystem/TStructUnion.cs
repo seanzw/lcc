@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace lcc.TypeSystem {
 
-    public abstract class TStructUnion : TObject, IEquatable<TStructUnion> {
+    public abstract class TStructUnion : TObject {
 
-        public struct Field : IEquatable<Field> {
+        public struct Field {
             public string name;
             public T type;
             public int offset;
@@ -17,18 +17,6 @@ namespace lcc.TypeSystem {
                 this.name = name;
                 this.type = type;
                 this.offset = offset;
-            }
-
-            public override bool Equals(object obj) {
-                return obj is Field && Equals((Field)obj);
-            }
-
-            public override int GetHashCode() {
-                return offset;
-            }
-
-            public bool Equals(Field o) {
-                return o.name.Equals(name) && o.type.Equals(type) && o.offset.Equals(offset);
             }
         }
 
@@ -55,19 +43,6 @@ namespace lcc.TypeSystem {
 
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
-        }
-
-        public bool Equals(TStructUnion x) {
-            return x != null && x.tag.Equals(tag)
-                && fields == null ? x.fields == null : fields.SequenceEqual(x.fields);
-        }
-
-        public override bool Equals(object obj) {
-            return Equals(obj as TStructUnion);
-        }
-
-        public override int GetHashCode() {
-            return tag.GetHashCode();
         }
 
         public virtual void Define(IEnumerable<Tuple<string, T>> fields) {
@@ -103,7 +78,6 @@ namespace lcc.TypeSystem {
                 else return size;
             }
         }
-
 
         public override string ToString() {
             return string.Format("struct {0}", tag);

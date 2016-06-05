@@ -57,8 +57,28 @@ namespace lcc.TypeSystem {
 
     /// <summary>
     /// Base type is a type without type qualifier.
+    /// 
+    /// For two unqualified types to be the same type, the following conditions must be satisfied:
+    /// 1. For all the arithmetic types, since they are singleton, reference equality does the job.
+    /// 2. For struct, union and enum type, since we are only dealing with one translation unit,
+    ///    reference equality does the job.
+    /// 3. For pointer, array, fucntion and bit-field types, value equality does the job.
     /// </summary>
     public abstract class TUnqualified {
+
+        /// <summary>
+        /// Whether two types are compatible.
+        /// 
+        /// From C99 6.2.7:
+        ///     Two types have compatible type if their types are the same.
+        ///     
+        /// Additional rules for enum, type qualifiers,
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public virtual bool Compatible(TUnqualified other) {
+            return Equals(other);
+        }
 
         /// <summary>
         /// Return a composite type of this and other.
@@ -97,6 +117,12 @@ namespace lcc.TypeSystem {
             throw new InvalidOperationException("Can't take type domain of non-arithmetic type!");
         }
 
+        /// <summary>
+        /// Perform usual arithmetic conversion.
+        /// Only call this on arithmetic types.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
         public virtual TArithmetic UsualArithConversion(TUnqualified other) {
             throw new InvalidOperationException("Can't do usual arithmetic conversions on non-arithmetic type!");
         }
@@ -127,7 +153,7 @@ namespace lcc.TypeSystem {
         public virtual bool IsArithmetic => false;
         public virtual bool IsScalar => false;
         public virtual bool IsAggregate => false;
-        public virtual bool IsPointer => false;
+        public virtual bool IsPtr => false;
         public virtual bool IsArray => false;
         public virtual bool IsVarArray => false;
         public virtual bool IsStruct => false;
@@ -429,6 +455,16 @@ namespace lcc.TypeSystem {
             return nake.GetHashCode();
         }
 
+        /// <summary>
+        /// For tow qualified types to be compatible, both shall have the identically qualified
+        /// version of a compatible type.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public bool Compatible(T other) {
+            return qualifiers.Equals(other.qualifiers) && nake.Compatible(other.nake);
+        }
+
         public override string ToString() {
             return qualifiers.ToString() + nake.ToString();
         }
@@ -475,7 +511,7 @@ namespace lcc.TypeSystem {
         /// <returns></returns>
         public T Ptr(TQualifiers qualifiers = null) {
             qualifiers = qualifiers ?? TQualifiers.N;
-            return new T(new TPointer(this), qualifiers);
+            return new T(new TPtr(this), qualifiers);
         }
 
         public T Func(IEnumerable<T> parameters, bool isEllipis) {
@@ -490,7 +526,7 @@ namespace lcc.TypeSystem {
         /// <returns></returns>
         public T Arr(int n, TQualifiers qualifiers = null) {
             qualifiers = qualifiers ?? TQualifiers.N;
-            return new T(new TArray(this, n), qualifiers);
+            return new T(new TCArr(this, n), qualifiers);
         }
 
         /// <summary>
@@ -501,7 +537,7 @@ namespace lcc.TypeSystem {
         /// <returns></returns>
         public T IArr(TQualifiers qualifiers = null) {
             qualifiers = qualifiers ?? TQualifiers.N;
-            return new T(new TArray(this), qualifiers);
+            return new T(new TCArr(this), qualifiers);
         }
 
         /// <summary>
@@ -512,11 +548,12 @@ namespace lcc.TypeSystem {
         /// <returns></returns>
         public T VArr(TQualifiers qualifiers = null) {
             qualifiers = qualifiers ?? TQualifiers.N;
-            return new T(new TVarArray(this), qualifiers);
+            return new T(new TVArr(this), qualifiers);
         }
 
         public void DefArr(int n) { nake.DefArr(n); }
         public void DefFunc() { nake.DefFunc(); }
+
 
         public T IntPromote() {
             return nake.IntPromote().None();
@@ -542,7 +579,7 @@ namespace lcc.TypeSystem {
         public bool IsArithmetic => nake.IsArithmetic;
         public bool IsScalar => nake.IsScalar;
         public bool IsAggregate => nake.IsAggregate;
-        public bool IsPointer => nake.IsPointer;
+        public bool IsPointer => nake.IsPtr;
         public bool IsArray => nake.IsArray;
         public bool IsVarArray => nake.IsVarArray;
         public bool IsStruct => nake.IsStruct;
