@@ -20,7 +20,7 @@ namespace lcc.TypeSystem {
             - incomplete
             - void
             - function
-            - unqualified
+            - unqualified object
                 - aggregate
                     - array
                     - variable length array
@@ -56,6 +56,41 @@ namespace lcc.TypeSystem {
     }
 
     /// <summary>
+    /// All the leaves of child classes from TUnqulified.
+    /// </summary>
+    public enum TKind {
+        VOID,
+        BOOL,
+        CHAR,
+        SCHAR,
+        UCHAR,
+        SHORT,
+        USHORT,
+        INT,
+        UINT,
+        LONG,
+        ULONG,
+        LLONG,
+        ULLONG,
+        SINGLE,
+        DOUBLE,
+        LDOUBLE,
+        CSINGLE,
+        CDOUBLE,
+        CLDOUBLE,
+        ENUM,
+        STRUCT,
+        UNION,
+        PTR,
+        CARR,
+        VARR,
+        FUNC,
+        BOOLBIT,
+        INTBIT,
+        UINTBIT,
+    }
+
+    /// <summary>
     /// Base type is a type without type qualifier.
     /// 
     /// For two unqualified types to be the same type, the following conditions must be satisfied:
@@ -65,6 +100,15 @@ namespace lcc.TypeSystem {
     /// 3. For pointer, array, fucntion and bit-field types, value equality does the job.
     /// </summary>
     public abstract class TUnqualified {
+
+        /// <summary>
+        /// Expose the actual type.
+        /// </summary>
+        public readonly TKind Kind;
+
+        public TUnqualified(TKind Kind) {
+            this.Kind = Kind;
+        }
 
         /// <summary>
         /// Whether two types are compatible.
@@ -209,18 +253,25 @@ namespace lcc.TypeSystem {
         protected static int _alignment = 32;
     }
 
+    /// <summary>
+    /// For an object type, it must be complete.
+    /// </summary>
     public abstract class TObject : TUnqualified {
-        public override bool IsObject => true;
+        public override bool IsObject => IsComplete;
+        public TObject(TKind Kind) : base(Kind) { }
     }
 
     public abstract class TScalar : TObject {
         public override bool IsComplete => true;
         public override bool IsDefined => true;
         public override bool IsScalar => true;
+        public TScalar(TKind Kind) : base(Kind) { }
     }
 
     public abstract class TArithmetic : TScalar {
         public override bool IsArithmetic => true;
+
+        public TArithmetic(TKind Kind) : base(Kind) { }
 
         /// <summary>
         /// Integer promotion, by default the original type.
@@ -304,6 +355,8 @@ namespace lcc.TypeSystem {
     }
 
     public abstract class TReal : TArithmetic {
+        public TReal(TKind Kind) : base(Kind) { }
+
         public override bool IsReal => true;
         public override TDomain TypeDomain() {
             return TDomain.REAL;
@@ -316,6 +369,7 @@ namespace lcc.TypeSystem {
     /// The real floating and complex types are collectively called the floating types.
     /// </summary>
     public abstract class TComplex : TArithmetic {
+        public TComplex(TKind Kind) : base(Kind) { }
         public override bool IsComplex => true;
         public override bool IsFloat => true;
         public override TDomain TypeDomain() {
@@ -324,9 +378,11 @@ namespace lcc.TypeSystem {
     }
 
     public abstract class TRealFloat : TReal {
+        public TRealFloat(TKind Kind) : base(Kind) { }
         public override bool IsFloat => true;
     }
     public abstract class TInteger : TReal {
+        public TInteger(TKind Kind) : base(Kind) { }
         public override bool IsInteger => true;
         public abstract BigInteger MAX { get; }
         public abstract BigInteger MIN { get; }
@@ -365,6 +421,7 @@ namespace lcc.TypeSystem {
     }
 
     public abstract class TCharacter : TInteger {
+        public TCharacter(TKind Kind) : base(Kind) { }
         public override int Bits => 8;
         public override bool IsCharacter => true;
     }
@@ -567,6 +624,7 @@ namespace lcc.TypeSystem {
             return nake.UsualArithConversion(other.nake).None();
         }
 
+        public TKind Kind => nake.Kind;
         public bool IsComplete => nake.IsComplete;
         public bool IsDefined => nake.IsDefined;
         public bool IsFunc => nake.IsFunc;
@@ -579,7 +637,7 @@ namespace lcc.TypeSystem {
         public bool IsArithmetic => nake.IsArithmetic;
         public bool IsScalar => nake.IsScalar;
         public bool IsAggregate => nake.IsAggregate;
-        public bool IsPointer => nake.IsPtr;
+        public bool IsPtr => nake.IsPtr;
         public bool IsArray => nake.IsArray;
         public bool IsVarArray => nake.IsVarArray;
         public bool IsStruct => nake.IsStruct;

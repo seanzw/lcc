@@ -13,6 +13,9 @@ namespace lcc.AST {
         public Env Envrionment => env;
         public abstract bool IsLValue { get; }
 
+        public virtual bool IsConstZero => false;
+        public virtual bool IsNullPtr => false;
+
         protected readonly T type;
         protected readonly Env env;
 
@@ -22,16 +25,104 @@ namespace lcc.AST {
         }
 
         /// <summary>
-        /// Performs all the three implicit conversions by explicitly using cast operator.
+        /// Performs integer promotion by explicitly using cast operator.
         /// </summary>
         /// <returns></returns>
-        public Expr ImplicitCast() {
-            return CastLValue().CastArr().CastFunc();
+        public Expr IntPromote() {
+            T type = this.type.IntPromote();
+            return type.Equals(this.type) ? this : new Cast(type.nake, env, this);
         }
 
         /// <summary>
+        /// Perform usual arithmetic conversion by explicitly using cast operator.
+        /// </summary>
+        /// <param name="e1"></param>
+        /// <param name="e2"></param>
+        /// <returns></returns>
+        public static Tuple<T, Expr, Expr> UsualArithConvert(Expr e1, Expr e2) {
+            T type = e1.Type.UsualArithConversion(e2.Type);
+            Expr c1 = type.Equals(e1.Type) ? e1 : new Cast(type.nake, e1.Envrionment, e1);
+            Expr c2 = type.Equals(e2.type) ? e2 : new Cast(type.nake, e2.Envrionment, e2);
+            return new Tuple<T, Expr, Expr>(type, c1, c2);
+        }
+
+        /// <summary>
+        /// Whether this type can be implicitly convertible to target without generating an warning.
+        /// Returns null if it cannot be implicitly converted to the target.
         /// 
+        /// One of the following situation. All other situations are either illegal or requiring explicit cast.
         /// 
+        /// 0. The same types.
+        /// 
+        /// 1. Compatible types.
+        /// 
+        /// 2. Boolean conversion.
+        ///    A value of any scalar type can be implicitly converted to _Bool.
+        ///    
+        /// 3. Arithmetic conversion.
+        ///    A value of arithmetic type can be implicitly converted to another arithmetic type without warning.
+        ///    No matter real or complex.
+        ///    
+        /// 4. Pointer conversion.
+        ///    a. A pointer to void can be implicitly converted to and from a pointer to any incomplete or object type.
+        ///    NOTE: I checked clang and void* can be implicitly converted to a pointer to function type and vice verse.
+        ///    Here I stick with the standard.
+        ///    
+        ///    b. For any qualifier q, a pointer to a non-q-qualified type may be converted to a pointer to the q-qualified
+        ///    version of the type.
+        ///    
+        ///    c. An integer constant expression with value 0 can be converted to a null pointer to any type.
+        ///    
+        ///    d. A null pointer can be converted another null pointer to any type.
+        /// </summary>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        public Expr ImplicitConvert(T target) {
+            if (Type.Equals(target)) {
+                return this;
+            }
+            if (Type.Compatible(target)) {
+                return new Cast(target.nake, env, this);
+            }
+            if (Type.IsScalar && target.Kind == TKind.BOOL) {
+                return new Cast(target.nake, env, this);
+            }
+            if (Type.IsArithmetic && target.IsArithmetic) {
+                return new Cast(target.nake, env, this);
+            }
+            if (Type.IsPtr) {
+                T e1 = (Type.nake as TPtr).element;
+                if (target.IsPtr) {
+                    T e2 = (target.nake as TPtr).element;
+                    if (e1.IsVoid && !e2.IsFunc) {
+                        return new Cast(target.nake, env, this);
+                    }
+                    if (e2.IsVoid && !e1.IsFunc) {
+                        return new Cast(target.nake, env, this);
+                    }
+                    if ((e1.qualifiers | e2.qualifiers).Equals(e2.qualifiers)) {
+                        return new Cast(target.nake, env, this);
+                    }
+                }
+            }
+            if ((IsNullPtr || IsConstZero) && target.IsPtr) {
+                return new ConstNullPtr((target.nake as TPtr).element, env);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Performs all the three value transforms by explicitly using cast operator.
+        /// Notice that these three implicit conversions will be perfromed automatically and
+        /// there is only one possible conversion result.
+        /// </summary>
+        /// <returns></returns>
+        public Expr ValueTransform() {
+            return VTLValue().VTArr().VTFunc();
+        }
+
+        /// <summary>
         /// 1. An lvalue that does not have array type is converted to the value stored in the designated
         ///    object (and is no longer an lvalue).
         ///    If the lvalue has qualified type, the values has unqualified version of the type of the lvalue.
@@ -39,7 +130,7 @@ namespace lcc.AST {
         ///    EXCEPT: sizeof, unary &, ++, --, left operand of ., left operand of assignment operator.
         /// </summary>
         /// <returns></returns>
-        public Expr CastLValue() {
+        public Expr VTLValue() {
             return (IsLValue && !type.IsArray) ? new Cast(type.nake, env, this) : this;
         }
 
@@ -50,7 +141,7 @@ namespace lcc.AST {
         ///    EXCEPT: sizeof, unary &, a string literal used to initialize an array.
         /// </summary>
         /// <returns></returns>
-        public Expr CastArr() {
+        public Expr VTArr() {
             return type.IsArray ? new Cast(new TPtr((type.nake as TArr).element), env, this) : this;
         }
 
@@ -60,8 +151,20 @@ namespace lcc.AST {
         ///    EXCEPT: sizeof, unary &.
         /// </summary>
         /// <returns></returns>
-        public Expr CastFunc() {
+        public Expr VTFunc() {
             return type.IsFunc ? new Cast(new TPtr(type), env, this) : this;
+        }
+    }
+
+    public sealed class CondExpr : Expr {
+        public readonly Expr p;
+        public readonly Expr t;
+        public readonly Expr f;
+        public override bool IsLValue => false;
+        public CondExpr(T type, Env env, Expr p, Expr t, Expr f) : base(type, env) {
+            this.p = p;
+            this.t = t;
+            this.f = f;
         }
     }
 
@@ -174,6 +277,7 @@ namespace lcc.AST {
     public sealed class ConstIntExpr : ConstArithExpr {
         public readonly TInteger t;
         public readonly BigInteger value;
+        public override bool IsConstZero => value == 0;
         public ConstIntExpr(TInteger t, BigInteger value, Env env) : base(t, env) {
             this.t = t;
             this.value = value;
@@ -190,6 +294,14 @@ namespace lcc.AST {
             this.t = t;
             this.value = value;
         }
+    }
+
+    /// <summary>
+    /// Null pointer constant.
+    /// </summary>
+    public sealed class ConstNullPtr : ConstExpr {
+        public override bool IsNullPtr => false;
+        public ConstNullPtr(T element, Env env) : base(new TPtr(element), env) { }
     }
 
     ///// <summary>

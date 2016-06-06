@@ -513,7 +513,7 @@ namespace LC_CompilerTests {
             Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a == 0 ? c : d",
-                    new STCondExpr(
+                    new CondExpr(
                         new BiExpr(
                             new Id(new T_IDENTIFIER(1, "a")),
                             new ConstInt(new T_CONST_INT(1, "0", 10)),
@@ -532,7 +532,7 @@ namespace LC_CompilerTests {
             Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a == 0 ? c : d",
-                    new STCondExpr(
+                    new CondExpr(
                         new BiExpr(
                             new Id(new T_IDENTIFIER(1, "a")),
                             new ConstInt(new T_CONST_INT(1, "0", 10)),
@@ -628,7 +628,7 @@ namespace LC_CompilerTests {
             Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a == 0 ? c : d",
-                    new STCondExpr(
+                    new CondExpr(
                         new BiExpr(
                             new Id(new T_IDENTIFIER(1, "a")),
                             new ConstInt(new T_CONST_INT(1, "0", 10)),

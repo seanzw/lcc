@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace lcc.TypeSystem {
     public sealed class TVoid : TUnqualified {
-
+        private TVoid() : base(TKind.VOID) { }
         private static readonly TVoid instance = new TVoid();
         public static TVoid Instance => instance;
         public override int Bits => 8;

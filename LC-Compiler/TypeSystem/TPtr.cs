@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace lcc.TypeSystem {
     public class TPtr : TScalar {
 
-        public TPtr(T element) {
+        public TPtr(T element) : base(TKind.PTR) {
             this.element = element;
         }
 

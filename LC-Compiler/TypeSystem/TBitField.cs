@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace lcc.TypeSystem {
 
     public abstract class TBitField : TObject {
-        public TBitField(int bits) {
+        public TBitField(TKind Kind, int bits) : base(Kind) {
             this.bits = bits;
         }
         public override bool IsBitField => true;
@@ -22,7 +22,7 @@ namespace lcc.TypeSystem {
 
     public sealed class TBoolBit : TBitField {
 
-        public TBoolBit(int bits) : base(bits) { }
+        public TBoolBit(int bits) : base(TKind.BOOLBIT, bits) { }
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
         }
@@ -44,7 +44,7 @@ namespace lcc.TypeSystem {
     }
 
     public sealed class TIntBit : TBitField {
-        public TIntBit(int bits) : base(bits) { }
+        public TIntBit(int bits) : base(TKind.INTBIT, bits) { }
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
         }
@@ -66,7 +66,7 @@ namespace lcc.TypeSystem {
     }
 
     public sealed class TUIntBit : TBitField {
-        public TUIntBit(int bits) : base(bits) { }
+        public TUIntBit(int bits) : base(TKind.UINTBIT, bits) { }
         public override TUnqualified Composite(TUnqualified other) {
             throw new NotImplementedException();
         }

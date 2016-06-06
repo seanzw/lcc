@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace lcc.TypeSystem {
     public sealed class TBool : TInteger {
-
+        private TBool() : base(TKind.BOOL) { }
         private static readonly TBool instance = new TBool();
         public static TBool Instance => instance;
         public override int Rank => 0;

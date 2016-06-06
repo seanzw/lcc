@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 
 namespace lcc.TypeSystem {
     public sealed class TFunc : TUnqualified {
-
-        public TFunc(T ret, IEnumerable<T> parameters, bool isEllipis) {
+        public TFunc(T ret, IEnumerable<T> parameters, bool isEllipis) : base(TKind.FUNC) {
             this.ret = ret;
             this.parameters = parameters;
             this.isEllipis = isEllipis;

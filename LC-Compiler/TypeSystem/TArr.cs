@@ -10,7 +10,7 @@ namespace lcc.TypeSystem {
         public readonly T element;
         public override bool IsArray => true;
         public override bool IsAggregate => true;
-        public TArr(T element) {
+        public TArr(TKind Kind, T element) : base(Kind) {
             this.element = element;
         }
     }
@@ -20,7 +20,7 @@ namespace lcc.TypeSystem {
     /// </summary>
     public sealed class TCArr : TArr, IEquatable<TCArr> {
 
-        public TCArr(T element, int n = -1) : base(element) {
+        public TCArr(T element, int n = -1) : base(TKind.CARR, element) {
             this.n = n;
         }
         public override bool IsComplete => n != -1;
@@ -96,7 +96,7 @@ namespace lcc.TypeSystem {
     /// </summary>
     public sealed class TVArr : TArr, IEquatable<TVArr> {
 
-        public TVArr(T element) : base(element) {
+        public TVArr(T element) : base(TKind.VARR, element) {
         }
         public override bool IsArray => true;
         public override bool IsComplete => true;

@@ -7,16 +7,16 @@ using System.Threading.Tasks;
 namespace lcc.TypeSystem {
 
     /// <summary>
-    /// Enum type is represented as unsigned int.
+    /// Enum type is represented as int.
     /// This is used for semantic analysis only.
     /// </summary>
-    public sealed class TEnum : TUnqualified {
+    public sealed class TEnum : TObject {
 
         /// <summary>
         /// Initialize an incomplete enum type with a tag.
         /// </summary>
         /// <param name="isConstant"></param>
-        public TEnum(string tag) {
+        public TEnum(string tag) : base(TKind.ENUM) {
             this.tag = tag;
         }
 
@@ -24,7 +24,7 @@ namespace lcc.TypeSystem {
         /// Initialize an incomplete enum type with anonymous but distinct tag.
         /// Notice that the tag name should be illegal for user.
         /// </summary>
-        public TEnum() {
+        public TEnum() : base(TKind.ENUM) {
             tag = "enum@" + id++;
         }
 

@@ -23,8 +23,13 @@ namespace lcc.SyntaxTree {
 
     }
 
-    public sealed class ErrRedefineTag : Error {
-        public ErrRedefineTag(Position pos, string tag, Position previous)
+    public sealed class ETypeError : Error {
+        public ETypeError(Position pos, string msg)
+            : base(pos, string.Format("type error: {0}", msg)) { }
+    }
+
+    public sealed class ERedefineTag : Error {
+        public ERedefineTag(Position pos, string tag, Position previous)
             : base(pos, string.Format("redefine tag {0}, previous defined at {1}", tag, previous)) { }
     }
 

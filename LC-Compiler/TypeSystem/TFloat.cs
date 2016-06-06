@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace lcc.TypeSystem {
     public sealed class TSingle : TRealFloat {
-
+        private TSingle() : base(TKind.SINGLE) { }
         private static readonly TSingle instance = new TSingle();
         public static TSingle Instance => instance;
         public override int Rank => 6;
@@ -23,6 +23,7 @@ namespace lcc.TypeSystem {
     }
 
     public sealed class TCSingle : TComplex {
+        private TCSingle() : base(TKind.CSINGLE) { }
         private static readonly TCSingle instance = new TCSingle();
         public static TCSingle Instance => instance;
         public override int Rank => 6;
@@ -37,7 +38,7 @@ namespace lcc.TypeSystem {
     }
 
     public sealed class TDouble : TRealFloat {
-
+        private TDouble() : base(TKind.DOUBLE) { }
         private static readonly TDouble instance = new TDouble();
 
         public static TDouble Instance => instance;
@@ -55,7 +56,7 @@ namespace lcc.TypeSystem {
     }
 
     public sealed class TCDouble : TComplex {
-
+        private TCDouble() : base(TKind.CDOUBLE) { }
         private static readonly TCDouble instance = new TCDouble();
 
         public static TCDouble Instance => instance;
@@ -72,7 +73,7 @@ namespace lcc.TypeSystem {
     }
 
     public sealed class TLDouble : TRealFloat {
-
+        private TLDouble() : base(TKind.LDOUBLE) { }
         private static readonly TLDouble instance = new TLDouble();
         public static TLDouble Instance => instance;
         public override int Rank => 8;
@@ -89,7 +90,7 @@ namespace lcc.TypeSystem {
     }
 
     public sealed class TCLDouble : TComplex {
-
+        private TCLDouble() : base(TKind.CLDOUBLE) { }
         private static readonly TCLDouble instance = new TCLDouble();
 
         public static TCLDouble Instance => instance;

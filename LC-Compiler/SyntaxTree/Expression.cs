@@ -92,9 +92,9 @@ namespace lcc.SyntaxTree {
         public readonly Op op;
     }
 
-    public sealed class STCondExpr : Expr, IEquatable<STCondExpr> {
+    public sealed class CondExpr : Expr, IEquatable<CondExpr> {
 
-        public STCondExpr(Expr predicator, Expr trueExpr, Expr falseExpr) {
+        public CondExpr(Expr predicator, Expr trueExpr, Expr falseExpr) {
             this.predicator = predicator;
             this.trueExpr = trueExpr;
             this.falseExpr = falseExpr;
@@ -103,10 +103,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => predicator.Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STCondExpr);
+            return Equals(obj as CondExpr);
         }
 
-        public bool Equals(STCondExpr x) {
+        public bool Equals(CondExpr x) {
             return x != null && x.predicator.Equals(predicator)
                 && x.trueExpr.Equals(trueExpr)
                 && x.falseExpr.Equals(falseExpr);
@@ -114,6 +114,55 @@ namespace lcc.SyntaxTree {
 
         public override int GetHashCode() {
             return predicator.GetHashCode() ^ trueExpr.GetHashCode() ^ falseExpr.GetHashCode();
+        }
+
+        /// <summary>
+        /// The first operand shall have scalar type.
+        /// One of the following shall hold for the second and the thrid operands:
+        /// - both operands have arithmetic types;
+        /// - both operands have the same structure or union type;
+        /// - both operands have void type;
+        /// - both operands are pointer to qualified or unqualified versions of compatible types;
+        /// - one operand is a pointer and the other is a null pointer constant/constant integer with value 0;
+        /// - one operand is a pointer to an object or incomplete type and the other is a pointer to a qualified
+        ///   or unqualified version of void.
+        /// </summary>
+        /// <param name="env"></param>
+        /// <returns></returns>
+        public override AST.Expr GetASTExpr(Env env) {
+            AST.Expr p = predicator.GetASTExpr(env);
+            AST.Expr t = trueExpr.GetASTExpr(env);
+            AST.Expr f = trueExpr.GetASTExpr(env);
+            if (!p.Type.IsScalar) {
+                throw new ETypeError(Pos, "the predicator shall have scalar type");
+            }
+            if (t.Type.IsArithmetic && f.Type.IsArithmetic) {
+                var uac = AST.Expr.UsualArithConvert(t, f);
+                return new AST.CondExpr(uac.Item1, env.GetASTEnv(), p, uac.Item2, uac.Item3);
+            }
+            if ((t.Type.IsStruct || t.Type.IsUnion) && (f.Type.IsStruct || f.Type.IsUnion)) {
+                if (t.Type.Equals(f.Type)) {
+                    return new AST.CondExpr(t.Type, env.GetASTEnv(), p, t, f);
+                }
+            }
+            if (t.Type.IsVoid && p.Type.IsVoid) {
+                return new AST.CondExpr(t.Type, env.GetASTEnv(), p, t, f);
+            }
+            throw new ETypeError(Pos, "sorry only partially support the conditional expression.");
+            //if (t.Type.IsPtr && f.Type.IsPtr) {
+            //    T tElement = (t.Type.nake as TPtr).element;
+            //    T fElement = (f.Type.nake as TPtr).element;
+            //    if (tElement.Compatible(fElement)) {
+            //        return new AST.BiExpr(TInt.Instance.None(), env.GetASTEnv(), lExpr, rExpr, op);
+            //    }
+            //    if ((!lElement.IsFunc && rElement.IsVoid) || (!rElement.IsFunc && lElement.IsVoid)) {
+            //        return new AST.BiExpr(TInt.Instance.None(), env.GetASTEnv(), lExpr, rExpr, op);
+            //    }
+            //}
+            //if ((lExpr.Type.IsPtr && (rExpr.IsConstZero || rExpr.IsNullPtr)) ||
+            //    (rExpr.Type.IsPtr && (lExpr.IsConstZero || lExpr.IsNullPtr))) {
+            //    return new AST.BiExpr(TInt.Instance.None(), env.GetASTEnv(), lExpr, rExpr, op);
+            //}
         }
 
         public readonly Expr predicator;
@@ -168,8 +217,13 @@ namespace lcc.SyntaxTree {
         }
 
         public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr lExpr = lhs.GetASTExpr(env).ImplicitCast();
-            AST.Expr rExpr = rhs.GetASTExpr(env).ImplicitCast();
+            AST.Expr lExpr = lhs.GetASTExpr(env).ValueTransform();
+            AST.Expr rExpr = rhs.GetASTExpr(env).ValueTransform();
+
+            var typeError = new ETypeError(Pos, string.Format("{0} {1} {2}", lExpr.Type, op, rExpr.Type));
+
+            Tuple<T, AST.Expr, AST.Expr> uac;   // For usual arithmetic conversion.
+            T lElement, rElement;
             switch (op) {
                 case Op.MULT:
                 case Op.DIV:
@@ -177,18 +231,147 @@ namespace lcc.SyntaxTree {
                     /// Multiplicative operators.
                     /// Each of the operands shall have arithmetic type.
                     if (!lExpr.Type.IsArithmetic || !rExpr.Type.IsArithmetic) {
-                        throw new Error(Pos, string.Format("operands of operator {0} shall have arithmetic type", op));
+                        throw typeError;
                     }
                     /// The operands of the % operator shall have integer type.
                     if (op == Op.MOD) {
                         if (!lExpr.Type.IsInteger || !rExpr.Type.IsInteger) {
-                            throw new Error(Pos, string.Format("operands of operator {0} shall have integer type", op));
+                            throw typeError;
                         }
                     }
                     /// The usual arithmetic conversions are performed on the operands.
-                    T type = lExpr.Type.UsualArithConversion(rExpr.Type);
-                    return new AST.BiExpr(type, env.GetASTEnv(), lExpr, rExpr, op);
-
+                    uac = AST.Expr.UsualArithConvert(lExpr, rExpr);
+                    return new AST.BiExpr(uac.Item1, env.GetASTEnv(), uac.Item2, uac.Item3, op);
+                case Op.PLUS:
+                    /// + operator.
+                    /// For addition, either both operands shall have arithmetic type
+                    /// or one operand shall be a pointer to an object type and the other shall have integer type.
+                    if (lExpr.Type.IsArithmetic && rExpr.Type.IsArithmetic) {
+                        /// If both operands have arithmetic type, the usual arithmetic conversions are performed on them.
+                        uac = AST.Expr.UsualArithConvert(lExpr, rExpr);
+                        return new AST.BiExpr(uac.Item1, env.GetASTEnv(), uac.Item2, uac.Item3, Op.PLUS);
+                    }
+                    if ((lExpr.Type.IsPtr && (lExpr.Type.nake as TPtr).element.IsObject && rExpr.Type.IsInteger) ||
+                        (rExpr.Type.IsPtr && (rExpr.Type.nake as TPtr).element.IsObject && lExpr.Type.IsInteger)) {
+                        AST.Expr ptr = lExpr.Type.IsPtr ? lExpr : rExpr;
+                        AST.Expr dif = lExpr.Type.IsPtr ? rExpr : lExpr;
+                        /// The result has the type of the pointer operand.
+                        /// Make sure that the first operand is the pointer operand in AST node.
+                        return new AST.BiExpr(ptr.Type, env.GetASTEnv(), ptr, dif, Op.PLUS);
+                    }
+                    throw typeError;
+                case Op.MINUS:
+                    /// - operator.
+                    /// For subtraction, one of the following shall hold:
+                    /// 1. Both operands have arithmetic types.
+                    /// 2. Both operands are pointers to qualified or unqualified versions of compatible object types.
+                    /// 3. The left operand is a pointer to an object type and the right operand has integer type.
+                    ///    The result shall have type ptrdiff_t, which is int in this implementation.
+                    /// Do not worry about "one past the last element" requirements.
+                    if (lExpr.Type.IsArithmetic && rExpr.Type.IsArithmetic) {
+                        uac = AST.Expr.UsualArithConvert(lExpr, rExpr);
+                        return new AST.BiExpr(uac.Item1, env.GetASTEnv(), uac.Item2, uac.Item3, Op.MINUS);
+                    }
+                    if (lExpr.Type.IsPtr) {
+                        lElement = (lExpr.Type.nake as TPtr).element;
+                        if (lElement.IsObject) {
+                            if (rExpr.Type.IsInteger) {
+                                return new AST.BiExpr(lExpr.Type, env.GetASTEnv(), lExpr, rExpr, Op.MINUS);
+                            } else if (rExpr.Type.IsPtr) {
+                                rElement = (rExpr.Type.nake as TPtr).element;
+                                if (rElement.IsObject && lElement.Compatible(rElement)) {
+                                    return new AST.BiExpr(TInt.Instance.None(), env.GetASTEnv(), lExpr, rExpr, Op.MINUS);
+                                }
+                            }
+                        }
+                    }
+                    throw typeError;
+                case Op.LEFT:
+                case Op.RIGHT:
+                    /// Bitwise shift operators.
+                    /// Each of the operands shall have integer types.
+                    /// The integer promotions are performed on each of the operands.
+                    /// The type of the result is that of the promoted left operand.
+                    if (lExpr.Type.IsInteger && rExpr.Type.IsInteger) {
+                        AST.Expr lPromoted = lExpr.IntPromote();
+                        AST.Expr rPromoted = rExpr.IntPromote();
+                        return new AST.BiExpr(lPromoted.Type, env.GetASTEnv(), lPromoted, rPromoted, op);
+                    }
+                    throw typeError;
+                case Op.LT:
+                case Op.GT:
+                case Op.LE:
+                case Op.GE:
+                    /// Relational operators.
+                    /// One of the following shall hold:
+                    /// 1. Both operands have real type.
+                    /// 2. Both operands are pointers to qualified or unqualified versions of compatible object types.
+                    /// 3. Both operands are pointers to qualified or unqualified versions of compatible incomplete types.
+                    /// The result has type int.
+                    if (lExpr.Type.IsReal && rExpr.Type.IsReal) {
+                        /// The usual arithmetic conversions are performed.
+                        uac = AST.Expr.UsualArithConvert(lExpr, rExpr);
+                        return new AST.BiExpr(TInt.Instance.None(), env.GetASTEnv(), uac.Item2, uac.Item3, op);
+                    }
+                    if (lExpr.Type.IsPtr && rExpr.Type.IsPtr) {
+                        lElement = (lExpr.Type.nake as TPtr).element;
+                        rElement = (rExpr.Type.nake as TPtr).element;
+                        if (lElement.IsObject && rElement.IsObject && lElement.Compatible(rElement)) {
+                            return new AST.BiExpr(TInt.Instance.None(), env.GetASTEnv(), lExpr, rExpr, op);
+                        }
+                        if (!lElement.IsComplete && !rElement.IsComplete && lElement.Compatible(rElement)) {
+                            return new AST.BiExpr(TInt.Instance.None(), env.GetASTEnv(), lExpr, rExpr, op);
+                        }
+                    }
+                    throw typeError;
+                case Op.EQ:
+                case Op.NEQ:
+                    /// Equality operators.
+                    /// One of the following shall hold:
+                    /// 1. Both operands have arithmetic type.
+                    /// 2. Both operands are pointers to qualified or unqualified versions of compatible types.
+                    /// 3. One operand is a pointer to an object or incomplete type and the other is a pointer to
+                    ///    a qualified or unqualified version of void.
+                    /// 4. One operand is a pointer and the other is a null pointer constant.
+                    /// 5. One operand is a pointer and the other is a integer constant with value 0.
+                    if (lExpr.Type.IsArithmetic && rExpr.Type.IsArithmetic) {
+                        uac = AST.Expr.UsualArithConvert(lExpr, rExpr);
+                        return new AST.BiExpr(TInt.Instance.None(), env.GetASTEnv(), uac.Item2, uac.Item3, op);
+                    }
+                    if (lExpr.Type.IsPtr && rExpr.Type.IsPtr) {
+                        lElement = (lExpr.Type.nake as TPtr).element;
+                        rElement = (rExpr.Type.nake as TPtr).element;
+                        if (lElement.Compatible(rElement)) {
+                            return new AST.BiExpr(TInt.Instance.None(), env.GetASTEnv(), lExpr, rExpr, op);
+                        }
+                        if ((!lElement.IsFunc && rElement.IsVoid) || (!rElement.IsFunc && lElement.IsVoid)) {
+                            return new AST.BiExpr(TInt.Instance.None(), env.GetASTEnv(), lExpr, rExpr, op);
+                        }
+                    }
+                    if ((lExpr.Type.IsPtr && (rExpr.IsConstZero || rExpr.IsNullPtr)) ||
+                        (rExpr.Type.IsPtr && (lExpr.IsConstZero || lExpr.IsNullPtr))) {
+                        return new AST.BiExpr(TInt.Instance.None(), env.GetASTEnv(), lExpr, rExpr, op);
+                    }
+                    throw typeError;
+                case Op.AND:
+                case Op.XOR:
+                case Op.OR:
+                    /// Bitwise &, ^, | operator.
+                    /// Each of the operands shall have integer type.
+                    if (lExpr.Type.IsInteger && rExpr.Type.IsInteger) {
+                        uac = AST.Expr.UsualArithConvert(lExpr, rExpr);
+                        return new AST.BiExpr(uac.Item1, env.GetASTEnv(), uac.Item2, uac.Item3, op);
+                    }
+                    throw typeError;
+                case Op.LOGAND:
+                case Op.LOGOR:
+                    /// &&, || operators.
+                    /// Each of the operands shall have scalar type.
+                    /// The result has type int.
+                    if (lExpr.Type.IsScalar && rExpr.Type.IsScalar) {
+                        return new AST.BiExpr(TInt.Instance.None(), env.GetASTEnv(), lExpr, rExpr, op);
+                    }
+                    throw typeError;
                 default:
                     throw new NotImplementedException();
             }
@@ -224,7 +407,7 @@ namespace lcc.SyntaxTree {
         }
 
         public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr e = expr.GetASTExpr(env).ImplicitCast();
+            AST.Expr e = expr.GetASTExpr(env).ValueTransform();
             if (e == null) {
                 return null;
             }
@@ -312,8 +495,8 @@ namespace lcc.SyntaxTree {
         }
 
         public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr e = expr.GetASTExpr(env).CastArr().CastFunc();
-            if (!e.Type.IsReal && !e.Type.IsPointer) {
+            AST.Expr e = expr.GetASTExpr(env).VTArr().VTFunc();
+            if (!e.Type.IsReal && !e.Type.IsPtr) {
                 throw new Error(expr.Pos, string.Format("{0} on type {1}", kind, e.Type));
             }
             if (!e.IsLValue) {
@@ -381,7 +564,7 @@ namespace lcc.SyntaxTree {
         }
 
         public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr e = op == Op.REF ? expr.GetASTExpr(env) : expr.GetASTExpr(env).ImplicitCast();
+            AST.Expr e = op == Op.REF ? expr.GetASTExpr(env) : expr.GetASTExpr(env).ValueTransform();
             switch (op) {
                 case Op.REF:
                     /// The operand of the unary & operator shall be either a function designator, 
@@ -412,7 +595,7 @@ namespace lcc.SyntaxTree {
                     return new AST.UnaryOp(e.Type.Ptr(), env.GetASTEnv(), e, Op.REF);
                 case Op.STAR:
                     /// The operand of the uanry * operator shall have pointer type.
-                    if (!e.Type.IsPointer) {
+                    if (!e.Type.IsPtr) {
                         throw new Error(Pos, "cannot deref none pointer type");
                     }
                     return new AST.UnaryOp((e.Type.nake as TPtr).element, env.GetASTEnv(), e, Op.STAR);
@@ -491,13 +674,13 @@ namespace lcc.SyntaxTree {
                 throw new Error(Pos, "do not support variable length array");
             }
 
-            /// The sizeof operator shall not be applied to an expression that has function type or an imcomplete type,
+            /// The sizeof operator shall not be applied to an expression that has function type or an incomplete type,
             /// to the parenthesized name of such a type, or to an expression that designates a bit-field member.
             if (type.IsFunc) {
                 throw new Error(Pos, "cannot apply sizeof to function type");
             }
             if (!type.IsComplete) {
-                throw new Error(Pos, "cannot apply sizeof to imcomplete type");
+                throw new Error(Pos, "cannot apply sizeof to incomplete type");
             }
             if (type.IsBitField) {
                 throw new Error(Pos, "cannot apply sizeof to bit-field member");
@@ -555,8 +738,8 @@ namespace lcc.SyntaxTree {
         /// <param name="env"></param>
         /// <returns></returns>
         public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr arrExpr = arr.GetASTExpr(env).ImplicitCast();
-            if (!arrExpr.Type.IsPointer) {
+            AST.Expr arrExpr = arr.GetASTExpr(env).ValueTransform();
+            if (!arrExpr.Type.IsPtr) {
                 throw new Error(arr.Pos, "subscripting none pointer type");
             }
 
@@ -624,11 +807,11 @@ namespace lcc.SyntaxTree {
         /// <param name="env"></param>
         /// <returns></returns>
         public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr aggExpr = kind == Kind.DOT ? agg.GetASTExpr(env).CastArr().CastFunc() : agg.GetASTExpr(env).ImplicitCast();
+            AST.Expr aggExpr = kind == Kind.DOT ? agg.GetASTExpr(env).VTArr().VTFunc() : agg.GetASTExpr(env).ValueTransform();
             T aggType = aggExpr.Type;
 
             if (kind == Kind.PTR) {
-                if (!aggType.IsPointer)
+                if (!aggType.IsPtr)
                     throw new Error(agg.Pos, "member reference base type is not a pointer");
                 aggType = (aggType.nake as TPtr).element;
             }
@@ -695,8 +878,8 @@ namespace lcc.SyntaxTree {
         /// <param name="env"></param>
         /// <returns></returns>
         public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr e = expr.GetASTExpr(env).CastArr().CastFunc();
-            if (!e.Type.IsPointer && !e.Type.IsReal) {
+            AST.Expr e = expr.GetASTExpr(env).VTArr().VTFunc();
+            if (!e.Type.IsPtr && !e.Type.IsReal) {
                 throw new Error(expr.Pos, string.Format("{0} on type {1}", kind, e.Type));
             }
 

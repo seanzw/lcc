@@ -823,7 +823,7 @@ namespace lcc.SyntaxTree {
                             throw new ErrDeclareTagAsDifferentType(pos, tag, tmp.node.Pos, tmp.type);
                         // Check if this type is already complete.
                         if (tmp.type.IsComplete)
-                            throw new ErrRedefineTag(pos, tag, tmp.node.Pos);
+                            throw new ERedefineTag(pos, tag, tmp.node.Pos);
                         entry = tmp;
                         type = entry.type as TStructUnion;
                     } else {
@@ -1081,7 +1081,7 @@ namespace lcc.SyntaxTree {
                             throw new ErrDeclareTagAsDifferentType(pos, id.symbol, entry.node.Pos, entry.type);
                         // Check if this type is already defined.
                         if (entry.type.IsDefined)
-                            throw new ErrRedefineTag(pos, id.symbol, entry.node.Pos);
+                            throw new ERedefineTag(pos, id.symbol, entry.node.Pos);
                         type = entry.type as TEnum;
                     } else {
                         type = new TEnum(id.symbol);

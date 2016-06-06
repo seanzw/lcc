@@ -82,7 +82,7 @@ namespace lcc.Parser {
                     .Then(Ref(Expression)
                     .Bind(trueExpr => Match<T_PUNC_COLON>()
                     .Then(Ref(ConditionalExpression)
-                    .Select(falseExpr => new STCondExpr(predicator, trueExpr, falseExpr)))))
+                    .Select(falseExpr => new CondExpr(predicator, trueExpr, falseExpr)))))
                     .Else(Result<Token.Token, Expr>(predicator))
                 );
         }

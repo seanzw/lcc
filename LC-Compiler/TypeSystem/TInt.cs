@@ -12,7 +12,7 @@ namespace lcc.TypeSystem {
     /// Here char is implemented with signed char.
     /// </summary>
     public sealed class TChar : TCharacter {
-
+        private TChar() : base(TKind.CHAR) { }
         private static readonly TChar instance = new TChar();
         public static TChar Instance => instance;
         public override int Rank => 1;
@@ -32,7 +32,7 @@ namespace lcc.TypeSystem {
     }
 
     public sealed class TUChar : TCharacter {
-
+        private TUChar() : base(TKind.UCHAR) { }
         private static readonly TUChar instance = new TUChar();
         public static TUChar Instance => instance;
         public override int Rank => 1;
@@ -53,7 +53,7 @@ namespace lcc.TypeSystem {
     }
 
     public sealed class TSChar : TCharacter {
-
+        private TSChar() : base(TKind.SCHAR) { }
         private static readonly TSChar instance = new TSChar();
         public static TSChar Instance => instance;
         public override int Rank => 1;
@@ -74,7 +74,7 @@ namespace lcc.TypeSystem {
     }
 
     public sealed class TShort : TInteger {
-
+        private TShort() : base(TKind.SHORT) { }
         private static readonly TShort instance = new TShort();
         public static TShort Instance => instance;
         public override int Rank => 2;
@@ -95,7 +95,7 @@ namespace lcc.TypeSystem {
     }
 
     public sealed class TUShort : TInteger {
-
+        private TUShort() : base(TKind.USHORT) { }
         private static readonly TUShort instance = new TUShort();
         public static TUShort Instance => instance;
         public override int Rank => 2;
@@ -119,7 +119,7 @@ namespace lcc.TypeSystem {
     }
 
     public sealed class TInt : TInteger {
-
+        private TInt() : base(TKind.INT) { }
         private static readonly TInt instance = new TInt();
 
         public static TInt Instance => instance;
@@ -151,7 +151,7 @@ namespace lcc.TypeSystem {
     }
 
     public sealed class TUInt : TInteger {
-
+        private TUInt() : base(TKind.UINT) { }
         private static readonly TUInt instance = new TUInt();
 
         public static TUInt Instance => instance;
@@ -174,7 +174,7 @@ namespace lcc.TypeSystem {
     }
 
     public sealed class TLong : TInteger {
-
+        private TLong() : base(TKind.LONG) { }
         private static readonly TLong instance = new TLong();
 
         public static TLong Instance => instance;
@@ -196,7 +196,7 @@ namespace lcc.TypeSystem {
     }
 
     public sealed class TULong : TInteger {
-
+        private TULong() : base(TKind.ULONG) { }
         private static readonly TULong instance = new TULong();
 
         public static TULong Instance => instance;
@@ -219,7 +219,7 @@ namespace lcc.TypeSystem {
     }
 
     public sealed class TLLong : TInteger {
-
+        private TLLong() : base(TKind.LLONG) { }
         private static readonly TLLong instance = new TLLong();
         public static TLLong Instance => instance;
         public override int Rank => 5;
@@ -240,7 +240,7 @@ namespace lcc.TypeSystem {
     }
 
     public sealed class TULLong : TInteger {
-
+        private TULLong() : base(TKind.ULLONG) { }
         private static readonly TULLong instance = new TULLong();
         public static TULLong Instance => instance;
         public override int Rank => 5;

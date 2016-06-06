@@ -20,7 +20,7 @@ namespace lcc.TypeSystem {
             }
         }
 
-        public TStructUnion(string tag, IEnumerable<Field> fields = null) {
+        public TStructUnion(TKind Kind, string tag, IEnumerable<Field> fields = null) : base(Kind) {
             this.tag = tag;
             this.fields = fields;
         }
@@ -68,8 +68,8 @@ namespace lcc.TypeSystem {
     }
 
     public sealed class TStruct : TStructUnion {
-        public TStruct(string tag) : base(tag, null) {}
-        public TStruct() : base("struct@" + (idx++), null) {}
+        public TStruct(string tag) : base(TKind.STRUCT, tag, null) {}
+        public TStruct() : base(TKind.STRUCT, "struct@" + (idx++), null) {}
         public override bool IsStruct => true;
         public override bool IsAggregate => true;
         public override int Bits {
@@ -123,8 +123,8 @@ namespace lcc.TypeSystem {
     }
 
     public sealed class TUnion : TStructUnion {
-        public TUnion(string tag) : base(tag, null) {}
-        public TUnion() : base("union@" + (idx++), null) {}
+        public TUnion(string tag) : base(TKind.UNION, tag, null) {}
+        public TUnion() : base(TKind.UNION, "union@" + (idx++), null) {}
         public override bool IsUnion => true;
         public override int Bits {
             get {
