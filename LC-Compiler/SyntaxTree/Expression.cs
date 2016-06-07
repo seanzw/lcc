@@ -16,13 +16,11 @@ namespace lcc.SyntaxTree {
     /// </summary>
     public abstract class Expr : Stmt {
 
-        public override IEnumerable<AST.Stmt> ToAST(Env env) {
+        public sealed override IEnumerable<AST.Stmt> ToAST(Env env) {
             return new List<AST.Stmt> { GetASTExpr(env) };
         }
 
-        public virtual AST.Expr GetASTExpr(Env env) {
-            throw new NotImplementedException();
-        }
+        public abstract AST.Expr GetASTExpr(Env env);
     }
 
     public sealed class CommaExpr : Expr, IEquatable<CommaExpr> {
@@ -69,9 +67,9 @@ namespace lcc.SyntaxTree {
             BITOREQ
         }
 
-        public Assign(Expr lexpr, Expr rexpr, Op op) {
-            this.lhs = lexpr;
-            this.rhs = rexpr;
+        public Assign(Expr lhs, Expr rhs, Op op) {
+            this.lhs = lhs;
+            this.rhs = rhs;
             this.op = op;
         }
 
@@ -617,6 +615,11 @@ namespace lcc.SyntaxTree {
             return expr.GetHashCode();
         }
 
+        /// <summary>
+        /// ++E is equivalent to E += 1.
+        /// </summary>
+        /// <param name="env"></param>
+        /// <returns></returns>
         public override AST.Expr GetASTExpr(Env env) {
             AST.Expr e = expr.GetASTExpr(env).VTArr().VTFunc();
             if (!e.Type.IsReal && !e.Type.IsPtr) {
@@ -628,7 +631,8 @@ namespace lcc.SyntaxTree {
             if (e.Type.qualifiers.isConstant) {
                 throw new Error(Pos, "cannot modify constant value");
             }
-            return new AST.PreStep(e.Type, env.GetASTEnv(), e, kind);
+            return new AST.Assign(e.Type.nake.None(), env.GetASTEnv(), e,
+                new AST.ConstIntExpr(TInt.Instance, 0, env.GetASTEnv()), kind == Kind.INC ? Assign.Op.PLUSEQ : Assign.Op.MINUSEQ);
         }
 
         public readonly Expr expr;
@@ -1024,23 +1028,27 @@ namespace lcc.SyntaxTree {
     /// <summary>
     /// ( type-name ) { initializer-list [,] }
     /// </summary>
-    public sealed class STCompound : Expr, IEquatable<STCompound> {
+    public sealed class Compound : Expr, IEquatable<Compound> {
 
-        public STCompound(TypeName name, IEnumerable<STInitItem> inits) {
+        public Compound(TypeName name, IEnumerable<STInitItem> inits) {
             this.name = name;
             this.inits = inits;
         }
 
-        public bool Equals(STCompound x) {
+        public bool Equals(Compound x) {
             return x != null && x.name.Equals(name) && x.inits.SequenceEqual(inits);
         }
 
         public override bool Equals(object obj) {
-            return Equals(obj as STCompound);
+            return Equals(obj as Compound);
         }
 
         public override int GetHashCode() {
             return name.GetHashCode();
+        }
+
+        public override AST.Expr GetASTExpr(Env env) {
+            throw new NotImplementedException();
         }
 
         public override Position Pos => name.Pos;
@@ -1049,6 +1057,9 @@ namespace lcc.SyntaxTree {
         public readonly IEnumerable<STInitItem> inits;
     }
 
+    /// <summary>
+    /// postfix-expression ( argument-expression-list_opt )
+    /// </summary>
     public sealed class FuncCall : Expr, IEquatable<FuncCall> {
 
         public FuncCall(Expr expr, IEnumerable<Expr> args) {
@@ -1070,6 +1081,71 @@ namespace lcc.SyntaxTree {
             return expr.GetHashCode();
         }
 
+        /// <summary>
+        /// The expression that denotes the called function shall have type pointer to function
+        /// returning void or returning an object type other than an array type.
+        /// 
+        /// In this implementation, all function should have prototype.
+        /// 
+        /// If the function has a prototype, the number of arguments shall agree with the number of
+        /// parameters. Each argument shall have a type such that its value may be assigned to an 
+        /// object with the unqualified version of the type of its corresponding parameter.
+        /// 
+        /// The ellipsis notation in a function prototype declarator causes argument type conversion
+        /// to stop after the last declared parameter. The default argument promotions are performed on
+        /// tailing arguments.
+        /// 
+        /// Default argument promotion:
+        /// - integer promotion;
+        /// - float -> doubl.
+        /// </summary>
+        /// <param name="env"></param>
+        /// <returns></returns>
+        public override AST.Expr GetASTExpr(Env env) {
+            AST.Expr fExpr = expr.GetASTExpr(env).ValueTransform();
+            if (fExpr.Type.IsPtr) {
+                TFunc f = (fExpr.Type.nake as TPtr).element.nake as TFunc;
+                if (f != null) {
+                    if (!f.isEllipis) {
+                        if (args.Count() != f.parameters.Count()) {
+                            throw new ETypeError(Pos, string.Format("expect {0} parameters, {1} given", f.parameters.Count(), args.Count()));
+                        }
+                    } else {
+                        if (args.Count() < f.parameters.Count()) {
+                            throw new ETypeError(Pos, string.Format("expect at least {0} parameters, {1} given", f.parameters.Count(), args.Count()));
+                        }
+                    }
+                    var p = f.parameters.GetEnumerator();
+                    var a = args.GetEnumerator();
+                    LinkedList<AST.Expr> aExprs = new LinkedList<AST.Expr>();
+                    while (a.MoveNext()) {
+                        AST.Expr aExpr = a.Current.GetASTExpr(env).ValueTransform();
+                        if (!aExpr.Type.IsObject) {
+                            throw new ETypeError(Pos, string.Format("expect object type for argument"));
+                        }
+                        if (p.MoveNext()) {
+                            // Type check for the arguments.
+                            AST.Expr converted = aExpr.ImplicitConvert(p.Current.nake.None());
+                            if (converted == null) {
+                                throw new ETypeError(Pos, string.Format("expect {0}, actual {1}", p.Current, aExpr.Type));
+                            }
+                            aExprs.AddLast(converted);
+                        } else {
+                            // Tailing arguments.
+                            // Default argument promotion.
+                            if (aExpr.Type.IsInteger) {
+                                aExpr = aExpr.IntPromote();
+                            } else if (aExpr.Type.Kind == TKind.SINGLE) {
+                                aExpr = new AST.Cast(TDouble.Instance, aExpr.Envrionment, aExpr);
+                            }
+                            aExprs.AddLast(aExpr);
+                        }
+                    }
+                    return new AST.FuncCall(f.ret, env.GetASTEnv(), fExpr, aExprs);
+                }
+            }
+            throw new ETypeError(Pos, string.Format("called illegal type {0}", fExpr.Type));
+        }
         public readonly Expr expr;
         public readonly IEnumerable<Expr> args;
     }
@@ -1567,6 +1643,10 @@ namespace lcc.SyntaxTree {
 
         public override int GetHashCode() {
             return values.First();
+        }
+
+        public override AST.Expr GetASTExpr(Env env) {
+            throw new NotImplementedException();
         }
 
         public static IEnumerable<ushort> Evaluate(LinkedList<T_STRING_LITERAL> tokens) {

@@ -326,7 +326,7 @@ namespace lcc.Parser {
                 .Else(Ref(TypeName).ParentLR()
                     .Bind(name => Ref(InitItem)
                         .PlusSeperatedBy(Match<T_PUNC_COMMA>()).Option(Match<T_PUNC_COMMA>()).BracelLR()
-                    .Bind(inits => PostfixExpressionTail(new STCompound(name, inits)))));
+                    .Bind(inits => PostfixExpressionTail(new Compound(name, inits)))));
         }
 
         /// <summary>

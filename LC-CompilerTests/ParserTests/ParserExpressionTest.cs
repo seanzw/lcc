@@ -155,7 +155,7 @@ namespace LC_CompilerTests {
                 },
                 {
                     "(int) { 1 }",
-                    new STCompound(
+                    new Compound(
                         new TypeName(
                             ProcessSS(new List<TypeSpecQual> { new TypeKeySpec(1, TypeSpec.Kind.INT) })
                         ),

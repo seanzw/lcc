@@ -212,15 +212,6 @@ namespace lcc.AST {
         }
     }
 
-    public sealed class PreStep : Expr {
-        public readonly Expr expr;
-        public readonly SyntaxTree.PreStep.Kind kind;
-        public PreStep(T type, Env env, Expr expr, SyntaxTree.PreStep.Kind kind) : base(type, env) {
-            this.expr = expr;
-            this.kind = kind;
-        }
-    }
-
     public sealed class ArrSub : Expr {
         public readonly Expr arr;
         public readonly Expr idx;
@@ -250,6 +241,15 @@ namespace lcc.AST {
         public PostStep(T type, Env env, Expr expr, SyntaxTree.PostStep.Kind kind) : base(type, env) {
             this.expr = expr;
             this.kind = kind;
+        }
+    }
+
+    public sealed class FuncCall : Expr {
+        public readonly Expr f;
+        public readonly IEnumerable<Expr> args;
+        public FuncCall(T type, Env env, Expr f, IEnumerable<Expr> args) : base(type, env) {
+            this.f = f;
+            this.args = args;
         }
     }
 

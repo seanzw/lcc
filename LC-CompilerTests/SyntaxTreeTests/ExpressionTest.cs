@@ -172,6 +172,180 @@ namespace LC_CompilerTests {
         }
 
         [TestMethod]
+        public void LCCTCPreStep() {
+            string source = @"
+{
+    int a;
+    --a;
+    float b;
+    ++b;
+    int* c;
+    ++c;
+}
+";
+            List<T> types = new List<T> {
+                TInt.Instance.None(),
+                TSingle.Instance.None(),
+                TInt.Instance.None().Ptr()
+            };
+            var env = new Env();
+            env.PushScope(ScopeKind.FUNCTION);
+            var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
+            Assert.AreEqual(1, result.Count());
+            Assert.IsFalse(result.First().Remain.More());
+            IEnumerable<lcc.AST.Stmt> stmts = result.First().Value.ToAST(env);
+            Assert.AreEqual(1, stmts.Count());
+            lcc.AST.CompoundStmt stmt = stmts.First() as lcc.AST.CompoundStmt;
+            Assert.IsNotNull(stmt);
+            Assert.AreEqual(types.Count(), stmt.stmts.Count());
+            {
+                var tests = stmt.stmts.Zip(types, (s, t) => new Tuple<lcc.AST.Expr, T>(s as lcc.AST.Expr, t));
+                foreach (var test in tests) {
+                    Assert.AreEqual(test.Item2, test.Item1.Type);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void LCCTCBiExpr() {
+            string source = @"
+{
+    char c;
+    unsigned char uc;
+    signed char sc;
+    short s;
+    unsigned short us;
+    int i;
+    unsigned int ui;
+    long l;
+    unsigned long ul;
+    long long ll;
+    unsigned long long ull;
+    float f;
+    double d;
+    long double ld;
+    int* ip1;
+    int* ip2;
+    
+    c * uc;
+    s * f;
+    ll * i;
+
+    d / f;
+    
+    i % ui;
+
+    f + ll;
+    ip1 + l;
+    i + ip2;
+
+    ld - f;
+    ip1 - ip2;
+}
+";
+            List<T> types = new List<T> {
+                TInt.Instance.None(),
+                TSingle.Instance.None(),
+                TLLong.Instance.None(),
+
+                TDouble.Instance.None(),
+
+                TUInt.Instance.None(),
+
+                TSingle.Instance.None(),
+                TInt.Instance.None().Ptr(),
+                TInt.Instance.None().Ptr(),
+
+                TLDouble.Instance.None(),
+                TInt.Instance.None(),
+            };
+            var env = new Env();
+            env.PushScope(ScopeKind.FUNCTION);
+            var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
+            Assert.AreEqual(1, result.Count());
+            Assert.IsFalse(result.First().Remain.More());
+            IEnumerable<lcc.AST.Stmt> stmts = result.First().Value.ToAST(env);
+            Assert.AreEqual(1, stmts.Count());
+            lcc.AST.CompoundStmt stmt = stmts.First() as lcc.AST.CompoundStmt;
+            Assert.IsNotNull(stmt);
+            Assert.AreEqual(types.Count(), stmt.stmts.Count());
+            {
+                var tests = stmt.stmts.Zip(types, (s, t) => new Tuple<lcc.AST.Expr, T>(s as lcc.AST.Expr, t));
+                foreach (var test in tests) {
+                    Assert.AreEqual(test.Item2, test.Item1.Type);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void LCCTCFuncCall() {
+            string source = @"
+{
+    int (*foo)(char);
+    int (*bar)(double, int, ...);
+    int x;
+    int y;
+    y = foo(x);
+    y = bar(y, x, y, x);
+}
+";
+            List<T> types = new List<T> {
+                TInt.Instance.None(),
+                TInt.Instance.None()
+            };
+            var env = new Env();
+            env.PushScope(ScopeKind.FUNCTION);
+            var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
+            Assert.AreEqual(1, result.Count());
+            Assert.IsFalse(result.First().Remain.More());
+            IEnumerable<lcc.AST.Stmt> stmts = result.First().Value.ToAST(env);
+            Assert.AreEqual(1, stmts.Count());
+            lcc.AST.CompoundStmt stmt = stmts.First() as lcc.AST.CompoundStmt;
+            Assert.IsNotNull(stmt);
+            Assert.AreEqual(types.Count(), stmt.stmts.Count());
+            {
+                var tests = stmt.stmts.Zip(types, (s, t) => new Tuple<lcc.AST.Expr, T>(s as lcc.AST.Expr, t));
+                foreach (var test in tests) {
+                    Assert.AreEqual(test.Item2, test.Item1.Type);
+                }
+            }
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ETypeError), "imcomplete argument")]
+        public void LCCTCFuncCallERR1() {
+            string source = @"
+{
+    int (*foo)(char);
+    int (*bar)(double, int, ...);
+    struct s s;
+    int x;
+    int y;
+    y = bar(s, y, x, y, x);
+}
+";
+            List<T> types = new List<T> {
+                TInt.Instance.None(),
+            };
+            var env = new Env();
+            env.PushScope(ScopeKind.FUNCTION);
+            var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
+            Assert.AreEqual(1, result.Count());
+            Assert.IsFalse(result.First().Remain.More());
+            IEnumerable<lcc.AST.Stmt> stmts = result.First().Value.ToAST(env);
+            Assert.AreEqual(1, stmts.Count());
+            lcc.AST.CompoundStmt stmt = stmts.First() as lcc.AST.CompoundStmt;
+            Assert.IsNotNull(stmt);
+            Assert.AreEqual(types.Count(), stmt.stmts.Count());
+            {
+                var tests = stmt.stmts.Zip(types, (s, t) => new Tuple<lcc.AST.Expr, T>(s as lcc.AST.Expr, t));
+                foreach (var test in tests) {
+                    Assert.AreEqual(test.Item2, test.Item1.Type);
+                }
+            }
+        }
+
+        [TestMethod]
         public void LCCTCUsualArithmeticConversion() {
             Dictionary<Tuple<TArithmetic, TArithmetic>, TArithmetic> tests = new Dictionary<Tuple<TArithmetic, TArithmetic>, TArithmetic> {
                 {
