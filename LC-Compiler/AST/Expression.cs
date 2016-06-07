@@ -11,7 +11,7 @@ namespace lcc.AST {
     public abstract class Expr : Stmt {
         public T Type => type;
         public Env Envrionment => env;
-        public abstract bool IsLValue { get; }
+        public virtual bool IsLValue => false;
 
         public virtual bool IsConstZero => false;
         public virtual bool IsNullPtr => false;
@@ -156,11 +156,28 @@ namespace lcc.AST {
         }
     }
 
+    public sealed class CommaExpr : Expr {
+        public readonly IEnumerable<Expr> exprs;
+        public CommaExpr(T type, Env env, IEnumerable<Expr> exprs) : base(type, env) {
+            this.exprs = exprs;
+        }
+    }
+
+    public sealed class Assign : Expr {
+        public readonly Expr lhs;
+        public readonly Expr rhs;
+        public readonly SyntaxTree.Assign.Op op;
+        public Assign(T type, Env env, Expr lhs, Expr rhs, SyntaxTree.Assign.Op op) : base(type, env) {
+            this.lhs = lhs;
+            this.rhs = rhs;
+            this.op = op;
+        }
+    }
+
     public sealed class CondExpr : Expr {
         public readonly Expr p;
         public readonly Expr t;
         public readonly Expr f;
-        public override bool IsLValue => false;
         public CondExpr(T type, Env env, Expr p, Expr t, Expr f) : base(type, env) {
             this.p = p;
             this.t = t;
@@ -172,7 +189,6 @@ namespace lcc.AST {
         public readonly Expr lhs;
         public readonly Expr rhs;
         public readonly SyntaxTree.BiExpr.Op op;
-        public override bool IsLValue => false;
         public BiExpr(T type, Env env, Expr lhs, Expr rhs, SyntaxTree.BiExpr.Op op) : base(type, env) {
             this.lhs = lhs;
             this.rhs = rhs;
@@ -182,7 +198,6 @@ namespace lcc.AST {
 
     public sealed class Cast : Expr {
         public readonly Expr expr;
-        public override bool IsLValue => false;
         public Cast(TUnqualified type, Env env, Expr expr) : base(type.None(), env) {
             this.expr = expr;
         }
@@ -191,7 +206,6 @@ namespace lcc.AST {
     public sealed class UnaryOp : Expr {
         public readonly Expr expr;
         public readonly SyntaxTree.UnaryOp.Op op;
-        public override bool IsLValue => false;
         public UnaryOp(T type, Env env, Expr expr, SyntaxTree.UnaryOp.Op op) : base(type, env) {
             this.expr = expr;
             this.op = op;
@@ -201,7 +215,6 @@ namespace lcc.AST {
     public sealed class PreStep : Expr {
         public readonly Expr expr;
         public readonly SyntaxTree.PreStep.Kind kind;
-        public override bool IsLValue => false;
         public PreStep(T type, Env env, Expr expr, SyntaxTree.PreStep.Kind kind) : base(type, env) {
             this.expr = expr;
             this.kind = kind;
@@ -234,7 +247,6 @@ namespace lcc.AST {
     public sealed class PostStep : Expr {
         public readonly Expr expr;
         public readonly SyntaxTree.PostStep.Kind kind;
-        public override bool IsLValue => false;
         public PostStep(T type, Env env, Expr expr, SyntaxTree.PostStep.Kind kind) : base(type, env) {
             this.expr = expr;
             this.kind = kind;
@@ -258,7 +270,6 @@ namespace lcc.AST {
     }
 
     public abstract class ConstExpr : Expr {
-        public override bool IsLValue => false;
         public ConstExpr(TUnqualified type, Env env) : base(type.None(), env) { }
     }
 

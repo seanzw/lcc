@@ -25,19 +25,19 @@ namespace lcc.SyntaxTree {
         }
     }
 
-    public sealed class STCommaExpr : Expr, IEquatable<STCommaExpr> {
+    public sealed class CommaExpr : Expr, IEquatable<CommaExpr> {
 
-        public STCommaExpr(IEnumerable<Expr> exprs) {
+        public CommaExpr(IEnumerable<Expr> exprs) {
             this.exprs = exprs;
         }
 
         public override Position Pos => exprs.First().Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STCommaExpr);
+            return Equals(obj as CommaExpr);
         }
 
-        public bool Equals(STCommaExpr x) {
+        public bool Equals(CommaExpr x) {
             return x != null && exprs.SequenceEqual(x.exprs);
         }
 
@@ -45,10 +45,15 @@ namespace lcc.SyntaxTree {
             return exprs.Aggregate(0, (acc, expr) => acc ^ expr.GetHashCode());
         }
 
+        public override AST.Expr GetASTExpr(Env env) {
+            IEnumerable<AST.Expr> es = exprs.Select(e => e.GetASTExpr(env).ValueTransform());
+            return new AST.CommaExpr(es.Last().Type, env.GetASTEnv(), es);
+        }
+
         public readonly IEnumerable<Expr> exprs;
     }
 
-    public sealed class STAssignExpr : Expr, IEquatable<STAssignExpr> {
+    public sealed class Assign : Expr, IEquatable<Assign> {
 
         public enum Op {
             ASSIGN,
@@ -64,31 +69,147 @@ namespace lcc.SyntaxTree {
             BITOREQ
         }
 
-        public STAssignExpr(Expr lexpr, Expr rexpr, Op op) {
-            this.lexpr = lexpr;
-            this.rexpr = rexpr;
+        public Assign(Expr lexpr, Expr rexpr, Op op) {
+            this.lhs = lexpr;
+            this.rhs = rexpr;
             this.op = op;
         }
 
-        public override Position Pos => lexpr.Pos;
+        public override Position Pos => lhs.Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STAssignExpr);
+            return Equals(obj as Assign);
         }
 
-        public bool Equals(STAssignExpr expr) {
+        public bool Equals(Assign expr) {
             return expr != null
-                && expr.lexpr.Equals(lexpr)
-                && expr.rexpr.Equals(rexpr)
+                && expr.lhs.Equals(lhs)
+                && expr.rhs.Equals(rhs)
                 && expr.op == op;
         }
 
         public override int GetHashCode() {
-            return lexpr.GetHashCode() ^ rexpr.GetHashCode() ^ op.GetHashCode();
+            return lhs.GetHashCode() ^ rhs.GetHashCode() ^ op.GetHashCode();
         }
 
-        public readonly Expr lexpr;
-        public readonly Expr rexpr;
+        /// <summary>
+        /// The left operand shall be a modifiable lvalue.
+        /// The result shall have the type of the left operand with all the qualifiers omitted and is an rvalue.
+        /// </summary>
+        /// <param name="env"></param>
+        /// <returns></returns>
+        public override AST.Expr GetASTExpr(Env env) {
+            AST.Expr lExpr = lhs.GetASTExpr(env).VTArr().VTFunc();
+            AST.Expr rExpr = rhs.GetASTExpr(env).ValueTransform();
+            if (!lExpr.IsLValue || lExpr.Type.qualifiers.isConstant) {
+                throw new ETypeError(Pos, "left operator of assign operator shall be a modifiable lvalue");
+            }
+
+            ETypeError typeError = new ETypeError(Pos, string.Format("illegal type: {0} {1} {2}", lExpr.Type, op, rExpr.Type));
+
+            T resultType = rExpr.Type.nake.None();
+            T lElement;
+            T rElement;
+
+            Func<AST.Assign> Convert = () => {
+                AST.Expr converted = rExpr.ImplicitConvert(resultType);
+                if (converted == null) {
+                    throw new ETypeError(Pos, string.Format("cannot implicitly convert from {0} to {1}", lExpr.Type, resultType));
+                }
+                return new AST.Assign(resultType, env.GetASTEnv(), lExpr, converted, op);
+            };
+
+            switch (op) {
+                case Op.ASSIGN:
+                    /// Simple assignment.
+                    /// - the left operand has qualified or unqualified arithmetic type and the right has arithmetic type;
+                    /// - the left operand has a qualified or unqualified version of a structure or union type compatible
+                    ///   with the type of the right;
+                    /// - both operands are pointers to qualified or unqualified versions of compatible types, and the type
+                    ///   pointed to by the left has all the qualifiers of the type pointed to by the right;
+                    /// - one operand is a pointer to an object or incomplete type and the other is a pointer to a qualified
+                    ///   or unqualified version of void, and the type pointed to by the left has all the qualifiers of the 
+                    ///   type pointed to by the right;
+                    /// - the left operand is a pointer and the right is a null pointer constant;
+                    /// - the left operand has type _Bool and the right is a pointer.
+                    /// 
+                    /// The value of the right operand is converted to the type of the assignment expression.
+                    if (lExpr.Type.IsArithmetic && rExpr.Type.IsArithmetic) {
+                        return Convert();
+                    }
+                    if ((lExpr.Type.IsStruct || lExpr.Type.IsUnion) && lExpr.Type.nake.Compatible(rExpr.Type.nake)) {
+                        return Convert();
+                    }
+                    if (lExpr.Type.IsPtr && rExpr.Type.IsPtr) {
+                        lElement = (lExpr.Type.nake as TPtr).element;
+                        rElement = (rExpr.Type.nake as TPtr).element;
+                        if (lElement.nake.Compatible(rElement.nake) && (lElement.qualifiers | rElement.qualifiers).Equals(lElement.qualifiers)) {
+                            return Convert();
+                        }
+                        if ((!lElement.IsFunc && rElement.IsVoid) ||
+                            (!rElement.IsFunc && lElement.IsVoid)) {
+                            if ((lElement.qualifiers | rElement.qualifiers).Equals(lElement.qualifiers)) {
+                                return Convert();
+                            }
+                        }
+                    }
+                    if (lExpr.Type.IsPtr && (rExpr.IsNullPtr || rExpr.IsConstZero)) {
+                        return Convert();
+                    }
+                    if (lExpr.Type.Kind == TKind.BOOL && rExpr.Type.IsPtr) {
+                        return Convert();
+                    }
+                    throw new ETypeError(Pos, string.Format("can not assign from {0} to {1}", rExpr.Type, lExpr.Type));
+                /// Compound assignment: leave all the conversion to AST.
+                case Op.MULEQ:
+                case Op.DIVEQ:
+                case Op.MODEQ:
+                    /// Each of the operands shall have arithmetic type.
+                    if (!lExpr.Type.IsArithmetic || !rExpr.Type.IsArithmetic) {
+                        throw typeError;
+                    }
+                    /// The operands of the % operator shall have integer type.
+                    if (op == Op.MODEQ) {
+                        if (!lExpr.Type.IsInteger || !rExpr.Type.IsInteger) {
+                            throw typeError;
+                        }
+                    }
+                    return new AST.Assign(resultType, env.GetASTEnv(), lExpr, rExpr, op);
+                case Op.PLUSEQ:
+                case Op.MINUSEQ:
+                    /// Either the left operand shall be a pointer to an object type and the right shall have integer type,
+                    /// or the left operand shall have qualified or unqualified arithmetic type and the right shall have arithemetic type.
+                    if (lExpr.Type.IsPtr) {
+                        lElement = (lExpr.Type.nake as TPtr).element;
+                        if (lElement.IsObject && rExpr.Type.IsInteger) {
+                            return new AST.Assign(resultType, env.GetASTEnv(), lExpr, rExpr, op);
+                        }
+                    }
+                    if (lExpr.Type.IsArithmetic && rExpr.Type.IsArithmetic) {
+                        return new AST.Assign(resultType, env.GetASTEnv(), lExpr, rExpr, op);
+                    }
+                    throw typeError;
+                case Op.SHIFTLEQ:
+                case Op.SHIFTREQ:
+                    if (lExpr.Type.IsInteger && rExpr.Type.IsInteger) {
+                        return new AST.Assign(resultType, env.GetASTEnv(), lExpr, rExpr, op);
+                    }
+                    throw typeError;
+                case Op.BITANDEQ:
+                case Op.BITXOREQ:
+                case Op.BITOREQ:
+                    /// Each of the operands shall have integer type.
+                    if (lExpr.Type.IsInteger && rExpr.Type.IsInteger) {
+                        return new AST.Assign(resultType, env.GetASTEnv(), lExpr, rExpr, op);
+                    }
+                    throw typeError;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        public readonly Expr lhs;
+        public readonly Expr rhs;
         public readonly Op op;
     }
 
@@ -148,7 +269,7 @@ namespace lcc.SyntaxTree {
             if (t.Type.IsVoid && p.Type.IsVoid) {
                 return new AST.CondExpr(t.Type, env.GetASTEnv(), p, t, f);
             }
-            throw new ETypeError(Pos, "sorry only partially support the conditional expression.");
+
             //if (t.Type.IsPtr && f.Type.IsPtr) {
             //    T tElement = (t.Type.nake as TPtr).element;
             //    T fElement = (f.Type.nake as TPtr).element;
@@ -163,6 +284,7 @@ namespace lcc.SyntaxTree {
             //    (rExpr.Type.IsPtr && (lExpr.IsConstZero || lExpr.IsNullPtr))) {
             //    return new AST.BiExpr(TInt.Instance.None(), env.GetASTEnv(), lExpr, rExpr, op);
             //}
+            throw new ETypeError(Pos, "sorry only partially support the conditional expression.");
         }
 
         public readonly Expr predicator;
@@ -265,8 +387,9 @@ namespace lcc.SyntaxTree {
                     /// For subtraction, one of the following shall hold:
                     /// 1. Both operands have arithmetic types.
                     /// 2. Both operands are pointers to qualified or unqualified versions of compatible object types.
-                    /// 3. The left operand is a pointer to an object type and the right operand has integer type.
                     ///    The result shall have type ptrdiff_t, which is int in this implementation.
+                    /// 3. The left operand is a pointer to an object type and the right operand has integer type.
+                    ///    
                     /// Do not worry about "one past the last element" requirements.
                     if (lExpr.Type.IsArithmetic && rExpr.Type.IsArithmetic) {
                         uac = AST.Expr.UsualArithConvert(lExpr, rExpr);
@@ -279,7 +402,7 @@ namespace lcc.SyntaxTree {
                                 return new AST.BiExpr(lExpr.Type, env.GetASTEnv(), lExpr, rExpr, Op.MINUS);
                             } else if (rExpr.Type.IsPtr) {
                                 rElement = (rExpr.Type.nake as TPtr).element;
-                                if (rElement.IsObject && lElement.Compatible(rElement)) {
+                                if (rElement.IsObject && lElement.nake.Compatible(rElement.nake)) {
                                     return new AST.BiExpr(TInt.Instance.None(), env.GetASTEnv(), lExpr, rExpr, Op.MINUS);
                                 }
                             }
@@ -316,10 +439,10 @@ namespace lcc.SyntaxTree {
                     if (lExpr.Type.IsPtr && rExpr.Type.IsPtr) {
                         lElement = (lExpr.Type.nake as TPtr).element;
                         rElement = (rExpr.Type.nake as TPtr).element;
-                        if (lElement.IsObject && rElement.IsObject && lElement.Compatible(rElement)) {
+                        if (lElement.IsObject && rElement.IsObject && lElement.nake.Compatible(rElement.nake)) {
                             return new AST.BiExpr(TInt.Instance.None(), env.GetASTEnv(), lExpr, rExpr, op);
                         }
-                        if (!lElement.IsComplete && !rElement.IsComplete && lElement.Compatible(rElement)) {
+                        if (!lElement.IsComplete && !rElement.IsComplete && lElement.nake.Compatible(rElement.nake)) {
                             return new AST.BiExpr(TInt.Instance.None(), env.GetASTEnv(), lExpr, rExpr, op);
                         }
                     }
@@ -341,7 +464,7 @@ namespace lcc.SyntaxTree {
                     if (lExpr.Type.IsPtr && rExpr.Type.IsPtr) {
                         lElement = (lExpr.Type.nake as TPtr).element;
                         rElement = (rExpr.Type.nake as TPtr).element;
-                        if (lElement.Compatible(rElement)) {
+                        if (lElement.nake.Compatible(rElement.nake)) {
                             return new AST.BiExpr(TInt.Instance.None(), env.GetASTEnv(), lExpr, rExpr, op);
                         }
                         if ((!lElement.IsFunc && rElement.IsVoid) || (!rElement.IsFunc && lElement.IsVoid)) {

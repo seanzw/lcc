@@ -17,13 +17,13 @@ namespace LC_CompilerTests {
                     "FOO: x = x + 2;",
                     new STLabeled(
                         new Id(new T_IDENTIFIER(1, "FOO")),
-                        new STAssignExpr(
+                        new Assign(
                             new Id(new T_IDENTIFIER(1, "x")),
                             new BiExpr(
                                 new Id(new T_IDENTIFIER(1, "x")),
                                 new ConstInt(new T_CONST_INT(1, "2", 10)),
                                 BiExpr.Op.PLUS),
-                            STAssignExpr.Op.ASSIGN))
+                            Assign.Op.ASSIGN))
                 }
             };
 
@@ -246,10 +246,10 @@ for (i = 0; i < length; ++i) {
 }",
                     new STFor(
                         2,
-                        new STAssignExpr(
+                        new Assign(
                             new Id(new T_IDENTIFIER(2, "i")),
                             new ConstInt(new T_CONST_INT(2, "0", 8)),
-                            STAssignExpr.Op.ASSIGN),
+                            Assign.Op.ASSIGN),
                         new BiExpr(
                             new Id(new T_IDENTIFIER(2, "i")),
                             new Id(new T_IDENTIFIER(2, "length")),
@@ -259,10 +259,10 @@ for (i = 0; i < length; ++i) {
                             PreStep.Kind.INC),
                         new CompoundStmt(
                             new List<Stmt> {
-                                new STAssignExpr(
+                                new Assign(
                                     new Id(new T_IDENTIFIER(3, "x")),
                                     new Id(new T_IDENTIFIER(3, "i")),
-                                    STAssignExpr.Op.PLUSEQ)
+                                    Assign.Op.PLUSEQ)
                             }))
                 },
                 {

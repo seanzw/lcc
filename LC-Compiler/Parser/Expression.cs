@@ -30,7 +30,7 @@ namespace lcc.Parser {
         /// <returns></returns>
         public static Parserc.Parser<Token.Token, Expr> Expression() {
             return AssignmentExpression().PlusSeperatedBy(Match<T_PUNC_COMMA>())
-                .Select(exprs => exprs.Count == 1 ? exprs.First() : new STCommaExpr(exprs));
+                .Select(exprs => exprs.Count == 1 ? exprs.First() : new CommaExpr(exprs));
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace lcc.Parser {
                 .Or(UnaryExpression()
                     .Bind(lexpr => AssgnmentOperator()
                     .Bind(op => AssignmentExpression()
-                    .Select(rexpr => new STAssignExpr(lexpr, rexpr, op)))));
+                    .Select(rexpr => new Assign(lexpr, rexpr, op)))));
         }
 
         /// <summary>
@@ -54,19 +54,19 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, STAssignExpr.Op> AssgnmentOperator() {
-            return Match<T_PUNC_ASSIGN>().Return(STAssignExpr.Op.ASSIGN)
-                .Else(Match<T_PUNC_ASSIGN>().Return(STAssignExpr.Op.ASSIGN))
-                .Else(Match<T_PUNC_MULEQ>().Return(STAssignExpr.Op.MULEQ))
-                .Else(Match<T_PUNC_DIVEQ>().Return(STAssignExpr.Op.DIVEQ))
-                .Else(Match<T_PUNC_MODEQ>().Return(STAssignExpr.Op.MODEQ))
-                .Else(Match<T_PUNC_PLUSEQ>().Return(STAssignExpr.Op.PLUSEQ))
-                .Else(Match<T_PUNC_MINUSEQ>().Return(STAssignExpr.Op.MINUSEQ))
-                .Else(Match<T_PUNC_SHIFTLEQ>().Return(STAssignExpr.Op.SHIFTLEQ))
-                .Else(Match<T_PUNC_SHIFTREQ>().Return(STAssignExpr.Op.SHIFTREQ))
-                .Else(Match<T_PUNC_BITANDEQ>().Return(STAssignExpr.Op.BITANDEQ))
-                .Else(Match<T_PUNC_BITXOREQ>().Return(STAssignExpr.Op.BITXOREQ))
-                .Else(Match<T_PUNC_BITOREQ>().Return(STAssignExpr.Op.BITOREQ));
+        public static Parserc.Parser<Token.Token, Assign.Op> AssgnmentOperator() {
+            return Match<T_PUNC_ASSIGN>().Return(Assign.Op.ASSIGN)
+                .Else(Match<T_PUNC_ASSIGN>().Return(Assign.Op.ASSIGN))
+                .Else(Match<T_PUNC_MULEQ>().Return(Assign.Op.MULEQ))
+                .Else(Match<T_PUNC_DIVEQ>().Return(Assign.Op.DIVEQ))
+                .Else(Match<T_PUNC_MODEQ>().Return(Assign.Op.MODEQ))
+                .Else(Match<T_PUNC_PLUSEQ>().Return(Assign.Op.PLUSEQ))
+                .Else(Match<T_PUNC_MINUSEQ>().Return(Assign.Op.MINUSEQ))
+                .Else(Match<T_PUNC_SHIFTLEQ>().Return(Assign.Op.SHIFTLEQ))
+                .Else(Match<T_PUNC_SHIFTREQ>().Return(Assign.Op.SHIFTREQ))
+                .Else(Match<T_PUNC_BITANDEQ>().Return(Assign.Op.BITANDEQ))
+                .Else(Match<T_PUNC_BITXOREQ>().Return(Assign.Op.BITXOREQ))
+                .Else(Match<T_PUNC_BITOREQ>().Return(Assign.Op.BITOREQ));
         }
 
         /// <summary>

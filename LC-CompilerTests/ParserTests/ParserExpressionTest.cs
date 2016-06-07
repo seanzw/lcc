@@ -542,20 +542,20 @@ namespace LC_CompilerTests {
                 },
                 {
                     "a += 6",
-                    new STAssignExpr(
+                    new Assign(
                         new Id(new T_IDENTIFIER(1, "a")),
                         new ConstInt(new T_CONST_INT(1, "6", 10)),
-                        STAssignExpr.Op.PLUSEQ)
+                        Assign.Op.PLUSEQ)
                 },
                 {
                     "val = a = c",
-                    new STAssignExpr(
+                    new Assign(
                         new Id(new T_IDENTIFIER(1, "val")),
-                        new STAssignExpr(
+                        new Assign(
                             new Id(new T_IDENTIFIER(1, "a")),
                             new Id(new T_IDENTIFIER(1, "c")),
-                            STAssignExpr.Op.ASSIGN),
-                        STAssignExpr.Op.ASSIGN)
+                            Assign.Op.ASSIGN),
+                        Assign.Op.ASSIGN)
                 }
             };
             foreach (var test in dict) {
@@ -588,9 +588,9 @@ namespace LC_CompilerTests {
             l3.AddFirst(e21);
             l3.AddFirst(e22);
 
-            var comma1 = new STCommaExpr(l1);
-            var comma2 = new STCommaExpr(l2);
-            var comma3 = new STCommaExpr(l3);
+            var comma1 = new CommaExpr(l1);
+            var comma2 = new CommaExpr(l2);
+            var comma3 = new CommaExpr(l3);
 
             Assert.IsFalse(comma1.Equals(comma2));
             Assert.IsTrue(comma1.Equals(comma3));
@@ -602,19 +602,19 @@ namespace LC_CompilerTests {
             Dictionary<string, Expr> dict = new Dictionary<string, Expr> {
                 {
                     "a = 1, b = 2, c = 3",
-                    new STCommaExpr(new LinkedList<Expr>(new List<Expr> {
-                        new STAssignExpr(
+                    new CommaExpr(new LinkedList<Expr>(new List<Expr> {
+                        new Assign(
                             new Id(new T_IDENTIFIER(1, "a")),
                             new ConstInt(new T_CONST_INT(1, "1", 10)),
-                            STAssignExpr.Op.ASSIGN),
-                        new STAssignExpr(
+                            Assign.Op.ASSIGN),
+                        new Assign(
                             new Id(new T_IDENTIFIER(1, "b")),
                             new ConstInt(new T_CONST_INT(1, "2", 10)),
-                            STAssignExpr.Op.ASSIGN),
-                        new STAssignExpr(
+                            Assign.Op.ASSIGN),
+                        new Assign(
                             new Id(new T_IDENTIFIER(1, "c")),
                             new ConstInt(new T_CONST_INT(1, "3", 10)),
-                            STAssignExpr.Op.ASSIGN),
+                            Assign.Op.ASSIGN),
                     }))
                 }
             };

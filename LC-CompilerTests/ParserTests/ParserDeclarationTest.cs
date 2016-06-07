@@ -1016,10 +1016,10 @@ int foo();
             var tests = new Dictionary<string, Initializer> {
                 {
                     "2 = 3",
-                    new Initializer(new STAssignExpr(
+                    new Initializer(new Assign(
                         new ConstInt(new T_CONST_INT(1, "2", 10)),
                         new ConstInt(new T_CONST_INT(1, "3", 10)),
-                        STAssignExpr.Op.ASSIGN))
+                        Assign.Op.ASSIGN))
                 },
                 {
                     "{ .what = {1, 2, 3 }, }",
