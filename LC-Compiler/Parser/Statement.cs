@@ -29,7 +29,7 @@ namespace lcc.Parser {
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<T, Stmt> Statement() {
-            return LabeledStatement().Cast<T, Stmt, STLabeled>()
+            return LabeledStatement().Cast<T, Stmt, Labeled>()
                 .Or(CaseStatement())
                 .Or(DefaultStatement())
                 .Or(CompoundStatement())
@@ -49,11 +49,11 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STLabeled> LabeledStatement() {
+        public static Parserc.Parser<T, Labeled> LabeledStatement() {
             return Identifier()
                 .Bind(identifier => Match<T_PUNC_COLON>()
                 .Then(Ref(Statement))
-                .Select(statement => new STLabeled(identifier, statement)));
+                .Select(statement => new Labeled(identifier, statement)));
         }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace lcc.Parser {
         /// <returns></returns>
         public static Parserc.Parser<T, Stmt> ExpressionStatement() {
             return Expression().Bind(expr => Match<T_PUNC_SEMICOLON>().Return(expr as Stmt))
-                .Or(Get<T_PUNC_SEMICOLON>().Select(t => new STVoidStmt(t.line)));
+                .Or(Get<T_PUNC_SEMICOLON>().Select(t => new VoidStmt(t.line)));
         }
 
         /// <summary>
@@ -121,13 +121,13 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STIf> IfStatement() {
+        public static Parserc.Parser<T, If> IfStatement() {
             return Get<T_KEY_IF>()
                 .Bind(t => Expression().ParentLR()
                 .Bind(expr => Ref(Statement)
                 .Bind(then => Match<T_KEY_ELSE>()
                 .Then(Ref(Statement)).ElseNull()
-                .Select(other => new STIf(t.line, expr, then, other)))));
+                .Select(other => new If(t.line, expr, then, other)))));
         }
 
         /// <summary>

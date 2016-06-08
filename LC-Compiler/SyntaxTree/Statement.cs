@@ -4,39 +4,47 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using lcc.AST;
+using lcc.TypeSystem;
 
 namespace lcc.SyntaxTree {
     public abstract class Stmt : Node {
-        public virtual IEnumerable<AST.Stmt> ToAST(Env env) {
+        public virtual AST.Stmt ToAST(Env env) {
             throw new NotImplementedException();
         }
     }
 
-    public sealed class STLabeled : Stmt, IEquatable<STLabeled> {
+    public sealed class Labeled : Stmt, IEquatable<Labeled> {
 
-        public STLabeled(Id identifier, Stmt statement) {
-            this.identifier = identifier;
-            this.statement = statement;
+        public Labeled(Id id, Stmt statement) {
+            this.id = id;
+            this.stmt = statement;
         }
 
-        public override Position Pos => identifier.Pos;
+        public override Position Pos => id.Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STLabeled);
+            return Equals(obj as Labeled);
         }
 
-        public bool Equals(STLabeled x) {
+        public bool Equals(Labeled x) {
             return x != null
-                && x.identifier.Equals(identifier)
-                && x.statement.Equals(statement);
+                && x.id.Equals(id)
+                && x.stmt.Equals(stmt);
         }
 
         public override int GetHashCode() {
-            return identifier.GetHashCode();
+            return id.GetHashCode();
         }
 
-        public readonly Id identifier;
-        public readonly Stmt statement;
+        public override AST.Stmt ToAST(Env env) {
+            if (Id.IsReservedIdentifier(id.symbol)) throw new EReservedIdentifier(Pos, id.symbol);
+            if (env.GetLable(id.symbol) != null) throw new ERedfineLabel(Pos, id.symbol);
+            string transformed = env.AddLabel(id.symbol);
+            return new AST.Labeled(transformed, stmt.ToAST(env));
+        }
+
+        public readonly Id id;
+        public readonly Stmt stmt;
     }
 
     public sealed class STCase : Stmt, IEquatable<STCase> {
@@ -109,20 +117,24 @@ namespace lcc.SyntaxTree {
             return Pos.GetHashCode();
         }
 
-        public override IEnumerable<AST.Stmt> ToAST(Env env) {
+        public override AST.Stmt ToAST(Env env) {
             env.PushScope(ScopeKind.BLOCK);
-            IEnumerable<AST.Stmt> results = stmts.Aggregate(Enumerable.Empty<AST.Stmt>(), (acc, stmt) => acc.Concat(stmt.ToAST(env)));
+            LinkedList<AST.Stmt> results = new LinkedList<AST.Stmt>();
+            foreach (var stmt in stmts) {
+                results.AddLast(stmt.ToAST(env));
+            }
             env.PopScope();
-            return new List<AST.Stmt> { new AST.CompoundStmt(results) };
+            return new AST.CompoundStmt(results);
         }
+
+        //public IEnumerable<AST.Stmt> FuncBody(Env env, T type, IEnumerable<)
 
         public readonly IEnumerable<Stmt> stmts;
     }
 
-    public sealed class STIf : Stmt, IEquatable<STIf> {
+    public sealed class If : Stmt, IEquatable<If> {
 
-
-        public STIf(
+        public If(
             int line,
             Expr expr,
             Stmt then,
@@ -137,10 +149,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STIf);
+            return Equals(obj as If);
         }
 
-        public bool Equals(STIf x) {
+        public bool Equals(If x) {
             return x != null
                 && x.pos.Equals(pos)
                 && x.expr.Equals(expr)
@@ -150,6 +162,28 @@ namespace lcc.SyntaxTree {
 
         public override int GetHashCode() {
             return expr.GetHashCode();
+        }
+
+        /// <summary>
+        /// A selection statement is a block whose scope is a strict subset
+        /// of the scope of its enclosing block.
+        /// 
+        /// The controlling expression of an if statement shall have scalar type.
+        /// </summary>
+        /// <param name="env"></param>
+        /// <returns></returns>
+        public override AST.Stmt ToAST(Env env) {
+            env.PushScope(ScopeKind.BLOCK);
+            AST.Expr e = expr.GetASTExpr(env);
+            if (!e.Type.IsScalar) {
+                throw new ETypeError(Pos, string.Format("expecting scalar type, given {0}", e.Type));
+            }
+
+            AST.Stmt t = then.ToAST(env);
+            AST.Stmt o = other != null ? other.ToAST(env) : null;
+
+            env.PopScope();
+            return new AST.If(e, t, o);
         }
 
         private readonly Position pos;
@@ -248,7 +282,6 @@ namespace lcc.SyntaxTree {
     }
 
     public sealed class STFor : Stmt, IEquatable<STFor> {
-
 
         public STFor(
             int line,
@@ -397,24 +430,28 @@ namespace lcc.SyntaxTree {
         public readonly Id label;
     }
 
-    public sealed class STVoidStmt : Stmt {
+    public sealed class VoidStmt : Stmt {
 
-        public STVoidStmt(int line) {
+        public VoidStmt(int line) {
             this.pos = new Position { line = line };
         }
 
         public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STVoidStmt);
+            return Equals(obj as VoidStmt);
         }
 
-        public bool Equals(STVoidStmt x) {
+        public bool Equals(VoidStmt x) {
             return x != null && x.pos.Equals(pos);
         }
 
         public override int GetHashCode() {
             return Pos.GetHashCode();
+        }
+
+        public override AST.Stmt ToAST(Env env) {
+            return AST.VoidStmt.Instance;
         }
 
         private readonly Position pos;

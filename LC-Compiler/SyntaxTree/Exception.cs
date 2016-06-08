@@ -23,9 +23,19 @@ namespace lcc.SyntaxTree {
 
     }
 
+    public sealed class EReservedIdentifier : Error {
+        public EReservedIdentifier(Position pos, string id)
+            : base(pos, string.Format("reserved identifier {0}", id)) { }
+    }
+
     public sealed class ETypeError : Error {
         public ETypeError(Position pos, string msg)
             : base(pos, string.Format("type error: {0}", msg)) { }
+    }
+
+    public sealed class ERedfineLabel : Error {
+        public ERedfineLabel(Position pos, string label)
+            : base(pos, string.Format("redefine lable {0}", label)) { }
     }
 
     public sealed class ERedefineTag : Error {

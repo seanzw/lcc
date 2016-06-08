@@ -153,7 +153,7 @@ namespace lcc.SyntaxTree {
         /// Scope contains two dictionary.
         /// One for symbols, another for tags.
         /// </summary>
-        private sealed class Scope {
+        private class Scope {
             public Scope(ScopeKind kind) {
                 this.kind = kind;
                 symbols = new LinkedList<SymbolEntry>();
@@ -188,6 +188,49 @@ namespace lcc.SyntaxTree {
                 return null;
             }
 
+            public bool HasVARR() {
+                foreach (var s in symbols) 
+                    if (s.kind == SymbolEntry.Kind.OBJECT && s.type.Kind == TKind.VARR) return true;
+                return false;
+            }
+
+            #region Interface for function scope.
+
+            public virtual TFunc FuncType {
+                get {
+                    throw new InvalidOperationException("can not get function type in non-function scope");
+                }
+            }
+
+            /// <summary>
+            /// Add a label, return the transformed label.
+            /// </summary>
+            /// <param name="label"></param>
+            /// <returns></returns>
+            public virtual string AddLabel(string label, Scope scope) {
+                throw new InvalidOperationException("can not add label in non-function scope");
+            }
+
+            /// <summary>
+            /// Get the transformed label. Returns null if the label is undefined.
+            /// </summary>
+            /// <param name="label"></param>
+            /// <returns></returns>
+            public virtual string GetLabel(string label) {
+                throw new InvalidOperationException("can not get label in non-function scope");
+            }
+
+            /// <summary>
+            /// Is this label defined within a scope that has VLA?
+            /// </summary>
+            /// <param name="label"></param>
+            /// <returns></returns>
+            public virtual bool IsLabelWithVARR(string label) {
+                throw new InvalidOperationException("can not get label in non-function scope");
+            }
+
+            #endregion
+
             public void Dump(int tab, StringBuilder builder) {
                 StringBuilder sb = new StringBuilder();
                 string tt = "";
@@ -213,6 +256,33 @@ namespace lcc.SyntaxTree {
             private readonly LinkedList<TagEntry> tags;
         }
 
+        private sealed class FuncScope : Scope {
+            public readonly TFunc type;
+            public override TFunc FuncType => type;
+            public FuncScope(TFunc type) : base(ScopeKind.FUNCTION) {
+                labels = new Dictionary<string, Tuple<string, Scope>>();
+            }
+
+            public override string AddLabel(string label, Scope scope) {
+                string transformed = string.Format("__{0}_{1}", label, cnt++);
+                labels.Add(label, new Tuple<string, Scope>(transformed, scope));
+                return transformed;
+            }
+
+            public override string GetLabel(string label) {
+                if (labels.ContainsKey(label)) return labels[label].Item1;
+                else return null;
+            }
+
+            public override bool IsLabelWithVARR(string label) {
+                if (labels.ContainsKey(label)) return labels[label].Item2.HasVARR();
+                else throw new ArgumentException(string.Format("there is no such label as {0}", label));
+            }
+
+            private static int cnt = 0;
+            private readonly Dictionary<string, Tuple<string, Scope>> labels;
+        }
+
         /// <summary>
         /// Initialize the environment with the file scope.
         /// </summary>
@@ -229,6 +299,9 @@ namespace lcc.SyntaxTree {
         /// Push a nested scope into the environment.
         /// </summary>
         public void PushScope(ScopeKind kind) {
+            if (kind == ScopeKind.FUNCTION) {
+                throw new InvalidOperationException("please use PushFuncScope() to push a function scope.");
+            }
             scopes.Push(new Scope(kind));
             
             // Make a copy of the AST Env.
@@ -237,6 +310,17 @@ namespace lcc.SyntaxTree {
                 env.PushScope();
                 ASTEnvs.Push(env);
             }
+        }
+
+        /// <summary>
+        /// Push a function scope.
+        /// </summary>
+        /// <param name="type"></param>
+        public void PushFuncScope(TFunc type) {
+            scopes.Push(new FuncScope(type));
+            var env = new AST.Env(ASTEnvs.Peek());
+            env.PushScope();
+            ASTEnvs.Push(env);
         }
 
         /// <summary>
@@ -292,6 +376,24 @@ namespace lcc.SyntaxTree {
 
         public void AddFunc(string symbol, T type, SymbolEntry.Link link, Declaration declaration) {
             scopes.Peek().AddSymbol(new FuncEntry(symbol, type, declaration, link));
+        }
+
+        public string AddLabel(string label) {
+            foreach (var scope in scopes)
+                if (scope.kind == ScopeKind.FUNCTION) return scope.AddLabel(label, scopes.Peek());
+            throw new InvalidOperationException("there is no upper function scope");
+        }
+
+        public string GetLable(string label) {
+            foreach (var scope in scopes)
+                if (scope.kind == ScopeKind.FUNCTION) return scope.GetLabel(label);
+            throw new InvalidOperationException("there is no upper function scope");
+        }
+
+        public bool IsLabelWithVARR(string label) {
+            foreach (var scope in scopes) 
+                if (scope.kind == ScopeKind.FUNCTION) return scope.IsLabelWithVARR(label);
+            throw new InvalidOperationException("there is no upper function scope");
         }
 
         /// <summary>

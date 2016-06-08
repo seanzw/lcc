@@ -61,6 +61,7 @@
     <Compile Include="SyntaxTreeTests\ExpressionTest.cs" />
     <Compile Include="SyntaxTreeTests\PrimExprTest.cs" />
     <Compile Include="SyntaxTreeTests\DeclarationTest.cs" />
+    <Compile Include="SyntaxTreeTests\StatementTests.cs" />
     <Compile Include="TypeTest.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>

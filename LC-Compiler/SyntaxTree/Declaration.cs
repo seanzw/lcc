@@ -44,7 +44,7 @@ namespace lcc.SyntaxTree {
             return specifiers.GetHashCode();
         }
 
-        public override IEnumerable<AST.Stmt> ToAST(Env env) {
+        public override AST.Stmt ToAST(Env env) {
             T baseType = specifiers.GetT(env);
 
             var nodes = new LinkedList<AST.Stmt>();
@@ -216,7 +216,7 @@ namespace lcc.SyntaxTree {
             }
 
             // Return the nodes.
-            return nodes;
+            return new AST.Declaraion(nodes);
         }
 
         public readonly DeclSpecs specifiers;

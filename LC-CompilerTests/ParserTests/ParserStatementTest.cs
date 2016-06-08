@@ -12,10 +12,10 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserLabeledStatement() {
-            var tests = new Dictionary<string, STLabeled> {
+            var tests = new Dictionary<string, Labeled> {
                 {
                     "FOO: x = x + 2;",
-                    new STLabeled(
+                    new Labeled(
                         new Id(new T_IDENTIFIER(1, "FOO")),
                         new Assign(
                             new Id(new T_IDENTIFIER(1, "x")),
@@ -103,7 +103,7 @@ namespace LC_CompilerTests {
             var tests = new Dictionary<string, Stmt> {
                 {
                     ";",
-                    new STVoidStmt(1)
+                    new VoidStmt(1)
                 }
             };
 
@@ -114,12 +114,12 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserIfStatement() {
-            var tests = new Dictionary<string, STIf> {
+            var tests = new Dictionary<string, If> {
                 {
                     @"
 if (i < length)
     x++;",
-                    new STIf(
+                    new If(
                         2,
                         new BiExpr(
                             new Id(new T_IDENTIFIER(2, "i")),
@@ -136,7 +136,7 @@ if (i < length)
     x++;
 else
     x--;",
-                    new STIf(
+                    new If(
                         2,
                         new BiExpr(
                             new Id(new T_IDENTIFIER(2, "i")),
@@ -273,7 +273,7 @@ for (;1;) ;",
                         null,
                         new ConstInt(new T_CONST_INT(2, "1", 10)),
                         null,
-                        new STVoidStmt(2))
+                        new VoidStmt(2))
                 }
             };
 

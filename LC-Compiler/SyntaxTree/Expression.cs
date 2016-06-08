@@ -16,8 +16,8 @@ namespace lcc.SyntaxTree {
     /// </summary>
     public abstract class Expr : Stmt {
 
-        public sealed override IEnumerable<AST.Stmt> ToAST(Env env) {
-            return new List<AST.Stmt> { GetASTExpr(env) };
+        public sealed override AST.Stmt ToAST(Env env) {
+            return GetASTExpr(env);
         }
 
         public abstract AST.Expr GetASTExpr(Env env);
@@ -1189,6 +1189,10 @@ namespace lcc.SyntaxTree {
                         throw new NotImplementedException();
                 }
             }
+        }
+
+        public static bool IsReservedIdentifier(string symbol) {
+            return symbol.Length > 2 && symbol.Substring(0, 2) == "__";
         }
 
         public readonly string symbol;

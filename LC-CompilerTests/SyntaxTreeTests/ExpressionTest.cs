@@ -28,14 +28,12 @@ namespace LC_CompilerTests {
 }
 ";
             var env = new Env();
-            env.PushScope(ScopeKind.FUNCTION);
             var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
-            IEnumerable<lcc.AST.Stmt> stmts = result.First().Value.ToAST(env);
-            Assert.AreEqual(1, stmts.Count());
-            lcc.AST.CompoundStmt stmt = stmts.First() as lcc.AST.CompoundStmt;
-            Assert.IsNotNull(stmt);
+            lcc.AST.Stmt stmt = result.First().Value.ToAST(env);
+            lcc.AST.CompoundStmt s = stmt as lcc.AST.CompoundStmt;
+            Assert.IsNotNull(s);
             //Assert.AreEqual(4, stmt.stmts.Count());
         }
 
@@ -62,16 +60,15 @@ namespace LC_CompilerTests {
                 TInt.Instance.Const()
             };
             var env = new Env();
-            env.PushScope(ScopeKind.FUNCTION);
             var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
-            IEnumerable<lcc.AST.Stmt> stmts = result.First().Value.ToAST(env);
-            Assert.AreEqual(1, stmts.Count());
-            lcc.AST.CompoundStmt stmt = stmts.First() as lcc.AST.CompoundStmt;
-            Assert.IsNotNull(stmt);
-            Assert.AreEqual(types.Count(), stmt.stmts.Count());
-            var tests = stmt.stmts.Zip(types, (s, t) => new Tuple<lcc.AST.Expr, T>(s as lcc.AST.Expr, t));
+            lcc.AST.Stmt stmt = result.First().Value.ToAST(env);
+            lcc.AST.CompoundStmt conmpund = stmt as lcc.AST.CompoundStmt;
+            Assert.IsNotNull(conmpund);
+            IEnumerable<lcc.AST.Expr> exprs = conmpund.stmts.OfType<lcc.AST.Expr>();
+            Assert.AreEqual(types.Count(), exprs.Count());
+            var tests = exprs.Zip(types, (s, t) => new Tuple<lcc.AST.Expr, T>(s as lcc.AST.Expr, t));
             foreach (var test in tests) {
                 Assert.AreEqual(test.Item2, test.Item1.Type);
             }
@@ -106,16 +103,15 @@ namespace LC_CompilerTests {
                 TInt.Instance.None()
             };
             var env = new Env();
-            env.PushScope(ScopeKind.FUNCTION);
             var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
-            IEnumerable<lcc.AST.Stmt> stmts = result.First().Value.ToAST(env);
-            Assert.AreEqual(1, stmts.Count());
-            lcc.AST.CompoundStmt stmt = stmts.First() as lcc.AST.CompoundStmt;
-            Assert.IsNotNull(stmt);
-            Assert.AreEqual(types.Count(), stmt.stmts.Count());
-            var tests = stmt.stmts.Zip(types, (s, t) => new Tuple<lcc.AST.Expr, T>(s as lcc.AST.Expr, t));
+            lcc.AST.Stmt stmt = result.First().Value.ToAST(env);
+            lcc.AST.CompoundStmt conmpund = stmt as lcc.AST.CompoundStmt;
+            Assert.IsNotNull(conmpund);
+            IEnumerable<lcc.AST.Expr> exprs = conmpund.stmts.OfType<lcc.AST.Expr>();
+            Assert.AreEqual(types.Count(), exprs.Count());
+            var tests = exprs.Zip(types, (s, t) => new Tuple<lcc.AST.Expr, T>(s as lcc.AST.Expr, t));
             foreach (var test in tests) {
                 Assert.AreEqual(test.Item2, test.Item1.Type);
             }
@@ -148,23 +144,22 @@ namespace LC_CompilerTests {
                 4
             };
             var env = new Env();
-            env.PushScope(ScopeKind.FUNCTION);
             var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
-            IEnumerable<lcc.AST.Stmt> stmts = result.First().Value.ToAST(env);
-            Assert.AreEqual(1, stmts.Count());
-            lcc.AST.CompoundStmt stmt = stmts.First() as lcc.AST.CompoundStmt;
-            Assert.IsNotNull(stmt);
-            Assert.AreEqual(types.Count(), stmt.stmts.Count());
+            lcc.AST.Stmt stmt = result.First().Value.ToAST(env);
+            lcc.AST.CompoundStmt conmpund = stmt as lcc.AST.CompoundStmt;
+            Assert.IsNotNull(conmpund);
+            IEnumerable<lcc.AST.Expr> exprs = conmpund.stmts.OfType<lcc.AST.Expr>();
+            Assert.AreEqual(types.Count(), exprs.Count());
             {
-                var tests = stmt.stmts.Zip(types, (s, t) => new Tuple<lcc.AST.Expr, T>(s as lcc.AST.Expr, t));
+                var tests = exprs.Zip(types, (s, t) => new Tuple<lcc.AST.Expr, T>(s as lcc.AST.Expr, t));
                 foreach (var test in tests) {
                     Assert.AreEqual(test.Item2, test.Item1.Type);
                 }
             }
             {
-                var tests = stmt.stmts.Zip(values, (s, t) => new Tuple<lcc.AST.ConstIntExpr, int>(s as lcc.AST.ConstIntExpr, t));
+                var tests = exprs.Zip(values, (s, t) => new Tuple<lcc.AST.ConstIntExpr, int>(s as lcc.AST.ConstIntExpr, t));
                 foreach (var test in tests) {
                     Assert.AreEqual(test.Item2, test.Item1.value);
                 }
@@ -189,20 +184,17 @@ namespace LC_CompilerTests {
                 TInt.Instance.None().Ptr()
             };
             var env = new Env();
-            env.PushScope(ScopeKind.FUNCTION);
             var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
-            IEnumerable<lcc.AST.Stmt> stmts = result.First().Value.ToAST(env);
-            Assert.AreEqual(1, stmts.Count());
-            lcc.AST.CompoundStmt stmt = stmts.First() as lcc.AST.CompoundStmt;
-            Assert.IsNotNull(stmt);
-            Assert.AreEqual(types.Count(), stmt.stmts.Count());
-            {
-                var tests = stmt.stmts.Zip(types, (s, t) => new Tuple<lcc.AST.Expr, T>(s as lcc.AST.Expr, t));
-                foreach (var test in tests) {
-                    Assert.AreEqual(test.Item2, test.Item1.Type);
-                }
+            lcc.AST.Stmt stmt = result.First().Value.ToAST(env);
+            lcc.AST.CompoundStmt conmpund = stmt as lcc.AST.CompoundStmt;
+            Assert.IsNotNull(conmpund);
+            IEnumerable<lcc.AST.Expr> exprs = conmpund.stmts.OfType<lcc.AST.Expr>();
+            Assert.AreEqual(types.Count(), exprs.Count());
+            var tests = exprs.Zip(types, (s, t) => new Tuple<lcc.AST.Expr, T>(s as lcc.AST.Expr, t));
+            foreach (var test in tests) {
+                Assert.AreEqual(test.Item2, test.Item1.Type);
             }
         }
 
@@ -260,20 +252,17 @@ namespace LC_CompilerTests {
                 TInt.Instance.None(),
             };
             var env = new Env();
-            env.PushScope(ScopeKind.FUNCTION);
             var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
-            IEnumerable<lcc.AST.Stmt> stmts = result.First().Value.ToAST(env);
-            Assert.AreEqual(1, stmts.Count());
-            lcc.AST.CompoundStmt stmt = stmts.First() as lcc.AST.CompoundStmt;
-            Assert.IsNotNull(stmt);
-            Assert.AreEqual(types.Count(), stmt.stmts.Count());
-            {
-                var tests = stmt.stmts.Zip(types, (s, t) => new Tuple<lcc.AST.Expr, T>(s as lcc.AST.Expr, t));
-                foreach (var test in tests) {
-                    Assert.AreEqual(test.Item2, test.Item1.Type);
-                }
+            lcc.AST.Stmt stmt = result.First().Value.ToAST(env);
+            lcc.AST.CompoundStmt conmpund = stmt as lcc.AST.CompoundStmt;
+            Assert.IsNotNull(conmpund);
+            IEnumerable<lcc.AST.Expr> exprs = conmpund.stmts.OfType<lcc.AST.Expr>();
+            Assert.AreEqual(types.Count(), exprs.Count());
+            var tests = exprs.Zip(types, (s, t) => new Tuple<lcc.AST.Expr, T>(s as lcc.AST.Expr, t));
+            foreach (var test in tests) {
+                Assert.AreEqual(test.Item2, test.Item1.Type);
             }
         }
 
@@ -294,20 +283,17 @@ namespace LC_CompilerTests {
                 TInt.Instance.None()
             };
             var env = new Env();
-            env.PushScope(ScopeKind.FUNCTION);
             var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
-            IEnumerable<lcc.AST.Stmt> stmts = result.First().Value.ToAST(env);
-            Assert.AreEqual(1, stmts.Count());
-            lcc.AST.CompoundStmt stmt = stmts.First() as lcc.AST.CompoundStmt;
-            Assert.IsNotNull(stmt);
-            Assert.AreEqual(types.Count(), stmt.stmts.Count());
-            {
-                var tests = stmt.stmts.Zip(types, (s, t) => new Tuple<lcc.AST.Expr, T>(s as lcc.AST.Expr, t));
-                foreach (var test in tests) {
-                    Assert.AreEqual(test.Item2, test.Item1.Type);
-                }
+            lcc.AST.Stmt stmt = result.First().Value.ToAST(env);
+            lcc.AST.CompoundStmt conmpund = stmt as lcc.AST.CompoundStmt;
+            Assert.IsNotNull(conmpund);
+            IEnumerable<lcc.AST.Expr> exprs = conmpund.stmts.OfType<lcc.AST.Expr>();
+            Assert.AreEqual(types.Count(), exprs.Count());
+            var tests = exprs.Zip(types, (s, t) => new Tuple<lcc.AST.Expr, T>(s as lcc.AST.Expr, t));
+            foreach (var test in tests) {
+                Assert.AreEqual(test.Item2, test.Item1.Type);
             }
         }
 
@@ -328,20 +314,17 @@ namespace LC_CompilerTests {
                 TInt.Instance.None(),
             };
             var env = new Env();
-            env.PushScope(ScopeKind.FUNCTION);
             var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
-            IEnumerable<lcc.AST.Stmt> stmts = result.First().Value.ToAST(env);
-            Assert.AreEqual(1, stmts.Count());
-            lcc.AST.CompoundStmt stmt = stmts.First() as lcc.AST.CompoundStmt;
-            Assert.IsNotNull(stmt);
-            Assert.AreEqual(types.Count(), stmt.stmts.Count());
-            {
-                var tests = stmt.stmts.Zip(types, (s, t) => new Tuple<lcc.AST.Expr, T>(s as lcc.AST.Expr, t));
-                foreach (var test in tests) {
-                    Assert.AreEqual(test.Item2, test.Item1.Type);
-                }
+            lcc.AST.Stmt stmt = result.First().Value.ToAST(env);
+            lcc.AST.CompoundStmt conmpund = stmt as lcc.AST.CompoundStmt;
+            Assert.IsNotNull(conmpund);
+            IEnumerable<lcc.AST.Expr> exprs = conmpund.stmts.OfType<lcc.AST.Expr>();
+            Assert.AreEqual(types.Count(), exprs.Count());
+            var tests = exprs.Zip(types, (s, t) => new Tuple<lcc.AST.Expr, T>(s as lcc.AST.Expr, t));
+            foreach (var test in tests) {
+                Assert.AreEqual(test.Item2, test.Item1.Type);
             }
         }
 
