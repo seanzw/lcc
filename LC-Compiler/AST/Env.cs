@@ -40,11 +40,11 @@ namespace lcc.AST {
         /// <summary>
         /// Offset to ebx reg.
         /// </summary>
-        public readonly int ebx;
+        public readonly int ebp;
 
-        public DynamicObj(string symbol, T type, int ebx)
+        public DynamicObj(string symbol, T type, int ebp)
             : base(symbol, type) {
-            this.ebx = ebx;
+            this.ebp = ebp;
         }
     }
 
@@ -55,52 +55,73 @@ namespace lcc.AST {
 
     public sealed class Env {
 
-        private sealed class Scope {
-            public ScopeKind kind;
-            public bool isVarLength;
-            public int ebx;
+        private sealed class Frame {
+
+            /// <summary>
+            /// The size of the frame.
+            /// </summary>
+            public int size {
+                get;
+                private set;
+            }
+
             public readonly LinkedList<DynamicObj> objs;
 
-            public Scope(ScopeKind kind) {
-                this.kind = kind;
+            public Frame() {
                 objs = new LinkedList<DynamicObj>();
-                isVarLength = false;
-                ebx = 0;
+                blocks = new Stack<int>();
+                preEBP = 8;
+                offEBP = 0;
+                size = 0;
             }
-            public void AddObj(string symbol, T type) {
-                DynamicObj obj = new DynamicObj(symbol, type, ebx);
-                objs.AddLast(obj);
+            public void AddLocal(string symbol, T type) {
+                offEBP -= type.AlignByte;
+                size = Math.Max(size, -offEBP);
+                objs.AddLast(new DynamicObj(symbol, type, offEBP));
             }
+
+            public void AddParam(string symbol, T type) {
+                objs.AddFirst(new DynamicObj(symbol, type, preEBP));
+                preEBP += type.AlignByte;
+            }
+
+            public void PushBlock() {
+                blocks.Push(offEBP);
+            }
+
+            public void PopBlock() {
+                offEBP = blocks.Pop();
+            }
+
+            /// <summary>
+            /// Offset to EBP for parameters.
+            /// </summary>
+            private int preEBP;
+
+            /// <summary>
+            /// Offset to EBP for local objects.
+            /// </summary>
+            private int offEBP;
+
+            /// <summary>
+            /// offEBP for blocks.
+            /// </summary>
+            private Stack<int> blocks;
         }
 
         /// <summary>
         /// Default constructor.
         /// </summary>
         public Env() {
-            scopes = new Stack<Scope>();
+            frame = new Frame();
         }
 
-        /// <summary>
-        /// Copy constructor.
-        /// Only copy the stack.
-        /// </summary>
-        /// <param name="e"></param>
-        public Env(Env e) {
-            scopes = new Stack<Scope>(e.scopes);
+        public void PushBlock() {
+            frame.PushBlock();
         }
 
-        public void PushScope() {
-            if (scopes.Count == 0) {
-                // This is the first scope, should be function scope.
-                scopes.Push(new Scope(ScopeKind.FUNCTION));
-            } else {
-                // This is a block scope.
-                scopes.Push(new Scope(ScopeKind.BLOCK));
-            }
-        }
-
-        public void PopScope() {
-            scopes.Pop();
+        public void PopBlock() {
+            frame.PopBlock();
         }
 
         /// <summary>
@@ -119,11 +140,15 @@ namespace lcc.AST {
             statics.AddLast(obj);
         }
 
-        public void AddDynamicObj(string symbol, T type) {
-            scopes.Peek().AddObj(symbol, type);
+        public void AddLocal(string symbol, T type) {
+            frame.AddLocal(symbol, type);
         }
 
-        private readonly Stack<Scope> scopes;
+        public void AddParam(string symbol, T type) {
+            frame.AddParam(symbol, type);
+        }
+
+        private readonly Frame frame;
 
         /// <summary>
         /// Static objects are global visible in AST, so use static.

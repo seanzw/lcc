@@ -261,6 +261,7 @@ namespace lcc.SyntaxTree {
             public override TFunc FuncType => type;
             public FuncScope(TFunc type) : base(ScopeKind.FUNCTION) {
                 labels = new Dictionary<string, Tuple<string, Scope>>();
+                this.type = type;
             }
 
             public override string AddLabel(string label, Scope scope) {
@@ -291,8 +292,12 @@ namespace lcc.SyntaxTree {
             PushScope(ScopeKind.FILE);
             IsFuncDef = false;
             IsFuncParam = false;
-            ASTEnvs = new Stack<AST.Env>();
-            ASTEnvs.Push(new AST.Env());
+            ASTEnv = new AST.Env();
+            loopId = 0;
+            switchId = 0;
+            caseId = 0;
+            defaultId = 0;
+            breakables = new Stack<Breakable>();
         }
 
         /// <summary>
@@ -303,12 +308,9 @@ namespace lcc.SyntaxTree {
                 throw new InvalidOperationException("please use PushFuncScope() to push a function scope.");
             }
             scopes.Push(new Scope(kind));
-            
-            // Make a copy of the AST Env.
-            if (kind == ScopeKind.FUNCTION || kind == ScopeKind.BLOCK) {
-                var env = new AST.Env(ASTEnvs.Peek());
-                env.PushScope();
-                ASTEnvs.Push(env);
+
+            if (kind == ScopeKind.BLOCK) {
+                ASTEnv.PushBlock();
             }
         }
 
@@ -318,17 +320,15 @@ namespace lcc.SyntaxTree {
         /// <param name="type"></param>
         public void PushFuncScope(TFunc type) {
             scopes.Push(new FuncScope(type));
-            var env = new AST.Env(ASTEnvs.Peek());
-            env.PushScope();
-            ASTEnvs.Push(env);
+            ASTEnv = new AST.Env();
         }
 
         /// <summary>
         /// Exit this scope.
         /// </summary>
         public void PopScope() {
-            if (scopes.Peek().kind == ScopeKind.FUNCTION || scopes.Peek().kind == ScopeKind.BLOCK) {
-                ASTEnvs.Pop();
+            if (scopes.Peek().kind == ScopeKind.BLOCK) {
+                ASTEnv.PopBlock();
             }
             scopes.Pop();
         }
@@ -348,7 +348,7 @@ namespace lcc.SyntaxTree {
             if (storage == ObjEntry.Storage.AUTO || storage == ObjEntry.Storage.REGISTER) {
                 // This is a dynamic object.
                 // In this implementation, register and auto are the same.
-                ASTEnvs.Peek().AddDynamicObj(symbol, type);
+                ASTEnv.AddLocal(symbol, type);
             } else if (storage == ObjEntry.Storage.STATIC) {
                 // This is a static object, check its linkage (either external or internal).
                 AST.Env.AddStaticObj(symbol, type, link == SymbolEntry.Link.EXTERNAL, false);
@@ -368,6 +368,7 @@ namespace lcc.SyntaxTree {
 
         public void AddParam(string symbol, T type, Param declaration) {
             scopes.Peek().AddSymbol(new ParamEntry(symbol, type, declaration));
+            ASTEnv.AddParam(symbol, type);
         }
 
         public void AddTypeDef(string symbol, T type, Declaration declaration) {
@@ -442,10 +443,85 @@ namespace lcc.SyntaxTree {
             }
         }
 
+
         /// <summary>
         /// Get the current scope kind.
         /// </summary>
         public ScopeKind WhatScope => scopes.Peek().kind;
+
+        /// <summary>
+        /// Push a switch statement to the environment.
+        /// </summary>
+        /// <param name="s"></param>
+        public void PushSwitch(Switch s) {
+            s.breakLabel = string.Format("__switch_break_{0}", switchId++);
+            breakables.Push(s);
+        }
+
+        /// <summary>
+        /// Get the enclosing switch statement, null if there are no switch.
+        /// </summary>
+        /// <returns></returns>
+        public Switch GetSwitch() {
+            foreach (var b in breakables) {
+                Switch s = b as Switch;
+                if (s != null) return s;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Push a loop statement to the environment.
+        /// </summary>
+        /// <param name="l"></param>
+        public void PushLoop(Loop l) {
+            l.breakLabel = string.Format("__loop_break_{0}", loopId);
+            l.continueLabel = string.Format("__loop_continure{0}", loopId++);
+            breakables.Push(l);
+        }
+
+        /// <summary>
+        /// Get the enclosing loop statement.
+        /// </summary>
+        /// <returns></returns>
+        public Loop GetLoop() {
+            foreach (var b in breakables) {
+                Loop l = b as Loop;
+                if (l != null) return l;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Get the enclosing breakable statement.
+        /// </summary>
+        /// <returns></returns>
+        public Breakable GetBreakable() {
+            return breakables.Peek();
+        }
+
+        /// <summary>
+        /// Pop a breakable.
+        /// </summary>
+        public void PopBreakable() {
+            breakables.Pop();
+        }
+
+        /// <summary>
+        /// Allocate a case label.
+        /// </summary>
+        /// <returns></returns>
+        public string AllocCaseLabel() {
+            return string.Format("__case_{0}", caseId++);
+        }
+
+        /// <summary>
+        /// Allocate a default label.
+        /// </summary>
+        /// <returns></returns>
+        public string AllocDefaultLabel() {
+            return string.Format("__default_{0}", defaultId++);
+        }
 
         /// <summary>
         /// Dump the environment.
@@ -460,15 +536,21 @@ namespace lcc.SyntaxTree {
             return builder.ToString();
         }
 
-        public AST.Env GetASTEnv() {
-            return ASTEnvs.Peek();
-        }
-
         public bool IsFuncParam;
         public bool IsFuncDef;
 
-        private Stack<AST.Env> ASTEnvs;
+        public AST.Env ASTEnv {
+            get;
+            private set;
+        }
 
+        private int loopId;
+        private int switchId;
+        private int caseId;
+        private int defaultId;
+
+        private Stack<Breakable> breakables;
         private Stack<Scope> scopes;
+
     }
 }

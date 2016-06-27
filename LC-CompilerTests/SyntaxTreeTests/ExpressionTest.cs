@@ -298,16 +298,13 @@ namespace LC_CompilerTests {
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ETypeError), "imcomplete argument")]
-        public void LCCTCFuncCallERR1() {
+        [ExpectedException(typeof(ETypeError), "imcomplete type for declaration")]
+        public void LCCTCDeclareERR1() {
             string source = @"
 {
     int (*foo)(char);
     int (*bar)(double, int, ...);
     struct s s;
-    int x;
-    int y;
-    y = bar(s, y, x, y, x);
 }
 ";
             List<T> types = new List<T> {

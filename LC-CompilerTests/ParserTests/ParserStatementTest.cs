@@ -34,10 +34,10 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserCaseStatement() {
-            var tests = new Dictionary<string, STCase> {
+            var tests = new Dictionary<string, Case> {
                 {
                     "case 1 : a;",
-                    new STCase(
+                    new Case(
                         new ConstInt(new T_CONST_INT(1, "1", 10)),
                         new Id(new T_IDENTIFIER(1, "a")))
                 }
@@ -50,10 +50,10 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserDefaultStatement() {
-            var tests = new Dictionary<string, STDefault> {
+            var tests = new Dictionary<string, Default> {
                 {
                     "default: a;",
-                    new STDefault(new Id(new T_IDENTIFIER(1, "a")))
+                    new Default(new Id(new T_IDENTIFIER(1, "a")))
                 }
             };
 
@@ -158,21 +158,21 @@ else
 
         [TestMethod]
         public void LCCParserSwitchStatement() {
-            var tests = new Dictionary<string, STSwitch> {
+            var tests = new Dictionary<string, Switch> {
                 {
                     @"
 switch (x) {
 case 0: a;
 default: c;
 }",
-                    new STSwitch(
+                    new Switch(
                         2,
                         new Id(new T_IDENTIFIER(2, "x")),
                         new CompoundStmt(new LinkedList<Stmt>(new List<Stmt> {
-                            new STCase(
+                            new Case(
                                 new ConstInt(new T_CONST_INT(3, "0", 8)),
                                 new Id(new T_IDENTIFIER(3, "a"))),
-                            new STDefault(
+                            new Default(
                                 new Id(new T_IDENTIFIER(4, "c"))) })))
                 }
             };
@@ -184,13 +184,13 @@ default: c;
 
         [TestMethod]
         public void LCCParserWhileStatement() {
-            var tests = new Dictionary<string, STWhile> {
+            var tests = new Dictionary<string, While> {
                 {
                     @"
 while (x < length) {
     x++;
 }",
-                    new STWhile(
+                    new While(
                         new BiExpr(
                             new Id(new T_IDENTIFIER(2, "x")),
                             new Id(new T_IDENTIFIER(2, "length")),
@@ -211,13 +211,13 @@ while (x < length) {
 
         [TestMethod]
         public void LCCParserDoStatement() {
-            var tests = new Dictionary<string, STDo> {
+            var tests = new Dictionary<string, Do> {
                 {
                     @"
 do {
     x++;
 } while (x < length);",
-                    new STDo(
+                    new Do(
                         new BiExpr(
                             new Id(new T_IDENTIFIER(4, "x")),
                             new Id(new T_IDENTIFIER(4, "length")),
@@ -238,13 +238,13 @@ do {
 
         [TestMethod]
         public void LCCParserForStatement() {
-            var tests = new Dictionary<string, STFor> {
+            var tests = new Dictionary<string, For> {
                 {
                     @"
 for (i = 0; i < length; ++i) {
     x += i;
 }",
-                    new STFor(
+                    new For(
                         2,
                         new Assign(
                             new Id(new T_IDENTIFIER(2, "i")),
@@ -268,7 +268,7 @@ for (i = 0; i < length; ++i) {
                 {
                     @"
 for (;1;) ;",
-                    new STFor(
+                    new For(
                         2,
                         null,
                         new ConstInt(new T_CONST_INT(2, "1", 10)),
@@ -287,19 +287,19 @@ for (;1;) ;",
             var tests = new Dictionary<string, Stmt> {
                 {
                     "continue;",
-                    new STContinue(1)
+                    new Continue(1)
                 },
                 {
                     "break;",
-                    new STBreak(1)
+                    new Break(1)
                 },
                 {
                     "goto foo;",
-                    new STGoto(1, new Id(new T_IDENTIFIER(1, "foo")))
+                    new Goto(1, new Id(new T_IDENTIFIER(1, "foo")))
                 },
                 {
                     "return 0;",
-                    new STReturn(1, new ConstInt(new T_CONST_INT(1, "0", 8)))
+                    new Return(1, new ConstInt(new T_CONST_INT(1, "0", 8)))
                 }
             };
 

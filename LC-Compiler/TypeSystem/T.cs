@@ -240,7 +240,12 @@ namespace lcc.TypeSystem {
         /// <summary>
         /// Get the alignment in bits.
         /// </summary>
-        public int Align => AlignTo(Bits);
+        public int AlignBit => AlignTo(Bits);
+
+        /// <summary>
+        /// Get the alignment in bytes.
+        /// </summary>
+        public int AlignByte => AlignTo(Bits) / 8;
 
         /// <summary>
         /// Align the size with 32.
@@ -651,7 +656,13 @@ namespace lcc.TypeSystem {
         /// <summary>
         /// Get the alignment in bits.
         /// </summary>
-        public int Align => nake.Align;
+        public int AlignBit => nake.AlignBit;
+
+
+        /// <summary>
+        /// Get the alignment in bytes.
+        /// </summary>
+        public int AlignByte => nake.AlignByte;
 
         public readonly TUnqualified nake;
         public readonly TQualifiers qualifiers;

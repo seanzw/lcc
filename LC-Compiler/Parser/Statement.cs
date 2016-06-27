@@ -62,12 +62,12 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STCase> CaseStatement() {
+        public static Parserc.Parser<T, Case> CaseStatement() {
             return Match<T_KEY_CASE>()
                 .Then(ConstantExpression())
                 .Bind(expr => Match<T_PUNC_COLON>()
                 .Then(Ref(Statement))
-                .Select(statement => new STCase(expr, statement)));
+                .Select(statement => new Case(expr, statement)));
         }
 
         /// <summary>
@@ -76,11 +76,11 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STDefault> DefaultStatement() {
+        public static Parserc.Parser<T, Default> DefaultStatement() {
             return Match<T_KEY_DEFAULT>()
                 .Then(Match<T_PUNC_COLON>())
                 .Then(Ref(Statement))
-                .Select(statement => new STDefault(statement));
+                .Select(statement => new Default(statement));
         }
 
         /// <summary>
@@ -136,11 +136,11 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STSwitch> SwitchStatement() {
+        public static Parserc.Parser<T, Switch> SwitchStatement() {
             return Get<T_KEY_SWITCH>()
                 .Bind(t => Expression().ParentLR()
                 .Bind(expr => Ref(Statement)
-                .Select(statement => new STSwitch(t.line, expr, statement))));
+                .Select(statement => new Switch(t.line, expr, statement))));
         }
 
         /// <summary>
@@ -149,11 +149,11 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STWhile> WhileStatement() {
+        public static Parserc.Parser<T, While> WhileStatement() {
             return Match<T_KEY_WHILE>()
                 .Then(Expression().ParentLR())
                 .Bind(expr => Ref(Statement)
-                .Select(statement => new STWhile(expr, statement)));
+                .Select(statement => new While(expr, statement)));
         }
 
         /// <summary>
@@ -161,12 +161,12 @@ namespace lcc.Parser {
         ///     : do statement while ( expression ) ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STDo> DoStatement() {
+        public static Parserc.Parser<T, Do> DoStatement() {
             return Match<T_KEY_DO>()
                 .Then(Ref(Statement))
                 .Bind(statement => Match<T_KEY_WHILE>()
                 .Then(Expression().ParentLR())
-                .Bind(expr => Match<T_PUNC_SEMICOLON>().Return(new STDo(expr, statement))));
+                .Bind(expr => Match<T_PUNC_SEMICOLON>().Return(new Do(expr, statement))));
         }
 
         /// <summary>
@@ -175,7 +175,7 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STFor> ForStatement() {
+        public static Parserc.Parser<T, For> ForStatement() {
             return Get<T_KEY_FOR>()
                 .Bind(t => Match<T_PUNC_PARENTL>()
                 .Then(Expression().ElseNull())
@@ -185,7 +185,7 @@ namespace lcc.Parser {
                 .Then(Expression().ElseNull())
                 .Bind(iter => Match<T_PUNC_PARENTR>()
                 .Then(Ref(Statement))
-                .Select(statement => new STFor(t.line, init, pred, iter, statement))))));
+                .Select(statement => new For(t.line, init, pred, iter, statement))))));
         }
 
         /// <summary>
@@ -201,17 +201,17 @@ namespace lcc.Parser {
             return Get<T_KEY_GOTO>()
                     .Bind(t => Identifier()
                     .Bind(label => Match<T_PUNC_SEMICOLON>()
-                    .Return(new STGoto(t.line, label) as Stmt)))
+                    .Return(new Goto(t.line, label) as Stmt)))
                 .Else(Get<T_KEY_CONTINUE>()
                     .Bind(t => Match<T_PUNC_SEMICOLON>()
-                    .Return(new STContinue(t.line) as Stmt)))
+                    .Return(new Continue(t.line) as Stmt)))
                 .Else(Get<T_KEY_BREAK>()
                     .Bind(t => Match<T_PUNC_SEMICOLON>()
-                    .Return(new STBreak(t.line) as Stmt)))
+                    .Return(new Break(t.line) as Stmt)))
                 .Else(Get<T_KEY_RETURN>()
                     .Bind(t => Expression().ElseNull()
                     .Bind(expr => Match<T_PUNC_SEMICOLON>()
-                    .Return(new STReturn(t.line, expr) as Stmt))));
+                    .Return(new Return(t.line, expr) as Stmt))));
         }
 
     }

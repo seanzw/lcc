@@ -36,6 +36,34 @@ namespace lcc.AST {
         }
     }
 
+    public abstract class Breakable : Stmt {
+        public readonly string breakLabel;
+        public Breakable(string breakLabel) {
+            this.breakLabel = breakLabel;
+        }
+    }
+
+    public abstract class Loop : Breakable {
+        public readonly string continueLabel;
+        public Loop(string breakLabel, string continueLabel) : base(breakLabel) {
+            this.continueLabel = continueLabel;
+        }
+    }
+
+    public sealed class Switch : Breakable {
+        public readonly LinkedList<Tuple<string, ConstIntExpr>> cases;
+        public readonly string defaultLabel;
+        public readonly Expr expr;
+        public readonly Stmt stmt;
+        public Switch(string breakLabel, LinkedList<Tuple<string, ConstIntExpr>> cases,
+            string defaultLabel, Expr expr, Stmt stmt) : base(breakLabel) {
+            this.cases = cases;
+            this.defaultLabel = defaultLabel;
+            this.expr = expr;
+            this.stmt = stmt;
+        }
+    }
+
     public sealed class VoidStmt : Stmt {
         private static VoidStmt instance = new VoidStmt();
         public static VoidStmt Instance => instance;

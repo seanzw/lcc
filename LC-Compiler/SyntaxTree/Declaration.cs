@@ -138,6 +138,11 @@ namespace lcc.SyntaxTree {
                     }
                 } else {
                     // This is a object.
+                    // Check if the type is an object.
+                    if (!result.Item2.IsObject) {
+                        throw new ETypeError(Pos, "cannot declare imcomplete type");
+                    }
+
                     // Check the inline specifier.
                     if (specifiers.function != FuncSpec.Kind.NONE) {
                         throw new Error(Pos, "inline can only appear on functions");
@@ -207,10 +212,6 @@ namespace lcc.SyntaxTree {
                     } else {
                         // Add this to the environment.
                         env.AddObj(result.Item1, result.Item2, link, storage, this);
-
-                        // Declaration will be removed from AST.
-                        //// Push the ast node.
-                        //nodes.AddLast(new AST.Declaration(result.Item2, result.Item3));
                     }
                 }
             }
@@ -1149,7 +1150,7 @@ namespace lcc.SyntaxTree {
                     throw new Error(Pos, "enumeration constant requires constant integer");
                 }
             } else {
-                e = new AST.ConstIntExpr(TInt.Instance, v, env.GetASTEnv());
+                e = new AST.ConstIntExpr(TInt.Instance, v, env.ASTEnv);
             }
 
             if (e.value > TInt.Instance.MAX || e.value < TInt.Instance.MIN) {

@@ -47,54 +47,105 @@ namespace lcc.SyntaxTree {
         public readonly Stmt stmt;
     }
 
-    public sealed class STCase : Stmt, IEquatable<STCase> {
+    public sealed class Case : Stmt, IEquatable<Case> {
 
-        public STCase(Expr expr, Stmt statement) {
+        public Case(Expr expr, Stmt statement) {
             this.expr = expr;
-            this.statement = statement;
+            this.stmt = statement;
         }
 
         public override Position Pos => expr.Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STCase);
+            return Equals(obj as Case);
         }
 
-        public bool Equals(STCase x) {
+        public bool Equals(Case x) {
             return x != null
                 && x.expr.Equals(expr)
-                && x.statement.Equals(statement);
+                && x.stmt.Equals(stmt);
         }
 
         public override int GetHashCode() {
             return expr.GetHashCode();
         }
 
+        public override AST.Stmt ToAST(Env env) {
+            /// Check the switch statement.
+            Switch sw = env.GetSwitch();
+            if (sw == null) {
+                throw new Error(Pos, "default statement not in switch statement");
+            }
+
+            /// The expression of a case should be constant integer expression.
+            AST.ConstIntExpr c = expr.GetASTExpr(env) as AST.ConstIntExpr;
+            if (c == null) {
+                throw new Error(Pos, "the expression of a case should be constant integer expression");
+            }
+
+            /// No two of the case constant expressions shall have the same value.
+            /// TODO: The conversion.
+            foreach (var e in sw.cases) {
+                if (c.value == e.Item2.value) {
+                    throw new Error(Pos, string.Format("duplicate value {0} in case", c.value));
+                }
+            }
+
+            string label = env.AllocCaseLabel();
+
+            sw.cases.AddLast(new Tuple<string, ConstIntExpr>(label, c));
+
+            AST.Stmt s = stmt.ToAST(env);
+
+            return new AST.Labeled(label, s);
+        }
+
         public readonly Expr expr;
-        public readonly Stmt statement;
+        public readonly Stmt stmt;
     }
 
-    public sealed class STDefault : Stmt, IEquatable<STDefault> {
+    public sealed class Default : Stmt, IEquatable<Default> {
 
-        public STDefault(Stmt statement) {
-            this.statement = statement;
+        public Default(Stmt statement) {
+            this.stmt = statement;
         }
 
-        public override Position Pos => statement.Pos;
+        public override Position Pos => stmt.Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STDefault);
+            return Equals(obj as Default);
         }
 
-        public bool Equals(STDefault x) {
-            return x != null && x.statement.Equals(statement);
+        public bool Equals(Default x) {
+            return x != null && x.stmt.Equals(stmt);
         }
 
         public override int GetHashCode() {
-            return statement.GetHashCode();
+            return stmt.GetHashCode();
         }
 
-        public readonly Stmt statement;
+        public override AST.Stmt ToAST(Env env) {
+
+            /// Check the switch statement.
+            Switch sw = env.GetSwitch();
+            if (sw == null) {
+                throw new Error(Pos, "default statement not in switch statement");
+            }
+
+            /// At most one default statement in a switch.
+            if (sw.defaultLabel != null) {
+                throw new Error(Pos, "at most one default label in a switch statement");
+            }
+
+            string label = env.AllocDefaultLabel();
+            sw.defaultLabel = label;
+
+            AST.Stmt s = stmt.ToAST(env);
+
+            return new AST.Labeled(label, s);
+        }
+
+        public readonly Stmt stmt;
     }
 
     public sealed class CompoundStmt : Stmt, IEquatable<CompoundStmt> {
@@ -192,43 +243,84 @@ namespace lcc.SyntaxTree {
         public readonly Stmt other;
     }
 
-    public sealed class STSwitch : Stmt, IEquatable<STSwitch> {
+    public abstract class Breakable : Stmt {
+        public string breakLabel;
+    }
 
-        public STSwitch(
+    public sealed class Switch : Breakable, IEquatable<Switch> {
+
+        public Switch(
             int line,
             Expr expr,
             Stmt statement
             ) {
             this.pos = new Position { line = line };
             this.expr = expr;
-            this.statement = statement;
+            this.stmt = statement;
+            this.cases = new LinkedList<Tuple<string, ConstIntExpr>>();
         }
 
         public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STSwitch);
+            return Equals(obj as Switch);
         }
 
-        public bool Equals(STSwitch x) {
+        public bool Equals(Switch x) {
             return x != null
                 && x.pos.Equals(pos)
                 && x.expr.Equals(expr)
-                && x.statement.Equals(statement);
+                && x.stmt.Equals(stmt);
         }
 
         public override int GetHashCode() {
             return expr.GetHashCode();
         }
 
-        private readonly Position pos;
+        public override AST.Stmt ToAST(Env env) {
+
+            /// The controlling expression shall have integer type.
+            e = expr.GetASTExpr(env);
+            if (!e.Type.IsInteger) {
+                throw new ETypeError(Pos, "the controlling expression of switch statement shall have integer type");
+            }
+
+            /// Integer promotions are performed on the controlling expression.
+            e = e.IntPromote();
+
+            env.PushSwitch(this);
+
+            /// Semantic check the statment.
+            AST.Stmt s = stmt.ToAST(env);
+
+            env.PopBreakable();
+
+            return new AST.Switch(breakLabel, cases, defaultLabel, e, s);
+        }
+
+        /// <summary>
+        /// For case and default statement.
+        /// </summary>
+        public LinkedList<Tuple<string, AST.ConstIntExpr>> cases;
+        public string defaultLabel;
+        public AST.Expr e {
+            get;
+            private set;
+        }
+
         public readonly Expr expr;
-        public readonly Stmt statement;
+        public readonly Stmt stmt;
+
+        private readonly Position pos;
     }
 
-    public sealed class STWhile : Stmt, IEquatable<STWhile> {
+    public abstract class Loop : Breakable {
+        public string continueLabel;
+    }
 
-        public STWhile(Expr expr, Stmt statement) {
+    public sealed class While : Loop, IEquatable<While> {
+
+        public While(Expr expr, Stmt statement) {
             this.expr = expr;
             this.statement = statement;
         }
@@ -236,10 +328,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => expr.Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STWhile);
+            return Equals(obj as While);
         }
 
-        public bool Equals(STWhile x) {
+        public bool Equals(While x) {
             return x != null
                 && x.expr.Equals(expr)
                 && x.statement.Equals(statement);
@@ -253,9 +345,9 @@ namespace lcc.SyntaxTree {
         public readonly Stmt statement;
     }
 
-    public sealed class STDo : Stmt, IEquatable<STDo> {
+    public sealed class Do : Loop, IEquatable<Do> {
 
-        public STDo(Expr expr, Stmt statement) {
+        public Do(Expr expr, Stmt statement) {
             this.expr = expr;
             this.statement = statement;
         }
@@ -263,11 +355,11 @@ namespace lcc.SyntaxTree {
         public override Position Pos => expr.Pos;
 
         public override bool Equals(object obj) {
-            STDo x = obj as STDo;
+            Do x = obj as Do;
             return Equals(x);
         }
 
-        public bool Equals(STDo x) {
+        public bool Equals(Do x) {
             return x != null
                 && x.expr.Equals(expr)
                 && x.statement.Equals(statement);
@@ -281,9 +373,9 @@ namespace lcc.SyntaxTree {
         public readonly Stmt statement;
     }
 
-    public sealed class STFor : Stmt, IEquatable<STFor> {
+    public sealed class For : Loop, IEquatable<For> {
 
-        public STFor(
+        public For(
             int line,
             Expr init,
             Expr pred,
@@ -299,10 +391,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STFor);
+            return Equals(obj as For);
         }
 
-        public bool Equals(STFor x) {
+        public bool Equals(For x) {
             return x != null
                 && x.pos.Equals(pos)
                 && NullableEquals(x.init, init)
@@ -322,9 +414,9 @@ namespace lcc.SyntaxTree {
         public readonly Stmt statement;
     }
 
-    public sealed class STContinue : Stmt, IEquatable<STContinue> {
+    public sealed class Continue : Stmt, IEquatable<Continue> {
 
-        public STContinue(
+        public Continue(
             int line
             ) {
             this.pos = new Position { line = line };
@@ -333,10 +425,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STContinue);
+            return Equals(obj as Continue);
         }
 
-        public bool Equals(STContinue x) {
+        public bool Equals(Continue x) {
             return x != null && x.pos.Equals(pos);
         }
 
@@ -347,9 +439,9 @@ namespace lcc.SyntaxTree {
         private readonly Position pos;
     }
 
-    public sealed class STBreak : Stmt, IEquatable<STBreak> {
+    public sealed class Break : Stmt, IEquatable<Break> {
 
-        public STBreak(
+        public Break(
             int line
             ) {
             this.pos = new Position { line = line };
@@ -358,10 +450,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STBreak);
+            return Equals(obj as Break);
         }
 
-        public bool Equals(STBreak x) {
+        public bool Equals(Break x) {
             return x != null && x.pos.Equals(pos);
         }
 
@@ -372,9 +464,9 @@ namespace lcc.SyntaxTree {
         private readonly Position pos;
     }
 
-    public sealed class STReturn : Stmt, IEquatable<STReturn> {
+    public sealed class Return : Stmt, IEquatable<Return> {
 
-        public STReturn(
+        public Return(
             int line,
             Expr expr
             ) {
@@ -385,10 +477,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STReturn);
+            return Equals(obj as Return);
         }
 
-        public bool Equals(STReturn x) {
+        public bool Equals(Return x) {
             return x != null && x.pos.Equals(pos)
                 && x.expr == null ? expr == null : x.expr.Equals(expr);
         }
@@ -401,9 +493,9 @@ namespace lcc.SyntaxTree {
         public readonly Expr expr;
     }
 
-    public sealed class STGoto : Stmt, IEquatable<STGoto> {
+    public sealed class Goto : Stmt, IEquatable<Goto> {
 
-        public STGoto(
+        public Goto(
             int line,
             Id label
             ) {
@@ -414,10 +506,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STGoto);
+            return Equals(obj as Goto);
         }
 
-        public bool Equals(STGoto x) {
+        public bool Equals(Goto x) {
             return x != null && x.pos.Equals(pos)
                 && x.label.Equals(label);
         }

@@ -111,7 +111,7 @@ namespace lcc.TypeSystem {
                 } else {
                     offset = AlignTo(offset);
                     tmp.AddLast(new Field(field.Item1, field.Item2, offset));
-                    offset += field.Item2.Align;
+                    offset += field.Item2.AlignBit;
                 }
             }
             this.fields = tmp;
