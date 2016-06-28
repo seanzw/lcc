@@ -10,7 +10,7 @@ using lcc.SyntaxTree;
 using Parserc;
 
 namespace LC_CompilerTests {
-    public partial class SyntaxTreeTest {
+    public partial class SyntaxTreeTests {
 
         [TestMethod]
         public void LCCTCArrSub() {
@@ -31,7 +31,7 @@ namespace LC_CompilerTests {
             var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
-            lcc.AST.Stmt stmt = result.First().Value.ToAST(env);
+            lcc.AST.Node stmt = result.First().Value.ToAST(env);
             lcc.AST.CompoundStmt s = stmt as lcc.AST.CompoundStmt;
             Assert.IsNotNull(s);
             //Assert.AreEqual(4, stmt.stmts.Count());
@@ -63,7 +63,7 @@ namespace LC_CompilerTests {
             var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
-            lcc.AST.Stmt stmt = result.First().Value.ToAST(env);
+            lcc.AST.Node stmt = result.First().Value.ToAST(env);
             lcc.AST.CompoundStmt conmpund = stmt as lcc.AST.CompoundStmt;
             Assert.IsNotNull(conmpund);
             IEnumerable<lcc.AST.Expr> exprs = conmpund.stmts.OfType<lcc.AST.Expr>();
@@ -106,7 +106,7 @@ namespace LC_CompilerTests {
             var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
-            lcc.AST.Stmt stmt = result.First().Value.ToAST(env);
+            lcc.AST.Node stmt = result.First().Value.ToAST(env);
             lcc.AST.CompoundStmt conmpund = stmt as lcc.AST.CompoundStmt;
             Assert.IsNotNull(conmpund);
             IEnumerable<lcc.AST.Expr> exprs = conmpund.stmts.OfType<lcc.AST.Expr>();
@@ -147,7 +147,7 @@ namespace LC_CompilerTests {
             var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
-            lcc.AST.Stmt stmt = result.First().Value.ToAST(env);
+            lcc.AST.Node stmt = result.First().Value.ToAST(env);
             lcc.AST.CompoundStmt conmpund = stmt as lcc.AST.CompoundStmt;
             Assert.IsNotNull(conmpund);
             IEnumerable<lcc.AST.Expr> exprs = conmpund.stmts.OfType<lcc.AST.Expr>();
@@ -187,7 +187,7 @@ namespace LC_CompilerTests {
             var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
-            lcc.AST.Stmt stmt = result.First().Value.ToAST(env);
+            lcc.AST.Node stmt = result.First().Value.ToAST(env);
             lcc.AST.CompoundStmt conmpund = stmt as lcc.AST.CompoundStmt;
             Assert.IsNotNull(conmpund);
             IEnumerable<lcc.AST.Expr> exprs = conmpund.stmts.OfType<lcc.AST.Expr>();
@@ -255,7 +255,7 @@ namespace LC_CompilerTests {
             var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
-            lcc.AST.Stmt stmt = result.First().Value.ToAST(env);
+            lcc.AST.Node stmt = result.First().Value.ToAST(env);
             lcc.AST.CompoundStmt conmpund = stmt as lcc.AST.CompoundStmt;
             Assert.IsNotNull(conmpund);
             IEnumerable<lcc.AST.Expr> exprs = conmpund.stmts.OfType<lcc.AST.Expr>();
@@ -286,7 +286,7 @@ namespace LC_CompilerTests {
             var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
-            lcc.AST.Stmt stmt = result.First().Value.ToAST(env);
+            lcc.AST.Node stmt = result.First().Value.ToAST(env);
             lcc.AST.CompoundStmt conmpund = stmt as lcc.AST.CompoundStmt;
             Assert.IsNotNull(conmpund);
             IEnumerable<lcc.AST.Expr> exprs = conmpund.stmts.OfType<lcc.AST.Expr>();
@@ -314,7 +314,7 @@ namespace LC_CompilerTests {
             var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
-            lcc.AST.Stmt stmt = result.First().Value.ToAST(env);
+            lcc.AST.Node stmt = result.First().Value.ToAST(env);
             lcc.AST.CompoundStmt conmpund = stmt as lcc.AST.CompoundStmt;
             Assert.IsNotNull(conmpund);
             IEnumerable<lcc.AST.Expr> exprs = conmpund.stmts.OfType<lcc.AST.Expr>();

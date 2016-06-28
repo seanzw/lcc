@@ -9,34 +9,34 @@ using lcc.TypeSystem;
 
 namespace lcc.AST {
 
-    public sealed class Labeled : Stmt {
+    public sealed class Labeled : Node {
         public readonly string label;
-        public readonly Stmt stmt;
-        public Labeled(string label, Stmt stmt) {
+        public readonly Node stmt;
+        public Labeled(string label, Node stmt) {
             this.label = label;
             this.stmt = stmt;
         }
     }
 
-    public sealed class CompoundStmt : Stmt {
-        public readonly IEnumerable<Stmt> stmts;
-        public CompoundStmt(IEnumerable<Stmt> stmts) {
+    public sealed class CompoundStmt : Node {
+        public readonly IEnumerable<Node> stmts;
+        public CompoundStmt(IEnumerable<Node> stmts) {
             this.stmts = stmts;
         }
     }
 
-    public sealed class If : Stmt {
+    public sealed class If : Node {
         public readonly Expr expr;
-        public readonly Stmt then;
-        public readonly Stmt other;
-        public If(Expr expr, Stmt then, Stmt other) {
+        public readonly Node then;
+        public readonly Node other;
+        public If(Expr expr, Node then, Node other) {
             this.expr = expr;
             this.then = then;
             this.other = other;
         }
     }
 
-    public abstract class Breakable : Stmt {
+    public abstract class Breakable : Node {
         public readonly string breakLabel;
         public Breakable(string breakLabel) {
             this.breakLabel = breakLabel;
@@ -54,9 +54,9 @@ namespace lcc.AST {
         public readonly LinkedList<Tuple<string, ConstIntExpr>> cases;
         public readonly string defaultLabel;
         public readonly Expr expr;
-        public readonly Stmt stmt;
+        public readonly Node stmt;
         public Switch(string breakLabel, LinkedList<Tuple<string, ConstIntExpr>> cases,
-            string defaultLabel, Expr expr, Stmt stmt) : base(breakLabel) {
+            string defaultLabel, Expr expr, Node stmt) : base(breakLabel) {
             this.cases = cases;
             this.defaultLabel = defaultLabel;
             this.expr = expr;
@@ -66,8 +66,8 @@ namespace lcc.AST {
 
     public sealed class While : Loop {
         public readonly Expr expr;
-        public readonly Stmt stmt;
-        public While(string breakLabel, string continueLabel, Expr expr, Stmt stmt) : base(breakLabel, continueLabel) {
+        public readonly Node stmt;
+        public While(string breakLabel, string continueLabel, Expr expr, Node stmt) : base(breakLabel, continueLabel) {
             this.expr = expr;
             this.stmt = stmt;
         }
@@ -75,21 +75,30 @@ namespace lcc.AST {
 
     public sealed class Do : Loop {
         public readonly Expr expr;
-        public readonly Stmt stmt;
-        public Do(string breakLabel, string continueLabel, Expr expr, Stmt stmt) : base(breakLabel, continueLabel) {
+        public readonly Node stmt;
+        public Do(string breakLabel, string continueLabel, Expr expr, Node stmt) : base(breakLabel, continueLabel) {
             this.expr = expr;
             this.stmt = stmt;
         }
     }
 
-    public sealed class GoTo : Stmt {
-        public string label;
+    public sealed class Return : Node {
+        public readonly string label;
+        public readonly Expr expr;
+        public Return(string label, Expr expr) {
+            this.label = label;
+            this.expr = expr;
+        }
+    }
+
+    public sealed class GoTo : Node {
+        public readonly string label;
         public GoTo(string label) {
             this.label = label;
         }
     }
 
-    public sealed class VoidStmt : Stmt {
+    public sealed class VoidStmt : Node {
         private static VoidStmt instance = new VoidStmt();
         public static VoidStmt Instance => instance;
     }

@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 using lcc.TypeSystem;
 
 namespace lcc.AST {
-    public sealed class Declaraion : Stmt {
-        public readonly IEnumerable<AST.Stmt> inits;
-        public Declaraion(IEnumerable<AST.Stmt> inits) {
+    public sealed class Declaraion : Node {
+        public readonly IEnumerable<AST.Node> inits;
+        public Declaraion(IEnumerable<AST.Node> inits) {
             this.inits = inits;
         }
     }

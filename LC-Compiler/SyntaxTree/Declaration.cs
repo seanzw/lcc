@@ -22,7 +22,7 @@ namespace lcc.SyntaxTree {
         /// Check if this is a typedef declaration.
         /// </summary>
         /// <returns></returns>
-        public bool IsTypedef => specifiers.storage == STStoreSpec.Kind.TYPEDEF;
+        public bool IsTypedef => specifiers.storage == StoreSpec.Kind.TYPEDEF;
 
         /// <summary>
         /// Return the names of the all the direct declarators.
@@ -44,14 +44,14 @@ namespace lcc.SyntaxTree {
             return specifiers.GetHashCode();
         }
 
-        public override AST.Stmt ToAST(Env env) {
+        public override AST.Node ToAST(Env env) {
             T baseType = specifiers.GetT(env);
 
-            var nodes = new LinkedList<AST.Stmt>();
+            var nodes = new LinkedList<AST.Node>();
             foreach (var declarator in declarators) {
                 var result = declarator.Declare(env, baseType);
 
-                if (specifiers.storage == STStoreSpec.Kind.TYPEDEF) {
+                if (specifiers.storage == StoreSpec.Kind.TYPEDEF) {
                     // This is a typedef declaration.
                     // Check the inline specifier.
                     if (specifiers.function != FuncSpec.Kind.NONE) {
@@ -95,20 +95,20 @@ namespace lcc.SyntaxTree {
                     SymbolEntry.Link link;
                     if (env.WhatScope == ScopeKind.FILE) {
                         switch (specifiers.storage) {
-                            case STStoreSpec.Kind.STATIC: link = SymbolEntry.Link.INTERNAL; break;
-                            case STStoreSpec.Kind.NONE:
-                            case STStoreSpec.Kind.EXTERN: link = SymbolEntry.Link.EXTERNAL; break;
-                            case STStoreSpec.Kind.AUTO:
-                            case STStoreSpec.Kind.REGISTER: throw new EIllegalStorageSpecifier(Pos);
+                            case StoreSpec.Kind.STATIC: link = SymbolEntry.Link.INTERNAL; break;
+                            case StoreSpec.Kind.NONE:
+                            case StoreSpec.Kind.EXTERN: link = SymbolEntry.Link.EXTERNAL; break;
+                            case StoreSpec.Kind.AUTO:
+                            case StoreSpec.Kind.REGISTER: throw new EIllegalStorageSpecifier(Pos);
                             default: throw new InvalidOperationException("Unknown storage specifier!");
                         }
                     } else {
                         switch (specifiers.storage) {
-                            case STStoreSpec.Kind.NONE:
-                            case STStoreSpec.Kind.EXTERN: link = SymbolEntry.Link.EXTERNAL; break;
-                            case STStoreSpec.Kind.STATIC:
-                            case STStoreSpec.Kind.AUTO:
-                            case STStoreSpec.Kind.REGISTER: throw new EIllegalStorageSpecifier(Pos);
+                            case StoreSpec.Kind.NONE:
+                            case StoreSpec.Kind.EXTERN: link = SymbolEntry.Link.EXTERNAL; break;
+                            case StoreSpec.Kind.STATIC:
+                            case StoreSpec.Kind.AUTO:
+                            case StoreSpec.Kind.REGISTER: throw new EIllegalStorageSpecifier(Pos);
                             default: throw new InvalidOperationException("Unknown storage specifier!");
                         }
                     }
@@ -154,22 +154,22 @@ namespace lcc.SyntaxTree {
                     if (env.WhatScope == ScopeKind.FILE) {
                         // This is file scope.
                         switch (specifiers.storage) {
-                            case STStoreSpec.Kind.STATIC:
+                            case StoreSpec.Kind.STATIC:
                                 link = SymbolEntry.Link.INTERNAL;
                                 storage = EObj.Storage.STATIC;
                                 break;
-                            case STStoreSpec.Kind.EXTERN:
+                            case StoreSpec.Kind.EXTERN:
                                 // A little hack to set the storage to extern (which should be static) when explicitly using extern specifier.
                                 link = SymbolEntry.Link.EXTERNAL;
                                 storage = EObj.Storage.EXTERNAL;
                                 break;
-                            case STStoreSpec.Kind.NONE:
+                            case StoreSpec.Kind.NONE:
                                 // By default the object in file scope has external linkage.
                                 link = SymbolEntry.Link.EXTERNAL;
                                 storage = EObj.Storage.STATIC;
                                 break;
-                            case STStoreSpec.Kind.REGISTER:
-                            case STStoreSpec.Kind.AUTO:
+                            case StoreSpec.Kind.REGISTER:
+                            case StoreSpec.Kind.AUTO:
                                 throw new EIllegalStorageSpecifier(Pos);
                             default:
                                 throw new InvalidOperationException("Unknown storage specifier!");
@@ -177,21 +177,21 @@ namespace lcc.SyntaxTree {
                     } else {
                         // This is other scope.
                         switch (specifiers.storage) {
-                            case STStoreSpec.Kind.STATIC:
+                            case StoreSpec.Kind.STATIC:
                                 link = SymbolEntry.Link.INTERNAL;
                                 storage = EObj.Storage.STATIC;
                                 break;
-                            case STStoreSpec.Kind.EXTERN:
+                            case StoreSpec.Kind.EXTERN:
                                 link = SymbolEntry.Link.EXTERNAL;
                                 storage = EObj.Storage.EXTERNAL;
                                 break;
-                            case STStoreSpec.Kind.AUTO:
-                            case STStoreSpec.Kind.NONE:
+                            case StoreSpec.Kind.AUTO:
+                            case StoreSpec.Kind.NONE:
                                 // By default the object in block scope has none linkage and auto storage.
                                 link = SymbolEntry.Link.NONE;
                                 storage = EObj.Storage.AUTO;
                                 break;
-                            case STStoreSpec.Kind.REGISTER:
+                            case StoreSpec.Kind.REGISTER:
                                 // In this implementation, register is the same as auto.
                                 // But we need the information to make sure that objects declared with 'register' will not be taken address.
                                 link = SymbolEntry.Link.NONE;
@@ -229,7 +229,7 @@ namespace lcc.SyntaxTree {
 
         public DeclSpecs(
             IEnumerable<DeclSpec> all,
-            STStoreSpec.Kind storage,
+            StoreSpec.Kind storage,
             IEnumerable<TypeSpec.Kind> keys,
             FuncSpec.Kind function = FuncSpec.Kind.NONE
             ) {
@@ -242,7 +242,7 @@ namespace lcc.SyntaxTree {
 
         public DeclSpecs(
             IEnumerable<DeclSpec> all,
-            STStoreSpec.Kind storage,
+            StoreSpec.Kind storage,
             TypeUserSpec specifier,
             FuncSpec.Kind function = FuncSpec.Kind.NONE
             ) {
@@ -275,7 +275,7 @@ namespace lcc.SyntaxTree {
         /// <summary>
         /// At most one storage specifier.
         /// </summary>
-        public readonly STStoreSpec.Kind storage;
+        public readonly StoreSpec.Kind storage;
 
         /// <summary>
         /// All the qualifiers.
@@ -317,7 +317,7 @@ namespace lcc.SyntaxTree {
             }
         }
 
-        public bool IsTypeDef => storage == STStoreSpec.Kind.TYPEDEF;
+        public bool IsTypeDef => storage == StoreSpec.Kind.TYPEDEF;
 
         /// <summary>
         /// Evaluate the type qualifiers.
@@ -642,7 +642,7 @@ namespace lcc.SyntaxTree {
 
     public abstract class DeclSpec : Node { }
 
-    public sealed class STStoreSpec : DeclSpec, IEquatable<STStoreSpec> {
+    public sealed class StoreSpec : DeclSpec, IEquatable<StoreSpec> {
 
         public enum Kind {
             NONE,           // Represent no storage-specifier
@@ -653,7 +653,7 @@ namespace lcc.SyntaxTree {
             REGISTER
         }
 
-        public STStoreSpec(int line, Kind type) {
+        public StoreSpec(int line, Kind type) {
             this.pos = new Position { line = line };
             this.kind = type;
         }
@@ -661,10 +661,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STStoreSpec);
+            return Equals(obj as StoreSpec);
         }
 
-        public bool Equals(STStoreSpec x) {
+        public bool Equals(StoreSpec x) {
             return x != null && x.pos.Equals(pos) && x.kind == kind;
         }
 
@@ -1621,7 +1621,7 @@ namespace lcc.SyntaxTree {
             env.IsFuncParam = true;
 
             // 1. The only storage-class specifier that shall occur in a parameter declaration is register.
-            if (specifiers.storage != STStoreSpec.Kind.NONE && specifiers.storage != STStoreSpec.Kind.REGISTER) {
+            if (specifiers.storage != StoreSpec.Kind.NONE && specifiers.storage != StoreSpec.Kind.REGISTER) {
                 throw new Error(Pos, string.Format("Illegal storage-class specifier in a parameter declaration: {0}", specifiers.storage));
             }
 

@@ -11,7 +11,7 @@ namespace lcc.SyntaxTree {
     public enum ScopeKind {
         BLOCK,
         STRUCT,
-        FUNCTION,
+        FUNC,
         FILE,
         PARAM,
     }
@@ -257,10 +257,14 @@ namespace lcc.SyntaxTree {
         }
 
         private sealed class FuncScope : Scope {
+            public readonly string name;
+            public readonly string returnLabel;
             public readonly TFunc type;
             public override TFunc FuncType => type;
-            public FuncScope(TFunc type) : base(ScopeKind.FUNCTION) {
+            public FuncScope(string name, string returnLabel, TFunc type) : base(ScopeKind.FUNC) {
                 labels = new Dictionary<string, Tuple<string, Scope>>();
+                this.name = name;
+                this.returnLabel = returnLabel;
                 this.type = type;
             }
 
@@ -289,7 +293,6 @@ namespace lcc.SyntaxTree {
         /// </summary>
         public Env() {
             scopes = new Stack<Scope>();
-            // Push the file scope.
             scopes.Push(new Scope(ScopeKind.FILE));
             IsFuncDef = false;
             IsFuncParam = false;
@@ -327,8 +330,8 @@ namespace lcc.SyntaxTree {
         /// Push a function scope.
         /// </summary>
         /// <param name="type"></param>
-        public void PushFuncScope(TFunc type) {
-            scopes.Push(new FuncScope(type));
+        public void PushFuncScope(string name, TFunc type) {
+            scopes.Push(new FuncScope(name, string.Format("__{0}_return", name), type));
             ASTEnv = new AST.Env();
         }
 
@@ -390,19 +393,19 @@ namespace lcc.SyntaxTree {
 
         public string AddLabel(string label) {
             foreach (var scope in scopes)
-                if (scope.kind == ScopeKind.FUNCTION) return scope.AddLabel(label, scopes.Peek());
+                if (scope.kind == ScopeKind.FUNC) return scope.AddLabel(label, scopes.Peek());
             throw new InvalidOperationException("there is no upper function scope");
         }
 
         public string GetLable(string label) {
             foreach (var scope in scopes)
-                if (scope.kind == ScopeKind.FUNCTION) return scope.GetLabel(label);
+                if (scope.kind == ScopeKind.FUNC) return scope.GetLabel(label);
             throw new InvalidOperationException("there is no upper function scope");
         }
 
         public bool IsLabelWithVARR(string label) {
             foreach (var scope in scopes) 
-                if (scope.kind == ScopeKind.FUNCTION) return scope.IsLabelWithVARR(label);
+                if (scope.kind == ScopeKind.FUNC) return scope.IsLabelWithVARR(label);
             throw new InvalidOperationException("there is no upper function scope");
         }
 
@@ -514,6 +517,32 @@ namespace lcc.SyntaxTree {
         /// </summary>
         public void PopBreakable() {
             breakables.Pop();
+        }
+
+        /// <summary>
+        /// Get the type of the current function.
+        /// </summary>
+        /// <returns></returns>
+        public TFunc GetFuncType() {
+            foreach (var s in scopes) {
+                if (s.kind == ScopeKind.FUNC) {
+                    return (s as FuncScope).type;
+                }
+            }
+            throw new InvalidOperationException("there is no function scope");
+        }
+
+        /// <summary>
+        /// Get the return label.
+        /// </summary>
+        /// <returns></returns>
+        public string GetReturnLabel() {
+            foreach (var s in scopes) {
+                if (s.kind == ScopeKind.FUNC) {
+                    return (s as FuncScope).returnLabel;
+                }
+            }
+            throw new InvalidOperationException("there is no function scope");
         }
 
         /// <summary>

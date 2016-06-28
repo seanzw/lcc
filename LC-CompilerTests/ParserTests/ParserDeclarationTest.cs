@@ -14,8 +14,8 @@ namespace LC_CompilerTests {
 
         private DeclSpecs ProcessSS(IEnumerable<DeclSpec> ss) {
             // At most one storage-class specifier may be given in the declaration specifiers.
-            var stors = ss.OfType<STStoreSpec>();
-            STStoreSpec.Kind storage = STStoreSpec.Kind.NONE;
+            var stors = ss.OfType<StoreSpec>();
+            StoreSpec.Kind storage = StoreSpec.Kind.NONE;
             if (stors.Count() > 1) return null;
             else if (stors.Count() == 1) storage = stors.First().kind;
 
@@ -47,26 +47,26 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCParserStorageClassSpecifier() {
-            Dictionary<string, STStoreSpec> dict = new Dictionary<string, STStoreSpec> {
+            Dictionary<string, StoreSpec> dict = new Dictionary<string, StoreSpec> {
                 {
                     "typedef",
-                    new STStoreSpec(1, STStoreSpec.Kind.TYPEDEF)
+                    new StoreSpec(1, StoreSpec.Kind.TYPEDEF)
                 },
                 {
                     "extern",
-                    new STStoreSpec(1, STStoreSpec.Kind.EXTERN)
+                    new StoreSpec(1, StoreSpec.Kind.EXTERN)
                 },
                 {
                     "static",
-                    new STStoreSpec(1, STStoreSpec.Kind.STATIC)
+                    new StoreSpec(1, StoreSpec.Kind.STATIC)
                 },
                 {
                     "auto",
-                    new STStoreSpec(1, STStoreSpec.Kind.AUTO)
+                    new StoreSpec(1, StoreSpec.Kind.AUTO)
                 },
                 {
                     "register",
-                    new STStoreSpec(1, STStoreSpec.Kind.REGISTER)
+                    new StoreSpec(1, StoreSpec.Kind.REGISTER)
                 }
             };
 
@@ -165,13 +165,13 @@ namespace LC_CompilerTests {
                     "static const int char inline",
                     new DeclSpecs(
                         new List<DeclSpec> {
-                            new STStoreSpec(1, STStoreSpec.Kind.STATIC),
+                            new StoreSpec(1, StoreSpec.Kind.STATIC),
                             new TypeQual(1, TypeQual.Kind.CONST),
                             new TypeKeySpec(1, TypeSpec.Kind.INT),
                             new TypeKeySpec(1, TypeSpec.Kind.CHAR),
                             new FuncSpec(1, FuncSpec.Kind.INLINE)
                         },
-                        STStoreSpec.Kind.STATIC,
+                        StoreSpec.Kind.STATIC,
                         new List<TypeSpec.Kind> {
                             TypeSpec.Kind.INT,
                             TypeSpec.Kind.CHAR
@@ -332,7 +332,7 @@ foo(int a, int b, double c, ...)
                                     new List<DeclSpec> {
                                         new TypeKeySpec(2, TypeSpec.Kind.INT)
                                     },
-                                    STStoreSpec.Kind.NONE,
+                                    StoreSpec.Kind.NONE,
                                     new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
                                 new Declarator(
                                     new List<Ptr>(),
@@ -342,7 +342,7 @@ foo(int a, int b, double c, ...)
                                     new List<DeclSpec> {
                                         new TypeKeySpec(2, TypeSpec.Kind.INT)
                                     },
-                                    STStoreSpec.Kind.NONE,
+                                    StoreSpec.Kind.NONE,
                                     new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
                                 new Declarator(
                                     new List<Ptr>(),
@@ -352,7 +352,7 @@ foo(int a, int b, double c, ...)
                                     new List<DeclSpec> {
                                         new TypeKeySpec(2, TypeSpec.Kind.DOUBLE)
                                     },
-                                    STStoreSpec.Kind.NONE,
+                                    StoreSpec.Kind.NONE,
                                     new List<TypeSpec.Kind> { TypeSpec.Kind.DOUBLE }),
                                 new Declarator(
                                     new List<Ptr>(),
@@ -595,7 +595,7 @@ struct s {
                             new List<DeclSpec> {
                                 new TypeKeySpec(1, TypeSpec.Kind.INT)
                             },
-                            STStoreSpec.Kind.NONE,
+                            StoreSpec.Kind.NONE,
                             new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
                         new Declarator(
                             new List<Ptr>(),
@@ -618,7 +618,7 @@ struct s {
                                     new List<DeclSpec> {
                                         new TypeKeySpec(1, TypeSpec.Kind.INT)
                                     },
-                                    STStoreSpec.Kind.NONE,
+                                    StoreSpec.Kind.NONE,
                                     new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
                                 new Declarator(
                                     new List<Ptr>(),
@@ -628,7 +628,7 @@ struct s {
                                     new List<DeclSpec> {
                                         new TypeKeySpec(1, TypeSpec.Kind.INT)
                                     },
-                                    STStoreSpec.Kind.NONE,
+                                    StoreSpec.Kind.NONE,
                                     new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
                                 new Declarator(
                                     new List<Ptr>(),
@@ -638,7 +638,7 @@ struct s {
                                     new List<DeclSpec> {
                                         new TypeKeySpec(1, TypeSpec.Kind.DOUBLE)
                                     },
-                                    STStoreSpec.Kind.NONE,
+                                    StoreSpec.Kind.NONE,
                                     new List<TypeSpec.Kind> { TypeSpec.Kind.DOUBLE }),
                                 new Declarator(
                                     new List<Ptr>(),
@@ -666,7 +666,7 @@ int a, int b, double c, ...
                                     new List<DeclSpec> {
                                         new TypeKeySpec(2, TypeSpec.Kind.INT)
                                     },
-                                    STStoreSpec.Kind.NONE,
+                                    StoreSpec.Kind.NONE,
                                     new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
                                 new Declarator(
                                     new List<Ptr>(),
@@ -676,7 +676,7 @@ int a, int b, double c, ...
                                     new List<DeclSpec> {
                                         new TypeKeySpec(2, TypeSpec.Kind.INT)
                                     },
-                                    STStoreSpec.Kind.NONE,
+                                    StoreSpec.Kind.NONE,
                                     new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
                                 new Declarator(
                                     new List<Ptr>(),
@@ -686,7 +686,7 @@ int a, int b, double c, ...
                                     new List<DeclSpec> {
                                         new TypeKeySpec(2, TypeSpec.Kind.DOUBLE)
                                     },
-                                    STStoreSpec.Kind.NONE,
+                                    StoreSpec.Kind.NONE,
                                     new List<TypeSpec.Kind> { TypeSpec.Kind.DOUBLE }),
                                 new Declarator(
                                     new List<Ptr>(),
@@ -856,7 +856,7 @@ int a, int b, double c, ...
                                             new List<DeclSpec> {
                                                 new TypeKeySpec(1, TypeSpec.Kind.VOID)
                                             },
-                                            STStoreSpec.Kind.NONE,
+                                            StoreSpec.Kind.NONE,
                                             new List<TypeSpec.Kind> { TypeSpec.Kind.VOID }))
                                 },
                                 false)))
@@ -886,7 +886,7 @@ int a, int b, double c, ...
                                                 new TypeKeySpec(1, TypeSpec.Kind.UNSIGNED),
                                                 new TypeKeySpec(1, TypeSpec.Kind.INT)
                                             },
-                                            STStoreSpec.Kind.NONE,
+                                            StoreSpec.Kind.NONE,
                                             new List<TypeSpec.Kind> {
                                                 TypeSpec.Kind.UNSIGNED,
                                                 TypeSpec.Kind.INT
@@ -914,7 +914,7 @@ int foo(int a, int b, double c, ...);
                             new List<DeclSpec> {
                                 new TypeKeySpec(2, TypeSpec.Kind.INT)
                             },
-                            STStoreSpec.Kind.NONE,
+                            StoreSpec.Kind.NONE,
                             new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
                         new List<InitDeclarator> {
                             new InitDeclarator(
@@ -928,7 +928,7 @@ int foo(int a, int b, double c, ...);
                                                     new List<DeclSpec> {
                                                         new TypeKeySpec(2, TypeSpec.Kind.INT)
                                                     },
-                                                    STStoreSpec.Kind.NONE,
+                                                    StoreSpec.Kind.NONE,
                                                     new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
                                                 new Declarator(
                                                     new List<Ptr>(),
@@ -938,7 +938,7 @@ int foo(int a, int b, double c, ...);
                                                     new List<DeclSpec> {
                                                         new TypeKeySpec(2, TypeSpec.Kind.INT)
                                                     },
-                                                    STStoreSpec.Kind.NONE,
+                                                    StoreSpec.Kind.NONE,
                                                     new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
                                                 new Declarator(
                                                     new List<Ptr>(),
@@ -948,7 +948,7 @@ int foo(int a, int b, double c, ...);
                                                     new List<DeclSpec> {
                                                         new TypeKeySpec(2, TypeSpec.Kind.DOUBLE)
                                                     },
-                                                    STStoreSpec.Kind.NONE,
+                                                    StoreSpec.Kind.NONE,
                                                     new List<TypeSpec.Kind> { TypeSpec.Kind.DOUBLE }),
                                                 new Declarator(
                                                     new List<Ptr>(),
@@ -967,7 +967,7 @@ int foo(a, b, c);
                             new List<DeclSpec> {
                                 new TypeKeySpec(2, TypeSpec.Kind.INT)
                             },
-                            STStoreSpec.Kind.NONE,
+                            StoreSpec.Kind.NONE,
                             new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
                         new List<InitDeclarator> {
                             new InitDeclarator(
@@ -992,7 +992,7 @@ int foo();
                             new List<DeclSpec> {
                                 new TypeKeySpec(2, TypeSpec.Kind.INT)
                             },
-                            STStoreSpec.Kind.NONE,
+                            StoreSpec.Kind.NONE,
                             new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
                         new List<InitDeclarator> {
                             new InitDeclarator(
@@ -1070,7 +1070,7 @@ int foo();
                             new List<DeclSpec> {
                                 new TypeKeySpec(1, TypeSpec.Kind.INT)
                             },
-                            STStoreSpec.Kind.NONE,
+                            StoreSpec.Kind.NONE,
                             new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
                         new Declarator(
                             new List<Ptr>(),
@@ -1084,7 +1084,7 @@ int foo();
                                 new TypeQual(1, TypeQual.Kind.CONST),
                                 new TypedefName(new Id(new T_IDENTIFIER(1, "a")))
                             },
-                            STStoreSpec.Kind.NONE,
+                            StoreSpec.Kind.NONE,
                             new TypedefName(new Id(new T_IDENTIFIER(1, "a")))))
                 }
             };
@@ -1107,7 +1107,7 @@ int foo();
                             new List<DeclSpec> {
                                 new TypeKeySpec(1, TypeSpec.Kind.INT)
                             },
-                            STStoreSpec.Kind.NONE,
+                            StoreSpec.Kind.NONE,
                             new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
                         new List<InitDeclarator> {
                             new InitDeclarator(

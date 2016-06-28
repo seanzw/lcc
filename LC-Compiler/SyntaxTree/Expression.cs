@@ -16,7 +16,7 @@ namespace lcc.SyntaxTree {
     /// </summary>
     public abstract class Expr : Stmt {
 
-        public sealed override AST.Stmt ToAST(Env env) {
+        public sealed override AST.Node ToAST(Env env) {
             return GetASTExpr(env);
         }
         public abstract AST.Expr GetASTExpr(Env env);
@@ -106,7 +106,6 @@ namespace lcc.SyntaxTree {
 
             T resultType = rExpr.Type.nake.None();
             T lElement;
-            T rElement;
 
             Func<AST.Assign> Convert = () => {
                 AST.Expr converted = rExpr.ImplicitConvert(resultType);
@@ -118,42 +117,8 @@ namespace lcc.SyntaxTree {
 
             switch (op) {
                 case Op.ASSIGN:
-                    /// Simple assignment.
-                    /// - the left operand has qualified or unqualified arithmetic type and the right has arithmetic type;
-                    /// - the left operand has a qualified or unqualified version of a structure or union type compatible
-                    ///   with the type of the right;
-                    /// - both operands are pointers to qualified or unqualified versions of compatible types, and the type
-                    ///   pointed to by the left has all the qualifiers of the type pointed to by the right;
-                    /// - one operand is a pointer to an object or incomplete type and the other is a pointer to a qualified
-                    ///   or unqualified version of void, and the type pointed to by the left has all the qualifiers of the 
-                    ///   type pointed to by the right;
-                    /// - the left operand is a pointer and the right is a null pointer constant;
-                    /// - the left operand has type _Bool and the right is a pointer.
-                    /// 
-                    /// The value of the right operand is converted to the type of the assignment expression.
-                    if (lExpr.Type.IsArithmetic && rExpr.Type.IsArithmetic) {
-                        return Convert();
-                    }
-                    if ((lExpr.Type.IsStruct || lExpr.Type.IsUnion) && lExpr.Type.nake.Compatible(rExpr.Type.nake)) {
-                        return Convert();
-                    }
-                    if (lExpr.Type.IsPtr && rExpr.Type.IsPtr) {
-                        lElement = (lExpr.Type.nake as TPtr).element;
-                        rElement = (rExpr.Type.nake as TPtr).element;
-                        if (lElement.nake.Compatible(rElement.nake) && (lElement.qualifiers | rElement.qualifiers).Equals(lElement.qualifiers)) {
-                            return Convert();
-                        }
-                        if ((!lElement.IsFunc && rElement.IsVoid) ||
-                            (!rElement.IsFunc && lElement.IsVoid)) {
-                            if ((lElement.qualifiers | rElement.qualifiers).Equals(lElement.qualifiers)) {
-                                return Convert();
-                            }
-                        }
-                    }
-                    if (lExpr.Type.IsPtr && (rExpr.IsNullPtr || rExpr.IsConstZero)) {
-                        return Convert();
-                    }
-                    if (lExpr.Type.Kind == TKind.BOOL && rExpr.Type.IsPtr) {
+                    /// Simple assign. See SimpleAssignable.
+                    if (SimpleAssignable(lExpr.Type, rExpr)) {
                         return Convert();
                     }
                     throw new ETypeError(Pos, string.Format("can not assign from {0} to {1}", rExpr.Type, lExpr.Type));
@@ -203,6 +168,56 @@ namespace lcc.SyntaxTree {
                 default:
                     throw new NotImplementedException();
             }
+        }
+
+        /// <summary>
+        /// Check whether this is legal for simple assignment.
+        /// </summary>
+        /// <param name="lType"></param>
+        /// <param name="rExpr"></param>
+        /// <returns></returns>
+        public static bool SimpleAssignable(T lType, AST.Expr rExpr) {
+
+            /// Simple assignment.
+            /// - the left operand has qualified or unqualified arithmetic type and the right has arithmetic type;
+            /// - the left operand has a qualified or unqualified version of a structure or union type compatible
+            ///   with the type of the right;
+            /// - both operands are pointers to qualified or unqualified versions of compatible types, and the type
+            ///   pointed to by the left has all the qualifiers of the type pointed to by the right;
+            /// - one operand is a pointer to an object or incomplete type and the other is a pointer to a qualified
+            ///   or unqualified version of void, and the type pointed to by the left has all the qualifiers of the 
+            ///   type pointed to by the right;
+            /// - the left operand is a pointer and the right is a null pointer constant;
+            /// - the left operand has type _Bool and the right is a pointer.
+            /// 
+            /// The value of the right operand is converted to the type of the assignment expression.
+            if (lType.IsArithmetic && rExpr.Type.IsArithmetic) {
+                return true;
+            }
+            if ((lType.IsStruct || lType.IsUnion) && lType.nake.Compatible(rExpr.Type.nake)) {
+                return true;
+            }
+            if (lType.IsPtr && rExpr.Type.IsPtr) {
+                T lElement = (lType.nake as TPtr).element;
+                T rElement = (rExpr.Type.nake as TPtr).element;
+                if (lElement.nake.Compatible(rElement.nake) && (lElement.qualifiers | rElement.qualifiers).Equals(lElement.qualifiers)) {
+                    return true;
+                }
+                if ((!lElement.IsFunc && rElement.IsVoid) ||
+                    (!rElement.IsFunc && lElement.IsVoid)) {
+                    if ((lElement.qualifiers | rElement.qualifiers).Equals(lElement.qualifiers)) {
+                        return true;
+                    }
+                }
+            }
+            if (lType.IsPtr && (rExpr.IsNullPtr || rExpr.IsConstZero)) {
+                return true;
+            }
+            if (lType.Kind == TKind.BOOL && rExpr.Type.IsPtr) {
+                return true;
+            }
+
+            return false;
         }
 
         public readonly Expr lhs;

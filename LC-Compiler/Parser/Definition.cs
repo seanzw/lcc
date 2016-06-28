@@ -22,10 +22,10 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, STProgram> TranslationUnit() {
+        public static Parserc.Parser<Token.Token, SyntaxTree.Program> TranslationUnit() {
             return FunctionDefintion().Cast<Token.Token, Node, FuncDef>()
                 .Or(Declaration().Cast<Token.Token, Node, Declaration>()).Plus()
-                .Select(nodes => new STProgram(nodes));
+                .Select((LinkedList<Node> nodes) => new SyntaxTree.Program(nodes));
         }
 
         /// <summary>

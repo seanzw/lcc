@@ -8,9 +8,7 @@ using lcc.TypeSystem;
 
 namespace lcc.SyntaxTree {
     public abstract class Stmt : Node {
-        public virtual AST.Stmt ToAST(Env env) {
-            throw new NotImplementedException();
-        }
+
     }
 
     public sealed class Labeled : Stmt, IEquatable<Labeled> {
@@ -36,7 +34,7 @@ namespace lcc.SyntaxTree {
             return id.GetHashCode();
         }
 
-        public override AST.Stmt ToAST(Env env) {
+        public override AST.Node ToAST(Env env) {
             if (Id.IsReservedIdentifier(id.symbol)) throw new EReservedIdentifier(Pos, id.symbol);
             if (env.GetLable(id.symbol) != null) throw new ERedfineLabel(Pos, id.symbol);
             string transformed = env.AddLabel(id.symbol);
@@ -70,7 +68,7 @@ namespace lcc.SyntaxTree {
             return expr.GetHashCode();
         }
 
-        public override AST.Stmt ToAST(Env env) {
+        public override AST.Node ToAST(Env env) {
             /// Check the switch statement.
             Switch sw = env.GetSwitch();
             if (sw == null) {
@@ -95,7 +93,7 @@ namespace lcc.SyntaxTree {
 
             sw.cases.AddLast(new Tuple<string, ConstIntExpr>(label, c));
 
-            AST.Stmt s = stmt.ToAST(env);
+            AST.Node s = stmt.ToAST(env);
 
             return new AST.Labeled(label, s);
         }
@@ -124,7 +122,7 @@ namespace lcc.SyntaxTree {
             return stmt.GetHashCode();
         }
 
-        public override AST.Stmt ToAST(Env env) {
+        public override AST.Node ToAST(Env env) {
 
             /// Check the switch statement.
             Switch sw = env.GetSwitch();
@@ -140,7 +138,7 @@ namespace lcc.SyntaxTree {
             string label = env.AllocDefaultLabel();
             sw.defaultLabel = label;
 
-            AST.Stmt s = stmt.ToAST(env);
+            AST.Node s = stmt.ToAST(env);
 
             return new AST.Labeled(label, s);
         }
@@ -168,9 +166,9 @@ namespace lcc.SyntaxTree {
             return Pos.GetHashCode();
         }
 
-        public override AST.Stmt ToAST(Env env) {
+        public override AST.Node ToAST(Env env) {
             env.PushBlockScope();
-            LinkedList<AST.Stmt> results = new LinkedList<AST.Stmt>();
+            LinkedList<AST.Node> results = new LinkedList<AST.Node>();
             foreach (var stmt in stmts) {
                 results.AddLast(stmt.ToAST(env));
             }
@@ -223,15 +221,15 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        public override AST.Stmt ToAST(Env env) {
+        public override AST.Node ToAST(Env env) {
             env.PushBlockScope();
             AST.Expr e = expr.GetASTExpr(env);
             if (!e.Type.IsScalar) {
                 throw new ETypeError(Pos, string.Format("expecting scalar type, given {0}", e.Type));
             }
 
-            AST.Stmt t = then.ToAST(env);
-            AST.Stmt o = other != null ? other.ToAST(env) : null;
+            AST.Node t = then.ToAST(env);
+            AST.Node o = other != null ? other.ToAST(env) : null;
 
             env.PopScope();
             return new AST.If(e, t, o);
@@ -277,7 +275,7 @@ namespace lcc.SyntaxTree {
             return expr.GetHashCode();
         }
 
-        public override AST.Stmt ToAST(Env env) {
+        public override AST.Node ToAST(Env env) {
 
             /// The controlling expression shall have integer type.
             e = expr.GetASTExpr(env);
@@ -291,7 +289,7 @@ namespace lcc.SyntaxTree {
             env.PushSwitch(this);
 
             /// Semantic check the statment.
-            AST.Stmt s = stmt.ToAST(env);
+            AST.Node s = stmt.ToAST(env);
 
             env.PopBreakable();
 
@@ -341,7 +339,7 @@ namespace lcc.SyntaxTree {
             return expr.GetHashCode() | stmt.GetHashCode();
         }
 
-        public override AST.Stmt ToAST(Env env) {
+        public override AST.Node ToAST(Env env) {
 
             /// An iteration statement is a block.
             env.PushBlockScope();
@@ -358,7 +356,7 @@ namespace lcc.SyntaxTree {
             /// Add this loop to the environemnt.
             env.PushLoop(this);
 
-            AST.Stmt s = stmt.ToAST(env);
+            AST.Node s = stmt.ToAST(env);
 
             env.PopBreakable();
 
@@ -396,12 +394,12 @@ namespace lcc.SyntaxTree {
             return expr.GetHashCode() | stmt.GetHashCode();
         }
 
-        public override AST.Stmt ToAST(Env env) {
+        public override AST.Node ToAST(Env env) {
             env.PushBlockScope();
             env.PushBlockScope();
             env.PushLoop(this);
 
-            AST.Stmt s = stmt.ToAST(env);
+            AST.Node s = stmt.ToAST(env);
 
             env.PopBreakable();
             env.PopScope();
@@ -482,7 +480,7 @@ namespace lcc.SyntaxTree {
             return Pos.GetHashCode();
         }
 
-        public override AST.Stmt ToAST(Env env) {
+        public override AST.Node ToAST(Env env) {
 
             Iteration i = env.GetLoop();
             if (i == null) {
@@ -517,7 +515,7 @@ namespace lcc.SyntaxTree {
             return Pos.GetHashCode();
         }
 
-        public override AST.Stmt ToAST(Env env) {
+        public override AST.Node ToAST(Env env) {
             Breakable b = env.GetBreakable();
             if (b == null) {
                 throw new Error(Pos, "break statement not in breakable statement");
@@ -554,6 +552,30 @@ namespace lcc.SyntaxTree {
             return Pos.GetHashCode();
         }
 
+        public override AST.Node ToAST(Env env) {
+
+            /// A return statement with an expression shall not appear in a function whose return type is void. 
+            /// A return statement without an expression shall only appear in a function whose return type is void.
+            TFunc f = env.GetFuncType();
+            string returnLabel = env.GetReturnLabel();
+
+            if (expr != null) {
+                if (f.ret.IsVoid) {
+                    throw new Error(Pos, "a return statement with an expression shall not appear a function whose return type is void");
+                }
+                AST.Expr e = expr.GetASTExpr(env);
+                if (!Assign.SimpleAssignable(f.ret, e)) {
+                    throw new ETypeError(Pos, string.Format("cannot assign {0} to {1}", e.Type, f.ret));
+                }
+                return new AST.Return(returnLabel, e.ImplicitConvert(f.ret));
+            } else {
+                if (!f.ret.IsVoid) {
+                    throw new Error(Pos, "a return statement without an expression shall only appear in a function whose return type is void");
+                }
+                return new AST.Return(returnLabel, null);
+            }
+        }
+
         private readonly Position pos;
         public readonly Expr expr;
     }
@@ -583,7 +605,7 @@ namespace lcc.SyntaxTree {
             return Pos.GetHashCode();
         }
 
-        public override AST.Stmt ToAST(Env env) {
+        public override AST.Node ToAST(Env env) {
             if (Id.IsReservedIdentifier(label)) {
                 throw new EReservedIdentifier(Pos, label);
             }
@@ -620,7 +642,7 @@ namespace lcc.SyntaxTree {
             return Pos.GetHashCode();
         }
 
-        public override AST.Stmt ToAST(Env env) {
+        public override AST.Node ToAST(Env env) {
             return AST.VoidStmt.Instance;
         }
 

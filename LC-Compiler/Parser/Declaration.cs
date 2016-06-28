@@ -42,8 +42,8 @@ namespace lcc.Parser {
         /// <returns></returns>
         public static Parserc.Parser<T, DeclSpecs> ProcessSS(IEnumerable<DeclSpec> ss) {
             // At most one storage-class specifier may be given in the declaration specifiers.
-            var stors = ss.OfType<STStoreSpec>();
-            STStoreSpec.Kind storage = STStoreSpec.Kind.NONE;
+            var stors = ss.OfType<StoreSpec>();
+            StoreSpec.Kind storage = StoreSpec.Kind.NONE;
             if (stors.Count() > 1) return Zero<T, DeclSpecs>();
             else if (stors.Count() == 1) storage = stors.First().kind;
 
@@ -97,7 +97,7 @@ namespace lcc.Parser {
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<T, DeclSpec> DeclarationSpecifier() {
-            return StorageClassSpecifier().Cast<T, DeclSpec, STStoreSpec>()
+            return StorageClassSpecifier().Cast<T, DeclSpec, StoreSpec>()
                 .Or(TypeSpecifier())
                 .Or(TypeQualifier())
                 .Or(FunctionSpecifier());
@@ -136,12 +136,12 @@ namespace lcc.Parser {
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, STStoreSpec> StorageClassSpecifier() {
-            return Get<T_KEY_TYPEDEF>().Select(t => new STStoreSpec(t.line, STStoreSpec.Kind.TYPEDEF))
-                .Else(Get<T_KEY_EXTERN>().Select(t => new STStoreSpec(t.line, STStoreSpec.Kind.EXTERN)))
-                .Else(Get<T_KEY_STATIC>().Select(t => new STStoreSpec(t.line, STStoreSpec.Kind.STATIC)))
-                .Else(Get<T_KEY_AUTO>().Select(t => new STStoreSpec(t.line, STStoreSpec.Kind.AUTO)))
-                .Else(Get<T_KEY_REGISTER>().Select(t => new STStoreSpec(t.line, STStoreSpec.Kind.REGISTER)));
+        public static Parserc.Parser<T, StoreSpec> StorageClassSpecifier() {
+            return Get<T_KEY_TYPEDEF>().Select(t => new StoreSpec(t.line, StoreSpec.Kind.TYPEDEF))
+                .Else(Get<T_KEY_EXTERN>().Select(t => new StoreSpec(t.line, StoreSpec.Kind.EXTERN)))
+                .Else(Get<T_KEY_STATIC>().Select(t => new StoreSpec(t.line, StoreSpec.Kind.STATIC)))
+                .Else(Get<T_KEY_AUTO>().Select(t => new StoreSpec(t.line, StoreSpec.Kind.AUTO)))
+                .Else(Get<T_KEY_REGISTER>().Select(t => new StoreSpec(t.line, StoreSpec.Kind.REGISTER)));
         }
 
         /// <summary>

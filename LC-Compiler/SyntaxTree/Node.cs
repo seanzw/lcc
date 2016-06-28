@@ -26,6 +26,10 @@ namespace lcc.SyntaxTree {
 
         public abstract Position Pos { get; }
 
+        public virtual AST.Node ToAST(Env env) {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Returns true if x equals y or both values are null.
         /// </summary>

@@ -11,7 +11,7 @@ using Parserc;
 
 namespace LC_CompilerTests {
     [TestClass]
-    public partial class SyntaxTreeTest {
+    public partial class SyntaxTreeTests {
 
         [TestMethod]
         public void LCCTCConstCharEvaluateLegal() {

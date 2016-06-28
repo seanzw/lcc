@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using lcc.TypeSystem;
 
 namespace lcc.AST {
-    public abstract class Stmt {
+    public abstract class Node {
 
     }
     

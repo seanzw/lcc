@@ -79,7 +79,7 @@ namespace LC_CompilerTests {
                                     new List<DeclSpec> {
                                         new TypeKeySpec(4, TypeSpec.Kind.INT)
                                     },
-                                    STStoreSpec.Kind.NONE,
+                                    StoreSpec.Kind.NONE,
                                     new List<TypeSpec.Kind> {
                                         TypeSpec.Kind.INT
                                     }),

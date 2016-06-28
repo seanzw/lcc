@@ -4,20 +4,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace lcc.SyntaxTree {
-    public sealed class STProgram : Node, IEquatable<STProgram> {
+using lcc.TypeSystem;
 
-        public STProgram(IEnumerable<Node> nodes) {
+namespace lcc.SyntaxTree {
+    public sealed class Program : Node, IEquatable<Program> {
+
+        public Program(IEnumerable<Node> nodes) {
             this.nodes = nodes;
         }
 
         public override Position Pos => nodes.First().Pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as STProgram);
+            return Equals(obj as Program);
         }
 
-        public bool Equals(STProgram x) {
+        public bool Equals(Program x) {
             return x.nodes.SequenceEqual(nodes);
         }
 
@@ -59,6 +61,35 @@ namespace lcc.SyntaxTree {
 
         public override int GetHashCode() {
             return specifiers.GetHashCode();
+        }
+
+        public override AST.Node ToAST(Env env) {
+
+            T baseType = specifiers.GetT(env);
+            var result = declarator.Declare(env, baseType);
+
+            if (declarations != null) {
+                throw new Error(Pos, "sorry we donot support old-style function definition");
+            }
+
+            /// The identifier declared in a function definition (which is the name of the function) shall
+            /// have a function type
+            if (!result.Item2.IsFunc) {
+                throw new ETypeError(Pos, "function definition should have function type");
+            }
+
+            /// The storage-class specifier, if any, shall be either extern or static.
+            if (specifiers.storage != StoreSpec.Kind.EXTERN &&
+                specifiers.storage != StoreSpec.Kind.NONE &&
+                specifiers.storage != StoreSpec.Kind.STATIC) {
+                throw new Error(Pos, string.Format("illegal storage specifier {0} in function definition", specifiers.storage));
+            }
+
+            var entry = env.GetSymbol(result.Item1);
+            if (entry == null) {
+                /// This identifier has not been used.
+                env.AddFunc(result.Item1, result.Item2, )
+            }
         }
 
         public readonly DeclSpecs specifiers;

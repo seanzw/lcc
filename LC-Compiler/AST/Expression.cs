@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using lcc.TypeSystem;
 
 namespace lcc.AST {
-    public abstract class Expr : Stmt {
+    public abstract class Expr : Node {
         public T Type => type;
         public Env Envrionment => env;
         public virtual bool IsLValue => false;

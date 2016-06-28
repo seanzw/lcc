@@ -10,7 +10,7 @@ using lcc.SyntaxTree;
 using Parserc;
 
 namespace LC_CompilerTests {
-    public partial class SyntaxTreeTest {
+    public partial class SyntaxTreeTests {
         [TestMethod]
         public void LCCTCDeclaratorLegal() {
 
