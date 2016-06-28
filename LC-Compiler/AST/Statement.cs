@@ -64,6 +64,31 @@ namespace lcc.AST {
         }
     }
 
+    public sealed class While : Loop {
+        public readonly Expr expr;
+        public readonly Stmt stmt;
+        public While(string breakLabel, string continueLabel, Expr expr, Stmt stmt) : base(breakLabel, continueLabel) {
+            this.expr = expr;
+            this.stmt = stmt;
+        }
+    }
+
+    public sealed class Do : Loop {
+        public readonly Expr expr;
+        public readonly Stmt stmt;
+        public Do(string breakLabel, string continueLabel, Expr expr, Stmt stmt) : base(breakLabel, continueLabel) {
+            this.expr = expr;
+            this.stmt = stmt;
+        }
+    }
+
+    public sealed class GoTo : Stmt {
+        public string label;
+        public GoTo(string label) {
+            this.label = label;
+        }
+    }
+
     public sealed class VoidStmt : Stmt {
         private static VoidStmt instance = new VoidStmt();
         public static VoidStmt Instance => instance;

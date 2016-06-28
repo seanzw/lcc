@@ -169,7 +169,7 @@ namespace lcc.SyntaxTree {
         }
 
         public override AST.Stmt ToAST(Env env) {
-            env.PushScope(ScopeKind.BLOCK);
+            env.PushBlockScope();
             LinkedList<AST.Stmt> results = new LinkedList<AST.Stmt>();
             foreach (var stmt in stmts) {
                 results.AddLast(stmt.ToAST(env));
@@ -224,7 +224,7 @@ namespace lcc.SyntaxTree {
         /// <param name="env"></param>
         /// <returns></returns>
         public override AST.Stmt ToAST(Env env) {
-            env.PushScope(ScopeKind.BLOCK);
+            env.PushBlockScope();
             AST.Expr e = expr.GetASTExpr(env);
             if (!e.Type.IsScalar) {
                 throw new ETypeError(Pos, string.Format("expecting scalar type, given {0}", e.Type));
@@ -314,15 +314,15 @@ namespace lcc.SyntaxTree {
         private readonly Position pos;
     }
 
-    public abstract class Loop : Breakable {
+    public abstract class Iteration : Breakable {
         public string continueLabel;
     }
 
-    public sealed class While : Loop, IEquatable<While> {
+    public sealed class While : Iteration, IEquatable<While> {
 
         public While(Expr expr, Stmt statement) {
             this.expr = expr;
-            this.statement = statement;
+            this.stmt = statement;
         }
 
         public override Position Pos => expr.Pos;
@@ -334,22 +334,49 @@ namespace lcc.SyntaxTree {
         public bool Equals(While x) {
             return x != null
                 && x.expr.Equals(expr)
-                && x.statement.Equals(statement);
+                && x.stmt.Equals(stmt);
         }
 
         public override int GetHashCode() {
-            return expr.GetHashCode() | statement.GetHashCode();
+            return expr.GetHashCode() | stmt.GetHashCode();
+        }
+
+        public override AST.Stmt ToAST(Env env) {
+
+            /// An iteration statement is a block.
+            env.PushBlockScope();
+
+            /// The controlling expression should have scalar type.
+            AST.Expr e = expr.GetASTExpr(env);
+            if (!e.Type.IsScalar) {
+                throw new ETypeError(Pos, "the controlling expression of iteration statement should have scalar type");
+            }
+
+            /// The loop body is also a block.
+            env.PushBlockScope();
+
+            /// Add this loop to the environemnt.
+            env.PushLoop(this);
+
+            AST.Stmt s = stmt.ToAST(env);
+
+            env.PopBreakable();
+
+            env.PopScope();
+            env.PopScope();
+
+            return new AST.While(breakLabel, continueLabel, e, s);
         }
 
         public readonly Expr expr;
-        public readonly Stmt statement;
+        public readonly Stmt stmt;
     }
 
-    public sealed class Do : Loop, IEquatable<Do> {
+    public sealed class Do : Iteration, IEquatable<Do> {
 
         public Do(Expr expr, Stmt statement) {
             this.expr = expr;
-            this.statement = statement;
+            this.stmt = statement;
         }
 
         public override Position Pos => expr.Pos;
@@ -362,18 +389,37 @@ namespace lcc.SyntaxTree {
         public bool Equals(Do x) {
             return x != null
                 && x.expr.Equals(expr)
-                && x.statement.Equals(statement);
+                && x.stmt.Equals(stmt);
         }
 
         public override int GetHashCode() {
-            return expr.GetHashCode() | statement.GetHashCode();
+            return expr.GetHashCode() | stmt.GetHashCode();
+        }
+
+        public override AST.Stmt ToAST(Env env) {
+            env.PushBlockScope();
+            env.PushBlockScope();
+            env.PushLoop(this);
+
+            AST.Stmt s = stmt.ToAST(env);
+
+            env.PopBreakable();
+            env.PopScope();
+
+            AST.Expr e = expr.GetASTExpr(env);
+            if (!e.Type.IsScalar) {
+                throw new ETypeError(Pos, "the controlling expression of iteration statement should be have scalar type");
+            }
+
+            env.PopScope();
+            return new AST.Do(breakLabel, continueLabel, e, s);
         }
 
         public readonly Expr expr;
-        public readonly Stmt statement;
+        public readonly Stmt stmt;
     }
 
-    public sealed class For : Loop, IEquatable<For> {
+    public sealed class For : Iteration, IEquatable<For> {
 
         public For(
             int line,
@@ -436,6 +482,16 @@ namespace lcc.SyntaxTree {
             return Pos.GetHashCode();
         }
 
+        public override AST.Stmt ToAST(Env env) {
+
+            Iteration i = env.GetLoop();
+            if (i == null) {
+                throw new Error(Pos, "continue statement not in an iteration statement");
+            }
+
+            return new AST.GoTo(i.continueLabel);
+        }
+
         private readonly Position pos;
     }
 
@@ -459,6 +515,15 @@ namespace lcc.SyntaxTree {
 
         public override int GetHashCode() {
             return Pos.GetHashCode();
+        }
+
+        public override AST.Stmt ToAST(Env env) {
+            Breakable b = env.GetBreakable();
+            if (b == null) {
+                throw new Error(Pos, "break statement not in breakable statement");
+            }
+
+            return new AST.GoTo(b.breakLabel);
         }
 
         private readonly Position pos;
@@ -493,11 +558,11 @@ namespace lcc.SyntaxTree {
         public readonly Expr expr;
     }
 
-    public sealed class Goto : Stmt, IEquatable<Goto> {
+    public sealed class GoTo : Stmt, IEquatable<GoTo> {
 
-        public Goto(
+        public GoTo(
             int line,
-            Id label
+            string label
             ) {
             this.pos = new Position { line = line };
             this.label = label;
@@ -506,10 +571,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => pos;
 
         public override bool Equals(object obj) {
-            return Equals(obj as Goto);
+            return Equals(obj as GoTo);
         }
 
-        public bool Equals(Goto x) {
+        public bool Equals(GoTo x) {
             return x != null && x.pos.Equals(pos)
                 && x.label.Equals(label);
         }
@@ -518,8 +583,21 @@ namespace lcc.SyntaxTree {
             return Pos.GetHashCode();
         }
 
+        public override AST.Stmt ToAST(Env env) {
+            if (Id.IsReservedIdentifier(label)) {
+                throw new EReservedIdentifier(Pos, label);
+            }
+
+            string rename = env.GetLable(label);
+            if (rename == null) {
+                throw new ErrUndefinedIdentifier(Pos, label);
+            }
+
+            return new AST.GoTo(rename);
+        }
+
         private readonly Position pos;
-        public readonly Id label;
+        public readonly string label;
     }
 
     public sealed class VoidStmt : Stmt {

@@ -295,7 +295,7 @@ for (;1;) ;",
                 },
                 {
                     "goto foo;",
-                    new Goto(1, new Id(new T_IDENTIFIER(1, "foo")))
+                    new GoTo(1, "foo")
                 },
                 {
                     "return 0;",

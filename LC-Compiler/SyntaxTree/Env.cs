@@ -13,16 +13,16 @@ namespace lcc.SyntaxTree {
         STRUCT,
         FUNCTION,
         FILE,
-        PROTOTYPE,
+        PARAM,
     }
 
     public abstract class SymbolEntry {
         public enum Kind {
-            PARAMETER,
-            OBJECT,
+            PARAM,
+            OBJ,
             TYPEDEF,
-            FUNCTION,
-            MEMBER,
+            FUNC,
+            FIELD,
             ENUM
         }
         public enum Link {
@@ -43,7 +43,7 @@ namespace lcc.SyntaxTree {
         public abstract Position Pos { get; }
     }
 
-    public sealed class ObjEntry : SymbolEntry {
+    public sealed class EObj : SymbolEntry {
         public enum Storage {
             AUTO,
             EXTERNAL,
@@ -52,8 +52,8 @@ namespace lcc.SyntaxTree {
         }
         public readonly Declaration declaration;
         public readonly Storage storage;
-        public ObjEntry(string symbol, T type, Declaration declaration, Link link, Storage storage)
-            : base(symbol, Kind.OBJECT, type, link) {
+        public EObj(string symbol, T type, Declaration declaration, Link link, Storage storage)
+            : base(symbol, Kind.OBJ, type, link) {
             this.declaration = declaration;
             this.storage = storage;
         }
@@ -63,10 +63,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => declaration.Pos;
     }
 
-    public sealed class MemEntry : SymbolEntry {
+    public sealed class EField : SymbolEntry {
         public readonly StructDeclarator declarator;
-        public MemEntry(string symbol, T type, StructDeclarator declarator)
-            : base(symbol, Kind.MEMBER, type, Link.NONE) {
+        public EField(string symbol, T type, StructDeclarator declarator)
+            : base(symbol, Kind.FIELD, type, Link.NONE) {
             this.declarator = declarator;
         }
         public override string ToString() {
@@ -75,10 +75,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => declarator.Pos;
     }
 
-    public sealed class EnumEntry : SymbolEntry {
+    public sealed class EEnum : SymbolEntry {
         public readonly Enum declarator;
         public readonly AST.ConstIntExpr expr;
-        public EnumEntry(string symbol, TEnum type, AST.ConstIntExpr expr, Enum declarator)
+        public EEnum(string symbol, TEnum type, AST.ConstIntExpr expr, Enum declarator)
             : base(symbol, Kind.ENUM, type.Const(), Link.NONE) {
             this.expr = expr;
             this.declarator = declarator;
@@ -93,10 +93,10 @@ namespace lcc.SyntaxTree {
     /// Represent a parameter.
     /// An identifier declared to be a function parameter has no linkage.
     /// </summary>
-    public sealed class ParamEntry : SymbolEntry {
+    public sealed class EParam : SymbolEntry {
         public readonly Param declaration;
-        public ParamEntry(string symbol, T type, Param declaration)
-            : base(symbol, Kind.PARAMETER, type, Link.NONE) {
+        public EParam(string symbol, T type, Param declaration)
+            : base(symbol, Kind.PARAM, type, Link.NONE) {
             this.declaration = declaration;
         }
         public override string ToString() {
@@ -108,9 +108,9 @@ namespace lcc.SyntaxTree {
     /// <summary>
     /// An identifier declared to be anything other than an object or a function has no linkage.
     /// </summary>
-    public sealed class TypeEntry : SymbolEntry {
+    public sealed class ETypeDef : SymbolEntry {
         public readonly Declaration declaration;
-        public TypeEntry(string symbol, T type, Declaration declaration)
+        public ETypeDef(string symbol, T type, Declaration declaration)
             : base(symbol, Kind.TYPEDEF, type, Link.NONE) {
             this.declaration = declaration;
         }
@@ -120,10 +120,10 @@ namespace lcc.SyntaxTree {
         public override Position Pos => declaration.Pos;
     }
 
-    public sealed class FuncEntry : SymbolEntry {
+    public sealed class EFunc : SymbolEntry {
         public readonly Declaration declaration;
-        public FuncEntry(string symbol, T type, Declaration declaration, Link link)
-            : base(symbol, Kind.FUNCTION, type, link) {
+        public EFunc(string symbol, T type, Declaration declaration, Link link)
+            : base(symbol, Kind.FUNC, type, link) {
             if (link == Link.NONE) throw new ArgumentException("Linkage for a function can only be internal or external.");
             this.declaration = declaration;
         }
@@ -190,7 +190,7 @@ namespace lcc.SyntaxTree {
 
             public bool HasVARR() {
                 foreach (var s in symbols) 
-                    if (s.kind == SymbolEntry.Kind.OBJECT && s.type.Kind == TKind.VARR) return true;
+                    if (s.kind == SymbolEntry.Kind.OBJ && s.type.Kind == TKind.VARR) return true;
                 return false;
             }
 
@@ -243,10 +243,10 @@ namespace lcc.SyntaxTree {
                             sb.Append(tt + s.ToString());
                 };
                 dumpSymbol(SymbolEntry.Kind.TYPEDEF);
-                dumpSymbol(SymbolEntry.Kind.FUNCTION);
-                dumpSymbol(SymbolEntry.Kind.PARAMETER);
-                dumpSymbol(SymbolEntry.Kind.OBJECT);
-                dumpSymbol(SymbolEntry.Kind.MEMBER);
+                dumpSymbol(SymbolEntry.Kind.FUNC);
+                dumpSymbol(SymbolEntry.Kind.PARAM);
+                dumpSymbol(SymbolEntry.Kind.OBJ);
+                dumpSymbol(SymbolEntry.Kind.FIELD);
                 dumpSymbol(SymbolEntry.Kind.ENUM);
                 builder.Insert(0, sb.ToString());
             }
@@ -289,7 +289,8 @@ namespace lcc.SyntaxTree {
         /// </summary>
         public Env() {
             scopes = new Stack<Scope>();
-            PushScope(ScopeKind.FILE);
+            // Push the file scope.
+            scopes.Push(new Scope(ScopeKind.FILE));
             IsFuncDef = false;
             IsFuncParam = false;
             ASTEnv = new AST.Env();
@@ -301,17 +302,25 @@ namespace lcc.SyntaxTree {
         }
 
         /// <summary>
-        /// Push a nested scope into the environment.
+        /// Push a block scope.
         /// </summary>
-        public void PushScope(ScopeKind kind) {
-            if (kind == ScopeKind.FUNCTION) {
-                throw new InvalidOperationException("please use PushFuncScope() to push a function scope.");
-            }
-            scopes.Push(new Scope(kind));
+        public void PushBlockScope() {
+            scopes.Push(new Scope(ScopeKind.BLOCK));
+            ASTEnv.PushBlock();
+        }
 
-            if (kind == ScopeKind.BLOCK) {
-                ASTEnv.PushBlock();
-            }
+        /// <summary>
+        /// Push a struct or union scope.
+        /// </summary>
+        public void PushStructScope() {
+            scopes.Push(new Scope(ScopeKind.STRUCT));
+        }
+
+        /// <summary>
+        /// Push a scope used for the parameter.
+        /// </summary>
+        public void PushParamScope() {
+            scopes.Push(new Scope(ScopeKind.PARAM));
         }
 
         /// <summary>
@@ -343,13 +352,13 @@ namespace lcc.SyntaxTree {
         /// <param name="symbol"></param>
         /// <param name="type"></param>
         /// <param name="declaration"></param>
-        public void AddObj(string symbol, T type, SymbolEntry.Link link, ObjEntry.Storage storage, Declaration declaration) {
-            scopes.Peek().AddSymbol(new ObjEntry(symbol, type, declaration, link, storage));
-            if (storage == ObjEntry.Storage.AUTO || storage == ObjEntry.Storage.REGISTER) {
+        public void AddObj(string symbol, T type, SymbolEntry.Link link, EObj.Storage storage, Declaration declaration) {
+            scopes.Peek().AddSymbol(new EObj(symbol, type, declaration, link, storage));
+            if (storage == EObj.Storage.AUTO || storage == EObj.Storage.REGISTER) {
                 // This is a dynamic object.
                 // In this implementation, register and auto are the same.
                 ASTEnv.AddLocal(symbol, type);
-            } else if (storage == ObjEntry.Storage.STATIC) {
+            } else if (storage == EObj.Storage.STATIC) {
                 // This is a static object, check its linkage (either external or internal).
                 AST.Env.AddStaticObj(symbol, type, link == SymbolEntry.Link.EXTERNAL, false);
             } else {
@@ -359,24 +368,24 @@ namespace lcc.SyntaxTree {
         }
 
         public void AddMem(string symbol, T type, StructDeclarator declarator) {
-            scopes.Peek().AddSymbol(new MemEntry(symbol, type, declarator));
+            scopes.Peek().AddSymbol(new EField(symbol, type, declarator));
         }
 
         public void AddEnum(string symbol, TEnum type, AST.ConstIntExpr expr, Enum declarator) {
-            scopes.Peek().AddSymbol(new EnumEntry(symbol, type, expr, declarator));
+            scopes.Peek().AddSymbol(new EEnum(symbol, type, expr, declarator));
         }
 
         public void AddParam(string symbol, T type, Param declaration) {
-            scopes.Peek().AddSymbol(new ParamEntry(symbol, type, declaration));
+            scopes.Peek().AddSymbol(new EParam(symbol, type, declaration));
             ASTEnv.AddParam(symbol, type);
         }
 
         public void AddTypeDef(string symbol, T type, Declaration declaration) {
-            scopes.Peek().AddSymbol(new TypeEntry(symbol, type, declaration));
+            scopes.Peek().AddSymbol(new ETypeDef(symbol, type, declaration));
         }
 
         public void AddFunc(string symbol, T type, SymbolEntry.Link link, Declaration declaration) {
-            scopes.Peek().AddSymbol(new FuncEntry(symbol, type, declaration, link));
+            scopes.Peek().AddSymbol(new EFunc(symbol, type, declaration, link));
         }
 
         public string AddLabel(string label) {
@@ -474,7 +483,7 @@ namespace lcc.SyntaxTree {
         /// Push a loop statement to the environment.
         /// </summary>
         /// <param name="l"></param>
-        public void PushLoop(Loop l) {
+        public void PushLoop(Iteration l) {
             l.breakLabel = string.Format("__loop_break_{0}", loopId);
             l.continueLabel = string.Format("__loop_continure{0}", loopId++);
             breakables.Push(l);
@@ -484,9 +493,9 @@ namespace lcc.SyntaxTree {
         /// Get the enclosing loop statement.
         /// </summary>
         /// <returns></returns>
-        public Loop GetLoop() {
+        public Iteration GetLoop() {
             foreach (var b in breakables) {
-                Loop l = b as Loop;
+                Iteration l = b as Iteration;
                 if (l != null) return l;
             }
             return null;

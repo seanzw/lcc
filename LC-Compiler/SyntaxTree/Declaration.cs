@@ -116,7 +116,7 @@ namespace lcc.SyntaxTree {
                     // Check if there is already a definition.
                     SymbolEntry entry = env.GetSymbol(result.Item1, true);
                     if (entry != null) {
-                        if (entry.kind != SymbolEntry.Kind.FUNCTION) {
+                        if (entry.kind != SymbolEntry.Kind.FUNC) {
                             throw new ERedefineSymbolAsDiffKind(declarator.Pos, result.Item1, entry.Pos);
                         }
                         if (!entry.type.Equals(result.Item2)) {
@@ -150,23 +150,23 @@ namespace lcc.SyntaxTree {
 
                     // Determine the linkage and storage of the object.
                     SymbolEntry.Link link;
-                    ObjEntry.Storage storage;
+                    EObj.Storage storage;
                     if (env.WhatScope == ScopeKind.FILE) {
                         // This is file scope.
                         switch (specifiers.storage) {
                             case STStoreSpec.Kind.STATIC:
                                 link = SymbolEntry.Link.INTERNAL;
-                                storage = ObjEntry.Storage.STATIC;
+                                storage = EObj.Storage.STATIC;
                                 break;
                             case STStoreSpec.Kind.EXTERN:
                                 // A little hack to set the storage to extern (which should be static) when explicitly using extern specifier.
                                 link = SymbolEntry.Link.EXTERNAL;
-                                storage = ObjEntry.Storage.EXTERNAL;
+                                storage = EObj.Storage.EXTERNAL;
                                 break;
                             case STStoreSpec.Kind.NONE:
                                 // By default the object in file scope has external linkage.
                                 link = SymbolEntry.Link.EXTERNAL;
-                                storage = ObjEntry.Storage.STATIC;
+                                storage = EObj.Storage.STATIC;
                                 break;
                             case STStoreSpec.Kind.REGISTER:
                             case STStoreSpec.Kind.AUTO:
@@ -179,23 +179,23 @@ namespace lcc.SyntaxTree {
                         switch (specifiers.storage) {
                             case STStoreSpec.Kind.STATIC:
                                 link = SymbolEntry.Link.INTERNAL;
-                                storage = ObjEntry.Storage.STATIC;
+                                storage = EObj.Storage.STATIC;
                                 break;
                             case STStoreSpec.Kind.EXTERN:
                                 link = SymbolEntry.Link.EXTERNAL;
-                                storage = ObjEntry.Storage.EXTERNAL;
+                                storage = EObj.Storage.EXTERNAL;
                                 break;
                             case STStoreSpec.Kind.AUTO:
                             case STStoreSpec.Kind.NONE:
                                 // By default the object in block scope has none linkage and auto storage.
                                 link = SymbolEntry.Link.NONE;
-                                storage = ObjEntry.Storage.AUTO;
+                                storage = EObj.Storage.AUTO;
                                 break;
                             case STStoreSpec.Kind.REGISTER:
                                 // In this implementation, register is the same as auto.
                                 // But we need the information to make sure that objects declared with 'register' will not be taken address.
                                 link = SymbolEntry.Link.NONE;
-                                storage = ObjEntry.Storage.REGISTER;
+                                storage = EObj.Storage.REGISTER;
                                 break;
                             default:
                                 throw new InvalidOperationException("Unknown storage specifier!");
@@ -205,7 +205,7 @@ namespace lcc.SyntaxTree {
                     // Check if there is already a definition.
                     SymbolEntry entry = env.GetSymbol(result.Item1, true);
                     if (entry != null) {
-                        if (entry.kind != SymbolEntry.Kind.OBJECT) {
+                        if (entry.kind != SymbolEntry.Kind.OBJ) {
                             throw new ERedefineSymbolAsDiffKind(declarator.Pos, result.Item1, entry.Pos);
                         }
                         throw new ERedefineObject(declarator.Pos, result.Item1, entry.Pos);
@@ -834,7 +834,7 @@ namespace lcc.SyntaxTree {
                 }
 
                 // Push a new scope.
-                env.PushScope(ScopeKind.STRUCT);
+                env.PushStructScope();
 
                 // Get all the fields.
                 var fields = declarations.Aggregate(
@@ -1416,7 +1416,7 @@ namespace lcc.SyntaxTree {
             }
 
             // Start evaluate the parameters.
-            env.PushScope(ScopeKind.PROTOTYPE);
+            env.PushParamScope();
             LinkedList<Tuple<string, T>> ps = new LinkedList<Tuple<string, T>>();
 
             // Special case for (void).

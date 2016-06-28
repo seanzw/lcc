@@ -201,7 +201,7 @@ namespace lcc.Parser {
             return Get<T_KEY_GOTO>()
                     .Bind(t => Identifier()
                     .Bind(label => Match<T_PUNC_SEMICOLON>()
-                    .Return(new Goto(t.line, label) as Stmt)))
+                    .Return(new GoTo(t.line, label.symbol) as Stmt)))
                 .Else(Get<T_KEY_CONTINUE>()
                     .Bind(t => Match<T_PUNC_SEMICOLON>()
                     .Return(new Continue(t.line) as Stmt)))

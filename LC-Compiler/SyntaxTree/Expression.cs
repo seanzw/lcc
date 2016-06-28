@@ -19,7 +19,6 @@ namespace lcc.SyntaxTree {
         public sealed override AST.Stmt ToAST(Env env) {
             return GetASTExpr(env);
         }
-
         public abstract AST.Expr GetASTExpr(Env env);
     }
 
@@ -1181,9 +1180,9 @@ namespace lcc.SyntaxTree {
                 throw new ErrUndefinedIdentifier(pos, symbol);
             } else {
                 switch (entry.kind) {
-                    case SymbolEntry.Kind.OBJECT:
+                    case SymbolEntry.Kind.OBJ:
                         return new AST.ObjExpr(entry.type, env.ASTEnv, symbol);
-                    case SymbolEntry.Kind.FUNCTION:
+                    case SymbolEntry.Kind.FUNC:
                         return new AST.FuncDesignator(entry.type, env.ASTEnv, symbol);
                     default:
                         throw new NotImplementedException();
