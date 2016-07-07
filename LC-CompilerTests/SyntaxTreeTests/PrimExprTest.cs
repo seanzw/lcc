@@ -66,14 +66,14 @@ namespace LC_CompilerTests {
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ErrEscapedSequenceOutOfRange), "Too long escaped sequence")]
+        [ExpectedException(typeof(EEscapedSequenceOutOfRange), "Too long escaped sequence")]
         public void LCCTCConstCharIllegal1() {
             string src = "\\xfff";
             var values = ConstChar.Evaluate(new Position { line = 1 }, src);
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ErrEscapedSequenceOutOfRange), "Too long escaped sequence")]
+        [ExpectedException(typeof(EEscapedSequenceOutOfRange), "Too long escaped sequence")]
         public void LCCTCConstCharIllegal2() {
             string src = "\\777";
             var values = ConstChar.Evaluate(new Position { line = 1 }, src);

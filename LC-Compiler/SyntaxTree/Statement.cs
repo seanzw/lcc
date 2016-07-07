@@ -167,6 +167,10 @@ namespace lcc.SyntaxTree {
         }
 
         public override AST.Node ToAST(Env env) {
+            return ToCompoundStmt(env);
+        }
+
+        public AST.CompoundStmt ToCompoundStmt(Env env) {
             env.PushBlockScope();
             LinkedList<AST.Node> results = new LinkedList<AST.Node>();
             foreach (var stmt in stmts) {

@@ -86,8 +86,13 @@ namespace lcc.SyntaxTree {
             : base(pos, "unknown type " + name) { }
     }
 
-    public sealed class ErrEscapedSequenceOutOfRange : Error {
-        public ErrEscapedSequenceOutOfRange(Position pos, string sequence)
+    public sealed class ERedefineFunction : Error {
+        public ERedefineFunction(Position pos, string name)
+            : base(pos, string.Format("redefine function {0}", name)) { }
+    }
+
+    public sealed class EEscapedSequenceOutOfRange : Error {
+        public EEscapedSequenceOutOfRange(Position pos, string sequence)
             : base(pos, string.Format("escaped sequence out of range.\n\t{0}", sequence)) { }
     }
 

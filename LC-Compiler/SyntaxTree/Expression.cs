@@ -1439,7 +1439,7 @@ namespace lcc.SyntaxTree {
             // and push it into the list.
             Action<BigInteger> PushValue = v => {
                 if (v < TUChar.Instance.MIN || v > TUChar.Instance.MAX) {
-                    throw new ErrEscapedSequenceOutOfRange(pos, text);
+                    throw new EEscapedSequenceOutOfRange(pos, text);
                 }
                 values.AddLast((ushort)v);  // Store the current result.
             };

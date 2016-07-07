@@ -53,6 +53,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="ASTTests\CGeneratorTests.cs" />
     <Compile Include="LexerTest.cs" />
     <Compile Include="ParserTests\ParserDeclarationTest.cs" />
     <Compile Include="ParserTests\ParserExpressionTest.cs" />
@@ -75,7 +76,11 @@
       <Name>Parserc</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="ASTTests\code\void_func.c" />
+    <None Include="ASTTests\code\void_func_clang.s" />
+    <None Include="ASTTests\code\void_func_lcc.s" />
+  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

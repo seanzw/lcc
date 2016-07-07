@@ -134,7 +134,7 @@ namespace lcc.SyntaxTree {
                         }
                     } else {
                         // This is a new declaration.
-                        env.AddFunc(result.Item1, result.Item2, link, this);
+                        env.AddFunc(result.Item1, result.Item2, link, Pos);
                     }
                 } else {
                     // This is a object.
@@ -211,7 +211,7 @@ namespace lcc.SyntaxTree {
                         throw new ERedefineObject(declarator.Pos, result.Item1, entry.Pos);
                     } else {
                         // Add this to the environment.
-                        env.AddObj(result.Item1, result.Item2, link, storage, this);
+                        env.AddObj(result.Item1, result.Item2, link, storage, Pos);
                     }
                 }
             }

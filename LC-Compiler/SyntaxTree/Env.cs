@@ -50,17 +50,17 @@ namespace lcc.SyntaxTree {
             STATIC,
             REGISTER,
         }
-        public readonly Declaration declaration;
+        public readonly Position pos;
         public readonly Storage storage;
-        public EObj(string symbol, T type, Declaration declaration, Link link, Storage storage)
+        public EObj(string symbol, T type, Position pos, Link link, Storage storage)
             : base(symbol, Kind.OBJ, type, link) {
-            this.declaration = declaration;
+            this.pos = pos;
             this.storage = storage;
         }
         public override string ToString() {
             return string.Format("{0,-12} {1,-20} {2,-10} {3,-10}\n", symbol, type, link, storage);
         }
-        public override Position Pos => declaration.Pos;
+        public override Position Pos => pos;
     }
 
     public sealed class EField : SymbolEntry {
@@ -121,16 +121,16 @@ namespace lcc.SyntaxTree {
     }
 
     public sealed class EFunc : SymbolEntry {
-        public readonly Declaration declaration;
-        public EFunc(string symbol, T type, Declaration declaration, Link link)
+        public readonly Position pos;
+        public EFunc(string symbol, T type, Position pos, Link link)
             : base(symbol, Kind.FUNC, type, link) {
             if (link == Link.NONE) throw new ArgumentException("Linkage for a function can only be internal or external.");
-            this.declaration = declaration;
+            this.pos = pos;
         }
         public override string ToString() {
             return string.Format("{0,-12} {1,-20} {2,-10}\n", symbol, type, link);
         }
-        public override Position Pos => declaration.Pos;
+        public override Position Pos => pos;
     }
 
     public class TagEntry {
@@ -327,12 +327,17 @@ namespace lcc.SyntaxTree {
         }
 
         /// <summary>
-        /// Push a function scope.
+        /// Push a function scope
         /// </summary>
         /// <param name="type"></param>
-        public void PushFuncScope(string name, TFunc type) {
+        public void PushFuncScope(string name, TFunc type, IEnumerable<Tuple<string, T>> parameters, Position pos) {
             scopes.Push(new FuncScope(name, string.Format("__{0}_return", name), type));
             ASTEnv = new AST.Env();
+            /// Add all the parameter to the environment.
+            foreach (var p in parameters) {
+                AddObj(p.Item1, p.Item2, SymbolEntry.Link.NONE, EObj.Storage.AUTO, pos);
+                ASTEnv.AddParam(p.Item1, p.Item2);
+            }
         }
 
         /// <summary>
@@ -355,8 +360,8 @@ namespace lcc.SyntaxTree {
         /// <param name="symbol"></param>
         /// <param name="type"></param>
         /// <param name="declaration"></param>
-        public void AddObj(string symbol, T type, SymbolEntry.Link link, EObj.Storage storage, Declaration declaration) {
-            scopes.Peek().AddSymbol(new EObj(symbol, type, declaration, link, storage));
+        public void AddObj(string symbol, T type, SymbolEntry.Link link, EObj.Storage storage, Position pos) {
+            scopes.Peek().AddSymbol(new EObj(symbol, type, pos, link, storage));
             if (storage == EObj.Storage.AUTO || storage == EObj.Storage.REGISTER) {
                 // This is a dynamic object.
                 // In this implementation, register and auto are the same.
@@ -378,17 +383,22 @@ namespace lcc.SyntaxTree {
             scopes.Peek().AddSymbol(new EEnum(symbol, type, expr, declarator));
         }
 
+        /// <summary>
+        /// Used to add parameter to the paraemeter scope in function declaration.
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <param name="type"></param>
+        /// <param name="declaration"></param>
         public void AddParam(string symbol, T type, Param declaration) {
             scopes.Peek().AddSymbol(new EParam(symbol, type, declaration));
-            ASTEnv.AddParam(symbol, type);
         }
 
         public void AddTypeDef(string symbol, T type, Declaration declaration) {
             scopes.Peek().AddSymbol(new ETypeDef(symbol, type, declaration));
         }
 
-        public void AddFunc(string symbol, T type, SymbolEntry.Link link, Declaration declaration) {
-            scopes.Peek().AddSymbol(new EFunc(symbol, type, declaration, link));
+        public void AddFunc(string symbol, T type, SymbolEntry.Link link, Position pos) {
+            scopes.Peek().AddSymbol(new EFunc(symbol, type, pos, link));
         }
 
         public string AddLabel(string label) {
