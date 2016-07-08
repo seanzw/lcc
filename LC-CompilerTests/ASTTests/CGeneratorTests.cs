@@ -18,24 +18,52 @@ namespace LC_CompilerTests {
 
         [TestMethod]
         public void LCCCGeneratorTest() {
-            var sources = Directory.GetFiles("../../ASTTests/code", "*.c");
-            foreach (var source in sources) {
 
-                string lcc = string.Format("{0}_lcc.s", source.Substring(0, source.Length - 2));
-                string clang = string.Format("{0}_clang.s", source.Substring(0, source.Length - 2));
+            var tests = new List<String> {
+                "void_func"
+            };
 
+            //var sources = Directory.GetFiles("../../ASTTests/code", "*.c");
+            foreach (var test in tests) {
+
+                var source = string.Format("../../ASTTests/code/{0}.c", test);
+
+                string lcc_s = string.Format("{0}_lcc.s", source.Substring(0, source.Length - 2));
+                string clang_s = string.Format("{0}_clang.s", source.Substring(0, source.Length - 2));
+                string lcc_exe = string.Format("{0}_lcc.exe", source.Substring(0, source.Length - 2));
+                string clang_exe = string.Format("{0}_clang.exe", source.Substring(0, source.Length - 2));
+
+                string main = string.Format("{0}_main.c", source.Substring(0, source.Length - 2));
+                string main_s = string.Format("{0}_main.s", source.Substring(0, source.Length - 2));
+
+                // Compile with lcc.
                 string src = File.ReadAllText(source);
-                File.WriteAllText(lcc, Utility.CGen(src));
+                File.WriteAllText(lcc_s, Utility.CGen(src));
 
                 // Compile with clang.
                 Process p = new Process();
                 p.StartInfo.UseShellExecute = false;
                 p.StartInfo.CreateNoWindow = true;
                 p.StartInfo.FileName = "clang";
-                p.StartInfo.Arguments = string.Format("-S {0} -masm=intel -o {1}", source, clang);
-                p.Start();
 
+                p.StartInfo.Arguments = string.Format("-S {0} -masm=intel -o {1}", source, clang_s);
+                p.Start();
                 p.WaitForExit();
+
+                // Compile the main with clang.
+                p.StartInfo.Arguments = string.Format("-S {0} -masm=intel -o {1}", main, main_s);
+                p.Start();
+                p.WaitForExit();
+
+                // Link them together.
+                p.StartInfo.Arguments = string.Format("{0} {1} -o {2}", lcc_s, main_s, lcc_exe);
+                p.Start();
+                p.WaitForExit();
+
+                p.StartInfo.Arguments = string.Format("{0} {1} -o {2}", clang_s, main_s, clang_exe);
+                p.Start();
+                p.WaitForExit();
+
                 p.Close();
             }
         }

@@ -128,7 +128,15 @@ namespace lcc.SyntaxTree {
 
             env.PopScope();
 
-            return new AST.FuncDef(result.Item1, returnLabel, type, result.Item3, b, env.ASTEnv);
+            return new AST.FuncDef(
+                result.Item1, 
+                returnLabel, 
+                type, 
+                result.Item3, 
+                b, 
+                env.ASTEnv, 
+                specifiers.storage != StoreSpec.Kind.STATIC
+                );
         }
 
         public readonly DeclSpecs specifiers;

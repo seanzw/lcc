@@ -28,25 +28,31 @@ namespace lcc.AST {
         public readonly IEnumerable<Tuple<string, T>> parameters;
         public readonly CompoundStmt body;
         public readonly Env env;
+        public readonly bool isGlobal;
         public FuncDef(
             string name,
             string returnLabel,
             TFunc type,
             IEnumerable<Tuple<string, T>> parameters,
             CompoundStmt body, 
-            Env env
+            Env env,
+            bool isGlobal
             ) {
             this.name = name;
             this.returnLabel = returnLabel;
             this.type = type;
             this.parameters = parameters;
             this.body = body;
+            this.isGlobal = isGlobal;
         }
         public override void CGen(X86Gen gen) {
-            gen.label(Seg.TEXT, "_" + name);
-
+            gen.label(Seg.TEXT, "_" + name, isGlobal);
+            gen.inst(X86Gen.push, X86Gen.ebp);
+            gen.inst(X86Gen.mov, X86Gen.ebp, X86Gen.esp);
 
             gen.label(Seg.TEXT, returnLabel);
+            gen.inst(X86Gen.pop, X86Gen.ebp);
+            gen.inst(X86Gen.ret);
         }
     }
 }

@@ -80,6 +80,10 @@
     <None Include="ASTTests\code\void_func.c" />
     <None Include="ASTTests\code\void_func_clang.s" />
     <None Include="ASTTests\code\void_func_lcc.s" />
+    <None Include="ASTTests\code\void_func_main.s" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ASTTests\code\void_func_main.c" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
