@@ -16,12 +16,21 @@ namespace lcc.AST {
             this.label = label;
             this.stmt = stmt;
         }
+        public override void ToX86(X86Gen gen) {
+            gen.Label(X86Gen.Seg.TEXT, label);
+            stmt.ToX86(gen);
+        }
     }
 
     public sealed class CompoundStmt : Node {
         public readonly IEnumerable<Node> stmts;
         public CompoundStmt(IEnumerable<Node> stmts) {
             this.stmts = stmts;
+        }
+        public override void ToX86(X86Gen gen) {
+            foreach (var stmt in stmts) {
+                stmt.ToX86(gen);
+            }
         }
     }
 

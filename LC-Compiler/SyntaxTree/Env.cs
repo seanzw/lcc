@@ -50,10 +50,12 @@ namespace lcc.SyntaxTree {
             STATIC,
             REGISTER,
         }
+        public readonly string uid;
         public readonly Position pos;
         public readonly Storage storage;
-        public EObj(string symbol, T type, Position pos, Link link, Storage storage)
+        public EObj(string uid, string symbol, T type, Position pos, Link link, Storage storage)
             : base(symbol, Kind.OBJ, type, link) {
+            this.uid = uid;
             this.pos = pos;
             this.storage = storage;
         }
@@ -301,6 +303,8 @@ namespace lcc.SyntaxTree {
             switchId = 0;
             caseId = 0;
             defaultId = 0;
+            staticId = 0;
+            dynamicId = 0;
             breakables = new Stack<Breakable>();
         }
 
@@ -331,12 +335,15 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <param name="type"></param>
         public void PushFuncScope(string name, TFunc type, IEnumerable<Tuple<string, T>> parameters, Position pos) {
+            // Clear the dynamic id.
+            dynamicId = 0;
             scopes.Push(new FuncScope(name, string.Format("__{0}_return", name), type));
             ASTEnv = new AST.Env();
             /// Add all the parameter to the environment.
             foreach (var p in parameters) {
-                AddObj(p.Item1, p.Item2, SymbolEntry.Link.NONE, EObj.Storage.AUTO, pos);
-                ASTEnv.AddParam(p.Item1, p.Item2);
+                scopes.Peek().AddSymbol(new EObj(dynamicId.ToString(), p.Item1, p.Item2, pos, SymbolEntry.Link.NONE, EObj.Storage.AUTO));
+                ASTEnv.AddParam(dynamicId.ToString(), p.Item1, p.Item2);
+                dynamicId++;
             }
         }
 
@@ -361,17 +368,23 @@ namespace lcc.SyntaxTree {
         /// <param name="type"></param>
         /// <param name="declaration"></param>
         public void AddObj(string symbol, T type, SymbolEntry.Link link, EObj.Storage storage, Position pos) {
-            scopes.Peek().AddSymbol(new EObj(symbol, type, pos, link, storage));
             if (storage == EObj.Storage.AUTO || storage == EObj.Storage.REGISTER) {
                 // This is a dynamic object.
                 // In this implementation, register and auto are the same.
-                ASTEnv.AddLocal(symbol, type);
-            } else if (storage == EObj.Storage.STATIC) {
-                // This is a static object, check its linkage (either external or internal).
-                AST.Env.AddStaticObj(symbol, type, link == SymbolEntry.Link.EXTERNAL, false);
+                scopes.Peek().AddSymbol(new EObj(dynamicId.ToString(), symbol, type, pos, link, storage));
+                ASTEnv.AddLocal(dynamicId.ToString(), symbol, type);
+                dynamicId++;
             } else {
-                // This is an external object, the linkage must be external.
-                AST.Env.AddStaticObj(symbol, type, true, true);
+                string uid = string.Format("__static_{0}_{1}", symbol, staticId++);
+                if (storage == EObj.Storage.STATIC) {
+                    // This is a static object, check its linkage (either external or internal).
+                    scopes.Peek().AddSymbol(new EObj(uid, symbol, type, pos, link, storage));
+                    AST.Env.AddStaticObj(uid, symbol, type, link == SymbolEntry.Link.EXTERNAL, false);
+                } else {
+                    // This is an external object, the linkage must be external.
+                    scopes.Peek().AddSymbol(new EObj(uid, symbol, type, pos, link, storage));
+                    AST.Env.AddStaticObj(uid, symbol, type, true, true);
+                }
             }
         }
 
@@ -596,6 +609,8 @@ namespace lcc.SyntaxTree {
         private int switchId;
         private int caseId;
         private int defaultId;
+        private int staticId;
+        private int dynamicId;
 
         private Stack<Breakable> breakables;
         private Stack<Scope> scopes;

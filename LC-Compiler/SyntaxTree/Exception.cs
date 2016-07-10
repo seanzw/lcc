@@ -101,8 +101,8 @@ namespace lcc.SyntaxTree {
             : base(pos, "integer literal is too large to be represented in any integer type.") { }
     }
 
-    public sealed class ErrUndefinedIdentifier : Error {
-        public ErrUndefinedIdentifier(Position pos, string name)
+    public sealed class EUndefinedIdentifier : Error {
+        public EUndefinedIdentifier(Position pos, string name)
             : base(pos, string.Format("undefined identfifier {0}", name)) { }
     }
 

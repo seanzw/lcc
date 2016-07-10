@@ -1192,11 +1192,17 @@ namespace lcc.SyntaxTree {
             var entry = env.GetSymbol(symbol);
             if (entry == null) {
                 // This is an undeclared identifier.
-                throw new ErrUndefinedIdentifier(pos, symbol);
+                throw new EUndefinedIdentifier(pos, symbol);
             } else {
                 switch (entry.kind) {
-                    case SymbolEntry.Kind.OBJ:
-                        return new AST.ObjExpr(entry.type, env.ASTEnv, symbol);
+                    case SymbolEntry.Kind.OBJ: {
+                            var e = entry as EObj;
+                            if (e.storage == EObj.Storage.AUTO || e.storage == EObj.Storage.REGISTER) {
+                                return new AST.DynamicObjExpr(entry.type, env.ASTEnv, e.uid, symbol);
+                            } else {
+                                throw new NotImplementedException();
+                            }
+                        }
                     case SymbolEntry.Kind.FUNC:
                         return new AST.FuncDesignator(entry.type, env.ASTEnv, symbol);
                     default:

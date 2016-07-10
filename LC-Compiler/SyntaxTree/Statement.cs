@@ -616,7 +616,7 @@ namespace lcc.SyntaxTree {
 
             string rename = env.GetLable(label);
             if (rename == null) {
-                throw new ErrUndefinedIdentifier(Pos, label);
+                throw new EUndefinedIdentifier(Pos, label);
             }
 
             return new AST.GoTo(rename);

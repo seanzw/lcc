@@ -14,9 +14,9 @@ namespace lcc.AST {
         public Program(IEnumerable<Node> nodes) {
             this.nodes = nodes;
         }
-        public override void CGen(X86Gen gen) {
+        public override void ToX86(X86Gen gen) {
             foreach (var node in nodes) {
-                node.CGen(gen);
+                node.ToX86(gen);
             }
         }
     }
@@ -43,16 +43,24 @@ namespace lcc.AST {
             this.type = type;
             this.parameters = parameters;
             this.body = body;
+            this.env = env;
             this.isGlobal = isGlobal;
         }
-        public override void CGen(X86Gen gen) {
-            gen.label(Seg.TEXT, "_" + name, isGlobal);
-            gen.inst(X86Gen.push, X86Gen.ebp);
-            gen.inst(X86Gen.mov, X86Gen.ebp, X86Gen.esp);
+        public override void ToX86(X86Gen gen) {
+            env.Dump(gen);
 
-            gen.label(Seg.TEXT, returnLabel);
-            gen.inst(X86Gen.pop, X86Gen.ebp);
-            gen.inst(X86Gen.ret);
+            gen.Label(X86Gen.Seg.TEXT, "_" + name, isGlobal);
+            gen.Inst(X86Gen.push, X86Gen.ebp);
+            gen.Inst(X86Gen.mov, X86Gen.ebp, X86Gen.esp);
+            gen.Inst(X86Gen.sub, X86Gen.esp, env.size);
+
+            body.ToX86(gen);
+
+
+            gen.Label(X86Gen.Seg.TEXT, returnLabel);
+            gen.Inst(X86Gen.add, X86Gen.esp, env.size);
+            gen.Inst(X86Gen.pop, X86Gen.ebp);
+            gen.Inst(X86Gen.ret);
         }
     }
 }

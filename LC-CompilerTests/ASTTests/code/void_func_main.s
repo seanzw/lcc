@@ -16,15 +16,19 @@ _main:                                  # @main
 # BB#0:
 	push	ebp
 	mov	ebp, esp
-	sub	esp, 12
+	sub	esp, 20
 	mov	eax, dword ptr [ebp + 12]
 	mov	ecx, dword ptr [ebp + 8]
 	mov	dword ptr [ebp - 4], 0
 	mov	dword ptr [ebp - 8], eax
 	mov	dword ptr [ebp - 12], ecx
+	mov	eax, dword ptr [ebp - 8]
+	mov	ecx, dword ptr [ebp - 12]
+	mov	dword ptr [esp], ecx
+	mov	dword ptr [esp + 4], eax
 	call	_func1
 	xor	eax, eax
-	add	esp, 12
+	add	esp, 20
 	pop	ebp
 	ret
 

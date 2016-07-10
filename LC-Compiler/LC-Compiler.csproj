@@ -44,7 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AST\CGenerator.cs" />
+    <Compile Include="AST\X86Gen.cs" />
     <Compile Include="AST\Declaraion.cs" />
     <Compile Include="AST\Definition.cs" />
     <Compile Include="AST\Env.cs" />

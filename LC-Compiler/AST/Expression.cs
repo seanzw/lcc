@@ -154,6 +154,15 @@ namespace lcc.AST {
         public Expr VTFunc() {
             return type.IsFunc ? new Cast(new TPtr(type), env, this) : this;
         }
+
+        public virtual X86Gen.Ret ToX86Expr(X86Gen gen) {
+            throw new NotImplementedException();
+        }
+
+        public sealed override void ToX86(X86Gen gen) {
+            ToX86Expr(gen);
+        }
+
     }
 
     public sealed class CommaExpr : Expr {
@@ -261,11 +270,26 @@ namespace lcc.AST {
         }
     }
 
-    public sealed class ObjExpr : Expr {
+    /// <summary>
+    /// Represent an object.
+    /// </summary>
+    public sealed class DynamicObjExpr : Expr {
+        public readonly string uid;
         public readonly string symbol;
         public override bool IsLValue => true;
-        public ObjExpr(T type, Env env, string symbol) : base(type, env) {
+        public DynamicObjExpr(T type, Env env, string uid, string symbol) : base(type, env) {
+            this.uid = uid;
             this.symbol = symbol;
+        }
+        public override string ToString() {
+            return symbol;
+        }
+        public override X86Gen.Ret ToX86Expr(X86Gen gen) {
+            /// Get the offset to ebp.
+            int ebp = env.GetEBP(uid);
+            gen.Comment(X86Gen.Seg.TEXT, ToString());
+            gen.Inst(X86Gen.lea, X86Gen.eax, new X86Gen.Address(X86Gen.ebp, ebp));
+            return X86Gen.Ret.PTR;
         }
     }
 
