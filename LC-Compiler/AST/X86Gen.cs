@@ -5,6 +5,8 @@ using System.Text;
 using System.Numerics;
 using System.Threading.Tasks;
 
+using lcc.TypeSystem;
+
 namespace lcc.AST {
 
 
@@ -21,13 +23,23 @@ namespace lcc.AST {
         /// </summary>
         public enum Ret {
             /// <summary>
-            /// The result is in eax.
+            /// The result is in register, maybe al, ax, eax, or edx:eax.
             /// </summary>
-            EAX,
+            REG,
             /// <summary>
             /// The result is a pointer in eax.
             /// </summary>
             PTR
+        }
+
+        /// <summary>
+        /// Represent operation size.
+        /// </summary>
+        public enum Size {
+            BYTE,
+            WORD,
+            DWORD,
+            QWORD
         }
 
         /// <summary>
@@ -42,8 +54,10 @@ namespace lcc.AST {
             this.IntelOrATT = IntelOrATT;
             text = new StringBuilder();
             data = new StringBuilder();
+            bss = new StringBuilder();
             text.Append("\t.text\n");
             data.Append("\t.data\n");
+            bss.Append("\t.bss\n");
             if (IntelOrATT) {
                 // To support Intel syntax.
                 text.Append("\t.intel_syntax noprefix\n");
@@ -52,31 +66,58 @@ namespace lcc.AST {
 
         public override string ToString() {
             var all = new StringBuilder(data.ToString());
+            all.Append(bss.ToString());
             all.Append(text.ToString());
             return all.ToString();
         }
 
         public abstract class Operand {
             public abstract string Intel { get; }
-            public static implicit operator Operand(int i) { return new Num(i); }
+            public static implicit operator Operand(int i) { return new Immediate(i); }
+            public static implicit operator Operand(BigInteger i) { return new Immediate(i); }
+            public static implicit operator Operand(string label) { return new Label(label); }
         }
 
         #region Effective Address
-        public sealed class Address : Operand {
-            public readonly Reg b;
+        public abstract class Mem : Operand {
             public readonly int offset;
-            public Address(Reg b, int offset) {
-                this.b = b;
+            public readonly Size size;
+            public Mem(int offset, Size size) {
                 this.offset = offset;
+                this.size = size;
             }
-            public override string Intel => string.Format("[{0}{1}]", b.Intel, offset.ToString(" + 0; - #"));
+            protected string SizeIntel(Size size) {
+                switch (size) {
+                    case Size.BYTE: return "byte";
+                    case Size.WORD: return "word";
+                    case Size.DWORD: return "dword";
+                    case Size.QWORD: return "qword";
+                    default: throw new ArgumentException("illegal operation size");
+                }
+            }
+        }
+
+        private sealed class MemReg : Mem {
+            public readonly Reg b;
+            public MemReg(Reg b, int offset, Size size) : base(offset, size) {
+                this.b = b;
+            }
+            public override string Intel => string.Format("{2} ptr [{0}{1}]", b.Intel, offset.ToString(" + 0; - #"), SizeIntel(size));
+        }
+
+        private sealed class MemLabel : Mem {
+            public readonly Label b;
+            public MemLabel(Label b, int offset, Size size) : base(offset, size) {
+                this.b = b;
+            }
+            public override string Intel => string.Format("{2} ptr [{0}{1}]", b.Intel, offset.ToString(" + 0; - #"), SizeIntel(size));
         }
         #endregion
 
-        #region Number
-        public sealed class Num : Operand {
+        #region Immediate
+        public sealed class Immediate : Operand {
             private readonly BigInteger i;
-            public Num(BigInteger i) { this.i = i; }
+            public Immediate(BigInteger i) { this.i = i; }
             public override string Intel => i.ToString();
         }
         #endregion
@@ -86,12 +127,39 @@ namespace lcc.AST {
             private readonly string s;
             public Reg(string s) { this.s = s; }
             public override string Intel => s;
+            public Mem Addr(int offset = 0, Size size = Size.DWORD) {
+                return new MemReg(this, offset, size);
+            }
         }
 
+        /// <summary>
+        /// General register.
+        /// </summary>
         public static readonly Reg eax = new Reg("eax");
+        public static readonly Reg al = new Reg("al");
+
+        public static readonly Reg ebx = new Reg("ebx");
+
+        /// <summary>
+        /// Special attention!
+        /// This is used like ebp to point to the base of a block.
+        /// </summary>
+        public static readonly Reg ecx = new Reg("ecx");
+        public static readonly Reg edx = new Reg("edx");
         public static readonly Reg ebp = new Reg("ebp");
         public static readonly Reg esp = new Reg("esp");
         #endregion
+
+        public sealed class Label : Operand {
+            public readonly string label;
+            public Label(string label) {
+                this.label = label;
+            }
+            public override string Intel => label;
+            public Mem Addr(int offset = 0, Size size = Size.DWORD) {
+                return new MemLabel(this, offset, size);
+            }
+        }
 
         #region Instruction
         public sealed class Operator {
@@ -101,14 +169,36 @@ namespace lcc.AST {
             public string l => i + "l";
         }
 
-        public static readonly Operator mov = new Operator("mov");
-        public static readonly Operator lea = new Operator("lea");
-        public static readonly Operator push = new Operator("push");
-        public static readonly Operator pop = new Operator("pop");
-        public static readonly Operator ret = new Operator("ret");
-        public static readonly Operator sub = new Operator("sub");
-        public static readonly Operator add = new Operator("add");
+        public static readonly Operator mov     = new Operator("mov");
+        public static readonly Operator movzx   = new Operator("movzx");
+
+        public static readonly Operator lea     = new Operator("lea");
+        public static readonly Operator push    = new Operator("push");
+        public static readonly Operator pop     = new Operator("pop");
+        public static readonly Operator ret     = new Operator("ret");
+        public static readonly Operator call    = new Operator("call");
+
+        public static readonly Operator sub     = new Operator("sub");
+        public static readonly Operator add     = new Operator("add");
+        public static readonly Operator inc     = new Operator("inc");
+        public static readonly Operator dec     = new Operator("dec");
+        public static readonly Operator imul    = new Operator("imul");
+
+        public static readonly Operator cmp     = new Operator("cmp");
+        public static readonly Operator setle   = new Operator("setle");
+        public static readonly Operator setl    = new Operator("setl");
+        public static readonly Operator setge   = new Operator("setge");
+        public static readonly Operator setg    = new Operator("setg");
+        public static readonly Operator sete    = new Operator("sete");
+        public static readonly Operator setne   = new Operator("setne");
+
+        public static readonly Operator and     = new Operator("and");
+
+        public static readonly Operator jmp     = new Operator("jmp");
+        public static readonly Operator je      = new Operator("je");
         #endregion
+
+
 
         public void Inst(Operator i) {
             if (IntelOrATT)
@@ -125,7 +215,18 @@ namespace lcc.AST {
                 text.Append(string.Format("\t{0, -6} {1}, {2}\n", i.Intel, dst.Intel, src.Intel));
         }
 
-        public void Label(Seg seg, string label, bool isGlobal = false) {
+        public void Inst(Operator i, Operand dst, Operand src1, Operand src2) {
+            if (IntelOrATT)
+                text.Append(string.Format("\t{0, -6} {1}, {2}, {3}\n", i.Intel, dst.Intel, src1.Intel, src2.Intel));
+        }
+
+        /// <summary>
+        /// Lay down a label.
+        /// </summary>
+        /// <param name="seg"></param>
+        /// <param name="label"></param>
+        /// <param name="isGlobal"></param>
+        public void Tag(Seg seg, string label, bool isGlobal = false) {
             StringBuilder sb = seg == Seg.DATA ? data : text;
             if (isGlobal)
                 sb.Append(string.Format("\t.globl {0}\n", label));
@@ -137,7 +238,26 @@ namespace lcc.AST {
             sb.Append(string.Format("\t# {0}\n", cmt));
         }
 
+        /// <summary>
+        /// Push the result into the stack.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="ret"></param>
+        public void Push(T type, Ret ret) {
+            switch (type.Kind) {
+                case TKind.PTR:
+                case TKind.ULONG:
+                case TKind.LONG:
+                case TKind.UINT:
+                case TKind.INT:
+                    Inst(push, ret == Ret.PTR ? eax.Addr() as Operand : eax);
+                    break;
+                default: throw new NotImplementedException();
+            }
+        }
+
         private readonly StringBuilder text;
         private readonly StringBuilder data;
+        private readonly StringBuilder bss;
     }
 }

@@ -122,7 +122,7 @@ namespace lcc.SyntaxTree {
             env.PushFuncScope(result.Item1, type, result.Item3, Pos);
 
             /// Semantic check the function body.
-            AST.CompoundStmt b = body.ToCompoundStmt(env);
+            AST.CompoundStmt b = body.ToASTCompoundStmt(env);
 
             string returnLabel = env.GetReturnLabel();
 

@@ -985,7 +985,7 @@ namespace lcc.SyntaxTree {
                     throw new Error(Pos, string.Format("illegal bit-field type: {0}", type));
                 }
 
-                AST.ConstIntExpr c = expr.GetASTExpr(env) as AST.ConstIntExpr;
+                AST.ConstIntExpr c = expr.ToASTExpr(env) as AST.ConstIntExpr;
                 if (c == null) {
                     throw new Error(Pos, "bit-field width should be a constant integer");
                 }
@@ -1145,7 +1145,7 @@ namespace lcc.SyntaxTree {
 
             AST.ConstIntExpr e;
             if (expr != null) {
-                e = expr.GetASTExpr(env) as AST.ConstIntExpr;
+                e = expr.ToASTExpr(env) as AST.ConstIntExpr;
                 if (e == null) {
                     throw new Error(Pos, "enumeration constant requires constant integer");
                 }
@@ -1520,7 +1520,7 @@ namespace lcc.SyntaxTree {
 
             // Check the expression is const integer expression.
             if (expr != null) {
-                AST.ConstIntExpr ast = expr.GetASTExpr(env) as AST.ConstIntExpr;
+                AST.ConstIntExpr ast = expr.ToASTExpr(env) as AST.ConstIntExpr;
                 if (ast == null) {
                     throw new Error(pos, "use non-constant expression as array length.");
                 }

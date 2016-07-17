@@ -20,7 +20,8 @@ namespace LC_CompilerTests {
         public void LCCCGeneratorTest() {
 
             var tests = new List<String> {
-                "void_func"
+                "void_func",
+                "quick_sort",
             };
 
             //var sources = Directory.GetFiles("../../ASTTests/code", "*.c");

@@ -11,6 +11,9 @@ namespace lcc.TypeSystem {
         public struct Field {
             public string name;
             public T type;
+            /// <summary>
+            /// Offset in bits.
+            /// </summary>
             public int offset;
 
             public Field(string name, T type, int offset) {
@@ -34,10 +37,10 @@ namespace lcc.TypeSystem {
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        public T GetType(string name) {
-            if (fields == null) return null;
+        public Field? GetField(string name) {
+            if (!IsComplete) throw new InvalidOperationException("incomplete type");
             foreach (var field in fields) 
-                if (field.name.Equals(name)) return field.type;
+                if (field.name.Equals(name)) return field;
             return null;
         }
 

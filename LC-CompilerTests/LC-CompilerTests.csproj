@@ -80,9 +80,12 @@
     <None Include="ASTTests\code\void_func.c" />
     <None Include="ASTTests\code\void_func_clang.s" />
     <None Include="ASTTests\code\void_func_lcc.s" />
-    <None Include="ASTTests\code\void_func_main.s" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="ASTTests\code\quick_sort.c" />
+    <Content Include="ASTTests\code\quick_sort_clang.s" />
+    <Content Include="ASTTests\code\quick_sort_lcc.s" />
+    <Content Include="ASTTests\code\quick_sort_main.c" />
     <Content Include="ASTTests\code\void_func_main.c" />
   </ItemGroup>
   <Choose>

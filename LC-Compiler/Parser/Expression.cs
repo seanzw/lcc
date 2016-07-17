@@ -365,9 +365,9 @@ namespace lcc.Parser {
                     .Then(Get<T_IDENTIFIER>()
                     .Bind(id => PostfixExpressionTail(new Access(expr, id, Access.Kind.PTR)))))
                 .Else(Match<T_PUNC_INCRE>()
-                    .Bind(_ => PostfixExpressionTail(new PostStep(expr, PostStep.Kind.INC))))
+                    .Bind(_ => PostfixExpressionTail(new PostStep(expr, PostStep.Op.INC))))
                 .Else(Match<T_PUNC_DECRE>()
-                    .Bind(_ => PostfixExpressionTail(new PostStep(expr, PostStep.Kind.DEC))))
+                    .Bind(_ => PostfixExpressionTail(new PostStep(expr, PostStep.Op.DEC))))
                 .Else(Result<Token.Token, Expr>(expr));
         }
 

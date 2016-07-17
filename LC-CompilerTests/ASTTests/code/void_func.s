@@ -87,9 +87,11 @@ _sum:                                   # @sum
 # BB#0:
 	push	ebp
 	mov	ebp, esp
-	sub	esp, 16
+	sub	esp, 20
 	mov	eax, dword ptr [ebp + 8]
+	lea	ecx, [_sum]
 	mov	dword ptr [ebp - 8], eax
+	mov	dword ptr [ebp - 12], ecx
 	cmp	dword ptr [ebp - 8], 0
 	jg	LBB2_2
 # BB#1:
@@ -97,17 +99,18 @@ _sum:                                   # @sum
 	jmp	LBB2_3
 LBB2_2:
 	mov	eax, dword ptr [ebp - 8]
-	mov	ecx, dword ptr [ebp - 8]
-	sub	ecx, 1
-	mov	dword ptr [esp], ecx
-	mov	dword ptr [ebp - 12], eax # 4-byte Spill
-	call	_sum
-	mov	ecx, dword ptr [ebp - 12] # 4-byte Reload
+	mov	ecx, dword ptr [ebp - 12]
+	mov	edx, dword ptr [ebp - 8]
+	sub	edx, 1
+	mov	dword ptr [esp], edx
+	mov	dword ptr [ebp - 16], eax # 4-byte Spill
+	call	ecx
+	mov	ecx, dword ptr [ebp - 16] # 4-byte Reload
 	add	ecx, eax
 	mov	dword ptr [ebp - 4], ecx
 LBB2_3:
 	mov	eax, dword ptr [ebp - 4]
-	add	esp, 16
+	add	esp, 20
 	pop	ebp
 	ret
 

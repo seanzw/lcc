@@ -234,8 +234,15 @@ namespace lcc.TypeSystem {
             return Qualify(TQualifiers.N);
         }
 
+        /// <summary>
+        /// Get the size in bits.
+        /// </summary>
         public abstract int Bits { get; }
-        public virtual int Size => Bits / 8;
+
+        /// <summary>
+        /// Get the size in bytes.
+        /// </summary>
+        public virtual int Bytes => Bits / 8;
 
         /// <summary>
         /// Get the alignment in bits.
@@ -650,8 +657,15 @@ namespace lcc.TypeSystem {
         public bool IsBitField => nake.IsBitField;
         public bool IsVoid => nake.IsVoid;
 
+        /// <summary>
+        /// Get the size in bits.
+        /// </summary>
         public int Bits => nake.Bits;
-        public int Size => nake.Size;
+
+        /// <summary>
+        /// Get the size in bytes.
+        /// </summary>
+        public int Size => nake.Bytes;
 
         /// <summary>
         /// Get the alignment in bits.

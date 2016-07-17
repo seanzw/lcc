@@ -17,9 +17,9 @@ namespace lcc.SyntaxTree {
     public abstract class Expr : Stmt {
 
         public sealed override AST.Node ToAST(Env env) {
-            return GetASTExpr(env);
+            return ToASTExpr(env);
         }
-        public abstract AST.Expr GetASTExpr(Env env);
+        public abstract AST.Expr ToASTExpr(Env env);
     }
 
     public sealed class CommaExpr : Expr, IEquatable<CommaExpr> {
@@ -42,8 +42,8 @@ namespace lcc.SyntaxTree {
             return exprs.Aggregate(0, (acc, expr) => acc ^ expr.GetHashCode());
         }
 
-        public override AST.Expr GetASTExpr(Env env) {
-            IEnumerable<AST.Expr> es = exprs.Select(e => e.GetASTExpr(env).ValueTransform());
+        public override AST.Expr ToASTExpr(Env env) {
+            IEnumerable<AST.Expr> es = exprs.Select(e => e.ToASTExpr(env).ValueTransform());
             return new AST.CommaExpr(es.Last().Type, env.ASTEnv, es);
         }
 
@@ -64,6 +64,23 @@ namespace lcc.SyntaxTree {
             BITANDEQ,
             BITXOREQ,
             BITOREQ
+        }
+
+        public static string OpToString(Op op) {
+            switch (op) {
+                case Op.ASSIGN:     return "=";
+                case Op.BITANDEQ:   return "&=";
+                case Op.BITOREQ:    return "|=";
+                case Op.BITXOREQ:   return "^=";
+                case Op.DIVEQ:      return "/=";
+                case Op.MINUSEQ:    return "-=";
+                case Op.MODEQ:      return "%=";
+                case Op.MULEQ:      return "*=";
+                case Op.PLUSEQ:     return "+=";
+                case Op.SHIFTLEQ:   return "<<=";
+                case Op.SHIFTREQ:   return ">>=";
+                default: throw new ArgumentException("illegal operator");
+            }
         }
 
         public Assign(Expr lhs, Expr rhs, Op op) {
@@ -95,9 +112,9 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr lExpr = lhs.GetASTExpr(env).VTArr().VTFunc();
-            AST.Expr rExpr = rhs.GetASTExpr(env).ValueTransform();
+        public override AST.Expr ToASTExpr(Env env) {
+            AST.Expr lExpr = lhs.ToASTExpr(env).VTArr().VTFunc();
+            AST.Expr rExpr = rhs.ToASTExpr(env).ValueTransform();
             if (!lExpr.IsLValue || lExpr.Type.qualifiers.isConstant) {
                 throw new ETypeError(Pos, "left operator of assign operator shall be a modifiable lvalue");
             }
@@ -262,10 +279,10 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr p = predicator.GetASTExpr(env);
-            AST.Expr t = trueExpr.GetASTExpr(env);
-            AST.Expr f = trueExpr.GetASTExpr(env);
+        public override AST.Expr ToASTExpr(Env env) {
+            AST.Expr p = predicator.ToASTExpr(env);
+            AST.Expr t = trueExpr.ToASTExpr(env);
+            AST.Expr f = trueExpr.ToASTExpr(env);
             if (!p.Type.IsScalar) {
                 throw new ETypeError(Pos, "the predicator shall have scalar type");
             }
@@ -327,6 +344,30 @@ namespace lcc.SyntaxTree {
             LOGOR   // ||
         }
 
+        public static string OpToString(Op op) {
+            switch (op) {
+                case Op.AND:    return "&";
+                case Op.DIV:    return "/";
+                case Op.EQ:     return "==";
+                case Op.GE:     return ">=";
+                case Op.GT:     return ">";
+                case Op.LE:     return "<=";
+                case Op.LEFT:   return "<<";
+                case Op.LOGAND: return "&&";
+                case Op.LOGOR:  return "||";
+                case Op.LT:     return "<";
+                case Op.MINUS:  return "-";
+                case Op.MOD:    return "%";
+                case Op.MULT:   return "*";
+                case Op.NEQ:    return "!=";
+                case Op.OR:     return "|";
+                case Op.PLUS:   return "+";
+                case Op.RIGHT:  return ">>";
+                case Op.XOR:    return "^";
+                default: throw new ArgumentException("illegal operator");
+            }
+        }
+
         public BiExpr(Expr lhs, Expr rhs, Op op) {
             this.lhs = lhs;
             this.rhs = rhs;
@@ -350,9 +391,9 @@ namespace lcc.SyntaxTree {
             return lhs.GetHashCode() ^ rhs.GetHashCode() ^ op.GetHashCode();
         }
 
-        public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr lExpr = lhs.GetASTExpr(env).ValueTransform();
-            AST.Expr rExpr = rhs.GetASTExpr(env).ValueTransform();
+        public override AST.Expr ToASTExpr(Env env) {
+            AST.Expr lExpr = lhs.ToASTExpr(env).ValueTransform();
+            AST.Expr rExpr = rhs.ToASTExpr(env).ValueTransform();
 
             var typeError = new ETypeError(Pos, string.Format("{0} {1} {2}", lExpr.Type, op, rExpr.Type));
 
@@ -541,8 +582,8 @@ namespace lcc.SyntaxTree {
             return name.GetHashCode() ^ expr.GetHashCode();
         }
 
-        public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr e = expr.GetASTExpr(env).ValueTransform();
+        public override AST.Expr ToASTExpr(Env env) {
+            AST.Expr e = expr.ToASTExpr(env).ValueTransform();
             if (e == null) {
                 return null;
             }
@@ -634,8 +675,8 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr e = expr.GetASTExpr(env).VTArr().VTFunc();
+        public override AST.Expr ToASTExpr(Env env) {
+            AST.Expr e = expr.ToASTExpr(env).VTArr().VTFunc();
             if (!e.Type.IsReal && !e.Type.IsPtr) {
                 throw new Error(expr.Pos, string.Format("{0} on type {1}", kind, e.Type));
             }
@@ -685,6 +726,19 @@ namespace lcc.SyntaxTree {
             NOT
         }
 
+        public static string OpToString(Op op) {
+            switch (op) {
+                case Op.MINUS:      return "-";
+                case Op.NOT:        return "!";
+                case Op.PLUS:       return "+";
+                case Op.REF:        return "&";
+                case Op.REVERSE:    return "~";
+                case Op.STAR:       return "*";
+                default:
+                    throw new ArgumentException("illegal unary operator");
+            }
+        }
+
         public UnaryOp(Expr expr, Op op) {
             this.expr = expr;
             this.op = op;
@@ -704,8 +758,8 @@ namespace lcc.SyntaxTree {
             return expr.GetHashCode();
         }
 
-        public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr e = op == Op.REF ? expr.GetASTExpr(env) : expr.GetASTExpr(env).ValueTransform();
+        public override AST.Expr ToASTExpr(Env env) {
+            AST.Expr e = op == Op.REF ? expr.ToASTExpr(env) : expr.ToASTExpr(env).ValueTransform();
             switch (op) {
                 case Op.REF:
                     /// The operand of the unary & operator shall be either a function designator, 
@@ -801,13 +855,13 @@ namespace lcc.SyntaxTree {
             return Pos.GetHashCode();
         }
 
-        public override AST.Expr GetASTExpr(Env env) {
+        public override AST.Expr ToASTExpr(Env env) {
             T type;
             AST.Expr e;
             if (name != null) {
                 type = name.GetT(env);
             } else {
-                e = expr.GetASTExpr(env);
+                e = expr.ToASTExpr(env);
                 type = e.Type;
             }
 
@@ -878,8 +932,8 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr arrExpr = arr.GetASTExpr(env).ValueTransform();
+        public override AST.Expr ToASTExpr(Env env) {
+            AST.Expr arrExpr = arr.ToASTExpr(env).ValueTransform();
             if (!arrExpr.Type.IsPtr) {
                 throw new Error(arr.Pos, "subscripting none pointer type");
             }
@@ -889,12 +943,12 @@ namespace lcc.SyntaxTree {
                 throw new Error(arr.Pos, "subscripting pointer to function");
             }
 
-            AST.Expr idxExpr = idx.GetASTExpr(env);
+            AST.Expr idxExpr = idx.ToASTExpr(env);
             if (!idxExpr.Type.IsInteger) {
                 throw new Error(idx.Pos, "subscripting none integer type");
             }
 
-            return new AST.ArrSub(ptr.element, env.ASTEnv, arrExpr, idxExpr);
+            return new AST.ArrSub(ptr.element, env.ASTEnv, arrExpr, idxExpr, ptr.element);
         }
 
         public readonly Expr arr;
@@ -947,8 +1001,8 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr aggExpr = kind == Kind.DOT ? agg.GetASTExpr(env).VTArr().VTFunc() : agg.GetASTExpr(env).ValueTransform();
+        public override AST.Expr ToASTExpr(Env env) {
+            AST.Expr aggExpr = kind == Kind.DOT ? agg.ToASTExpr(env).VTArr().VTFunc() : agg.ToASTExpr(env).ValueTransform();
             T aggType = aggExpr.Type;
 
             if (kind == Kind.PTR) {
@@ -962,12 +1016,16 @@ namespace lcc.SyntaxTree {
 
             TStructUnion s = aggType.nake as TStructUnion;
 
-            T m = s.GetType(field);
+            if (!s.IsComplete) {
+                throw new Error(agg.Pos, string.Format("incomplete struct or union type: {0}", s));
+            }
+
+            var m = s.GetField(field);
             if (m == null) {
                 throw new Error(agg.Pos, string.Format("no member named {0} in {1}", field, s.ToString()));
             }
 
-            return new AST.Access(aggType.Unnest(m), env.ASTEnv, aggExpr, field, kind);
+            return new AST.Access(aggType.Unnest(m.Value.type), env.ASTEnv, aggExpr, field, kind, s);
         }
 
         public readonly Expr agg;
@@ -981,12 +1039,20 @@ namespace lcc.SyntaxTree {
     /// </summary>
     public sealed class PostStep : Expr, IEquatable<PostStep> {
 
-        public enum Kind {
+        public enum Op {
             INC,
             DEC
         }
 
-        public PostStep(Expr expr, Kind kind) {
+        public static string OpToString(Op op) {
+            switch (op) {
+                case Op.DEC: return "--";
+                case Op.INC: return "++";
+                default: throw new ArgumentException("illegal post step operator");
+            }
+        }
+
+        public PostStep(Expr expr, Op kind) {
             this.expr = expr;
             this.kind = kind;
         }
@@ -1018,8 +1084,8 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr e = expr.GetASTExpr(env).VTArr().VTFunc();
+        public override AST.Expr ToASTExpr(Env env) {
+            AST.Expr e = expr.ToASTExpr(env).VTArr().VTFunc();
             if (!e.Type.IsPtr && !e.Type.IsReal) {
                 throw new Error(expr.Pos, string.Format("{0} on type {1}", kind, e.Type));
             }
@@ -1036,7 +1102,7 @@ namespace lcc.SyntaxTree {
         }
 
         public readonly Expr expr;
-        public readonly Kind kind;
+        public readonly Op kind;
     }
 
     /// <summary>
@@ -1061,7 +1127,7 @@ namespace lcc.SyntaxTree {
             return name.GetHashCode();
         }
 
-        public override AST.Expr GetASTExpr(Env env) {
+        public override AST.Expr ToASTExpr(Env env) {
             throw new NotImplementedException();
         }
 
@@ -1115,8 +1181,8 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        public override AST.Expr GetASTExpr(Env env) {
-            AST.Expr fExpr = expr.GetASTExpr(env).ValueTransform();
+        public override AST.Expr ToASTExpr(Env env) {
+            AST.Expr fExpr = expr.ToASTExpr(env).ValueTransform();
             if (fExpr.Type.IsPtr) {
                 TFunc f = (fExpr.Type.nake as TPtr).element.nake as TFunc;
                 if (f != null) {
@@ -1133,7 +1199,7 @@ namespace lcc.SyntaxTree {
                     var a = args.GetEnumerator();
                     LinkedList<AST.Expr> aExprs = new LinkedList<AST.Expr>();
                     while (a.MoveNext()) {
-                        AST.Expr aExpr = a.Current.GetASTExpr(env).ValueTransform();
+                        AST.Expr aExpr = a.Current.ToASTExpr(env).ValueTransform();
                         if (!aExpr.Type.IsObject) {
                             throw new ETypeError(Pos, string.Format("expect object type for argument"));
                         }
@@ -1188,7 +1254,7 @@ namespace lcc.SyntaxTree {
             return pos.GetHashCode();
         }
 
-        public override AST.Expr GetASTExpr(Env env) {
+        public override AST.Expr ToASTExpr(Env env) {
             var entry = env.GetSymbol(symbol);
             if (entry == null) {
                 // This is an undeclared identifier.
@@ -1346,7 +1412,7 @@ namespace lcc.SyntaxTree {
             return pos.GetHashCode();
         }
 
-        public override AST.Expr GetASTExpr(Env env) {
+        public override AST.Expr ToASTExpr(Env env) {
             return new AST.ConstIntExpr(type, value, env.ASTEnv);
         }
 
@@ -1413,7 +1479,7 @@ namespace lcc.SyntaxTree {
             return pos.GetHashCode();
         }
 
-        public override AST.Expr GetASTExpr(Env env) {
+        public override AST.Expr ToASTExpr(Env env) {
             return new AST.ConstIntExpr(TChar.Instance, values.First(), env.ASTEnv);
         }
 
@@ -1586,7 +1652,7 @@ namespace lcc.SyntaxTree {
                 && x.t.Equals(t);
         }
 
-        public override AST.Expr GetASTExpr(Env env) {
+        public override AST.Expr ToASTExpr(Env env) {
             return new AST.ConstFloatExpr(t, value, env.ASTEnv);
         }
 
@@ -1669,7 +1735,7 @@ namespace lcc.SyntaxTree {
             return values.First();
         }
 
-        public override AST.Expr GetASTExpr(Env env) {
+        public override AST.Expr ToASTExpr(Env env) {
             throw new NotImplementedException();
         }
 

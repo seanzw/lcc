@@ -300,6 +300,7 @@ namespace lcc.SyntaxTree {
             IsFuncParam = false;
             ASTEnv = new AST.Env();
             loopId = 0;
+            ifId = 0;
             switchId = 0;
             caseId = 0;
             defaultId = 0;
@@ -509,7 +510,9 @@ namespace lcc.SyntaxTree {
         /// Push a loop statement to the environment.
         /// </summary>
         /// <param name="l"></param>
-        public void PushLoop(Iteration l) {
+        public void PushLoop(Loop l) {
+            l.secondPlusLabel = string.Format("__loop_second_plus_{0}", loopId);
+            l.firstLabel = string.Format("__loop_first_{0}", loopId);
             l.breakLabel = string.Format("__loop_break_{0}", loopId);
             l.continueLabel = string.Format("__loop_continure{0}", loopId++);
             breakables.Push(l);
@@ -519,9 +522,9 @@ namespace lcc.SyntaxTree {
         /// Get the enclosing loop statement.
         /// </summary>
         /// <returns></returns>
-        public Iteration GetLoop() {
+        public Loop GetLoop() {
             foreach (var b in breakables) {
-                Iteration l = b as Iteration;
+                Loop l = b as Loop;
                 if (l != null) return l;
             }
             return null;
@@ -585,6 +588,16 @@ namespace lcc.SyntaxTree {
         }
 
         /// <summary>
+        /// Allocate a if label.
+        /// Item1: elseLabel;
+        /// Item2: endIfLabel;
+        /// </summary>
+        /// <returns></returns>
+        public Tuple<string, string> AllocIfLabel() {
+            return new Tuple<string, string>(string.Format("__else_block_{0}", ifId), string.Format("__endif_{0}", ifId++));
+        }
+
+        /// <summary>
         /// Dump the environment.
         /// </summary>
         /// <returns></returns>
@@ -606,6 +619,7 @@ namespace lcc.SyntaxTree {
         }
 
         private int loopId;
+        private int ifId;
         private int switchId;
         private int caseId;
         private int defaultId;

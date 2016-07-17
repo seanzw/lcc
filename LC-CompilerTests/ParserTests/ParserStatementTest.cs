@@ -127,7 +127,7 @@ if (i < length)
                             BiExpr.Op.LT),
                         new PostStep(
                             new Id(new T_IDENTIFIER(3, "x")),
-                            PostStep.Kind.INC),
+                            PostStep.Op.INC),
                         null)
                 },
                 {
@@ -144,10 +144,10 @@ else
                             BiExpr.Op.LT),
                         new PostStep(
                             new Id(new T_IDENTIFIER(3, "x")),
-                            PostStep.Kind.INC),
+                            PostStep.Op.INC),
                         new PostStep(
                             new Id(new T_IDENTIFIER(5, "x")),
-                            PostStep.Kind.DEC))
+                            PostStep.Op.DEC))
                 }
             };
 
@@ -199,7 +199,7 @@ while (x < length) {
                             new List<Stmt> {
                                 new PostStep(
                                     new Id(new T_IDENTIFIER(3, "x")),
-                                    PostStep.Kind.INC)
+                                    PostStep.Op.INC)
                             }))
                 }
             };
@@ -226,7 +226,7 @@ do {
                             new List<Stmt> {
                                 new PostStep(
                                     new Id(new T_IDENTIFIER(3, "x")),
-                                    PostStep.Kind.INC)
+                                    PostStep.Op.INC)
                             }))
                 }
             };

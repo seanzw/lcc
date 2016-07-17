@@ -76,7 +76,7 @@ namespace lcc.SyntaxTree {
             }
 
             /// The expression of a case should be constant integer expression.
-            AST.ConstIntExpr c = expr.GetASTExpr(env) as AST.ConstIntExpr;
+            AST.ConstIntExpr c = expr.ToASTExpr(env) as AST.ConstIntExpr;
             if (c == null) {
                 throw new Error(Pos, "the expression of a case should be constant integer expression");
             }
@@ -167,10 +167,10 @@ namespace lcc.SyntaxTree {
         }
 
         public override AST.Node ToAST(Env env) {
-            return ToCompoundStmt(env);
+            return ToASTCompoundStmt(env);
         }
 
-        public AST.CompoundStmt ToCompoundStmt(Env env) {
+        public AST.CompoundStmt ToASTCompoundStmt(Env env) {
             env.PushBlockScope();
             LinkedList<AST.Node> results = new LinkedList<AST.Node>();
             foreach (var stmt in stmts) {
@@ -227,7 +227,7 @@ namespace lcc.SyntaxTree {
         /// <returns></returns>
         public override AST.Node ToAST(Env env) {
             env.PushBlockScope();
-            AST.Expr e = expr.GetASTExpr(env);
+            AST.Expr e = expr.ToASTExpr(env);
             if (!e.Type.IsScalar) {
                 throw new ETypeError(Pos, string.Format("expecting scalar type, given {0}", e.Type));
             }
@@ -236,7 +236,9 @@ namespace lcc.SyntaxTree {
             AST.Node o = other != null ? other.ToAST(env) : null;
 
             env.PopScope();
-            return new AST.If(e, t, o);
+
+            var labels = env.AllocIfLabel();
+            return new AST.If(e, t, o, labels.Item1, labels.Item2);
         }
 
         private readonly Position pos;
@@ -282,7 +284,7 @@ namespace lcc.SyntaxTree {
         public override AST.Node ToAST(Env env) {
 
             /// The controlling expression shall have integer type.
-            e = expr.GetASTExpr(env);
+            e = expr.ToASTExpr(env);
             if (!e.Type.IsInteger) {
                 throw new ETypeError(Pos, "the controlling expression of switch statement shall have integer type");
             }
@@ -316,11 +318,22 @@ namespace lcc.SyntaxTree {
         private readonly Position pos;
     }
 
-    public abstract class Iteration : Breakable {
+    public abstract class Loop : Breakable {
+        /// <summary>
+        /// The continuation label.
+        /// </summary>
         public string continueLabel;
+        /// <summary>
+        /// Second or more iteration start label.
+        /// </summary>
+        public string secondPlusLabel;
+        /// <summary>
+        /// The first iteration start label.
+        /// </summary>
+        public string firstLabel;
     }
 
-    public sealed class While : Iteration, IEquatable<While> {
+    public sealed class While : Loop, IEquatable<While> {
 
         public While(Expr expr, Stmt statement) {
             this.expr = expr;
@@ -349,7 +362,7 @@ namespace lcc.SyntaxTree {
             env.PushBlockScope();
 
             /// The controlling expression should have scalar type.
-            AST.Expr e = expr.GetASTExpr(env);
+            AST.Expr e = expr.ToASTExpr(env);
             if (!e.Type.IsScalar) {
                 throw new ETypeError(Pos, "the controlling expression of iteration statement should have scalar type");
             }
@@ -367,14 +380,14 @@ namespace lcc.SyntaxTree {
             env.PopScope();
             env.PopScope();
 
-            return new AST.While(breakLabel, continueLabel, e, s);
+            return new AST.While(breakLabel, continueLabel, secondPlusLabel, firstLabel, e, s);
         }
 
         public readonly Expr expr;
         public readonly Stmt stmt;
     }
 
-    public sealed class Do : Iteration, IEquatable<Do> {
+    public sealed class Do : Loop, IEquatable<Do> {
 
         public Do(Expr expr, Stmt statement) {
             this.expr = expr;
@@ -408,32 +421,32 @@ namespace lcc.SyntaxTree {
             env.PopBreakable();
             env.PopScope();
 
-            AST.Expr e = expr.GetASTExpr(env);
+            AST.Expr e = expr.ToASTExpr(env);
             if (!e.Type.IsScalar) {
                 throw new ETypeError(Pos, "the controlling expression of iteration statement should be have scalar type");
             }
 
             env.PopScope();
-            return new AST.Do(breakLabel, continueLabel, e, s);
+            return new AST.Do(breakLabel, continueLabel, secondPlusLabel, firstLabel, e, s);
         }
 
         public readonly Expr expr;
         public readonly Stmt stmt;
     }
 
-    public sealed class For : Iteration, IEquatable<For> {
+    public sealed class For : Loop, IEquatable<For> {
 
         public For(
             int line,
             Expr init,
             Expr pred,
             Expr iter,
-            Stmt statement) {
+            Stmt body) {
             this.pos = new Position { line = line };
             this.init = init;
             this.pred = pred;
             this.iter = iter;
-            this.statement = statement;
+            this.body = new CompoundStmt(new List<Stmt> { body });
         }
 
         public override Position Pos => pos;
@@ -448,18 +461,46 @@ namespace lcc.SyntaxTree {
                 && NullableEquals(x.init, init)
                 && NullableEquals(x.pred, pred)
                 && NullableEquals(x.iter, iter)
-                && x.statement.Equals(statement);
+                && x.body.Equals(body);
         }
 
         public override int GetHashCode() {
-            return statement.GetHashCode();
+            return body.GetHashCode();
+        }
+
+        public override AST.Node ToAST(Env env) {
+
+            /// An iteration statement is a block.
+            env.PushBlockScope();
+
+            /// Check the expressions.
+            /// An omitted expression-2 is replaced by a nonzero constant.
+            var i = init != null ? init.ToAST(env) : null;
+            var p = pred != null ? pred.ToASTExpr(env) : new AST.ConstIntExpr(TInt.Instance, 1, env.ASTEnv);
+            var q = iter != null ? iter.ToAST(env) : null;
+
+            /// The controlling expression of a iteration statement shall have scalar type.
+            if (!p.Type.IsScalar) {
+                throw new ETypeError(Pos, "the controlling expression of iteration statement should have scalar type");
+            }
+
+            /// Add this loop to the environment.
+            env.PushLoop(this);
+
+            var b = body.ToASTCompoundStmt(env);
+
+            env.PopBreakable();
+
+            env.PopScope();
+
+            return new AST.For(breakLabel, continueLabel, secondPlusLabel, firstLabel, i, p, q, b);
         }
 
         private readonly Position pos;
         public readonly Expr init;
         public readonly Expr pred;
         public readonly Expr iter;
-        public readonly Stmt statement;
+        public readonly CompoundStmt body;
     }
 
     public sealed class Continue : Stmt, IEquatable<Continue> {
@@ -486,7 +527,7 @@ namespace lcc.SyntaxTree {
 
         public override AST.Node ToAST(Env env) {
 
-            Iteration i = env.GetLoop();
+            Loop i = env.GetLoop();
             if (i == null) {
                 throw new Error(Pos, "continue statement not in an iteration statement");
             }
@@ -567,7 +608,7 @@ namespace lcc.SyntaxTree {
                 if (f.ret.IsVoid) {
                     throw new Error(Pos, "a return statement with an expression shall not appear a function whose return type is void");
                 }
-                AST.Expr e = expr.GetASTExpr(env);
+                AST.Expr e = expr.ToASTExpr(env);
                 if (!Assign.SimpleAssignable(f.ret, e)) {
                     throw new ETypeError(Pos, string.Format("cannot assign {0} to {1}", e.Type, f.ret));
                 }

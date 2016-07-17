@@ -49,7 +49,8 @@ namespace lcc.AST {
         public override void ToX86(X86Gen gen) {
             env.Dump(gen);
 
-            gen.Label(X86Gen.Seg.TEXT, "_" + name, isGlobal);
+            /// Append '_' to the function name.
+            gen.Tag(X86Gen.Seg.TEXT, "_" + name, isGlobal);
             gen.Inst(X86Gen.push, X86Gen.ebp);
             gen.Inst(X86Gen.mov, X86Gen.ebp, X86Gen.esp);
             gen.Inst(X86Gen.sub, X86Gen.esp, env.size);
@@ -57,7 +58,7 @@ namespace lcc.AST {
             body.ToX86(gen);
 
 
-            gen.Label(X86Gen.Seg.TEXT, returnLabel);
+            gen.Tag(X86Gen.Seg.TEXT, returnLabel);
             gen.Inst(X86Gen.add, X86Gen.esp, env.size);
             gen.Inst(X86Gen.pop, X86Gen.ebp);
             gen.Inst(X86Gen.ret);

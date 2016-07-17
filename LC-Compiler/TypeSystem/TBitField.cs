@@ -12,7 +12,7 @@ namespace lcc.TypeSystem {
         }
         public override bool IsBitField => true;
         public override int Bits => bits;
-        public override int Size {
+        public override int Bytes {
             get {
                 throw new InvalidOperationException("Can't take the size of a bit field type. ");
             }

@@ -84,7 +84,7 @@ namespace LC_CompilerTests {
         public void LCCTCConstCharIllegalMultiChar1() {
             string src = "'\\0223'";
             var ast = new ConstChar(new T_CONST_CHAR(1, src));
-            ast.GetASTExpr(new lcc.SyntaxTree.Env());
+            ast.ToASTExpr(new lcc.SyntaxTree.Env());
         }
 
         [TestMethod]
@@ -92,7 +92,7 @@ namespace LC_CompilerTests {
         public void LCCTCConstCharIllegalMultiChar2() {
             string src = "L'\\0223'";
             var ast = new ConstChar(new T_CONST_CHAR(1, src));
-            ast.GetASTExpr(new lcc.SyntaxTree.Env());
+            ast.ToASTExpr(new lcc.SyntaxTree.Env());
         }
 
         [TestMethod]

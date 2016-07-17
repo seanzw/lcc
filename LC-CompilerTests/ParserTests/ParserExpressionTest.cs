@@ -126,14 +126,14 @@ namespace LC_CompilerTests {
                     "x++",
                     new PostStep(
                         new Id(new T_IDENTIFIER(1, "x")),
-                        PostStep.Kind.INC
+                        PostStep.Op.INC
                     )
                 },
                 {
                     "x--",
                     new PostStep(
                         new Id(new T_IDENTIFIER(1, "x")),
-                        PostStep.Kind.DEC
+                        PostStep.Op.DEC
                     )
                 },
                 {
@@ -179,7 +179,7 @@ namespace LC_CompilerTests {
                     new PreStep(
                         new PostStep(
                             new Id(new T_IDENTIFIER(1, "x")),
-                            PostStep.Kind.DEC),
+                            PostStep.Op.DEC),
                         PreStep.Kind.INC
                     )
                 },
@@ -272,7 +272,7 @@ namespace LC_CompilerTests {
                     new PreStep(
                         new PostStep(
                             new Id(new T_IDENTIFIER(1, "x")),
-                            PostStep.Kind.DEC),
+                            PostStep.Op.DEC),
                         PreStep.Kind.INC
                     )
                 },
