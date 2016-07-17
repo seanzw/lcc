@@ -7,11 +7,10 @@ int main(int argc, char* argv[]) {
     int a2[] = { 3 };
     int a3[] = { 1, 2, 3 };
 
-#define BIGSIZE 10
+#define BIGSIZE 100
     int a4[BIGSIZE];
     for (int i = 0; i < BIGSIZE; ++i) {
         a4[i] = BIGSIZE - i;
-        printf("a4[%d] = %d\n", i, a4[i]);
     }
     quick_sort(a4, 0, BIGSIZE - 1);
     for (int i = 0; i < BIGSIZE; ++i) {

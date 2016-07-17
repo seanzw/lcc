@@ -65,6 +65,23 @@ namespace LC_CompilerTests {
                 p.Start();
                 p.WaitForExit();
 
+                // Run both program and compare the stdout.
+                p.StartInfo.FileName = clang_exe;
+                p.StartInfo.Arguments = "";
+                p.StartInfo.RedirectStandardOutput = true;
+                p.Start();
+                string clang_out = p.StandardOutput.ReadToEnd();
+                p.WaitForExit();
+
+                p.StartInfo.FileName = lcc_exe;
+                p.StartInfo.Arguments = "";
+                p.StartInfo.RedirectStandardOutput = true;
+                p.Start();
+                string lcc_out = p.StandardOutput.ReadToEnd();
+                p.WaitForExit();
+
+                Assert.AreEqual(clang_out, lcc_out);
+
                 p.Close();
             }
         }
