@@ -75,7 +75,7 @@ namespace lcc.AST {
         }
         public override void ToX86(X86Gen gen) {
             gen.Comment(X86Gen.Seg.TEXT, "if");
-            Branch(gen, expr, other != null ? elseLabel : endIfLabel);
+            gen.BranchFalse(expr, other != null ? elseLabel : endIfLabel);
 
             /// Generate code for then branch.
             /// Remember to jump to endif label since
@@ -90,20 +90,7 @@ namespace lcc.AST {
             }
             gen.Tag(X86Gen.Seg.TEXT, endIfLabel);
         }
-        public static void Branch(X86Gen gen, Expr expr, string label) {
-            var ret = expr.ToX86Expr(gen);
-            switch (expr.Type.Kind) {
-                case TKind.INT: X86Int(gen, ret, label); break;
-                default: throw new NotImplementedException();
-            }
-        }
-        private static void X86Int(X86Gen gen, X86Gen.Ret ret, string label) {
-            if (ret == X86Gen.Ret.PTR) {
-                gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
-            }
-            gen.Inst(X86Gen.cmp, X86Gen.eax, 0);
-            gen.Inst(X86Gen.je, label);
-        }
+        
     }
 
     public abstract class Breakable : Node {
@@ -246,7 +233,7 @@ namespace lcc.AST {
             /// Generate the controlling (predicating) code.
             gen.Comment(X86Gen.Seg.TEXT, "for pred");
             gen.Tag(X86Gen.Seg.TEXT, firstLabel);
-            If.Branch(gen, pred, breakLabel);
+            gen.BranchFalse(pred, breakLabel);
 
             /// Generate body code.
             gen.Comment(X86Gen.Seg.TEXT, "for body");

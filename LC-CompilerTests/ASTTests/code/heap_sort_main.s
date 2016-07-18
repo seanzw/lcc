@@ -167,120 +167,101 @@ _main:                                  # @main
 # BB#0:
 	push	ebp
 	mov	ebp, esp
-	sub	esp, 104
+	push	esi
+	sub	esp, 464
 	mov	eax, dword ptr [ebp + 12]
 	mov	ecx, dword ptr [ebp + 8]
-	mov	dword ptr [ebp - 4], 0
-	mov	dword ptr [ebp - 8], eax
-	mov	dword ptr [ebp - 12], ecx
-	mov	dword ptr [ebp - 16], 0
-LBB4_1:                                 # =>This Inner Loop Header: Depth=1
-	cmp	dword ptr [ebp - 16], 10
-	jge	LBB4_4
-# BB#2:                                 #   in Loop: Header=BB4_1 Depth=1
-	xor	eax, eax
-	mov	ecx, dword ptr [ebp - 16]
-	mov	dword ptr [esp], ecx
+	xor	edx, edx
+	lea	esi, [ebp - 20]
+	mov	dword ptr [ebp - 8], 0
+	mov	dword ptr [ebp - 12], eax
+	mov	dword ptr [ebp - 16], ecx
+	mov	eax, dword ptr [L_main.a0]
+	mov	dword ptr [ebp - 20], eax
+	mov	dword ptr [esp], esi
 	mov	dword ptr [esp + 4], 0
-	mov	dword ptr [ebp - 24], eax # 4-byte Spill
-	call	_func1
-	lea	ecx, ["??_C@_0BA@NBGEPLPO@func1?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@"]
-	mov	edx, dword ptr [ebp - 16]
-	mov	dword ptr [esp], ecx
-	mov	dword ptr [esp + 4], edx
-	mov	dword ptr [esp + 8], eax
+	mov	dword ptr [ebp - 432], edx # 4-byte Spill
+	call	_heap_sort
+	cmp	dword ptr [ebp - 20], 1
+	je	LBB4_2
+# BB#1:
+	lea	eax, ["??_C@_0P@HGHIOKIG@wrong?5answer?$CB?6?$AA@"]
+	mov	dword ptr [esp], eax
 	call	_printf
-	mov	dword ptr [ebp - 28], eax # 4-byte Spill
-# BB#3:                                 #   in Loop: Header=BB4_1 Depth=1
-	mov	eax, dword ptr [ebp - 16]
-	add	eax, 1
-	mov	dword ptr [ebp - 16], eax
-	jmp	LBB4_1
+	mov	dword ptr [ebp - 436], eax # 4-byte Spill
+LBB4_2:
+	mov	eax, 1
+	lea	ecx, [ebp - 20]
+	mov	dword ptr [esp], ecx
+	mov	dword ptr [esp + 4], 1
+	mov	dword ptr [ebp - 440], eax # 4-byte Spill
+	call	_heap_sort
+	cmp	dword ptr [ebp - 20], 1
+	je	LBB4_4
+# BB#3:
+	lea	eax, ["??_C@_0P@HGHIOKIG@wrong?5answer?$CB?6?$AA@"]
+	mov	dword ptr [esp], eax
+	call	_printf
+	mov	dword ptr [ebp - 444], eax # 4-byte Spill
 LBB4_4:
-	mov	dword ptr [ebp - 20], -4
+	mov	dword ptr [ebp - 424], 0
 LBB4_5:                                 # =>This Inner Loop Header: Depth=1
-	cmp	dword ptr [ebp - 20], 5
+	cmp	dword ptr [ebp - 424], 100
 	jge	LBB4_8
 # BB#6:                                 #   in Loop: Header=BB4_5 Depth=1
-	mov	eax, dword ptr [ebp - 20]
-	mov	dword ptr [esp], eax
-	call	_test_if
-	lea	ecx, ["??_C@_0BC@HOKPMPCN@test_if?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@"]
-	mov	edx, dword ptr [ebp - 20]
-	mov	dword ptr [esp], ecx
-	mov	dword ptr [esp + 4], edx
-	mov	dword ptr [esp + 8], eax
-	call	_printf
-	mov	dword ptr [ebp - 32], eax # 4-byte Spill
+	mov	eax, 100
+	sub	eax, dword ptr [ebp - 424]
+	mov	ecx, dword ptr [ebp - 424]
+	mov	dword ptr [ebp + 4*ecx - 420], eax
 # BB#7:                                 #   in Loop: Header=BB4_5 Depth=1
-	mov	eax, dword ptr [ebp - 20]
+	mov	eax, dword ptr [ebp - 424]
 	add	eax, 1
-	mov	dword ptr [ebp - 20], eax
+	mov	dword ptr [ebp - 424], eax
 	jmp	LBB4_5
 LBB4_8:
-	mov	eax, 10
-	mov	dword ptr [esp], 10
-	mov	dword ptr [ebp - 36], eax # 4-byte Spill
-	call	_test_for
-	lea	ecx, ["??_C@_0BD@CCDNHDOI@test_for?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@"]
-	mov	edx, 10
+	mov	eax, 100
+	lea	ecx, [ebp - 420]
 	mov	dword ptr [esp], ecx
-	mov	dword ptr [esp + 4], 10
-	mov	dword ptr [esp + 8], eax
-	mov	dword ptr [ebp - 40], edx # 4-byte Spill
+	mov	dword ptr [esp + 4], 100
+	mov	dword ptr [ebp - 448], eax # 4-byte Spill
+	call	_heap_sort
+	mov	dword ptr [ebp - 428], 0
+LBB4_9:                                 # =>This Inner Loop Header: Depth=1
+	cmp	dword ptr [ebp - 428], 100
+	jge	LBB4_14
+# BB#10:                                #   in Loop: Header=BB4_9 Depth=1
+	mov	eax, dword ptr [ebp - 428]
+	mov	eax, dword ptr [ebp + 4*eax - 420]
+	mov	ecx, dword ptr [ebp - 428]
+	add	ecx, 1
+	cmp	eax, ecx
+	je	LBB4_12
+# BB#11:                                #   in Loop: Header=BB4_9 Depth=1
+	lea	eax, ["??_C@_0BO@DMODBOOK@wrong?5answer?5for?5a?$FL?$CFd?$FN?5?$DN?5?$CFd?$CB?6?$AA@"]
+	mov	ecx, dword ptr [ebp - 428]
+	mov	ecx, dword ptr [ebp + 4*ecx - 420]
+	mov	edx, dword ptr [ebp - 428]
+	mov	dword ptr [esp], eax
+	mov	dword ptr [esp + 4], edx
+	mov	dword ptr [esp + 8], ecx
 	call	_printf
-	mov	ecx, 10
-	mov	dword ptr [esp], 10
-	mov	dword ptr [ebp - 44], eax # 4-byte Spill
-	mov	dword ptr [ebp - 48], ecx # 4-byte Spill
-	call	_sum
-	lea	ecx, ["??_C@_0O@EPLEGLJF@sum?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@"]
-	mov	edx, 10
-	mov	dword ptr [esp], ecx
-	mov	dword ptr [esp + 4], 10
-	mov	dword ptr [esp + 8], eax
-	mov	dword ptr [ebp - 52], edx # 4-byte Spill
-	call	_printf
-	mov	ecx, 10
-	mov	dword ptr [esp], 10
-	mov	dword ptr [ebp - 56], eax # 4-byte Spill
-	mov	dword ptr [ebp - 60], ecx # 4-byte Spill
-	call	_test_mul
-	lea	ecx, ["??_C@_0BD@GHELGBL@test_mul?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@"]
-	mov	edx, 10
-	mov	dword ptr [esp], ecx
-	mov	dword ptr [esp + 4], 10
-	mov	dword ptr [esp + 8], eax
-	mov	dword ptr [ebp - 64], edx # 4-byte Spill
-	call	_printf
-	mov	ecx, 1
-	mov	dword ptr [esp], 1
-	mov	dword ptr [ebp - 68], eax # 4-byte Spill
-	mov	dword ptr [ebp - 72], ecx # 4-byte Spill
-	call	_test_div
-	lea	ecx, ["??_C@_0BD@GALAFDOH@test_div?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@"]
-	mov	edx, 1
-	mov	dword ptr [esp], ecx
-	mov	dword ptr [esp + 4], 1
-	mov	dword ptr [esp + 8], eax
-	mov	dword ptr [ebp - 76], edx # 4-byte Spill
-	call	_printf
-	mov	ecx, 1
-	mov	dword ptr [esp], 1
-	mov	dword ptr [ebp - 80], eax # 4-byte Spill
-	mov	dword ptr [ebp - 84], ecx # 4-byte Spill
-	call	_test_log_and
-	lea	ecx, ["??_C@_0BH@DFJIBHPL@test_log_and?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@"]
-	mov	edx, 1
-	mov	dword ptr [esp], ecx
-	mov	dword ptr [esp + 4], 1
-	mov	dword ptr [esp + 8], eax
-	mov	dword ptr [ebp - 88], edx # 4-byte Spill
+	mov	dword ptr [ebp - 452], eax # 4-byte Spill
+LBB4_12:                                #   in Loop: Header=BB4_9 Depth=1
+	jmp	LBB4_13
+LBB4_13:                                #   in Loop: Header=BB4_9 Depth=1
+	mov	eax, dword ptr [ebp - 428]
+	add	eax, 1
+	mov	dword ptr [ebp - 428], eax
+	jmp	LBB4_9
+LBB4_14:
+	lea	eax, ["??_C@_0BE@BDFHCIHI@everyting?5is?5fine?$CB?6?$AA@"]
+	mov	dword ptr [esp], eax
 	call	_printf
 	xor	ecx, ecx
-	mov	dword ptr [ebp - 92], eax # 4-byte Spill
+	mov	dword ptr [ebp - 456], eax # 4-byte Spill
 	mov	eax, ecx
-	add	esp, 104
+	add	esp, 464
+	pop	esi
 	pop	ebp
 	ret
 
@@ -499,40 +480,25 @@ __vfprintf_l:                           # @_vfprintf_l
 	pop	ebp
 	ret
 
-	.section	.rdata,"dr",discard,"??_C@_0BA@NBGEPLPO@func1?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@"
-	.globl	"??_C@_0BA@NBGEPLPO@func1?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@" # @"\01??_C@_0BA@NBGEPLPO@func1?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@"
-"??_C@_0BA@NBGEPLPO@func1?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@":
-	.asciz	"func1(%d) = %d\n"
+	.section	.rdata,"dr"
+	.p2align	2               # @main.a0
+L_main.a0:
+	.long	1                       # 0x1
 
-	.section	.rdata,"dr",discard,"??_C@_0BC@HOKPMPCN@test_if?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@"
-	.globl	"??_C@_0BC@HOKPMPCN@test_if?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@" # @"\01??_C@_0BC@HOKPMPCN@test_if?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@"
-"??_C@_0BC@HOKPMPCN@test_if?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@":
-	.asciz	"test_if(%d) = %d\n"
+	.section	.rdata,"dr",discard,"??_C@_0P@HGHIOKIG@wrong?5answer?$CB?6?$AA@"
+	.globl	"??_C@_0P@HGHIOKIG@wrong?5answer?$CB?6?$AA@" # @"\01??_C@_0P@HGHIOKIG@wrong?5answer?$CB?6?$AA@"
+"??_C@_0P@HGHIOKIG@wrong?5answer?$CB?6?$AA@":
+	.asciz	"wrong answer!\n"
 
-	.section	.rdata,"dr",discard,"??_C@_0BD@CCDNHDOI@test_for?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@"
-	.globl	"??_C@_0BD@CCDNHDOI@test_for?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@" # @"\01??_C@_0BD@CCDNHDOI@test_for?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@"
-"??_C@_0BD@CCDNHDOI@test_for?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@":
-	.asciz	"test_for(%d) = %d\n"
+	.section	.rdata,"dr",discard,"??_C@_0BO@DMODBOOK@wrong?5answer?5for?5a?$FL?$CFd?$FN?5?$DN?5?$CFd?$CB?6?$AA@"
+	.globl	"??_C@_0BO@DMODBOOK@wrong?5answer?5for?5a?$FL?$CFd?$FN?5?$DN?5?$CFd?$CB?6?$AA@" # @"\01??_C@_0BO@DMODBOOK@wrong?5answer?5for?5a?$FL?$CFd?$FN?5?$DN?5?$CFd?$CB?6?$AA@"
+"??_C@_0BO@DMODBOOK@wrong?5answer?5for?5a?$FL?$CFd?$FN?5?$DN?5?$CFd?$CB?6?$AA@":
+	.asciz	"wrong answer for a[%d] = %d!\n"
 
-	.section	.rdata,"dr",discard,"??_C@_0O@EPLEGLJF@sum?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@"
-	.globl	"??_C@_0O@EPLEGLJF@sum?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@" # @"\01??_C@_0O@EPLEGLJF@sum?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@"
-"??_C@_0O@EPLEGLJF@sum?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@":
-	.asciz	"sum(%d) = %d\n"
-
-	.section	.rdata,"dr",discard,"??_C@_0BD@GHELGBL@test_mul?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@"
-	.globl	"??_C@_0BD@GHELGBL@test_mul?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@" # @"\01??_C@_0BD@GHELGBL@test_mul?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@"
-"??_C@_0BD@GHELGBL@test_mul?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@":
-	.asciz	"test_mul(%d) = %d\n"
-
-	.section	.rdata,"dr",discard,"??_C@_0BD@GALAFDOH@test_div?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@"
-	.globl	"??_C@_0BD@GALAFDOH@test_div?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@" # @"\01??_C@_0BD@GALAFDOH@test_div?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@"
-"??_C@_0BD@GALAFDOH@test_div?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@":
-	.asciz	"test_div(%d) = %d\n"
-
-	.section	.rdata,"dr",discard,"??_C@_0BH@DFJIBHPL@test_log_and?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@"
-	.globl	"??_C@_0BH@DFJIBHPL@test_log_and?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@" # @"\01??_C@_0BH@DFJIBHPL@test_log_and?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@"
-"??_C@_0BH@DFJIBHPL@test_log_and?$CI?$CFd?$CJ?5?$DN?5?$CFd?6?$AA@":
-	.asciz	"test_log_and(%d) = %d\n"
+	.section	.rdata,"dr",discard,"??_C@_0BE@BDFHCIHI@everyting?5is?5fine?$CB?6?$AA@"
+	.globl	"??_C@_0BE@BDFHCIHI@everyting?5is?5fine?$CB?6?$AA@" # @"\01??_C@_0BE@BDFHCIHI@everyting?5is?5fine?$CB?6?$AA@"
+"??_C@_0BE@BDFHCIHI@everyting?5is?5fine?$CB?6?$AA@":
+	.asciz	"everyting is fine!\n"
 
 	.lcomm	___local_stdio_printf_options._OptionsStorage,8,8 # @__local_stdio_printf_options._OptionsStorage
 

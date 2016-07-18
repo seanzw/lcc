@@ -35,13 +35,12 @@ _partition:
 	pop    eax
 	mov    eax, dword ptr [eax + 0]
 	mov    dword ptr [ebx + 0], eax
-	# i = (int)(lhs) - 1
-	# (int)(lhs) - 1
+	# i = - ((int)(lhs)) (1)
+	# - ((int)(lhs)) (1)
 	# (int)(lhs)
 	# lhs
 	lea    eax, dword ptr [ebp + 12]
-	mov    eax, dword ptr [eax + 0]
-	push   eax
+	push   dword ptr [eax + 0]
 	# 1
 	mov    eax, 1
 	mov    ebx, eax
@@ -76,18 +75,16 @@ __loop_second_plus_0:
 	mov    eax, ebx
 	# for pred
 __loop_first_0:
-	# (int)(j) <= (int)(rhs) - 1
+	# <= ((int)(j)) (- ((int)(rhs)) (1))
 	# (int)(j)
 	# j
 	lea    eax, dword ptr [ebp - 12]
-	mov    eax, dword ptr [eax + 0]
-	push   eax
-	# (int)(rhs) - 1
+	push   dword ptr [eax + 0]
+	# - ((int)(rhs)) (1)
 	# (int)(rhs)
 	# rhs
 	lea    eax, dword ptr [ebp + 16]
-	mov    eax, dword ptr [eax + 0]
-	push   eax
+	push   dword ptr [eax + 0]
 	# 1
 	mov    eax, 1
 	mov    ebx, eax
@@ -99,11 +96,12 @@ __loop_first_0:
 	setle  al
 	and    al, 1
 	movzx  eax, al
+	mov    eax, eax
 	cmp    eax, 0
 	je     __loop_break_0
 	# for body
 	# if
-	# (int)((((int) *)(arr))[j]) <= (int)(x)
+	# <= ((int)((((int) *)(arr))[j])) ((int)(x))
 	# (int)((((int) *)(arr))[j])
 	# (((int) *)(arr))[j]
 	# ((int) *)(arr)
@@ -115,8 +113,7 @@ __loop_first_0:
 	imul   ebx, dword ptr [eax + 0], 4
 	pop    eax
 	add    eax, ebx
-	mov    eax, dword ptr [eax + 0]
-	push   eax
+	push   dword ptr [eax + 0]
 	# (int)(x)
 	# x
 	lea    eax, dword ptr [ebp - 4]
@@ -126,6 +123,7 @@ __loop_first_0:
 	setle  al
 	and    al, 1
 	movzx  eax, al
+	mov    eax, eax
 	cmp    eax, 0
 	je     __endif_0
 	# then
@@ -206,19 +204,18 @@ __loop_continure0:
 	jmp    __loop_second_plus_0
 	# for end
 __loop_break_0:
-	# t = (int)((((int) *)(arr))[(int)(i) + 1])
-	# (int)((((int) *)(arr))[(int)(i) + 1])
-	# (((int) *)(arr))[(int)(i) + 1]
+	# t = (int)((((int) *)(arr))[+ ((int)(i)) (1)])
+	# (int)((((int) *)(arr))[+ ((int)(i)) (1)])
+	# (((int) *)(arr))[+ ((int)(i)) (1)]
 	# ((int) *)(arr)
 	# arr
 	lea    eax, dword ptr [ebp + 8]
 	push   dword ptr [eax + 0]
-	# (int)(i) + 1
+	# + ((int)(i)) (1)
 	# (int)(i)
 	# i
 	lea    eax, dword ptr [ebp - 8]
-	mov    eax, dword ptr [eax + 0]
-	push   eax
+	push   dword ptr [eax + 0]
 	# 1
 	mov    eax, 1
 	mov    ebx, eax
@@ -234,7 +231,7 @@ __loop_break_0:
 	pop    eax
 	mov    eax, dword ptr [eax + 0]
 	mov    dword ptr [ebx + 0], eax
-	# (((int) *)(arr))[(int)(i) + 1] = (int)((((int) *)(arr))[rhs])
+	# (((int) *)(arr))[+ ((int)(i)) (1)] = (int)((((int) *)(arr))[rhs])
 	# (int)((((int) *)(arr))[rhs])
 	# (((int) *)(arr))[rhs]
 	# ((int) *)(arr)
@@ -247,17 +244,16 @@ __loop_break_0:
 	pop    eax
 	add    eax, ebx
 	push   eax
-	# (((int) *)(arr))[(int)(i) + 1]
+	# (((int) *)(arr))[+ ((int)(i)) (1)]
 	# ((int) *)(arr)
 	# arr
 	lea    eax, dword ptr [ebp + 8]
 	push   dword ptr [eax + 0]
-	# (int)(i) + 1
+	# + ((int)(i)) (1)
 	# (int)(i)
 	# i
 	lea    eax, dword ptr [ebp - 8]
-	mov    eax, dword ptr [eax + 0]
-	push   eax
+	push   dword ptr [eax + 0]
 	# 1
 	mov    eax, 1
 	mov    ebx, eax
@@ -289,13 +285,12 @@ __loop_break_0:
 	pop    eax
 	mov    eax, dword ptr [eax + 0]
 	mov    dword ptr [ebx + 0], eax
-	# return (int)(i) + 1
-	# (int)(i) + 1
+	# return + ((int)(i)) (1)
+	# + ((int)(i)) (1)
 	# (int)(i)
 	# i
 	lea    eax, dword ptr [ebp - 8]
-	mov    eax, dword ptr [eax + 0]
-	push   eax
+	push   dword ptr [eax + 0]
 	# 1
 	mov    eax, 1
 	mov    ebx, eax
@@ -318,12 +313,11 @@ _quick_sort:
 	mov    ebp, esp
 	sub    esp, 4
 	# if
-	# (int)(lhs) < (int)(rhs)
+	# < ((int)(lhs)) ((int)(rhs))
 	# (int)(lhs)
 	# lhs
 	lea    eax, dword ptr [ebp + 12]
-	mov    eax, dword ptr [eax + 0]
-	push   eax
+	push   dword ptr [eax + 0]
 	# (int)(rhs)
 	# rhs
 	lea    eax, dword ptr [ebp + 16]
@@ -333,6 +327,7 @@ _quick_sort:
 	setl   al
 	and    al, 1
 	movzx  eax, al
+	mov    eax, eax
 	cmp    eax, 0
 	je     __endif_1
 	# then
@@ -361,13 +356,12 @@ _quick_sort:
 	mov    ebx, eax
 	pop    eax
 	mov    dword ptr [ebx + 0], eax
-	# ((((int) *, int, int) -> void) *)(quick_sort)(((int) *)(arr), (int)(lhs), (int)(mid) - 1)
-	# (int)(mid) - 1
+	# ((((int) *, int, int) -> void) *)(quick_sort)(((int) *)(arr), (int)(lhs), - ((int)(mid)) (1))
+	# - ((int)(mid)) (1)
 	# (int)(mid)
 	# mid
 	lea    eax, dword ptr [ebp - 4]
-	mov    eax, dword ptr [eax + 0]
-	push   eax
+	push   dword ptr [eax + 0]
 	# 1
 	mov    eax, 1
 	mov    ebx, eax
@@ -387,17 +381,16 @@ _quick_sort:
 	lea    eax, dword ptr [_quick_sort + 0]
 	call   eax
 	add    esp, 12
-	# ((((int) *, int, int) -> void) *)(quick_sort)(((int) *)(arr), (int)(mid) + 1, (int)(rhs))
+	# ((((int) *, int, int) -> void) *)(quick_sort)(((int) *)(arr), + ((int)(mid)) (1), (int)(rhs))
 	# (int)(rhs)
 	# rhs
 	lea    eax, dword ptr [ebp + 16]
 	push   dword ptr [eax + 0]
-	# (int)(mid) + 1
+	# + ((int)(mid)) (1)
 	# (int)(mid)
 	# mid
 	lea    eax, dword ptr [ebp - 4]
-	mov    eax, dword ptr [eax + 0]
-	push   eax
+	push   dword ptr [eax + 0]
 	# 1
 	mov    eax, 1
 	mov    ebx, eax

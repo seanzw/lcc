@@ -228,68 +228,270 @@ namespace lcc.AST {
     }
 
     public sealed class BiExpr : Expr {
+        /// <summary>
+        /// Used in branch for logical operator.
+        /// </summary>
+        public readonly string logicalShortCutLabel;
+        /// <summary>
+        /// Used in branch for logical operator.
+        /// </summary>
+        public readonly string logicalEndLabel;
         public readonly Expr lhs;
         public readonly Expr rhs;
         public readonly SyntaxTree.BiExpr.Op op;
-        public BiExpr(T type, Env env, Expr lhs, Expr rhs, SyntaxTree.BiExpr.Op op) : base(type, env) {
+        public BiExpr(
+            T type,
+            Env env,
+            Expr lhs, 
+            Expr rhs, 
+            SyntaxTree.BiExpr.Op op
+            ) : base(type, env) {
+            Debug.Assert(op != SyntaxTree.BiExpr.Op.LOGAND && op != SyntaxTree.BiExpr.Op.LOGOR);
             this.lhs = lhs;
             this.rhs = rhs;
             this.op = op;
+            this.logicalShortCutLabel = null;
+            this.logicalEndLabel = null;
+        }
+
+        /// <summary>
+        /// Constructor for logical operator.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="env"></param>
+        /// <param name="lhs"></param>
+        /// <param name="rhs"></param>
+        /// <param name="op"></param>
+        /// <param name="logicalShortCutLabel"></param>
+        /// <param name="logicalEndLabel"></param>
+        public BiExpr(
+            T type,
+            Env env, 
+            Expr lhs,
+            Expr rhs,
+            SyntaxTree.BiExpr.Op op,
+            string logicalShortCutLabel,
+            string logicalEndLabel
+            ) : base(type, env) {
+            Debug.Assert(op == SyntaxTree.BiExpr.Op.LOGAND || op == SyntaxTree.BiExpr.Op.LOGOR);
+            Debug.Assert(logicalEndLabel != null && logicalShortCutLabel != null);
+            this.lhs = lhs;
+            this.rhs = rhs;
+            this.op = op;
+            this.logicalShortCutLabel = logicalShortCutLabel;
+            this.logicalEndLabel = logicalEndLabel;
         }
         public override string ToString() {
-            return string.Format("{0} {1} {2}", lhs, SyntaxTree.BiExpr.OpToString(op), rhs);
+            return string.Format("{0} ({1}) ({2})", SyntaxTree.BiExpr.OpToString(op), lhs, rhs);
         }
         public override X86Gen.Ret ToX86Expr(X86Gen gen) {
             gen.Comment(X86Gen.Seg.TEXT, ToString());
-            var lhsRet = lhs.ToX86Expr(gen);
-            switch (type.Kind) {
-                case TKind.INT: X86Int(gen, lhsRet); break;
-                default: throw new NotImplementedException();
+            switch (op) {
+                case SyntaxTree.BiExpr.Op.MULT:
+                case SyntaxTree.BiExpr.Op.DIV:
+                case SyntaxTree.BiExpr.Op.MOD:
+                    Multiplicative(gen);
+                    break;
+                case SyntaxTree.BiExpr.Op.PLUS:
+                case SyntaxTree.BiExpr.Op.MINUS:
+                    Additive(gen);
+                    break;
+                case SyntaxTree.BiExpr.Op.LEFT:
+                case SyntaxTree.BiExpr.Op.RIGHT:
+                    throw new NotImplementedException();
+                case SyntaxTree.BiExpr.Op.LE:
+                case SyntaxTree.BiExpr.Op.GE:
+                case SyntaxTree.BiExpr.Op.LT:
+                case SyntaxTree.BiExpr.Op.GT:
+                case SyntaxTree.BiExpr.Op.EQ:
+                case SyntaxTree.BiExpr.Op.NEQ:
+                    RelationalEquality(gen);
+                    break;
+                case SyntaxTree.BiExpr.Op.AND:
+                case SyntaxTree.BiExpr.Op.XOR:
+                case SyntaxTree.BiExpr.Op.OR:
+                    throw new NotImplementedException();
+                case SyntaxTree.BiExpr.Op.LOGAND:
+                case SyntaxTree.BiExpr.Op.LOGOR:
+                    Logical(gen);
+                    break;
             }
             return X86Gen.Ret.REG;
         }
 
-        private void X86Int(X86Gen gen, X86Gen.Ret lhsRet) {
-            /// Store the lhs operand.
-            if (lhsRet == X86Gen.Ret.PTR) {
-                gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
-            }
-            gen.Inst(X86Gen.push, X86Gen.eax);
+        /// <summary>
+        /// Handle multiplicative ooperator.
+        /// </summary>
+        /// <param name="gen"></param>
+        private void Multiplicative(X86Gen gen) {
+            Debug.Assert(lhs.Type.Kind == rhs.Type.Kind);
+            Debug.Assert(type.Kind == lhs.Type.Kind);
+            Debug.Assert(op == SyntaxTree.BiExpr.Op.MULT || op == SyntaxTree.BiExpr.Op.DIV || op == SyntaxTree.BiExpr.Op.MOD);
 
-            /// Generate the second operand and mov it to ebx.
-            var rhsRet = rhs.ToX86Expr(gen);
-            if (rhsRet == X86Gen.Ret.PTR) {
-                gen.Inst(X86Gen.mov, X86Gen.ebx, X86Gen.eax.Addr());
-            } else {
-                gen.Inst(X86Gen.mov, X86Gen.ebx, X86Gen.eax);
+            gen.Push(lhs.Type, lhs.ToX86Expr(gen));
+            switch (type.Kind) {
+                case TKind.INT:
+                    // Generate code for rhs and move the result to ebx.
+                    gen.Mov(rhs.Type, rhs.ToX86Expr(gen), X86Gen.ebx);
+                    gen.Inst(X86Gen.pop, X86Gen.eax);
+                    switch (op) {
+                        case SyntaxTree.BiExpr.Op.MOD:
+                            throw new NotImplementedException();
+                        case SyntaxTree.BiExpr.Op.MULT:
+                            gen.Inst(X86Gen.imul, X86Gen.eax, X86Gen.ebx);
+                            break;
+                        case SyntaxTree.BiExpr.Op.DIV:
+                            gen.Inst(X86Gen.cdq);
+                            gen.Inst(X86Gen.idiv, X86Gen.ebx);
+                            break;
+                    }
+                    break;
+                default: throw new NotImplementedException();
             }
-            /// Pop the lhs operand and calcuate the result.
-            gen.Inst(X86Gen.pop, X86Gen.eax);
-            switch (op) {
-                case SyntaxTree.BiExpr.Op.PLUS: gen.Inst(X86Gen.add, X86Gen.eax, X86Gen.ebx); break;
-                case SyntaxTree.BiExpr.Op.MINUS: gen.Inst(X86Gen.sub, X86Gen.eax, X86Gen.ebx); break;
-                case SyntaxTree.BiExpr.Op.LT:
-                case SyntaxTree.BiExpr.Op.LE:
-                case SyntaxTree.BiExpr.Op.GT:
-                case SyntaxTree.BiExpr.Op.GE:
-                case SyntaxTree.BiExpr.Op.EQ:
-                case SyntaxTree.BiExpr.Op.NEQ:
+        }
+
+        /// <summary>
+        /// Handle additive opeator.
+        /// </summary>
+        /// <param name="gen"></param>
+        private void Additive(X86Gen gen) {
+            Debug.Assert(lhs.Type.Kind == rhs.Type.Kind);
+            Debug.Assert(type.Kind == lhs.Type.Kind);
+            Debug.Assert(op == SyntaxTree.BiExpr.Op.PLUS || op == SyntaxTree.BiExpr.Op.MINUS);
+
+            gen.Push(lhs.Type, lhs.ToX86Expr(gen));
+            switch (type.Kind) {
+                case TKind.INT:
+                    // Generate code for rhs and move the result to ebx.
+                    gen.Mov(rhs.Type, rhs.ToX86Expr(gen), X86Gen.ebx);
+                    gen.Inst(X86Gen.pop, X86Gen.eax);
+                    switch (op) {
+                        case SyntaxTree.BiExpr.Op.PLUS:     gen.Inst(X86Gen.add, X86Gen.eax, X86Gen.ebx); break;
+                        case SyntaxTree.BiExpr.Op.MINUS:    gen.Inst(X86Gen.sub, X86Gen.eax, X86Gen.ebx); break;
+                    }
+                    break;
+                default: throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Handle relational and equality operator.
+        /// </summary>
+        /// <param name="gen"></param>
+        private void RelationalEquality(X86Gen gen) {
+            Debug.Assert(type.Kind == TKind.INT);
+            Debug.Assert(op == SyntaxTree.BiExpr.Op.LE ||
+                op == SyntaxTree.BiExpr.Op.LT ||
+                op == SyntaxTree.BiExpr.Op.GE ||
+                op == SyntaxTree.BiExpr.Op.GT ||
+                op == SyntaxTree.BiExpr.Op.EQ ||
+                op == SyntaxTree.BiExpr.Op.NEQ);
+            Debug.Assert(lhs.Type.Kind == rhs.Type.Kind);
+
+            gen.Push(lhs.Type, lhs.ToX86Expr(gen));
+
+            /// Both lhs and rhs should have the same type (either pointer or result from usual arithmetic conversion).
+            switch (lhs.Type.Kind) {
+                case TKind.INT:
+                    // Generate code for rhs and move the result to ebx.
+                    gen.Mov(rhs.Type, rhs.ToX86Expr(gen), X86Gen.ebx);
+
+                    // Pop the result of lhs to eax.
+                    gen.Inst(X86Gen.pop, X86Gen.eax);
                     gen.Inst(X86Gen.cmp, X86Gen.eax, X86Gen.ebx);
                     switch (op) {
-                        case SyntaxTree.BiExpr.Op.LE:   gen.Inst(X86Gen.setle, X86Gen.al); break;
-                        case SyntaxTree.BiExpr.Op.LT:   gen.Inst(X86Gen.setl, X86Gen.al); break;
-                        case SyntaxTree.BiExpr.Op.GE:   gen.Inst(X86Gen.setge, X86Gen.al); break;
-                        case SyntaxTree.BiExpr.Op.GT:   gen.Inst(X86Gen.setg, X86Gen.al); break;
-                        case SyntaxTree.BiExpr.Op.EQ:   gen.Inst(X86Gen.sete, X86Gen.al); break;
-                        case SyntaxTree.BiExpr.Op.NEQ:  gen.Inst(X86Gen.setne, X86Gen.al); break;
+                        case SyntaxTree.BiExpr.Op.LE: gen.Inst(X86Gen.setle, X86Gen.al); break;
+                        case SyntaxTree.BiExpr.Op.LT: gen.Inst(X86Gen.setl, X86Gen.al); break;
+                        case SyntaxTree.BiExpr.Op.GE: gen.Inst(X86Gen.setge, X86Gen.al); break;
+                        case SyntaxTree.BiExpr.Op.GT: gen.Inst(X86Gen.setg, X86Gen.al); break;
+                        case SyntaxTree.BiExpr.Op.EQ: gen.Inst(X86Gen.sete, X86Gen.al); break;
+                        case SyntaxTree.BiExpr.Op.NEQ: gen.Inst(X86Gen.setne, X86Gen.al); break;
                     }
-                    
                     gen.Inst(X86Gen.and, X86Gen.al, 1);
                     gen.Inst(X86Gen.movzx, X86Gen.eax, X86Gen.al);
                     break;
                 default: throw new NotImplementedException();
             }
         }
+
+        /// <summary>
+        /// Handle logical operator.
+        /// </summary>
+        /// <param name="gen"></param>
+        private void Logical(X86Gen gen) {
+            Debug.Assert(type.Kind == TKind.INT);
+            Debug.Assert(op == SyntaxTree.BiExpr.Op.LOGAND || op == SyntaxTree.BiExpr.Op.LOGOR);
+            Debug.Assert(logicalEndLabel != null && logicalShortCutLabel != null);
+
+            switch (op) {
+                case SyntaxTree.BiExpr.Op.LOGAND:
+                    gen.BranchFalse(lhs, logicalShortCutLabel);
+                    gen.BranchFalse(rhs, logicalShortCutLabel);
+                    gen.Inst(X86Gen.mov, X86Gen.eax, 1);
+                    gen.Inst(X86Gen.jmp, logicalEndLabel);
+                    gen.Tag(X86Gen.Seg.TEXT, logicalShortCutLabel);
+                    gen.Inst(X86Gen.mov, X86Gen.eax, 0);
+                    break;
+                case SyntaxTree.BiExpr.Op.LOGOR:
+                    gen.BranchTrue(lhs, logicalShortCutLabel);
+                    gen.BranchTrue(rhs, logicalShortCutLabel);
+                    gen.Inst(X86Gen.mov, X86Gen.eax, 0);
+                    gen.Inst(X86Gen.jmp, logicalEndLabel);
+                    gen.Tag(X86Gen.Seg.TEXT, logicalShortCutLabel);
+                    gen.Inst(X86Gen.mov, X86Gen.eax, 1);
+                    break;
+            }
+
+            gen.Tag(X86Gen.Seg.TEXT, logicalEndLabel);
+        }
+
+        //private void X86Int(X86Gen gen, X86Gen.Ret lhsRet) {
+        //    /// Store the lhs operand.
+        //    if (lhsRet == X86Gen.Ret.PTR) {
+        //        gen.Inst(X86Gen.push, X86Gen.eax.Addr());
+        //    } else {
+        //        gen.Inst(X86Gen.push, X86Gen.eax);
+        //    }
+
+        //    /// Generate the second operand and mov it to ebx.
+        //    var rhsRet = rhs.ToX86Expr(gen);
+        //    if (rhsRet == X86Gen.Ret.PTR) {
+        //        gen.Inst(X86Gen.mov, X86Gen.ebx, X86Gen.eax.Addr());
+        //    } else {
+        //        gen.Inst(X86Gen.mov, X86Gen.ebx, X86Gen.eax);
+        //    }
+        //    /// Pop the lhs operand and calcuate the result.
+        //    gen.Inst(X86Gen.pop, X86Gen.eax);
+        //    switch (op) {
+        //        case SyntaxTree.BiExpr.Op.PLUS:     gen.Inst(X86Gen.add, X86Gen.eax, X86Gen.ebx); break;
+        //        case SyntaxTree.BiExpr.Op.MINUS:    gen.Inst(X86Gen.sub, X86Gen.eax, X86Gen.ebx); break;
+        //        case SyntaxTree.BiExpr.Op.MULT:     gen.Inst(X86Gen.imul, X86Gen.eax, X86Gen.ebx); break;
+        //        case SyntaxTree.BiExpr.Op.DIV:
+        //            gen.Inst(X86Gen.cdq);
+        //            gen.Inst(X86Gen.idiv, X86Gen.ebx);
+        //            break;
+        //        case SyntaxTree.BiExpr.Op.LT:
+        //        case SyntaxTree.BiExpr.Op.LE:
+        //        case SyntaxTree.BiExpr.Op.GT:
+        //        case SyntaxTree.BiExpr.Op.GE:
+        //        case SyntaxTree.BiExpr.Op.EQ:
+        //        case SyntaxTree.BiExpr.Op.NEQ:
+        //            gen.Inst(X86Gen.cmp, X86Gen.eax, X86Gen.ebx);
+        //            switch (op) {
+        //                case SyntaxTree.BiExpr.Op.LE:   gen.Inst(X86Gen.setle, X86Gen.al); break;
+        //                case SyntaxTree.BiExpr.Op.LT:   gen.Inst(X86Gen.setl, X86Gen.al); break;
+        //                case SyntaxTree.BiExpr.Op.GE:   gen.Inst(X86Gen.setge, X86Gen.al); break;
+        //                case SyntaxTree.BiExpr.Op.GT:   gen.Inst(X86Gen.setg, X86Gen.al); break;
+        //                case SyntaxTree.BiExpr.Op.EQ:   gen.Inst(X86Gen.sete, X86Gen.al); break;
+        //                case SyntaxTree.BiExpr.Op.NEQ:  gen.Inst(X86Gen.setne, X86Gen.al); break;
+        //            }
+                    
+        //            gen.Inst(X86Gen.and, X86Gen.al, 1);
+        //            gen.Inst(X86Gen.movzx, X86Gen.eax, X86Gen.al);
+        //            break;
+        //        default: throw new NotImplementedException();
+        //    }
+        //}
     }
 
     public class Cast : Expr {

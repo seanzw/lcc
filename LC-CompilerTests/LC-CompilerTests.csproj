@@ -82,6 +82,8 @@
     <None Include="ASTTests\code\void_func_lcc.s" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="ASTTests\code\heap_sort.c" />
+    <Content Include="ASTTests\code\heap_sort_main.c" />
     <Content Include="ASTTests\code\quick_sort.c" />
     <Content Include="ASTTests\code\quick_sort_clang.s" />
     <Content Include="ASTTests\code\quick_sort_lcc.s" />

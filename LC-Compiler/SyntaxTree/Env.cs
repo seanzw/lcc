@@ -306,6 +306,7 @@ namespace lcc.SyntaxTree {
             defaultId = 0;
             staticId = 0;
             dynamicId = 0;
+            logicalId = 0;
             breakables = new Stack<Breakable>();
         }
 
@@ -598,6 +599,14 @@ namespace lcc.SyntaxTree {
         }
 
         /// <summary>
+        /// Allocate labels for logical operator to ensure the short circuit evaluation.
+        /// </summary>
+        /// <returns></returns>
+        public Tuple<string, string> AllocLogicalLabel() {
+            return new Tuple<string, string>(string.Format("__logical_shortcut_{0}", logicalId), string.Format("__logical_end_{0}", logicalId++));
+        }
+
+        /// <summary>
         /// Dump the environment.
         /// </summary>
         /// <returns></returns>
@@ -625,6 +634,7 @@ namespace lcc.SyntaxTree {
         private int defaultId;
         private int staticId;
         private int dynamicId;
+        private int logicalId;
 
         private Stack<Breakable> breakables;
         private Stack<Scope> scopes;

@@ -87,11 +87,9 @@ _sum:                                   # @sum
 # BB#0:
 	push	ebp
 	mov	ebp, esp
-	sub	esp, 20
+	sub	esp, 16
 	mov	eax, dword ptr [ebp + 8]
-	lea	ecx, [_sum]
 	mov	dword ptr [ebp - 8], eax
-	mov	dword ptr [ebp - 12], ecx
 	cmp	dword ptr [ebp - 8], 0
 	jg	LBB2_2
 # BB#1:
@@ -99,18 +97,17 @@ _sum:                                   # @sum
 	jmp	LBB2_3
 LBB2_2:
 	mov	eax, dword ptr [ebp - 8]
-	mov	ecx, dword ptr [ebp - 12]
-	mov	edx, dword ptr [ebp - 8]
-	sub	edx, 1
-	mov	dword ptr [esp], edx
-	mov	dword ptr [ebp - 16], eax # 4-byte Spill
-	call	ecx
-	mov	ecx, dword ptr [ebp - 16] # 4-byte Reload
+	mov	ecx, dword ptr [ebp - 8]
+	sub	ecx, 1
+	mov	dword ptr [esp], ecx
+	mov	dword ptr [ebp - 12], eax # 4-byte Spill
+	call	_sum
+	mov	ecx, dword ptr [ebp - 12] # 4-byte Reload
 	add	ecx, eax
 	mov	dword ptr [ebp - 4], ecx
 LBB2_3:
 	mov	eax, dword ptr [ebp - 4]
-	add	esp, 20
+	add	esp, 16
 	pop	ebp
 	ret
 
@@ -144,6 +141,78 @@ _func1:                                 # @func1
 	mov	dword ptr [ebp - 16], eax
 	mov	eax, dword ptr [ebp - 16]
 	add	esp, 16
+	pop	ebp
+	ret
+
+	.def	 _test_mul;
+	.scl	2;
+	.type	32;
+	.endef
+	.globl	_test_mul
+	.p2align	4, 0x90
+_test_mul:                              # @test_mul
+# BB#0:
+	push	ebp
+	mov	ebp, esp
+	sub	esp, 8
+	mov	eax, dword ptr [ebp + 8]
+	mov	dword ptr [ebp - 4], eax
+	imul	eax, dword ptr [ebp - 4], 5
+	mov	dword ptr [ebp - 8], eax
+	mov	eax, dword ptr [ebp - 8]
+	add	esp, 8
+	pop	ebp
+	ret
+
+	.def	 _test_div;
+	.scl	2;
+	.type	32;
+	.endef
+	.globl	_test_div
+	.p2align	4, 0x90
+_test_div:                              # @test_div
+# BB#0:
+	push	ebp
+	mov	ebp, esp
+	sub	esp, 8
+	mov	eax, dword ptr [ebp + 8]
+	mov	ecx, 2
+	mov	dword ptr [ebp - 4], eax
+	mov	eax, dword ptr [ebp - 4]
+	cdq
+	idiv	ecx
+	mov	dword ptr [ebp - 8], eax
+	mov	eax, dword ptr [ebp - 8]
+	add	esp, 8
+	pop	ebp
+	ret
+
+	.def	 _test_log_and;
+	.scl	2;
+	.type	32;
+	.endef
+	.globl	_test_log_and
+	.p2align	4, 0x90
+_test_log_and:                          # @test_log_and
+# BB#0:
+	push	ebp
+	mov	ebp, esp
+	sub	esp, 8
+	mov	eax, dword ptr [ebp + 8]
+	mov	dword ptr [ebp - 8], eax
+	cmp	dword ptr [ebp - 8], 0
+	jle	LBB6_3
+# BB#1:
+	cmp	dword ptr [ebp - 8], 5
+	jge	LBB6_3
+# BB#2:
+	mov	dword ptr [ebp - 4], 1
+	jmp	LBB6_4
+LBB6_3:
+	mov	dword ptr [ebp - 4], 0
+LBB6_4:
+	mov	eax, dword ptr [ebp - 4]
+	add	esp, 8
 	pop	ebp
 	ret
 

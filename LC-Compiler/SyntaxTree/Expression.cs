@@ -544,8 +544,9 @@ namespace lcc.SyntaxTree {
                     /// &&, || operators.
                     /// Each of the operands shall have scalar type.
                     /// The result has type int.
+                    var labels = env.AllocLogicalLabel();
                     if (lExpr.Type.IsScalar && rExpr.Type.IsScalar) {
-                        return new AST.BiExpr(TInt.Instance.None(), env.ASTEnv, lExpr, rExpr, op);
+                        return new AST.BiExpr(TInt.Instance.None(), env.ASTEnv, lExpr, rExpr, op, labels.Item1, labels.Item2);
                     }
                     throw typeError;
                 default:

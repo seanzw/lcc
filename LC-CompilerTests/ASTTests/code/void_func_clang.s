@@ -144,4 +144,76 @@ _func1:                                 # @func1
 	pop	ebp
 	ret
 
+	.def	 _test_mul;
+	.scl	2;
+	.type	32;
+	.endef
+	.globl	_test_mul
+	.p2align	4, 0x90
+_test_mul:                              # @test_mul
+# BB#0:
+	push	ebp
+	mov	ebp, esp
+	sub	esp, 8
+	mov	eax, dword ptr [ebp + 8]
+	mov	dword ptr [ebp - 4], eax
+	imul	eax, dword ptr [ebp - 4], 5
+	mov	dword ptr [ebp - 8], eax
+	mov	eax, dword ptr [ebp - 8]
+	add	esp, 8
+	pop	ebp
+	ret
+
+	.def	 _test_div;
+	.scl	2;
+	.type	32;
+	.endef
+	.globl	_test_div
+	.p2align	4, 0x90
+_test_div:                              # @test_div
+# BB#0:
+	push	ebp
+	mov	ebp, esp
+	sub	esp, 8
+	mov	eax, dword ptr [ebp + 8]
+	mov	ecx, 2
+	mov	dword ptr [ebp - 4], eax
+	mov	eax, dword ptr [ebp - 4]
+	cdq
+	idiv	ecx
+	mov	dword ptr [ebp - 8], eax
+	mov	eax, dword ptr [ebp - 8]
+	add	esp, 8
+	pop	ebp
+	ret
+
+	.def	 _test_log_and;
+	.scl	2;
+	.type	32;
+	.endef
+	.globl	_test_log_and
+	.p2align	4, 0x90
+_test_log_and:                          # @test_log_and
+# BB#0:
+	push	ebp
+	mov	ebp, esp
+	sub	esp, 8
+	mov	eax, dword ptr [ebp + 8]
+	mov	dword ptr [ebp - 8], eax
+	cmp	dword ptr [ebp - 8], 0
+	jle	LBB6_3
+# BB#1:
+	cmp	dword ptr [ebp - 8], 5
+	jge	LBB6_3
+# BB#2:
+	mov	dword ptr [ebp - 4], 1
+	jmp	LBB6_4
+LBB6_3:
+	mov	dword ptr [ebp - 4], 0
+LBB6_4:
+	mov	eax, dword ptr [ebp - 4]
+	add	esp, 8
+	pop	ebp
+	ret
+
 

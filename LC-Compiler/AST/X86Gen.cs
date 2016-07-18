@@ -183,6 +183,8 @@ namespace lcc.AST {
         public static readonly Operator inc     = new Operator("inc");
         public static readonly Operator dec     = new Operator("dec");
         public static readonly Operator imul    = new Operator("imul");
+        public static readonly Operator idiv    = new Operator("idiv");
+        public static readonly Operator cdq     = new Operator("cdq");
 
         public static readonly Operator cmp     = new Operator("cmp");
         public static readonly Operator setle   = new Operator("setle");
@@ -196,6 +198,7 @@ namespace lcc.AST {
 
         public static readonly Operator jmp     = new Operator("jmp");
         public static readonly Operator je      = new Operator("je");
+        public static readonly Operator jne     = new Operator("jne");
         #endregion
 
 
@@ -251,6 +254,57 @@ namespace lcc.AST {
                 case TKind.UINT:
                 case TKind.INT:
                     Inst(push, ret == Ret.PTR ? eax.Addr() as Operand : eax);
+                    break;
+                default: throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Mov the result in eax to dst.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="ret"></param>
+        /// <param name="dst"></param>
+        public void Mov(T type, Ret ret, Operand dst) {
+            switch (type.Kind) {
+                case TKind.PTR:
+                case TKind.ULONG:
+                case TKind.LONG:
+                case TKind.UINT:
+                case TKind.INT:
+                    Inst(mov, dst, ret == Ret.PTR ? eax.Addr() as Operand : eax);
+                    break;
+                default: throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Evaluate the expr and branch to label if the result is 0.
+        /// </summary>
+        /// <param name="expr"></param>
+        /// <param name="label"></param>
+        public void BranchFalse(Expr expr, string label) {
+            switch (expr.Type.Kind) {
+                case TKind.INT:
+                    Mov(expr.Type, expr.ToX86Expr(this), eax);
+                    Inst(cmp, eax, 0);
+                    Inst(je, label);
+                    break;
+                default: throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Evaluate the expr and brance to label if the result is not 0.
+        /// </summary>
+        /// <param name="expr"></param>
+        /// <param name="label"></param>
+        public void BranchTrue(Expr expr, string label) {
+            switch (expr.Type.Kind) {
+                case TKind.INT:
+                    Mov(expr.Type, expr.ToX86Expr(this), eax);
+                    Inst(cmp, eax, 0);
+                    Inst(jne, label);
                     break;
                 default: throw new NotImplementedException();
             }

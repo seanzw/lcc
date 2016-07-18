@@ -36,3 +36,24 @@ int func1(int argc, char* argv[]) {
     j = i <= 5;
     return j;
 }
+
+int test_mul(int x) {
+    int j;
+    j = x * 5;
+    return j;
+}
+
+int test_div(int x) {
+    int j;
+    j = x / 2;
+    return j;
+}
+
+int test_log_and(int x) {
+    if (x > 0 && x < 5) {
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}

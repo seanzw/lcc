@@ -167,86 +167,72 @@ _main:                                  # @main
 # BB#0:
 	push	ebp
 	mov	ebp, esp
-	sub	esp, 476
+	sub	esp, 448
 	mov	eax, dword ptr [ebp + 12]
 	mov	ecx, dword ptr [ebp + 8]
 	mov	dword ptr [ebp - 4], 0
 	mov	dword ptr [ebp - 8], eax
 	mov	dword ptr [ebp - 12], ecx
-	mov	eax, dword ptr [L_main.a1]
-	mov	dword ptr [ebp - 24], eax
-	mov	eax, dword ptr [L_main.a1+4]
-	mov	dword ptr [ebp - 20], eax
-	mov	eax, dword ptr [L_main.a1+8]
-	mov	dword ptr [ebp - 16], eax
-	mov	eax, dword ptr [L_main.a2]
-	mov	dword ptr [ebp - 28], eax
-	mov	eax, dword ptr [L_main.a3]
-	mov	dword ptr [ebp - 40], eax
-	mov	eax, dword ptr [L_main.a3+4]
-	mov	dword ptr [ebp - 36], eax
-	mov	eax, dword ptr [L_main.a3+8]
-	mov	dword ptr [ebp - 32], eax
-	mov	dword ptr [ebp - 444], 0
+	mov	dword ptr [ebp - 416], 0
 LBB4_1:                                 # =>This Inner Loop Header: Depth=1
-	cmp	dword ptr [ebp - 444], 100
+	cmp	dword ptr [ebp - 416], 100
 	jge	LBB4_4
 # BB#2:                                 #   in Loop: Header=BB4_1 Depth=1
 	mov	eax, 100
-	sub	eax, dword ptr [ebp - 444]
-	mov	ecx, dword ptr [ebp - 444]
-	mov	dword ptr [ebp + 4*ecx - 440], eax
+	sub	eax, dword ptr [ebp - 416]
+	mov	ecx, dword ptr [ebp - 416]
+	mov	dword ptr [ebp + 4*ecx - 412], eax
 # BB#3:                                 #   in Loop: Header=BB4_1 Depth=1
-	mov	eax, dword ptr [ebp - 444]
+	mov	eax, dword ptr [ebp - 416]
 	add	eax, 1
-	mov	dword ptr [ebp - 444], eax
+	mov	dword ptr [ebp - 416], eax
 	jmp	LBB4_1
 LBB4_4:
 	xor	eax, eax
 	mov	ecx, 99
-	lea	edx, [ebp - 440]
+	lea	edx, [ebp - 412]
 	mov	dword ptr [esp], edx
 	mov	dword ptr [esp + 4], 0
 	mov	dword ptr [esp + 8], 99
-	mov	dword ptr [ebp - 452], eax # 4-byte Spill
-	mov	dword ptr [ebp - 456], ecx # 4-byte Spill
+	mov	dword ptr [ebp - 424], eax # 4-byte Spill
+	mov	dword ptr [ebp - 428], ecx # 4-byte Spill
 	call	_quick_sort
-	mov	dword ptr [ebp - 448], 0
+	mov	dword ptr [ebp - 420], 0
 LBB4_5:                                 # =>This Inner Loop Header: Depth=1
-	cmp	dword ptr [ebp - 448], 100
+	cmp	dword ptr [ebp - 420], 100
 	jge	LBB4_10
 # BB#6:                                 #   in Loop: Header=BB4_5 Depth=1
-	mov	eax, dword ptr [ebp - 448]
-	mov	eax, dword ptr [ebp + 4*eax - 440]
-	mov	ecx, dword ptr [ebp - 448]
+	mov	eax, dword ptr [ebp - 420]
+	mov	eax, dword ptr [ebp + 4*eax - 412]
+	mov	ecx, dword ptr [ebp - 420]
 	add	ecx, 1
 	cmp	eax, ecx
 	je	LBB4_8
 # BB#7:                                 #   in Loop: Header=BB4_5 Depth=1
-	lea	eax, ["??_C@_0BP@JAADCOJM@wrong?5answer?5for?5a4?$FL?$CFd?$FN?5?$DN?5?$CFd?$CB?6?$AA@"]
-	mov	ecx, dword ptr [ebp - 448]
-	mov	ecx, dword ptr [ebp + 4*ecx - 440]
-	mov	edx, dword ptr [ebp - 448]
+	lea	eax, ["??_C@_0BO@DMODBOOK@wrong?5answer?5for?5a?$FL?$CFd?$FN?5?$DN?5?$CFd?$CB?6?$AA@"]
+	mov	ecx, dword ptr [ebp - 420]
+	mov	ecx, dword ptr [ebp + 4*ecx - 412]
+	mov	edx, dword ptr [ebp - 420]
 	mov	dword ptr [esp], eax
 	mov	dword ptr [esp + 4], edx
 	mov	dword ptr [esp + 8], ecx
 	call	_printf
-	mov	dword ptr [ebp - 460], eax # 4-byte Spill
+	mov	dword ptr [ebp - 432], eax # 4-byte Spill
 LBB4_8:                                 #   in Loop: Header=BB4_5 Depth=1
 	jmp	LBB4_9
 LBB4_9:                                 #   in Loop: Header=BB4_5 Depth=1
-	mov	eax, dword ptr [ebp - 448]
+	mov	eax, dword ptr [ebp - 420]
 	add	eax, 1
-	mov	dword ptr [ebp - 448], eax
+	mov	dword ptr [ebp - 420], eax
 	jmp	LBB4_5
 LBB4_10:
 	lea	eax, ["??_C@_0BE@BDFHCIHI@everyting?5is?5fine?$CB?6?$AA@"]
 	mov	dword ptr [esp], eax
 	call	_printf
 	xor	ecx, ecx
-	mov	dword ptr [ebp - 464], eax # 4-byte Spill
+	mov	dword ptr [ebp - 436], eax # 4-byte Spill
 	mov	eax, ecx
-	add	esp, 476
+	add	esp, 448
 	pop	ebp
 	ret
 
@@ -465,27 +451,10 @@ __vfprintf_l:                           # @_vfprintf_l
 	pop	ebp
 	ret
 
-	.section	.rdata,"dr"
-	.p2align	2               # @main.a1
-L_main.a1:
-	.long	3                       # 0x3
-	.long	2                       # 0x2
-	.long	1                       # 0x1
-
-	.p2align	2               # @main.a2
-L_main.a2:
-	.long	3                       # 0x3
-
-	.p2align	2               # @main.a3
-L_main.a3:
-	.long	1                       # 0x1
-	.long	2                       # 0x2
-	.long	3                       # 0x3
-
-	.section	.rdata,"dr",discard,"??_C@_0BP@JAADCOJM@wrong?5answer?5for?5a4?$FL?$CFd?$FN?5?$DN?5?$CFd?$CB?6?$AA@"
-	.globl	"??_C@_0BP@JAADCOJM@wrong?5answer?5for?5a4?$FL?$CFd?$FN?5?$DN?5?$CFd?$CB?6?$AA@" # @"\01??_C@_0BP@JAADCOJM@wrong?5answer?5for?5a4?$FL?$CFd?$FN?5?$DN?5?$CFd?$CB?6?$AA@"
-"??_C@_0BP@JAADCOJM@wrong?5answer?5for?5a4?$FL?$CFd?$FN?5?$DN?5?$CFd?$CB?6?$AA@":
-	.asciz	"wrong answer for a4[%d] = %d!\n"
+	.section	.rdata,"dr",discard,"??_C@_0BO@DMODBOOK@wrong?5answer?5for?5a?$FL?$CFd?$FN?5?$DN?5?$CFd?$CB?6?$AA@"
+	.globl	"??_C@_0BO@DMODBOOK@wrong?5answer?5for?5a?$FL?$CFd?$FN?5?$DN?5?$CFd?$CB?6?$AA@" # @"\01??_C@_0BO@DMODBOOK@wrong?5answer?5for?5a?$FL?$CFd?$FN?5?$DN?5?$CFd?$CB?6?$AA@"
+"??_C@_0BO@DMODBOOK@wrong?5answer?5for?5a?$FL?$CFd?$FN?5?$DN?5?$CFd?$CB?6?$AA@":
+	.asciz	"wrong answer for a[%d] = %d!\n"
 
 	.section	.rdata,"dr",discard,"??_C@_0BE@BDFHCIHI@everyting?5is?5fine?$CB?6?$AA@"
 	.globl	"??_C@_0BE@BDFHCIHI@everyting?5is?5fine?$CB?6?$AA@" # @"\01??_C@_0BE@BDFHCIHI@everyting?5is?5fine?$CB?6?$AA@"

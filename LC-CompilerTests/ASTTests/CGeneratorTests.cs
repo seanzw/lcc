@@ -22,6 +22,7 @@ namespace LC_CompilerTests {
             var tests = new List<String> {
                 "void_func",
                 "quick_sort",
+                "heap_sort",
             };
 
             //var sources = Directory.GetFiles("../../ASTTests/code", "*.c");
