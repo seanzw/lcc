@@ -96,7 +96,6 @@ __loop_first_0:
 	setle  al
 	and    al, 1
 	movzx  eax, al
-	mov    eax, eax
 	cmp    eax, 0
 	je     __loop_break_0
 	# for body
@@ -123,7 +122,6 @@ __loop_first_0:
 	setle  al
 	and    al, 1
 	movzx  eax, al
-	mov    eax, eax
 	cmp    eax, 0
 	je     __endif_0
 	# then
@@ -327,7 +325,6 @@ _quick_sort:
 	setl   al
 	and    al, 1
 	movzx  eax, al
-	mov    eax, eax
 	cmp    eax, 0
 	je     __endif_1
 	# then

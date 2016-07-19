@@ -3,6 +3,12 @@
     char b;
 };
 
+int foo(int a) {
+    a += 1;
+    ++a;
+    return a;
+}
+
 int test_if(int x) {
     if (x <= 0) {
         if (x <= 2) {

@@ -29,11 +29,10 @@ namespace LC_CompilerTests {
         public static IEnumerable<IParserResult<Token, R>> parse<R>(
             string src,
             Parser<Token, R> parser,
-            bool clear = false
+            bool clear = true
             ) {
             if (clear) {
-                lcc.Parser.Env.PopScope();
-                lcc.Parser.Env.PushScope();
+                lcc.Parser.Env.Clear();
             }
             var tokens = new ReadOnlyCollection<Token>(Lexer.Instance.Scan(src));
             var stream = new TokenStream<Token>(tokens);

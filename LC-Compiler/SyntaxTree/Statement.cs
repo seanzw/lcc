@@ -193,7 +193,7 @@ namespace lcc.SyntaxTree {
             Stmt then,
             Stmt other
             ) {
-            this.pos = new Position { line = line };
+            this.pos = new Position(line);
             this.expr = expr;
             this.then = then;
             this.other = other;
@@ -258,7 +258,7 @@ namespace lcc.SyntaxTree {
             Expr expr,
             Stmt statement
             ) {
-            this.pos = new Position { line = line };
+            this.pos = new Position(line);
             this.expr = expr;
             this.stmt = statement;
             this.cases = new LinkedList<Tuple<string, ConstIntExpr>>();
@@ -442,7 +442,7 @@ namespace lcc.SyntaxTree {
             Expr pred,
             Expr iter,
             Stmt body) {
-            this.pos = new Position { line = line };
+            this.pos = new Position(line);
             this.init = init;
             this.pred = pred;
             this.iter = iter;
@@ -508,7 +508,7 @@ namespace lcc.SyntaxTree {
         public Continue(
             int line
             ) {
-            this.pos = new Position { line = line };
+            this.pos = new Position(line);
         }
 
         public override Position Pos => pos;
@@ -543,7 +543,7 @@ namespace lcc.SyntaxTree {
         public Break(
             int line
             ) {
-            this.pos = new Position { line = line };
+            this.pos = new Position(line);
         }
 
         public override Position Pos => pos;
@@ -578,7 +578,7 @@ namespace lcc.SyntaxTree {
             int line,
             Expr expr
             ) {
-            this.pos = new Position { line = line };
+            this.pos = new Position(line);
             this.expr = expr;
         }
 
@@ -631,7 +631,7 @@ namespace lcc.SyntaxTree {
             int line,
             string label
             ) {
-            this.pos = new Position { line = line };
+            this.pos = new Position(line);
             this.label = label;
         }
 
@@ -670,7 +670,7 @@ namespace lcc.SyntaxTree {
     public sealed class VoidStmt : Stmt {
 
         public VoidStmt(int line) {
-            this.pos = new Position { line = line };
+            this.pos = new Position(line);
         }
 
         public override Position Pos => pos;

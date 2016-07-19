@@ -130,12 +130,16 @@ namespace lcc.AST {
             public Mem Addr(int offset = 0, Size size = Size.DWORD) {
                 return new MemReg(this, offset, size);
             }
+            public Mem Addr(Size size) {
+                return new MemReg(this, 0, size);
+            }
         }
 
         /// <summary>
         /// General register.
         /// </summary>
         public static readonly Reg eax = new Reg("eax");
+        public static readonly Reg ax = new Reg("ax");
         public static readonly Reg al = new Reg("al");
 
         public static readonly Reg ebx = new Reg("ebx");
@@ -183,14 +187,21 @@ namespace lcc.AST {
         public static readonly Operator inc     = new Operator("inc");
         public static readonly Operator dec     = new Operator("dec");
         public static readonly Operator imul    = new Operator("imul");
+        public static readonly Operator mul     = new Operator("mul");
         public static readonly Operator idiv    = new Operator("idiv");
         public static readonly Operator cdq     = new Operator("cdq");
+
+        public static readonly Operator xor     = new Operator("xor");
 
         public static readonly Operator cmp     = new Operator("cmp");
         public static readonly Operator setle   = new Operator("setle");
         public static readonly Operator setl    = new Operator("setl");
         public static readonly Operator setge   = new Operator("setge");
         public static readonly Operator setg    = new Operator("setg");
+        public static readonly Operator setbe   = new Operator("setbe");
+        public static readonly Operator setb    = new Operator("setb");
+        public static readonly Operator setae   = new Operator("setae");
+        public static readonly Operator seta    = new Operator("seta");
         public static readonly Operator sete    = new Operator("sete");
         public static readonly Operator setne   = new Operator("setne");
 
@@ -260,54 +271,88 @@ namespace lcc.AST {
         }
 
         /// <summary>
-        /// Mov the result in eax to dst.
+        /// Evaluate the expr and branch to "which".
         /// </summary>
+        /// <param name="expr"></param>
+        /// <param name="label"></param>
+        /// <param name="which"></param>
+        public void Branch(Expr expr, string label, bool which) {
+            switch (expr.Type.Kind) {
+                case TKind.INT:
+                    if (expr.ToX86Expr(this) == Ret.PTR) {
+                        Inst(mov, eax, eax.Addr());
+                    }
+                    Inst(cmp, eax, 0);
+                    Inst(which ? jne : je, label);
+                    break;
+                default: throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Evaluate and cast to type.
+        /// 
+        /// Ref for unsigned integer:
+        /// https://msdn.microsoft.com/en-us/library/e9s326kw.aspx
+        /// 
+        /// </summary>
+        /// <param name="expr"></param>
         /// <param name="type"></param>
-        /// <param name="ret"></param>
-        /// <param name="dst"></param>
-        public void Mov(T type, Ret ret, Operand dst) {
-            switch (type.Kind) {
-                case TKind.PTR:
-                case TKind.ULONG:
-                case TKind.LONG:
+        /// <returns></returns>
+        public Ret Cast(Expr expr, T type) {
+            var ret = expr.ToX86Expr(this);
+            if (type.Kind == expr.Type.Kind) {
+                return ret;
+            }
+
+            switch (expr.Type.Kind) {
+                case TKind.UCHAR:
+                    switch (type.Kind) {
+                        case TKind.CHAR:
+                        case TKind.SCHAR:
+                            /// Preserve bit pattern; high-order bit becomes sign bit.
+                            return ret;
+                        case TKind.SHORT:
+                        case TKind.USHORT:
+                            /// Zero extended.
+                            if (ret == Ret.PTR) Inst(mov, al, eax.Addr(Size.BYTE));
+                            Inst(movzx, ax, al);
+                            return Ret.REG;
+                        case TKind.INT:
+                        case TKind.LONG:
+                        case TKind.UINT:
+                        case TKind.ULONG:
+                            if (ret == Ret.PTR) Inst(mov, al, eax.Addr(Size.BYTE));
+                            Inst(movzx, eax, al);
+                            return Ret.REG;
+                    }
+                    break;
                 case TKind.UINT:
-                case TKind.INT:
-                    Inst(mov, dst, ret == Ret.PTR ? eax.Addr() as Operand : eax);
+                    switch (type.Kind) {
+                        case TKind.CHAR:
+                        case TKind.SCHAR:
+                        case TKind.UCHAR:
+                            ///// Preserve lower-order byte.
+                            ///// TRICK: Do not mov al eax.
+                            //if (ret == Ret.PTR) {
+                            //    Inst(mov, eax, eax.Addr());
+                            //}
+                            //return Ret.REG;
+                        case TKind.SHORT:
+                        case TKind.USHORT:
+                            /// Preserve lower-order word.
+                            if (ret == Ret.PTR) {
+                                Inst(mov, eax, eax.Addr());
+                            }
+                            return Ret.REG;
+                        case TKind.INT:
+                            /// Preserve bit pattern; high-order bit becomes sign bit.
+                            return ret;
+                    }
                     break;
-                default: throw new NotImplementedException();
             }
-        }
 
-        /// <summary>
-        /// Evaluate the expr and branch to label if the result is 0.
-        /// </summary>
-        /// <param name="expr"></param>
-        /// <param name="label"></param>
-        public void BranchFalse(Expr expr, string label) {
-            switch (expr.Type.Kind) {
-                case TKind.INT:
-                    Mov(expr.Type, expr.ToX86Expr(this), eax);
-                    Inst(cmp, eax, 0);
-                    Inst(je, label);
-                    break;
-                default: throw new NotImplementedException();
-            }
-        }
-
-        /// <summary>
-        /// Evaluate the expr and brance to label if the result is not 0.
-        /// </summary>
-        /// <param name="expr"></param>
-        /// <param name="label"></param>
-        public void BranchTrue(Expr expr, string label) {
-            switch (expr.Type.Kind) {
-                case TKind.INT:
-                    Mov(expr.Type, expr.ToX86Expr(this), eax);
-                    Inst(cmp, eax, 0);
-                    Inst(jne, label);
-                    break;
-                default: throw new NotImplementedException();
-            }
+            throw new NotImplementedException();
         }
 
         private readonly StringBuilder text;

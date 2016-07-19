@@ -75,7 +75,7 @@ namespace lcc.AST {
         }
         public override void ToX86(X86Gen gen) {
             gen.Comment(X86Gen.Seg.TEXT, "if");
-            gen.BranchFalse(expr, other != null ? elseLabel : endIfLabel);
+            gen.Branch(expr, other != null ? elseLabel : endIfLabel, false);
 
             /// Generate code for then branch.
             /// Remember to jump to endif label since
@@ -233,7 +233,7 @@ namespace lcc.AST {
             /// Generate the controlling (predicating) code.
             gen.Comment(X86Gen.Seg.TEXT, "for pred");
             gen.Tag(X86Gen.Seg.TEXT, firstLabel);
-            gen.BranchFalse(pred, breakLabel);
+            gen.Branch(pred, breakLabel, false);
 
             /// Generate body code.
             gen.Comment(X86Gen.Seg.TEXT, "for body");
@@ -259,16 +259,32 @@ namespace lcc.AST {
         public override void ToX86(X86Gen gen) {
             gen.Comment(X86Gen.Seg.TEXT, ToString());
             var ret = expr.ToX86Expr(gen);
-            if (expr.Type.Kind == TKind.INT) {
-                switch (ret) {
-                    case X86Gen.Ret.REG:
-                        gen.Inst(X86Gen.jmp, label);
-                        return;
-                    case X86Gen.Ret.PTR:
+            switch (expr.Type.Kind) {
+                case TKind.CHAR:
+                case TKind.SCHAR:
+                case TKind.UCHAR:
+                    if (ret == X86Gen.Ret.PTR) {
+                        gen.Inst(X86Gen.mov, X86Gen.al, X86Gen.eax.Addr(X86Gen.Size.BYTE));
+                    }
+                    gen.Inst(X86Gen.jmp, label);
+                    return;
+                case TKind.SHORT:
+                case TKind.USHORT:
+                    if (ret == X86Gen.Ret.PTR) {
+                        gen.Inst(X86Gen.mov, X86Gen.ax, X86Gen.eax.Addr(X86Gen.Size.WORD));
+                    }
+                    gen.Inst(X86Gen.jmp, label);
+                    return;
+                case TKind.PTR:
+                case TKind.UINT:
+                case TKind.ULONG:
+                case TKind.INT:
+                case TKind.LONG:
+                    if (ret == X86Gen.Ret.PTR) {
                         gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
-                        gen.Inst(X86Gen.jmp, label);
-                        return;
-                }
+                    }
+                    gen.Inst(X86Gen.jmp, label);
+                    return;
             }
 
             throw new NotImplementedException();

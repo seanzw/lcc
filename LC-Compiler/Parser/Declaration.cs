@@ -151,20 +151,28 @@ namespace lcc.Parser {
         ///     | enum-specifier
         ///     | typedef-name
         ///     ;
-        ///     
-        /// typedef-name
-        ///     : identifier
-        ///     ;
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<T, TypeSpec> TypeSpecifier() {
             return TypeKeySpecifier().Cast<T, TypeSpec, TypeKeySpec>()
                 .Else(StructUnionSpecifier())
                 .Else(EnumSpecifier())
-                .Else(Identifier().Bind(identifier => {
-                    return Env.IsTypedefName(identifier.symbol) ? Result<T, TypeSpec>(new TypedefName(identifier))
-                        : Zero<T, TypeSpec>();
-                }));
+                .Else(TypedefName());
+        }
+
+        /// <summary>
+        /// typedef-name
+        ///     : identifier
+        ///     ;
+        ///     
+        /// Notice that we have to check the parser environment first.
+        /// </summary>
+        /// <returns></returns>
+        public static Parserc.Parser<T, TypedefName> TypedefName() {
+            return Get<T_IDENTIFIER>()
+                .Bind(id => Env.IsTypedefName(id.name) ? 
+                    Result<T, TypedefName>(new TypedefName(new Id(id))) :
+                    Zero<T, TypedefName>());
         }
 
         /// <summary>
@@ -405,10 +413,9 @@ namespace lcc.Parser {
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<T, DirDeclarator> DirectDeclaratorPrime(DirDeclarator direct) {
-            var paramterIdentifier = Identifier().Bind(id => Env.IsTypedefName(id.symbol) ? Zero<T, Id>() : Result<T, Id>(id));
             return ParameterTypeList().ParentLR()
                     .Bind(tuple => DirectDeclaratorPrime(new FuncDeclarator(direct, tuple.Item1, tuple.Item2)))
-                .Or(paramterIdentifier.ManySeperatedBy(Match<T_PUNC_COMMA>()).ParentLR()
+                .Or(Identifier().ManySeperatedBy(Match<T_PUNC_COMMA>()).ParentLR()
                     .Bind(identifiers => DirectDeclaratorPrime(new FuncDeclarator(direct, identifiers))))
                 .Or(Match<T_PUNC_SUBSCRIPTL>().Then(TypeQualifier().Many())
                     .Bind(qualifiers => AssignmentExpression().ElseNull()

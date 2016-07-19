@@ -59,26 +59,26 @@ namespace lcc.SyntaxTree {
             MODEQ,
             PLUSEQ,
             MINUSEQ,
-            SHIFTLEQ,
-            SHIFTREQ,
-            BITANDEQ,
-            BITXOREQ,
-            BITOREQ
+            LEFTEQ,
+            RIGHTEQ,
+            ANDEQ,
+            XOREQ,
+            OREQ
         }
 
         public static string OpToString(Op op) {
             switch (op) {
                 case Op.ASSIGN:     return "=";
-                case Op.BITANDEQ:   return "&=";
-                case Op.BITOREQ:    return "|=";
-                case Op.BITXOREQ:   return "^=";
+                case Op.ANDEQ:   return "&=";
+                case Op.OREQ:    return "|=";
+                case Op.XOREQ:   return "^=";
                 case Op.DIVEQ:      return "/=";
                 case Op.MINUSEQ:    return "-=";
                 case Op.MODEQ:      return "%=";
                 case Op.MULEQ:      return "*=";
                 case Op.PLUSEQ:     return "+=";
-                case Op.SHIFTLEQ:   return "<<=";
-                case Op.SHIFTREQ:   return ">>=";
+                case Op.LEFTEQ:   return "<<=";
+                case Op.RIGHTEQ:   return ">>=";
                 default: throw new ArgumentException("illegal operator");
             }
         }
@@ -121,15 +121,15 @@ namespace lcc.SyntaxTree {
 
             ETypeError typeError = new ETypeError(Pos, string.Format("illegal type: {0} {1} {2}", lExpr.Type, op, rExpr.Type));
 
-            T resultType = rExpr.Type.nake.None();
+            T resultType = lExpr.Type.nake.None();
             T lElement;
 
-            Func<AST.Assign> Convert = () => {
+            Func<AST.SimpleAssign> Convert = () => {
                 AST.Expr converted = rExpr.ImplicitConvert(resultType);
                 if (converted == null) {
                     throw new ETypeError(Pos, string.Format("cannot implicitly convert from {0} to {1}", lExpr.Type, resultType));
                 }
-                return new AST.Assign(resultType, env.ASTEnv, lExpr, converted, op);
+                return new AST.SimpleAssign(resultType, env.ASTEnv, lExpr, converted, op);
             };
 
             switch (op) {
@@ -153,7 +153,7 @@ namespace lcc.SyntaxTree {
                             throw typeError;
                         }
                     }
-                    return new AST.Assign(resultType, env.ASTEnv, lExpr, rExpr, op);
+                    return new AST.MultiplicativeAssign(resultType, env.ASTEnv, lExpr, rExpr, op);
                 case Op.PLUSEQ:
                 case Op.MINUSEQ:
                     /// Either the left operand shall be a pointer to an object type and the right shall have integer type,
@@ -161,25 +161,25 @@ namespace lcc.SyntaxTree {
                     if (lExpr.Type.IsPtr) {
                         lElement = (lExpr.Type.nake as TPtr).element;
                         if (lElement.IsObject && rExpr.Type.IsInteger) {
-                            return new AST.Assign(resultType, env.ASTEnv, lExpr, rExpr, op);
+                            return new AST.AdditiveAssign(resultType, env.ASTEnv, lExpr, rExpr, op);
                         }
                     }
                     if (lExpr.Type.IsArithmetic && rExpr.Type.IsArithmetic) {
-                        return new AST.Assign(resultType, env.ASTEnv, lExpr, rExpr, op);
+                        return new AST.AdditiveAssign(resultType, env.ASTEnv, lExpr, rExpr, op);
                     }
                     throw typeError;
-                case Op.SHIFTLEQ:
-                case Op.SHIFTREQ:
+                case Op.LEFTEQ:
+                case Op.RIGHTEQ:
                     if (lExpr.Type.IsInteger && rExpr.Type.IsInteger) {
-                        return new AST.Assign(resultType, env.ASTEnv, lExpr, rExpr, op);
+                        return new AST.ShiftAssign(resultType, env.ASTEnv, lExpr, rExpr, op);
                     }
                     throw typeError;
-                case Op.BITANDEQ:
-                case Op.BITXOREQ:
-                case Op.BITOREQ:
+                case Op.ANDEQ:
+                case Op.XOREQ:
+                case Op.OREQ:
                     /// Each of the operands shall have integer type.
                     if (lExpr.Type.IsInteger && rExpr.Type.IsInteger) {
-                        return new AST.Assign(resultType, env.ASTEnv, lExpr, rExpr, op);
+                        return new AST.BitwiseAssign(resultType, env.ASTEnv, lExpr, rExpr, op);
                     }
                     throw typeError;
                 default:
@@ -524,9 +524,11 @@ namespace lcc.SyntaxTree {
                             return new AST.BiExpr(TInt.Instance.None(), env.ASTEnv, lExpr, rExpr, op);
                         }
                     }
-                    if ((lExpr.Type.IsPtr && (rExpr.IsConstZero || rExpr.IsNullPtr)) ||
-                        (rExpr.Type.IsPtr && (lExpr.IsConstZero || lExpr.IsNullPtr))) {
-                        return new AST.BiExpr(TInt.Instance.None(), env.ASTEnv, lExpr, rExpr, op);
+                    if (lExpr.Type.IsPtr && (rExpr.IsConstZero || rExpr.IsNullPtr)) { 
+                        return new AST.BiExpr(TInt.Instance.None(), env.ASTEnv, lExpr, rExpr.ImplicitConvert(lExpr.Type), op);
+                    }
+                    if (rExpr.Type.IsPtr && (lExpr.IsConstZero || lExpr.IsNullPtr)) {
+                        return new AST.BiExpr(TInt.Instance.None(), env.ASTEnv, lExpr.ImplicitConvert(rExpr.Type), rExpr, op);
                     }
                     throw typeError;
                 case Op.AND:
@@ -687,8 +689,8 @@ namespace lcc.SyntaxTree {
             if (e.Type.qualifiers.isConstant) {
                 throw new Error(Pos, "cannot modify constant value");
             }
-            return new AST.Assign(e.Type.nake.None(), env.ASTEnv, e,
-                new AST.ConstIntExpr(TInt.Instance, 0, env.ASTEnv), kind == Kind.INC ? Assign.Op.PLUSEQ : Assign.Op.MINUSEQ);
+            return new AST.AdditiveAssign(e.Type.nake.None(), env.ASTEnv, e,
+                new AST.ConstIntExpr(TInt.Instance, 1, env.ASTEnv), kind == Kind.INC ? Assign.Op.PLUSEQ : Assign.Op.MINUSEQ);
         }
 
         public readonly Expr expr;
@@ -802,7 +804,13 @@ namespace lcc.SyntaxTree {
                     if (!e.Type.IsArithmetic) {
                         throw new Error(Pos, "the operand of the unary + or - operator shall have arithmetic type");
                     }
-                    return new AST.UnaryOp(e.Type.IntPromote(), env.ASTEnv, e, op);
+                    var promoted = e.IntPromote();
+                    /// If e is constant expression, do the optimization.
+                    var c = promoted as AST.ConstArithExpr;
+                    if (c != null) {
+                        return op == Op.PLUS ? c : c.Neg();
+                    }
+                    return new AST.UnaryOp(promoted.Type, env.ASTEnv, promoted, op);
                 case Op.REVERSE:
                     /// Of the ~ operator, integer type.
                     /// The result has integer promoted type.
@@ -1237,7 +1245,7 @@ namespace lcc.SyntaxTree {
     public sealed class Id : Expr, IEquatable<Id> {
 
         public Id(T_IDENTIFIER token) {
-            pos = new Position { line = token.line };
+            pos = new Position(token);
             symbol = token.name;
         }
 
@@ -1340,7 +1348,7 @@ namespace lcc.SyntaxTree {
     /// </summary>
     public sealed class ConstInt : Constant, IEquatable<ConstInt> {
 
-        public ConstInt(T_CONST_INT token) : base(new Position { line = token.line }) {
+        public ConstInt(T_CONST_INT token) : base(new Position(token)) {
             value = Evaluate(token);
 
             // Select the proper type for this constant.
@@ -1452,7 +1460,7 @@ namespace lcc.SyntaxTree {
     /// </summary>
     public sealed class ConstChar : Constant {
 
-        public ConstChar(T_CONST_CHAR token) : base(new Position { line = token.line }) {
+        public ConstChar(T_CONST_CHAR token) : base(new Position(token)) {
 
             // Do not support multi-character characer.
             if (token.prefix == T_CONST_CHAR.Prefix.L) {
@@ -1628,7 +1636,7 @@ namespace lcc.SyntaxTree {
     /// 
     /// </summary>
     public sealed class ConstFloat : Constant, IEquatable<ConstFloat> {
-        public ConstFloat(T_CONST_FLOAT token) : base(new Position { line = token.line }) {
+        public ConstFloat(T_CONST_FLOAT token) : base(new Position(token)) {
             value = Evaluate(token);
             switch (token.suffix) {
                 case T_CONST_FLOAT.Suffix.NONE:
@@ -1717,7 +1725,7 @@ namespace lcc.SyntaxTree {
     /// </summary>
     public sealed class Str : Expr, IEquatable<Str> {
         public Str(LinkedList<T_STRING_LITERAL> tokens) {
-            pos = new Position { line = tokens.First().line };
+            pos = new Position(tokens.First());
             values = Evaluate(tokens);
             type = TChar.Instance.None().Arr(values.Count());
         }
@@ -1745,7 +1753,7 @@ namespace lcc.SyntaxTree {
             IEnumerable<ushort> values = new LinkedList<ushort>();
 
             foreach (var t in tokens) {
-                Position pos = new Position { line = t.line };
+                Position pos = new Position(t);
                 if (t.prefix == T_STRING_LITERAL.Prefix.L) {
                     throw new EUnknownType(pos, "multi-character");
                 }

@@ -654,7 +654,7 @@ namespace lcc.SyntaxTree {
         }
 
         public StoreSpec(int line, Kind type) {
-            this.pos = new Position { line = line };
+            this.pos = new Position(line);
             this.kind = type;
         }
 
@@ -708,7 +708,7 @@ namespace lcc.SyntaxTree {
     public sealed class TypeKeySpec : TypeSpec, IEquatable<TypeKeySpec> {
 
         public TypeKeySpec(int line, Kind kind) : base(kind) {
-            this.pos = new Position { line = line };
+            this.pos = new Position(line);
         }
 
         public override Position Pos => pos;
@@ -746,7 +746,7 @@ namespace lcc.SyntaxTree {
             ) : base(kind) {
             if (kind != Kind.STRUCT && kind != Kind.UNION)
                 throw new ArgumentException("This must be either struct or union!");
-            pos = new Position { line = line };
+            pos = new Position(line);
             this.id = identifier;
             this.declarations = declarations;
         }
@@ -1023,7 +1023,7 @@ namespace lcc.SyntaxTree {
 
         public EnumSpec(int line, Id id, IEnumerable<Enum> enums)
             : base(Kind.ENUM) {
-            pos = new Position { line = line };
+            pos = new Position(line);
             this.id = id;
             this.enums = enums;
         }
@@ -1174,7 +1174,7 @@ namespace lcc.SyntaxTree {
         }
 
         public TypeQual(int line, Kind kind) {
-            this.pos = new Position { line = line };
+            this.pos = new Position(line);
             this.kind = kind;
         }
 
@@ -1204,7 +1204,7 @@ namespace lcc.SyntaxTree {
         }
 
         public FuncSpec(int line, Kind kind) {
-            this.pos = new Position { line = line };
+            this.pos = new Position(line);
             this.kind = kind;
         }
 
@@ -1550,7 +1550,7 @@ namespace lcc.SyntaxTree {
     public sealed class Ptr : Node, IEquatable<Ptr> {
 
         public Ptr(int line, IEnumerable<TypeQual> qualifiers) {
-            this.pos = new Position { line = line };
+            this.pos = new Position(line);
             this.qualifiers = DeclSpecs.GetQualifiers(qualifiers.Select(_ => _.kind));
         }
 
@@ -1746,7 +1746,7 @@ namespace lcc.SyntaxTree {
 
     public sealed class AbsDirDeclaratorNil : AbsDirDeclarator {
         public AbsDirDeclaratorNil(int line) {
-            pos = new Position { line = line };
+            pos = new Position(line);
         }
 
         public bool Equals(AbsDirDeclaratorNil x) {

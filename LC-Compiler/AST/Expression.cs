@@ -17,6 +17,7 @@ namespace lcc.AST {
         public virtual bool IsConstZero => false;
         public virtual bool IsNullPtr => false;
 
+
         protected readonly T type;
         protected readonly Env env;
 
@@ -29,7 +30,7 @@ namespace lcc.AST {
         /// Performs integer promotion by explicitly using cast operator.
         /// </summary>
         /// <returns></returns>
-        public Expr IntPromote() {
+        public virtual Expr IntPromote() {
             T type = this.type.IntPromote();
             return type.Equals(this.type) ? this : new Cast(type.nake, env, this);
         }
@@ -169,50 +170,123 @@ namespace lcc.AST {
     public sealed class CommaExpr : Expr {
         public readonly IEnumerable<Expr> exprs;
         public CommaExpr(T type, Env env, IEnumerable<Expr> exprs) : base(type, env) {
+            Debug.Assert(exprs.Count() > 1);
             this.exprs = exprs;
+        }
+        public override string ToString() {
+            return exprs.Aggregate("", (acc, expr) => acc == "" ? expr.ToString() : acc + ", " + expr.ToString());
+        }
+        public override X86Gen.Ret ToX86Expr(X86Gen gen) {
+            /// Get the last expression and return the ret.
+            return exprs.Aggregate((e1, e2) => {
+                e1.ToX86(gen);
+                return e2;
+            }).ToX86Expr(gen);
         }
     }
 
-    public sealed class Assign : Expr {
+    public abstract class Assign : Expr {
         public readonly Expr lhs;
         public readonly Expr rhs;
         public readonly SyntaxTree.Assign.Op op;
-        public Assign(T type, Env env, Expr lhs, Expr rhs, SyntaxTree.Assign.Op op) : base(type, env) {
+        public Assign(T type, Env env, Expr lhs, Expr rhs, SyntaxTree.Assign.Op op)
+            : base(type, env) {
             this.lhs = lhs;
             this.rhs = rhs;
             this.op = op;
         }
-        public override string ToString() {
+        public sealed override string ToString() {
             return string.Format("{0} {1} {2}", lhs, SyntaxTree.Assign.OpToString(op), rhs);
         }
+    }
+
+    public sealed class SimpleAssign : Assign {
+        public SimpleAssign(T type, Env env, Expr lhs, Expr rhs, SyntaxTree.Assign.Op op) : base(type, env, lhs, rhs, op) {
+            Debug.Assert(op == SyntaxTree.Assign.Op.ASSIGN);
+        }
+
         public override X86Gen.Ret ToX86Expr(X86Gen gen) {
             /// The order of evaluation of the opoerands is unspecified.
             /// Here I choose to evaluate rhs first.
             gen.Comment(X86Gen.Seg.TEXT, ToString());
             var rhsRet = rhs.ToX86Expr(gen);
-            switch (op) {
-                case SyntaxTree.Assign.Op.ASSIGN: {
-                        switch (lhs.Type.Kind) {
-                            case TKind.INT: {
-                                    gen.Inst(X86Gen.push, X86Gen.eax);
-                                    var lhsRet = lhs.ToX86Expr(gen);
-                                    Debug.Assert(lhsRet == X86Gen.Ret.PTR);
-                                    gen.Inst(X86Gen.mov, X86Gen.ebx, X86Gen.eax);
-                                    gen.Inst(X86Gen.pop, X86Gen.eax);
-                                    if (rhsRet == X86Gen.Ret.PTR) {
-                                        gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
-                                    }
-                                    gen.Inst(X86Gen.mov, X86Gen.ebx.Addr(), X86Gen.eax);
-                                    return X86Gen.Ret.REG;
-                                }                                
-                            default:
-                                throw new NotImplementedException();
+            switch (lhs.Type.Kind) {
+                case TKind.PTR:
+                case TKind.UINT:
+                case TKind.ULONG:
+                case TKind.LONG:
+                case TKind.INT: {
+                        gen.Inst(X86Gen.push, X86Gen.eax);
+                        var lhsRet = lhs.ToX86Expr(gen);
+                        Debug.Assert(lhsRet == X86Gen.Ret.PTR);
+                        gen.Inst(X86Gen.mov, X86Gen.ebx, X86Gen.eax);
+                        gen.Inst(X86Gen.pop, X86Gen.eax);
+                        if (rhsRet == X86Gen.Ret.PTR) {
+                            gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
                         }
+                        gen.Inst(X86Gen.mov, X86Gen.ebx.Addr(), X86Gen.eax);
+                        return X86Gen.Ret.REG;
                     }
-                    
                 default:
                     throw new NotImplementedException();
             }
+        }
+    }
+
+    public sealed class MultiplicativeAssign : Assign {
+        public MultiplicativeAssign(T type, Env env, Expr lhs, Expr rhs, SyntaxTree.Assign.Op op) : base(type, env, lhs, rhs, op) {
+            Debug.Assert(op == SyntaxTree.Assign.Op.MULEQ ||
+                op == SyntaxTree.Assign.Op.DIVEQ ||
+                op == SyntaxTree.Assign.Op.MODEQ);
+        }
+    }
+
+    public sealed class AdditiveAssign : Assign {
+        public AdditiveAssign(T type, Env env, Expr lhs, Expr rhs, SyntaxTree.Assign.Op op) : base(type, env, lhs, rhs, op) {
+            Debug.Assert(op == SyntaxTree.Assign.Op.PLUSEQ ||
+                op == SyntaxTree.Assign.Op.MINUSEQ);
+        }
+        public override X86Gen.Ret ToX86Expr(X86Gen gen) {
+            gen.Comment(X86Gen.Seg.TEXT, ToString());
+            gen.Push(rhs.Type, rhs.ToX86Expr(gen));
+            var lhsRet = lhs.ToX86Expr(gen);
+            Debug.Assert(lhsRet == X86Gen.Ret.PTR);
+            if (lhs.Type.IsArithmetic) {
+                if (lhs.Type.Kind == rhs.Type.Kind) {
+                    /// Same type.
+                    switch (lhs.Type.Kind) {
+                        case TKind.INT:
+                            gen.Inst(X86Gen.pop, X86Gen.ebx);
+                            gen.Inst(X86Gen.push, X86Gen.eax);
+                            gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
+                            gen.Inst(op == SyntaxTree.Assign.Op.PLUSEQ ? X86Gen.add : X86Gen.sub, X86Gen.eax, X86Gen.ebx);
+                            gen.Inst(X86Gen.pop, X86Gen.ebx);
+                            gen.Inst(X86Gen.mov, X86Gen.ebx.Addr(), X86Gen.eax);
+                            return X86Gen.Ret.REG;
+                        default: throw new NotImplementedException();
+                    }
+                }
+                throw new NotImplementedException();
+            } else {
+                /// lhs should have pointer type.
+                Debug.Assert(lhs.Type.IsPtr);
+                throw new NotImplementedException();
+            }
+        }
+    }
+
+    public sealed class ShiftAssign : Assign {
+        public ShiftAssign(T type, Env env, Expr lhs, Expr rhs, SyntaxTree.Assign.Op op) : base(type, env, lhs, rhs, op) {
+            Debug.Assert(op == SyntaxTree.Assign.Op.LEFTEQ ||
+                op == SyntaxTree.Assign.Op.RIGHTEQ);
+        }
+    }
+
+    public sealed class BitwiseAssign : Assign {
+        public BitwiseAssign(T type, Env env, Expr lhs, Expr rhs, SyntaxTree.Assign.Op op) : base(type, env, lhs, rhs, op) {
+            Debug.Assert(op == SyntaxTree.Assign.Op.ANDEQ ||
+                op == SyntaxTree.Assign.Op.XOREQ ||
+                op == SyntaxTree.Assign.Op.OREQ);
         }
     }
 
@@ -242,8 +316,8 @@ namespace lcc.AST {
         public BiExpr(
             T type,
             Env env,
-            Expr lhs, 
-            Expr rhs, 
+            Expr lhs,
+            Expr rhs,
             SyntaxTree.BiExpr.Op op
             ) : base(type, env) {
             Debug.Assert(op != SyntaxTree.BiExpr.Op.LOGAND && op != SyntaxTree.BiExpr.Op.LOGOR);
@@ -266,7 +340,7 @@ namespace lcc.AST {
         /// <param name="logicalEndLabel"></param>
         public BiExpr(
             T type,
-            Env env, 
+            Env env,
             Expr lhs,
             Expr rhs,
             SyntaxTree.BiExpr.Op op,
@@ -330,9 +404,25 @@ namespace lcc.AST {
 
             gen.Push(lhs.Type, lhs.ToX86Expr(gen));
             switch (type.Kind) {
+                case TKind.UINT:
+                case TKind.ULONG:
+                    // Generate code for rhs and move the result to ebx.
+                    gen.Inst(X86Gen.mov, X86Gen.ebx, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr() as X86Gen.Operand : X86Gen.eax);
+                    gen.Inst(X86Gen.pop, X86Gen.eax);
+                    switch (op) {
+                        case SyntaxTree.BiExpr.Op.MOD:
+                            throw new NotImplementedException();
+                        case SyntaxTree.BiExpr.Op.MULT:
+                            gen.Inst(X86Gen.mul, X86Gen.ebx);
+                            break;
+                        case SyntaxTree.BiExpr.Op.DIV:
+                            throw new NotImplementedException();
+                    }
+                    break;
+                case TKind.LONG:
                 case TKind.INT:
                     // Generate code for rhs and move the result to ebx.
-                    gen.Mov(rhs.Type, rhs.ToX86Expr(gen), X86Gen.ebx);
+                    gen.Inst(X86Gen.mov, X86Gen.ebx, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr() as X86Gen.Operand : X86Gen.eax);
                     gen.Inst(X86Gen.pop, X86Gen.eax);
                     switch (op) {
                         case SyntaxTree.BiExpr.Op.MOD:
@@ -363,11 +453,11 @@ namespace lcc.AST {
             switch (type.Kind) {
                 case TKind.INT:
                     // Generate code for rhs and move the result to ebx.
-                    gen.Mov(rhs.Type, rhs.ToX86Expr(gen), X86Gen.ebx);
+                    gen.Inst(X86Gen.mov, X86Gen.ebx, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr() as X86Gen.Operand : X86Gen.eax);
                     gen.Inst(X86Gen.pop, X86Gen.eax);
                     switch (op) {
-                        case SyntaxTree.BiExpr.Op.PLUS:     gen.Inst(X86Gen.add, X86Gen.eax, X86Gen.ebx); break;
-                        case SyntaxTree.BiExpr.Op.MINUS:    gen.Inst(X86Gen.sub, X86Gen.eax, X86Gen.ebx); break;
+                        case SyntaxTree.BiExpr.Op.PLUS: gen.Inst(X86Gen.add, X86Gen.eax, X86Gen.ebx); break;
+                        case SyntaxTree.BiExpr.Op.MINUS: gen.Inst(X86Gen.sub, X86Gen.eax, X86Gen.ebx); break;
                     }
                     break;
                 default: throw new NotImplementedException();
@@ -392,9 +482,27 @@ namespace lcc.AST {
 
             /// Both lhs and rhs should have the same type (either pointer or result from usual arithmetic conversion).
             switch (lhs.Type.Kind) {
+                case TKind.PTR:
+                case TKind.ULONG:
+                case TKind.UINT:
+                    gen.Inst(X86Gen.mov, X86Gen.ebx, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr() as X86Gen.Operand : X86Gen.eax);
+                    gen.Inst(X86Gen.pop, X86Gen.eax);
+                    gen.Inst(X86Gen.cmp, X86Gen.eax, X86Gen.ebx);
+                    switch (op) {
+                        case SyntaxTree.BiExpr.Op.LE: gen.Inst(X86Gen.setbe, X86Gen.al); break;
+                        case SyntaxTree.BiExpr.Op.LT: gen.Inst(X86Gen.setb, X86Gen.al); break;
+                        case SyntaxTree.BiExpr.Op.GE: gen.Inst(X86Gen.setae, X86Gen.al); break;
+                        case SyntaxTree.BiExpr.Op.GT: gen.Inst(X86Gen.seta, X86Gen.al); break;
+                        case SyntaxTree.BiExpr.Op.EQ: gen.Inst(X86Gen.sete, X86Gen.al); break;
+                        case SyntaxTree.BiExpr.Op.NEQ: gen.Inst(X86Gen.setne, X86Gen.al); break;
+                    }
+                    gen.Inst(X86Gen.and, X86Gen.al, 1);
+                    gen.Inst(X86Gen.movzx, X86Gen.eax, X86Gen.al);
+                    break;
+                case TKind.LONG:
                 case TKind.INT:
                     // Generate code for rhs and move the result to ebx.
-                    gen.Mov(rhs.Type, rhs.ToX86Expr(gen), X86Gen.ebx);
+                    gen.Inst(X86Gen.mov, X86Gen.ebx, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr() as X86Gen.Operand : X86Gen.eax);
 
                     // Pop the result of lhs to eax.
                     gen.Inst(X86Gen.pop, X86Gen.eax);
@@ -423,75 +531,15 @@ namespace lcc.AST {
             Debug.Assert(op == SyntaxTree.BiExpr.Op.LOGAND || op == SyntaxTree.BiExpr.Op.LOGOR);
             Debug.Assert(logicalEndLabel != null && logicalShortCutLabel != null);
 
-            switch (op) {
-                case SyntaxTree.BiExpr.Op.LOGAND:
-                    gen.BranchFalse(lhs, logicalShortCutLabel);
-                    gen.BranchFalse(rhs, logicalShortCutLabel);
-                    gen.Inst(X86Gen.mov, X86Gen.eax, 1);
-                    gen.Inst(X86Gen.jmp, logicalEndLabel);
-                    gen.Tag(X86Gen.Seg.TEXT, logicalShortCutLabel);
-                    gen.Inst(X86Gen.mov, X86Gen.eax, 0);
-                    break;
-                case SyntaxTree.BiExpr.Op.LOGOR:
-                    gen.BranchTrue(lhs, logicalShortCutLabel);
-                    gen.BranchTrue(rhs, logicalShortCutLabel);
-                    gen.Inst(X86Gen.mov, X86Gen.eax, 0);
-                    gen.Inst(X86Gen.jmp, logicalEndLabel);
-                    gen.Tag(X86Gen.Seg.TEXT, logicalShortCutLabel);
-                    gen.Inst(X86Gen.mov, X86Gen.eax, 1);
-                    break;
-            }
-
+            var which = op == SyntaxTree.BiExpr.Op.LOGOR;
+            gen.Branch(lhs, logicalShortCutLabel, which);
+            gen.Branch(rhs, logicalShortCutLabel, which);
+            gen.Inst(X86Gen.mov, X86Gen.eax, which ? 0 : 1);
+            gen.Inst(X86Gen.jmp, logicalEndLabel);
+            gen.Tag(X86Gen.Seg.TEXT, logicalShortCutLabel);
+            gen.Inst(X86Gen.mov, X86Gen.eax, which ? 1 : 0);
             gen.Tag(X86Gen.Seg.TEXT, logicalEndLabel);
         }
-
-        //private void X86Int(X86Gen gen, X86Gen.Ret lhsRet) {
-        //    /// Store the lhs operand.
-        //    if (lhsRet == X86Gen.Ret.PTR) {
-        //        gen.Inst(X86Gen.push, X86Gen.eax.Addr());
-        //    } else {
-        //        gen.Inst(X86Gen.push, X86Gen.eax);
-        //    }
-
-        //    /// Generate the second operand and mov it to ebx.
-        //    var rhsRet = rhs.ToX86Expr(gen);
-        //    if (rhsRet == X86Gen.Ret.PTR) {
-        //        gen.Inst(X86Gen.mov, X86Gen.ebx, X86Gen.eax.Addr());
-        //    } else {
-        //        gen.Inst(X86Gen.mov, X86Gen.ebx, X86Gen.eax);
-        //    }
-        //    /// Pop the lhs operand and calcuate the result.
-        //    gen.Inst(X86Gen.pop, X86Gen.eax);
-        //    switch (op) {
-        //        case SyntaxTree.BiExpr.Op.PLUS:     gen.Inst(X86Gen.add, X86Gen.eax, X86Gen.ebx); break;
-        //        case SyntaxTree.BiExpr.Op.MINUS:    gen.Inst(X86Gen.sub, X86Gen.eax, X86Gen.ebx); break;
-        //        case SyntaxTree.BiExpr.Op.MULT:     gen.Inst(X86Gen.imul, X86Gen.eax, X86Gen.ebx); break;
-        //        case SyntaxTree.BiExpr.Op.DIV:
-        //            gen.Inst(X86Gen.cdq);
-        //            gen.Inst(X86Gen.idiv, X86Gen.ebx);
-        //            break;
-        //        case SyntaxTree.BiExpr.Op.LT:
-        //        case SyntaxTree.BiExpr.Op.LE:
-        //        case SyntaxTree.BiExpr.Op.GT:
-        //        case SyntaxTree.BiExpr.Op.GE:
-        //        case SyntaxTree.BiExpr.Op.EQ:
-        //        case SyntaxTree.BiExpr.Op.NEQ:
-        //            gen.Inst(X86Gen.cmp, X86Gen.eax, X86Gen.ebx);
-        //            switch (op) {
-        //                case SyntaxTree.BiExpr.Op.LE:   gen.Inst(X86Gen.setle, X86Gen.al); break;
-        //                case SyntaxTree.BiExpr.Op.LT:   gen.Inst(X86Gen.setl, X86Gen.al); break;
-        //                case SyntaxTree.BiExpr.Op.GE:   gen.Inst(X86Gen.setge, X86Gen.al); break;
-        //                case SyntaxTree.BiExpr.Op.GT:   gen.Inst(X86Gen.setg, X86Gen.al); break;
-        //                case SyntaxTree.BiExpr.Op.EQ:   gen.Inst(X86Gen.sete, X86Gen.al); break;
-        //                case SyntaxTree.BiExpr.Op.NEQ:  gen.Inst(X86Gen.setne, X86Gen.al); break;
-        //            }
-                    
-        //            gen.Inst(X86Gen.and, X86Gen.al, 1);
-        //            gen.Inst(X86Gen.movzx, X86Gen.eax, X86Gen.al);
-        //            break;
-        //        default: throw new NotImplementedException();
-        //    }
-        //}
     }
 
     public class Cast : Expr {
@@ -503,7 +551,8 @@ namespace lcc.AST {
             return string.Format("({0})({1})", type, expr);
         }
         public override X86Gen.Ret ToX86Expr(X86Gen gen) {
-            throw new NotImplementedException();
+            gen.Comment(X86Gen.Seg.TEXT, ToString());
+            return gen.Cast(expr, type);
         }
     }
 
@@ -558,6 +607,7 @@ namespace lcc.AST {
     public sealed class UnaryOp : Expr {
         public readonly Expr expr;
         public readonly SyntaxTree.UnaryOp.Op op;
+        public override bool IsLValue => op == SyntaxTree.UnaryOp.Op.STAR;
         public UnaryOp(T type, Env env, Expr expr, SyntaxTree.UnaryOp.Op op) : base(type, env) {
             this.expr = expr;
             this.op = op;
@@ -572,6 +622,11 @@ namespace lcc.AST {
                 case SyntaxTree.UnaryOp.Op.REF:
                     Debug.Assert(ret == X86Gen.Ret.PTR);
                     return X86Gen.Ret.REG;
+                case SyntaxTree.UnaryOp.Op.STAR:
+                    if (ret == X86Gen.Ret.PTR) {
+                        gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
+                    }
+                    return X86Gen.Ret.PTR;
                 default:
                     throw new NotImplementedException();
             }
@@ -639,12 +694,11 @@ namespace lcc.AST {
             var ret = agg.ToX86Expr(gen);
             var f = aggType.GetField(field);
             if (kind == SyntaxTree.Access.Kind.PTR) {
-                if (ret == X86Gen.Ret.REG) {
-                    gen.Inst(X86Gen.add, X86Gen.eax, f.Value.offset / 8);
-                    return X86Gen.Ret.PTR;
-                } else {
-                    throw new NotImplementedException();
+                if (ret == X86Gen.Ret.PTR) {
+                    gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
                 }
+                gen.Inst(X86Gen.add, X86Gen.eax, f.Value.offset / 8);
+                return X86Gen.Ret.PTR;
             } else {
                 throw new NotImplementedException();
             }
@@ -757,6 +811,9 @@ namespace lcc.AST {
     /// </summary>
     public abstract class ConstArithExpr : ConstExpr {
         public ConstArithExpr(TUnqualified type, Env env) : base(type, env) { }
+        public virtual ConstArithExpr Neg() {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>
@@ -769,17 +826,27 @@ namespace lcc.AST {
         public ConstIntExpr(TInteger t, BigInteger value, Env env) : base(t, env) {
             this.t = t;
             this.value = value;
+            Debug.Assert(t.IsSigned || value >= 0);
+        }
+        public override Expr IntPromote() {
+            T promoted = type.IntPromote();
+            if (promoted.IsInteger) return new ConstIntExpr(promoted.nake as TInteger, value, env);
+            else return new ConstFloatExpr(promoted.nake as TArithmetic, (double)value, env);
+        }
+        public override ConstArithExpr Neg() {
+            return new ConstIntExpr(t, -value, env);
         }
         public override string ToString() {
             return value.ToString();
         }
         public override X86Gen.Ret ToX86Expr(X86Gen gen) {
             gen.Comment(X86Gen.Seg.TEXT, ToString());
-            if (t.Kind == TKind.INT) {
-                gen.Inst(X86Gen.mov, X86Gen.eax, value);
-                return X86Gen.Ret.REG;
+            switch (t.Kind) {
+                case TKind.UINT:
+                case TKind.INT:
+                    gen.Inst(X86Gen.mov, X86Gen.eax, value);
+                    return X86Gen.Ret.REG;
             }
-
 
             throw new NotImplementedException();
         }
@@ -801,8 +868,16 @@ namespace lcc.AST {
     /// Null pointer constant.
     /// </summary>
     public sealed class ConstNullPtr : ConstExpr {
-        public override bool IsNullPtr => false;
+        public override bool IsNullPtr => true;
         public ConstNullPtr(T element, Env env) : base(new TPtr(element), env) { }
+        public override string ToString() {
+            return string.Format("({0})0", type);
+        }
+        public override X86Gen.Ret ToX86Expr(X86Gen gen) {
+            gen.Comment(X86Gen.Seg.TEXT, ToString());
+            gen.Inst(X86Gen.xor, X86Gen.eax, X86Gen.eax);
+            return X86Gen.Ret.REG;
+        }
     }
 
     ///// <summary>

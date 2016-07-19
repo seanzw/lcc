@@ -1,5 +1,6 @@
 ﻿#include <stdio.h>
 
+int foo(int x);
 int func1(int argc, char* argv[]);
 int test_if(int x);
 int test_for(int x);
@@ -20,5 +21,6 @@ int main(int argc, char* argv[]) {
     printf("test_mul(%d) = %d\n", 10, test_mul(10));
     printf("test_div(%d) = %d\n", 1, test_div(1));
     printf("test_log_and(%d) = %d\n", 1, test_log_and(1));
+    printf("foo(%d) = %d\n", 2, foo(2));
     return 0;
 }

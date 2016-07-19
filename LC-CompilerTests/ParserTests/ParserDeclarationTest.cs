@@ -1060,22 +1060,9 @@ int foo();
 
         [TestMethod]
         public void LCCParserTypedef() {
-            lcc.Parser.Env.PushScope();
+            lcc.Parser.Env.Clear();
             lcc.Parser.Env.AddTypedefName(1, "a");
             var tests = new Dictionary<string, Param> {
-                {
-                    "int a",
-                    new Param(
-                        new DeclSpecs(
-                            new List<DeclSpec> {
-                                new TypeKeySpec(1, TypeSpec.Kind.INT)
-                            },
-                            StoreSpec.Kind.NONE,
-                            new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
-                        new Declarator(
-                            new List<Ptr>(),
-                            new IdDeclarator(new Id(new T_IDENTIFIER(1, "a")))))
-                },
                 {
                     "const a",
                     new Param(
@@ -1092,35 +1079,6 @@ int foo();
                 Aux(test.Key, Parser.ParameterDeclaration().End(), test.Value, false);
             }
             lcc.Parser.Env.PopScope();
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(TypedefRedefined), "Redefine typedef name.")]
-        public void LCCParserTypeRedefined() {
-            lcc.Parser.Env.PushScope();
-            lcc.Parser.Env.AddTypedefName(1, "a");
-            var tests = new Dictionary<string, Declaration> {
-                {
-                    "typedef int a;",
-                    new Declaration(
-                        new DeclSpecs(
-                            new List<DeclSpec> {
-                                new TypeKeySpec(1, TypeSpec.Kind.INT)
-                            },
-                            StoreSpec.Kind.NONE,
-                            new List<TypeSpec.Kind> { TypeSpec.Kind.INT }),
-                        new List<InitDeclarator> {
-                            new InitDeclarator(
-                                new Declarator(new List<Ptr>(),
-                                new IdDeclarator(new Id(new T_IDENTIFIER(1, "a")))))
-                        })
-                }
-            };
-            foreach (var test in tests) {
-                Aux(test.Key, Parser.Declaration().End(), test.Value, false);
-            }
-            lcc.Parser.Env.PopScope();
-
         }
     }
 }

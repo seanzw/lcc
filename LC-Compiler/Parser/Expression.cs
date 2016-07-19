@@ -62,11 +62,11 @@ namespace lcc.Parser {
                 .Else(Match<T_PUNC_MODEQ>().Return(Assign.Op.MODEQ))
                 .Else(Match<T_PUNC_PLUSEQ>().Return(Assign.Op.PLUSEQ))
                 .Else(Match<T_PUNC_MINUSEQ>().Return(Assign.Op.MINUSEQ))
-                .Else(Match<T_PUNC_SHIFTLEQ>().Return(Assign.Op.SHIFTLEQ))
-                .Else(Match<T_PUNC_SHIFTREQ>().Return(Assign.Op.SHIFTREQ))
-                .Else(Match<T_PUNC_BITANDEQ>().Return(Assign.Op.BITANDEQ))
-                .Else(Match<T_PUNC_BITXOREQ>().Return(Assign.Op.BITXOREQ))
-                .Else(Match<T_PUNC_BITOREQ>().Return(Assign.Op.BITOREQ));
+                .Else(Match<T_PUNC_SHIFTLEQ>().Return(Assign.Op.LEFTEQ))
+                .Else(Match<T_PUNC_SHIFTREQ>().Return(Assign.Op.RIGHTEQ))
+                .Else(Match<T_PUNC_BITANDEQ>().Return(Assign.Op.ANDEQ))
+                .Else(Match<T_PUNC_BITXOREQ>().Return(Assign.Op.XOREQ))
+                .Else(Match<T_PUNC_BITOREQ>().Return(Assign.Op.OREQ));
         }
 
         /// <summary>
@@ -379,15 +379,32 @@ namespace lcc.Parser {
         ///     | string-literal.Plus // Allow strings to be concated.
         ///     | ( expression )
         ///     ;
+        ///     
+        /// Notice that an identifier is a primary expression only when it has
+        /// been declared as designating an object for a function.
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<Token.Token, Expr> PrimaryExpression() {
-            return Get<T_IDENTIFIER>().Select(x => new Id(x) as Expr)
+            return Identifier().Select(x => x as Expr)
                 .Else(Get<T_CONST_CHAR>().Select(x => new ConstChar(x)))
                 .Else(Get<T_CONST_INT>().Select(x => new ConstInt(x)))
                 .Else(Get<T_CONST_FLOAT>().Select(x => new ConstFloat(x)))
                 .Else(Get<T_STRING_LITERAL>().Plus().Select(x => new Str(x)))
                 .Else(Ref(Expression).ParentLR());
+        }
+
+        /// <summary>
+        /// identifier
+        ///     : T_IDENTIFIER
+        ///     ;
+        ///     
+        /// Fail if the identifier is a typedef name.
+        /// </summary>
+        /// <returns></returns>
+        public static Parserc.Parser<Token.Token, Id> Identifier() {
+            return Get<T_IDENTIFIER>()
+                .Bind(id => Env.IsTypedefName(id.name) ? 
+                Zero<Token.Token, Id>() : Result<Token.Token, Id>(new Id(id)));
         }
     }
 }

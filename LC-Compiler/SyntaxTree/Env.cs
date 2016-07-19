@@ -191,7 +191,7 @@ namespace lcc.SyntaxTree {
             }
 
             public bool HasVARR() {
-                foreach (var s in symbols) 
+                foreach (var s in symbols)
                     if (s.kind == SymbolEntry.Kind.OBJ && s.type.Kind == TKind.VARR) return true;
                 return false;
             }
@@ -429,7 +429,7 @@ namespace lcc.SyntaxTree {
         }
 
         public bool IsLabelWithVARR(string label) {
-            foreach (var scope in scopes) 
+            foreach (var scope in scopes)
                 if (scope.kind == ScopeKind.FUNC) return scope.IsLabelWithVARR(label);
             throw new InvalidOperationException("there is no upper function scope");
         }

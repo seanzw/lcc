@@ -6,6 +6,30 @@
 	.globl	@feat.00
 @feat.00 = 1
 	.intel_syntax noprefix
+	.def	 _foo;
+	.scl	2;
+	.type	32;
+	.endef
+	.globl	_foo
+	.p2align	4, 0x90
+_foo:                                   # @foo
+# BB#0:
+	push	ebp
+	mov	ebp, esp
+	push	eax
+	mov	eax, dword ptr [ebp + 8]
+	mov	dword ptr [ebp - 4], eax
+	mov	eax, dword ptr [ebp - 4]
+	add	eax, 1
+	mov	dword ptr [ebp - 4], eax
+	mov	eax, dword ptr [ebp - 4]
+	add	eax, 1
+	mov	dword ptr [ebp - 4], eax
+	mov	eax, dword ptr [ebp - 4]
+	add	esp, 4
+	pop	ebp
+	ret
+
 	.def	 _test_if;
 	.scl	2;
 	.type	32;
@@ -20,24 +44,24 @@ _test_if:                               # @test_if
 	mov	eax, dword ptr [ebp + 8]
 	mov	dword ptr [ebp - 8], eax
 	cmp	dword ptr [ebp - 8], 0
-	jg	LBB0_4
+	jg	LBB1_4
 # BB#1:
 	cmp	dword ptr [ebp - 8], 2
-	jg	LBB0_3
+	jg	LBB1_3
 # BB#2:
 	mov	eax, dword ptr [ebp - 8]
 	add	eax, 1
 	mov	dword ptr [ebp - 4], eax
-	jmp	LBB0_5
-LBB0_3:
+	jmp	LBB1_5
+LBB1_3:
 	mov	eax, dword ptr [ebp - 8]
 	mov	dword ptr [ebp - 4], eax
-	jmp	LBB0_5
-LBB0_4:
+	jmp	LBB1_5
+LBB1_4:
 	mov	eax, dword ptr [ebp - 8]
 	sub	eax, 4
 	mov	dword ptr [ebp - 4], eax
-LBB0_5:
+LBB1_5:
 	mov	eax, dword ptr [ebp - 4]
 	add	esp, 8
 	pop	ebp
@@ -58,20 +82,20 @@ _test_for:                              # @test_for
 	mov	dword ptr [ebp - 4], eax
 	mov	dword ptr [ebp - 12], 0
 	mov	dword ptr [ebp - 8], 0
-LBB1_1:                                 # =>This Inner Loop Header: Depth=1
+LBB2_1:                                 # =>This Inner Loop Header: Depth=1
 	mov	eax, dword ptr [ebp - 8]
 	cmp	eax, dword ptr [ebp - 4]
-	jge	LBB1_4
-# BB#2:                                 #   in Loop: Header=BB1_1 Depth=1
+	jge	LBB2_4
+# BB#2:                                 #   in Loop: Header=BB2_1 Depth=1
 	mov	eax, dword ptr [ebp - 12]
 	add	eax, dword ptr [ebp - 4]
 	mov	dword ptr [ebp - 12], eax
-# BB#3:                                 #   in Loop: Header=BB1_1 Depth=1
+# BB#3:                                 #   in Loop: Header=BB2_1 Depth=1
 	mov	eax, dword ptr [ebp - 8]
 	add	eax, 1
 	mov	dword ptr [ebp - 8], eax
-	jmp	LBB1_1
-LBB1_4:
+	jmp	LBB2_1
+LBB2_4:
 	mov	eax, dword ptr [ebp - 12]
 	add	esp, 12
 	pop	ebp
@@ -91,11 +115,11 @@ _sum:                                   # @sum
 	mov	eax, dword ptr [ebp + 8]
 	mov	dword ptr [ebp - 8], eax
 	cmp	dword ptr [ebp - 8], 0
-	jg	LBB2_2
+	jg	LBB3_2
 # BB#1:
 	mov	dword ptr [ebp - 4], 0
-	jmp	LBB2_3
-LBB2_2:
+	jmp	LBB3_3
+LBB3_2:
 	mov	eax, dword ptr [ebp - 8]
 	mov	ecx, dword ptr [ebp - 8]
 	sub	ecx, 1
@@ -105,7 +129,7 @@ LBB2_2:
 	mov	ecx, dword ptr [ebp - 12] # 4-byte Reload
 	add	ecx, eax
 	mov	dword ptr [ebp - 4], ecx
-LBB2_3:
+LBB3_3:
 	mov	eax, dword ptr [ebp - 4]
 	add	esp, 16
 	pop	ebp
@@ -201,16 +225,16 @@ _test_log_and:                          # @test_log_and
 	mov	eax, dword ptr [ebp + 8]
 	mov	dword ptr [ebp - 8], eax
 	cmp	dword ptr [ebp - 8], 0
-	jle	LBB6_3
+	jle	LBB7_3
 # BB#1:
 	cmp	dword ptr [ebp - 8], 5
-	jge	LBB6_3
+	jge	LBB7_3
 # BB#2:
 	mov	dword ptr [ebp - 4], 1
-	jmp	LBB6_4
-LBB6_3:
+	jmp	LBB7_4
+LBB7_3:
 	mov	dword ptr [ebp - 4], 0
-LBB6_4:
+LBB7_4:
 	mov	eax, dword ptr [ebp - 4]
 	add	esp, 8
 	pop	ebp

@@ -4,6 +4,47 @@
 	.intel_syntax noprefix
 	# Frame Size: 0
 	# EBP        UID   SYMBOL     TYPE                
+	# 8          0     a          int                 
+	.globl _foo
+_foo:
+	push   ebp
+	mov    ebp, esp
+	sub    esp, 0
+	# a += 1
+	# 1
+	mov    eax, 1
+	push   eax
+	# a
+	lea    eax, dword ptr [ebp + 8]
+	pop    ebx
+	push   eax
+	mov    eax, dword ptr [eax + 0]
+	add    eax, ebx
+	pop    ebx
+	mov    dword ptr [ebx + 0], eax
+	# a += 1
+	# 1
+	mov    eax, 1
+	push   eax
+	# a
+	lea    eax, dword ptr [ebp + 8]
+	pop    ebx
+	push   eax
+	mov    eax, dword ptr [eax + 0]
+	add    eax, ebx
+	pop    ebx
+	mov    dword ptr [ebx + 0], eax
+	# return a
+	# a
+	lea    eax, dword ptr [ebp + 8]
+	mov    eax, dword ptr [eax + 0]
+	jmp    __foo_return
+__foo_return:
+	add    esp, 0
+	pop    ebp
+	ret
+	# Frame Size: 0
+	# EBP        UID   SYMBOL     TYPE                
 	# 8          0     x          int                 
 	.globl _test_if
 _test_if:
@@ -24,7 +65,6 @@ _test_if:
 	setle  al
 	and    al, 1
 	movzx  eax, al
-	mov    eax, eax
 	cmp    eax, 0
 	je     __else_block_1
 	# then
@@ -42,7 +82,6 @@ _test_if:
 	setle  al
 	and    al, 1
 	movzx  eax, al
-	mov    eax, eax
 	cmp    eax, 0
 	je     __endif_0
 	# then
@@ -139,7 +178,6 @@ __loop_first_0:
 	setl   al
 	and    al, 1
 	movzx  eax, al
-	mov    eax, eax
 	cmp    eax, 0
 	je     __loop_break_0
 	# for body
@@ -196,7 +234,6 @@ _sum:
 	setle  al
 	and    al, 1
 	movzx  eax, al
-	mov    eax, eax
 	cmp    eax, 0
 	je     __else_block_2
 	# then
@@ -403,7 +440,6 @@ _test_log_and:
 	setg   al
 	and    al, 1
 	movzx  eax, al
-	mov    eax, eax
 	cmp    eax, 0
 	je     __logical_shortcut_0
 	# < ((int)(x)) (5)
@@ -419,7 +455,6 @@ _test_log_and:
 	setl   al
 	and    al, 1
 	movzx  eax, al
-	mov    eax, eax
 	cmp    eax, 0
 	je     __logical_shortcut_0
 	mov    eax, 1
@@ -427,7 +462,6 @@ _test_log_and:
 __logical_shortcut_0:
 	mov    eax, 0
 __logical_end_0:
-	mov    eax, eax
 	cmp    eax, 0
 	je     __else_block_3
 	# then

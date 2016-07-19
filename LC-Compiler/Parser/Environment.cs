@@ -33,8 +33,7 @@ namespace lcc.Parser {
         /// Static initializer.
         /// </summary>
         static Env() {
-            scopes = new Stack<Scope>();
-            PushScope();
+            Clear();
         }
 
         /// <summary>
@@ -79,6 +78,11 @@ namespace lcc.Parser {
         public static void AddTypedefName(int line, string name) {
             if (scopes.Peek().IsTypedefName(name)) throw new TypedefRedefined(line, name);
             else scopes.Peek().AddTypedefName(name);
+        }
+
+        public static void Clear() {
+            scopes = new Stack<Scope>();
+            PushScope();
         }
 
         private static Stack<Scope> scopes;

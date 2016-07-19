@@ -10,7 +10,7 @@ namespace lcc.SyntaxTree {
     /// Position in the source code.
     /// </summary>
     public struct Position : IEquatable<Position> {
-        public int line;
+        public readonly int line;
         public override string ToString() {
             return string.Format("line {0}", line);
         }
@@ -19,6 +19,12 @@ namespace lcc.SyntaxTree {
         }
         public override int GetHashCode() {
             return line;
+        }
+        public Position(Token.Token token) {
+            line = token.line;
+        }
+        public Position(int line) {
+            this.line = line;
         }
     }
 

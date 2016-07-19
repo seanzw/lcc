@@ -27,12 +27,7 @@ namespace LC_CompilerTests {
             R truth,
             bool clear = true
             ) {
-            // Clear the parser environment.
-            if (clear) {
-                lcc.Parser.Env.PopScope();
-                lcc.Parser.Env.PushScope();
-            }
-            var result = Utility.parse(src, parser);
+            var result = Utility.parse(src, parser, clear);
 
             // Check the first result.
             Assert.AreEqual(1, result.Count());

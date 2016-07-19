@@ -225,7 +225,6 @@ _max_heapify:
 	setl   al
 	and    al, 1
 	movzx  eax, al
-	mov    eax, eax
 	cmp    eax, 0
 	je     __logical_shortcut_0
 	# > ((int)((((int) *)(arr))[lhs])) ((int)((((int) *)(arr))[i]))
@@ -258,7 +257,6 @@ _max_heapify:
 	setg   al
 	and    al, 1
 	movzx  eax, al
-	mov    eax, eax
 	cmp    eax, 0
 	je     __logical_shortcut_0
 	mov    eax, 1
@@ -266,7 +264,6 @@ _max_heapify:
 __logical_shortcut_0:
 	mov    eax, 0
 __logical_end_0:
-	mov    eax, eax
 	cmp    eax, 0
 	je     __else_block_0
 	# then
@@ -312,7 +309,6 @@ __endif_0:
 	setl   al
 	and    al, 1
 	movzx  eax, al
-	mov    eax, eax
 	cmp    eax, 0
 	je     __logical_shortcut_1
 	# > ((int)((((int) *)(arr))[rhs])) ((int)((((int) *)(arr))[maximum]))
@@ -345,7 +341,6 @@ __endif_0:
 	setg   al
 	and    al, 1
 	movzx  eax, al
-	mov    eax, eax
 	cmp    eax, 0
 	je     __logical_shortcut_1
 	mov    eax, 1
@@ -353,7 +348,6 @@ __endif_0:
 __logical_shortcut_1:
 	mov    eax, 0
 __logical_end_1:
-	mov    eax, eax
 	cmp    eax, 0
 	je     __endif_1
 	# then
@@ -385,7 +379,6 @@ __endif_1:
 	setne  al
 	and    al, 1
 	movzx  eax, al
-	mov    eax, eax
 	cmp    eax, 0
 	je     __endif_2
 	# then
@@ -491,7 +484,6 @@ __loop_first_0:
 	setge  al
 	and    al, 1
 	movzx  eax, al
-	mov    eax, eax
 	cmp    eax, 0
 	je     __loop_break_0
 	# for body
@@ -587,7 +579,6 @@ __loop_first_1:
 	setge  al
 	and    al, 1
 	movzx  eax, al
-	mov    eax, eax
 	cmp    eax, 0
 	je     __loop_break_1
 	# for body

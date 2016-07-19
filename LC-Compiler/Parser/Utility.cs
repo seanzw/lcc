@@ -87,15 +87,6 @@ namespace lcc.Parser {
             return parser.Bracket(Match<T_PUNC_SUBSCRIPTL>(), Match<T_PUNC_SUBSCRIPTR>());
         }
 
-        /// <summary>
-        /// identifier
-        ///     : T_IDENTIFIER
-        ///     ;
-        /// </summary>
-        /// <returns></returns>
-        public static Parserc.Parser<T, Id> Identifier() {
-            return Get<T_IDENTIFIER>().Select(t => new Id(t));
-        }
     }
 
     public class TypedefRedefined : System.Exception {
