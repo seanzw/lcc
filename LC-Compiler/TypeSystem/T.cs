@@ -665,7 +665,7 @@ namespace lcc.TypeSystem {
         /// <summary>
         /// Get the size in bytes.
         /// </summary>
-        public int Size => nake.Bytes;
+        public int Bytes => nake.Bytes;
 
         /// <summary>
         /// Get the alignment in bits.

@@ -361,7 +361,7 @@ namespace lcc.AST {
         public override X86Gen.Ret ToX86Expr(X86Gen gen) {
             gen.Comment(X86Gen.Seg.TEXT, ToString());
             switch (op) {
-                case SyntaxTree.BiExpr.Op.MULT:
+                case SyntaxTree.BiExpr.Op.MUL:
                 case SyntaxTree.BiExpr.Op.DIV:
                 case SyntaxTree.BiExpr.Op.MOD:
                     Multiplicative(gen);
@@ -400,7 +400,7 @@ namespace lcc.AST {
         private void Multiplicative(X86Gen gen) {
             Debug.Assert(lhs.Type.Kind == rhs.Type.Kind);
             Debug.Assert(type.Kind == lhs.Type.Kind);
-            Debug.Assert(op == SyntaxTree.BiExpr.Op.MULT || op == SyntaxTree.BiExpr.Op.DIV || op == SyntaxTree.BiExpr.Op.MOD);
+            Debug.Assert(op == SyntaxTree.BiExpr.Op.MUL || op == SyntaxTree.BiExpr.Op.DIV || op == SyntaxTree.BiExpr.Op.MOD);
 
             gen.Push(lhs.Type, lhs.ToX86Expr(gen));
             switch (type.Kind) {
@@ -411,12 +411,17 @@ namespace lcc.AST {
                     gen.Inst(X86Gen.pop, X86Gen.eax);
                     switch (op) {
                         case SyntaxTree.BiExpr.Op.MOD:
-                            throw new NotImplementedException();
-                        case SyntaxTree.BiExpr.Op.MULT:
+                        case SyntaxTree.BiExpr.Op.DIV:
+                            // Clear edx.
+                            gen.Inst(X86Gen.xor, X86Gen.edx, X86Gen.edx);
+                            gen.Inst(X86Gen.div, X86Gen.ebx);
+                            if (op == SyntaxTree.BiExpr.Op.MOD) {
+                                gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.edx);
+                            }
+                            break;
+                        case SyntaxTree.BiExpr.Op.MUL:
                             gen.Inst(X86Gen.mul, X86Gen.ebx);
                             break;
-                        case SyntaxTree.BiExpr.Op.DIV:
-                            throw new NotImplementedException();
                     }
                     break;
                 case TKind.LONG:
@@ -425,14 +430,17 @@ namespace lcc.AST {
                     gen.Inst(X86Gen.mov, X86Gen.ebx, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr() as X86Gen.Operand : X86Gen.eax);
                     gen.Inst(X86Gen.pop, X86Gen.eax);
                     switch (op) {
-                        case SyntaxTree.BiExpr.Op.MOD:
-                            throw new NotImplementedException();
-                        case SyntaxTree.BiExpr.Op.MULT:
+                        case SyntaxTree.BiExpr.Op.MUL:
                             gen.Inst(X86Gen.imul, X86Gen.eax, X86Gen.ebx);
                             break;
+                        case SyntaxTree.BiExpr.Op.MOD:
                         case SyntaxTree.BiExpr.Op.DIV:
+                            // Sign extension to edx:eax.
                             gen.Inst(X86Gen.cdq);
                             gen.Inst(X86Gen.idiv, X86Gen.ebx);
+                            if (op == SyntaxTree.BiExpr.Op.MOD) {
+                                gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.ebx);
+                            }
                             break;
                     }
                     break;
@@ -445,12 +453,15 @@ namespace lcc.AST {
         /// </summary>
         /// <param name="gen"></param>
         private void Additive(X86Gen gen) {
-            Debug.Assert(lhs.Type.Kind == rhs.Type.Kind);
+            Debug.Assert((lhs.Type.IsPtr) || (lhs.Type.Kind == rhs.Type.Kind));
             Debug.Assert(type.Kind == lhs.Type.Kind);
             Debug.Assert(op == SyntaxTree.BiExpr.Op.PLUS || op == SyntaxTree.BiExpr.Op.MINUS);
 
             gen.Push(lhs.Type, lhs.ToX86Expr(gen));
-            switch (type.Kind) {
+            switch (lhs.Type.Kind) {
+                case TKind.ULONG:
+                case TKind.UINT:
+                case TKind.LONG:
                 case TKind.INT:
                     // Generate code for rhs and move the result to ebx.
                     gen.Inst(X86Gen.mov, X86Gen.ebx, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr() as X86Gen.Operand : X86Gen.eax);
@@ -653,13 +664,20 @@ namespace lcc.AST {
             var arrRet = arr.ToX86Expr(gen);
             gen.Push(arr.Type, arrRet);
 
-
-            /// Evaluate the offset.
+            /// Evaluate the offset and store in ebx.
             var idxRet = idx.ToX86Expr(gen);
             switch (idx.Type.Kind) {
+                case TKind.UINT:
+                case TKind.ULONG:
+                    if (idxRet == X86Gen.Ret.PTR) gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
+                    gen.Inst(X86Gen.mov, X86Gen.ebx, element.Bytes);
+                    gen.Inst(X86Gen.mul, X86Gen.ebx);
+                    gen.Inst(X86Gen.mov, X86Gen.ebx, X86Gen.eax);
+                    break;
+                case TKind.LONG:
                 case TKind.INT:
-                    if (idxRet == X86Gen.Ret.PTR) gen.Inst(X86Gen.imul, X86Gen.ebx, X86Gen.eax.Addr(), element.Size);
-                    else gen.Inst(X86Gen.imul, X86Gen.ebx, X86Gen.eax, element.Size);
+                    if (idxRet == X86Gen.Ret.PTR) gen.Inst(X86Gen.imul, X86Gen.ebx, X86Gen.eax.Addr(), element.Bytes);
+                    else gen.Inst(X86Gen.imul, X86Gen.ebx, X86Gen.eax, element.Bytes);
                     break;
                 default:
                     throw new NotImplementedException();

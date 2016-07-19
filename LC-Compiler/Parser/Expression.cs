@@ -253,7 +253,7 @@ namespace lcc.Parser {
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<Token.Token, BiExpr.Op> MultiplicativeOperator() {
-            return Match<T_PUNC_STAR>().Return(BiExpr.Op.MULT)
+            return Match<T_PUNC_STAR>().Return(BiExpr.Op.MUL)
                 .Else(Match<T_PUNC_SLASH>().Return(BiExpr.Op.DIV))
                 .Else(Match<T_PUNC_MOD>().Return(BiExpr.Op.MOD))
                 ;

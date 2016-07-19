@@ -41,6 +41,11 @@ namespace LC_CompilerTests {
             Aux("stack_array");
         }
 
+        [TestMethod]
+        public void LCCCGeneratorTestQueueArray() {
+            Aux("queue_array");
+        }
+
         private void Aux(string test) {
             var source = string.Format("../../ASTTests/code/{0}/{0}.c", test);
 

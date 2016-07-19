@@ -296,7 +296,7 @@ namespace LC_CompilerTests {
                             new BiExpr(
                                 new Id(new T_IDENTIFIER(1, "a")),
                                 new Id(new T_IDENTIFIER(1, "b")),
-                                BiExpr.Op.MULT),
+                                BiExpr.Op.MUL),
                             new Id(new T_IDENTIFIER(1, "c")),
                             BiExpr.Op.DIV),
                         new Id(new T_IDENTIFIER(1, "d")),
@@ -319,7 +319,7 @@ namespace LC_CompilerTests {
                         new BiExpr(
                             new Id(new T_IDENTIFIER(1, "b")),
                             new ConstInt(new T_CONST_INT(1, "3", 10)),
-                            BiExpr.Op.MULT),
+                            BiExpr.Op.MUL),
                         BiExpr.Op.PLUS)
                 },
                 {
@@ -330,7 +330,7 @@ namespace LC_CompilerTests {
                             new BiExpr(
                                 new ConstInt(new T_CONST_INT(1, "2", 10)),
                                 new Id(new T_IDENTIFIER(2, "c")),
-                                BiExpr.Op.MULT),
+                                BiExpr.Op.MUL),
                             BiExpr.Op.PLUS),
                         new ConstInt(new T_CONST_INT(3, "5", 10)),
                         BiExpr.Op.MINUS)

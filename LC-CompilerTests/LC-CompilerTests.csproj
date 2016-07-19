@@ -86,6 +86,8 @@
     <Content Include="ASTTests\code\heap_sort\heap_sort_clang.s" />
     <Content Include="ASTTests\code\heap_sort\heap_sort_lcc.s" />
     <Content Include="ASTTests\code\heap_sort\heap_sort_main.c" />
+    <Content Include="ASTTests\code\queue_array\queue_array.c" />
+    <Content Include="ASTTests\code\queue_array\queue_array_main.c" />
     <Content Include="ASTTests\code\quick_sort\quick_sort.c" />
     <Content Include="ASTTests\code\quick_sort\quick_sort_clang.s" />
     <Content Include="ASTTests\code\quick_sort\quick_sort_lcc.s" />

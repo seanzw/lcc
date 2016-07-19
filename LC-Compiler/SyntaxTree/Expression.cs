@@ -324,7 +324,7 @@ namespace lcc.SyntaxTree {
     public sealed class BiExpr : Expr, IEquatable<BiExpr> {
 
         public enum Op {
-            MULT,   // *
+            MUL,   // *
             DIV,    // /
             MOD,    // %
             PLUS,   // +
@@ -358,7 +358,7 @@ namespace lcc.SyntaxTree {
                 case Op.LT:     return "<";
                 case Op.MINUS:  return "-";
                 case Op.MOD:    return "%";
-                case Op.MULT:   return "*";
+                case Op.MUL:   return "*";
                 case Op.NEQ:    return "!=";
                 case Op.OR:     return "|";
                 case Op.PLUS:   return "+";
@@ -400,7 +400,7 @@ namespace lcc.SyntaxTree {
             Tuple<T, AST.Expr, AST.Expr> uac;   // For usual arithmetic conversion.
             T lElement, rElement;
             switch (op) {
-                case Op.MULT:
+                case Op.MUL:
                 case Op.DIV:
                 case Op.MOD:
                     /// Multiplicative operators.
@@ -893,7 +893,7 @@ namespace lcc.SyntaxTree {
             /// The sizeof operator yields the size (in bytes) of its operand.
             /// The result has type an unsigned integer type size_t, which is defined in "stddef.h".
             /// Here I take unsigned int.
-            return new AST.ConstIntExpr(TUInt.Instance, type.Size, env.ASTEnv);
+            return new AST.ConstIntExpr(TUInt.Instance, type.Bytes, env.ASTEnv);
 
         }
 

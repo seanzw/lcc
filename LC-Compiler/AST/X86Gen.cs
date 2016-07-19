@@ -189,6 +189,7 @@ namespace lcc.AST {
         public static readonly Operator imul    = new Operator("imul");
         public static readonly Operator mul     = new Operator("mul");
         public static readonly Operator idiv    = new Operator("idiv");
+        public static readonly Operator div     = new Operator("div");
         public static readonly Operator cdq     = new Operator("cdq");
 
         public static readonly Operator xor     = new Operator("xor");
@@ -292,8 +293,8 @@ namespace lcc.AST {
         /// <summary>
         /// Evaluate and cast to type.
         /// 
-        /// Ref for unsigned integer:
-        /// https://msdn.microsoft.com/en-us/library/e9s326kw.aspx
+        /// Refs:
+        /// https://msdn.microsoft.com/en-us/library/k630sk6z.aspx
         /// 
         /// </summary>
         /// <param name="expr"></param>
@@ -306,6 +307,19 @@ namespace lcc.AST {
             }
 
             switch (expr.Type.Kind) {
+                case TKind.INT:
+                    switch (type.Kind) {
+                        case TKind.UCHAR:
+                        case TKind.CHAR:
+                        case TKind.SCHAR:
+                        case TKind.SHORT:
+                        case TKind.USHORT:
+                            if (ret == Ret.PTR) Inst(mov, eax, eax.Addr());
+                            return Ret.REG;
+                        case TKind.UINT:
+                            return ret;
+                    }
+                    break;
                 case TKind.UCHAR:
                     switch (type.Kind) {
                         case TKind.CHAR:
@@ -332,18 +346,11 @@ namespace lcc.AST {
                         case TKind.CHAR:
                         case TKind.SCHAR:
                         case TKind.UCHAR:
-                            ///// Preserve lower-order byte.
-                            ///// TRICK: Do not mov al eax.
-                            //if (ret == Ret.PTR) {
-                            //    Inst(mov, eax, eax.Addr());
-                            //}
-                            //return Ret.REG;
                         case TKind.SHORT:
                         case TKind.USHORT:
                             /// Preserve lower-order word.
-                            if (ret == Ret.PTR) {
-                                Inst(mov, eax, eax.Addr());
-                            }
+                            /// Trick: do not mov al/ax eax.
+                            if (ret == Ret.PTR) Inst(mov, eax, eax.Addr());
                             return Ret.REG;
                         case TKind.INT:
                             /// Preserve bit pattern; high-order bit becomes sign bit.

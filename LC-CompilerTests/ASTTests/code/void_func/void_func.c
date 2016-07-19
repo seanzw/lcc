@@ -6,6 +6,9 @@
 int foo(int a) {
     a += 1;
     ++a;
+    unsigned int x, y;
+    x = 1, y = 2;
+    x = x % y;
     return a;
 }
 
