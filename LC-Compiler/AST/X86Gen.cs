@@ -173,45 +173,47 @@ namespace lcc.AST {
             public string l => i + "l";
         }
 
-        public static readonly Operator mov     = new Operator("mov");
-        public static readonly Operator movzx   = new Operator("movzx");
-        public static readonly Operator movsx   = new Operator("movsx");
+        public static readonly Operator mov = new Operator("mov");
+        public static readonly Operator movzx = new Operator("movzx");
+        public static readonly Operator movsx = new Operator("movsx");
 
-        public static readonly Operator lea     = new Operator("lea");
-        public static readonly Operator push    = new Operator("push");
-        public static readonly Operator pop     = new Operator("pop");
-        public static readonly Operator ret     = new Operator("ret");
-        public static readonly Operator call    = new Operator("call");
+        public static readonly Operator lea = new Operator("lea");
+        public static readonly Operator push = new Operator("push");
+        public static readonly Operator pop = new Operator("pop");
+        public static readonly Operator ret = new Operator("ret");
+        public static readonly Operator call = new Operator("call");
 
-        public static readonly Operator sub     = new Operator("sub");
-        public static readonly Operator add     = new Operator("add");
-        public static readonly Operator inc     = new Operator("inc");
-        public static readonly Operator dec     = new Operator("dec");
-        public static readonly Operator imul    = new Operator("imul");
-        public static readonly Operator mul     = new Operator("mul");
-        public static readonly Operator idiv    = new Operator("idiv");
-        public static readonly Operator div     = new Operator("div");
-        public static readonly Operator cdq     = new Operator("cdq");
+        public static readonly Operator sub = new Operator("sub");
+        public static readonly Operator add = new Operator("add");
+        public static readonly Operator inc = new Operator("inc");
+        public static readonly Operator dec = new Operator("dec");
+        public static readonly Operator imul = new Operator("imul");
+        public static readonly Operator mul = new Operator("mul");
+        public static readonly Operator idiv = new Operator("idiv");
+        public static readonly Operator div = new Operator("div");
+        public static readonly Operator cdq = new Operator("cdq");
 
-        public static readonly Operator xor     = new Operator("xor");
 
-        public static readonly Operator cmp     = new Operator("cmp");
-        public static readonly Operator setle   = new Operator("setle");
-        public static readonly Operator setl    = new Operator("setl");
-        public static readonly Operator setge   = new Operator("setge");
-        public static readonly Operator setg    = new Operator("setg");
-        public static readonly Operator setbe   = new Operator("setbe");
-        public static readonly Operator setb    = new Operator("setb");
-        public static readonly Operator setae   = new Operator("setae");
-        public static readonly Operator seta    = new Operator("seta");
-        public static readonly Operator sete    = new Operator("sete");
-        public static readonly Operator setne   = new Operator("setne");
 
-        public static readonly Operator and     = new Operator("and");
+        public static readonly Operator cmp = new Operator("cmp");
+        public static readonly Operator setle = new Operator("setle");
+        public static readonly Operator setl = new Operator("setl");
+        public static readonly Operator setge = new Operator("setge");
+        public static readonly Operator setg = new Operator("setg");
+        public static readonly Operator setbe = new Operator("setbe");
+        public static readonly Operator setb = new Operator("setb");
+        public static readonly Operator setae = new Operator("setae");
+        public static readonly Operator seta = new Operator("seta");
+        public static readonly Operator sete = new Operator("sete");
+        public static readonly Operator setne = new Operator("setne");
 
-        public static readonly Operator jmp     = new Operator("jmp");
-        public static readonly Operator je      = new Operator("je");
-        public static readonly Operator jne     = new Operator("jne");
+        public static readonly Operator and = new Operator("and");
+        public static readonly Operator xor = new Operator("xor");
+        public static readonly Operator or = new Operator("or");
+
+        public static readonly Operator jmp = new Operator("jmp");
+        public static readonly Operator je = new Operator("je");
+        public static readonly Operator jne = new Operator("jne");
         #endregion
 
 
@@ -308,6 +310,27 @@ namespace lcc.AST {
             }
 
             switch (expr.Type.Kind) {
+                case TKind.UCHAR:
+                    if (ret == Ret.PTR) Inst(mov, al, eax.Addr(Size.BYTE));
+                    switch (type.Kind) {
+                        case TKind.CHAR:
+                        case TKind.SCHAR:
+                            /// Preserve bit pattern; high-order bit becomes sign bit.
+                            return Ret.REG;
+                        case TKind.SHORT:
+                        case TKind.USHORT:
+                            /// Zero extended.
+                            Inst(movzx, ax, al);
+                            return Ret.REG;
+                        case TKind.INT:
+                        case TKind.LONG:
+                        case TKind.UINT:
+                        case TKind.ULONG:
+                            Inst(movzx, eax, al);
+                            return Ret.REG;
+                    }
+                    break;
+                case TKind.USHORT:
                 case TKind.SHORT:
                     if (ret == Ret.PTR) Inst(mov, ax, eax.Addr(Size.WORD));
                     switch (type.Kind) {
@@ -321,11 +344,30 @@ namespace lcc.AST {
                         case TKind.LONG:
                         case TKind.ULONG:
                             /// Sign extension.
-                            Inst(movsx, eax, ax);
+                            Inst(expr.Type.Kind == TKind.SHORT ? movsx : movzx, eax, ax);
+                            return Ret.REG;
+                    }
+                    break;
+                case TKind.UINT:
+                case TKind.ULONG:
+                    if (ret == Ret.PTR) Inst(mov, eax, eax.Addr());
+                    switch (type.Kind) {
+                        case TKind.CHAR:
+                        case TKind.SCHAR:
+                        case TKind.UCHAR:
+                        case TKind.SHORT:
+                        case TKind.USHORT:
+                        case TKind.INT:
+                        case TKind.UINT:
+                        case TKind.LONG:
+                        case TKind.ULONG:
+                        case TKind.PTR:
+                            /// Preserve bit pattern; high-order bit becomes sign bit.
                             return Ret.REG;
                     }
                     break;
                 case TKind.INT:
+                case TKind.LONG:
                     if (ret == Ret.PTR) Inst(mov, eax, eax.Addr());
                     switch (type.Kind) {
                         case TKind.UCHAR:
@@ -333,47 +375,42 @@ namespace lcc.AST {
                         case TKind.SCHAR:
                         case TKind.SHORT:
                         case TKind.USHORT:
-                        case TKind.UINT:
-                        case TKind.LONG:
-                        case TKind.ULONG:
-                            return Ret.REG;
-                    }
-                    break;
-                case TKind.UCHAR:
-                    switch (type.Kind) {
-                        case TKind.CHAR:
-                        case TKind.SCHAR:
-                            /// Preserve bit pattern; high-order bit becomes sign bit.
-                            return ret;
-                        case TKind.SHORT:
-                        case TKind.USHORT:
-                            /// Zero extended.
-                            if (ret == Ret.PTR) Inst(mov, al, eax.Addr(Size.BYTE));
-                            Inst(movzx, ax, al);
-                            return Ret.REG;
                         case TKind.INT:
-                        case TKind.LONG:
                         case TKind.UINT:
+                        case TKind.LONG:
                         case TKind.ULONG:
-                            if (ret == Ret.PTR) Inst(mov, al, eax.Addr(Size.BYTE));
-                            Inst(movzx, eax, al);
+                        case TKind.PTR:
                             return Ret.REG;
                     }
                     break;
-                case TKind.UINT:
+                case TKind.PTR:
+                    /// Pointer behaves like unsigned int:
+                    /// A pointer value can also be converted to an integral value. 
+                    /// The conversion path depends on the size of the pointer and 
+                    /// the size of the integral type, according to the following rules:
+                    /// 
+                    ///     If the size of the pointer is greater than or equal to the
+                    ///   size of the integral type, the pointer behaves like an unsigned 
+                    ///   value in the conversion, except that it cannot be converted to 
+                    ///   a floating value.
+                    ///   
+                    ///     If the pointer is smaller than the integral type, the pointer is 
+                    ///   first converted to a pointer with the same size as the integral type,
+                    ///   then converted to the integral type.
+                    if (ret == Ret.PTR) Inst(mov, eax, eax.Addr());
                     switch (type.Kind) {
                         case TKind.CHAR:
                         case TKind.SCHAR:
                         case TKind.UCHAR:
                         case TKind.SHORT:
                         case TKind.USHORT:
+                        case TKind.INT:
+                        case TKind.UINT:
+                        case TKind.LONG:
+                        case TKind.ULONG:
                             /// Preserve lower-order word.
                             /// Trick: do not mov al/ax eax.
-                            if (ret == Ret.PTR) Inst(mov, eax, eax.Addr());
                             return Ret.REG;
-                        case TKind.INT:
-                            /// Preserve bit pattern; high-order bit becomes sign bit.
-                            return ret;
                     }
                     break;
             }

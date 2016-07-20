@@ -51,6 +51,12 @@ namespace LC_CompilerTests {
             Aux("singly_linked_list");
         }
 
+        [TestMethod]
+        public void LCCCGeneratorTestDoublyLinkedList() {
+            Aux("doubly_linked_list");
+        }
+
+
         private void Aux(string test) {
             var source = string.Format("../../ASTTests/code/{0}/{0}.c", test);
 

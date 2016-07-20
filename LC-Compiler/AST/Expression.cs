@@ -401,7 +401,8 @@ namespace lcc.AST {
                 case SyntaxTree.BiExpr.Op.AND:
                 case SyntaxTree.BiExpr.Op.XOR:
                 case SyntaxTree.BiExpr.Op.OR:
-                    throw new NotImplementedException();
+                    Bitwise(gen);
+                    break;
                 case SyntaxTree.BiExpr.Op.LOGAND:
                 case SyntaxTree.BiExpr.Op.LOGOR:
                     Logical(gen);
@@ -545,6 +546,34 @@ namespace lcc.AST {
                     }
                     gen.Inst(X86Gen.and, X86Gen.al, 1);
                     gen.Inst(X86Gen.movzx, X86Gen.eax, X86Gen.al);
+                    break;
+                default: throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Handle bitwise operator.
+        /// </summary>
+        /// <param name="gen"></param>
+        private void Bitwise(X86Gen gen) {
+            Debug.Assert(lhs.Type.IsInteger && rhs.Type.IsInteger);
+            Debug.Assert(lhs.Type.Kind == rhs.Type.Kind);
+            Debug.Assert(op == SyntaxTree.BiExpr.Op.AND || op == SyntaxTree.BiExpr.Op.XOR || op == SyntaxTree.BiExpr.Op.OR);
+
+            gen.Push(lhs.Type, lhs.ToX86Expr(gen));
+            switch (lhs.Type.Kind) {
+                case TKind.UINT:
+                case TKind.ULONG:
+                case TKind.INT:
+                case TKind.LONG:
+                    // Generate code for rhs and move the result to ebx.
+                    gen.Inst(X86Gen.mov, X86Gen.ebx, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr() as X86Gen.Operand : X86Gen.eax);
+                    gen.Inst(X86Gen.pop, X86Gen.eax);
+                    switch (op) {
+                        case SyntaxTree.BiExpr.Op.AND: gen.Inst(X86Gen.and, X86Gen.eax, X86Gen.ebx); break;
+                        case SyntaxTree.BiExpr.Op.XOR: gen.Inst(X86Gen.xor, X86Gen.eax, X86Gen.ebx); break;
+                        case SyntaxTree.BiExpr.Op.OR: gen.Inst(X86Gen.or, X86Gen.eax, X86Gen.ebx); break;
+                    }
                     break;
                 default: throw new NotImplementedException();
             }
