@@ -16,7 +16,7 @@ _foo:                                   # @foo
 # BB#0:
 	push	ebp
 	mov	ebp, esp
-	push	eax
+	sub	esp, 12
 	mov	eax, dword ptr [ebp + 8]
 	mov	dword ptr [ebp - 4], eax
 	mov	eax, dword ptr [ebp - 4]
@@ -25,8 +25,15 @@ _foo:                                   # @foo
 	mov	eax, dword ptr [ebp - 4]
 	add	eax, 1
 	mov	dword ptr [ebp - 4], eax
-	mov	eax, dword ptr [ebp - 4]
-	add	esp, 4
+	mov	dword ptr [ebp - 8], 1
+	mov	dword ptr [ebp - 12], 2
+	mov	eax, dword ptr [ebp - 8]
+	xor	edx, edx
+	div	dword ptr [ebp - 12]
+	mov	dword ptr [ebp - 8], edx
+	mov	edx, dword ptr [ebp - 4]
+	mov	eax, edx
+	add	esp, 12
 	pop	ebp
 	ret
 

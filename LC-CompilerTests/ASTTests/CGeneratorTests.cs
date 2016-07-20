@@ -46,6 +46,11 @@ namespace LC_CompilerTests {
             Aux("queue_array");
         }
 
+        [TestMethod]
+        public void LCCCGeneratorTestSinglyLinkedList() {
+            Aux("singly_linked_list");
+        }
+
         private void Aux(string test) {
             var source = string.Format("../../ASTTests/code/{0}/{0}.c", test);
 

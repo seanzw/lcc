@@ -211,6 +211,11 @@ namespace lcc.AST {
             gen.Comment(X86Gen.Seg.TEXT, ToString());
             var rhsRet = rhs.ToX86Expr(gen);
             switch (lhs.Type.Kind) {
+                case TKind.CHAR:
+                case TKind.UCHAR:
+                case TKind.SCHAR:
+                case TKind.SHORT:
+                case TKind.USHORT:
                 case TKind.PTR:
                 case TKind.UINT:
                 case TKind.ULONG:
@@ -221,10 +226,22 @@ namespace lcc.AST {
                         Debug.Assert(lhsRet == X86Gen.Ret.PTR);
                         gen.Inst(X86Gen.mov, X86Gen.ebx, X86Gen.eax);
                         gen.Inst(X86Gen.pop, X86Gen.eax);
-                        if (rhsRet == X86Gen.Ret.PTR) {
-                            gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
+                        X86Gen.Operand o;
+                        X86Gen.Size s;
+                        if (lhs.Type.AlignByte == 4) {
+                            o = X86Gen.eax;
+                            s = X86Gen.Size.DWORD;
+                        } else if (lhs.Type.AlignByte == 2) {
+                            o = X86Gen.ax;
+                            s = X86Gen.Size.WORD;
+                        } else {
+                            o = X86Gen.al;
+                            s = X86Gen.Size.BYTE;
                         }
-                        gen.Inst(X86Gen.mov, X86Gen.ebx.Addr(), X86Gen.eax);
+                        if (rhsRet == X86Gen.Ret.PTR) {
+                            gen.Inst(X86Gen.mov, o, X86Gen.eax.Addr(s));
+                        }
+                        gen.Inst(X86Gen.mov, X86Gen.ebx.Addr(s), o);
                         return X86Gen.Ret.REG;
                     }
                 default:

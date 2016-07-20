@@ -43,7 +43,10 @@ namespace lcc.SyntaxTree {
         }
 
         public override AST.Expr ToASTExpr(Env env) {
-            IEnumerable<AST.Expr> es = exprs.Select(e => e.ToASTExpr(env).ValueTransform());
+            LinkedList<AST.Expr> es = new LinkedList<AST.Expr>();
+            foreach (var expr in exprs) {
+                es.AddLast(expr.ToASTExpr(env).ValueTransform());
+            }
             return new AST.CommaExpr(es.Last().Type, env.ASTEnv, es);
         }
 

@@ -2,14 +2,16 @@
 	.bss
 	.text
 	.intel_syntax noprefix
-	# Frame Size: 0
+	# Frame Size: 8
 	# EBP        UID   SYMBOL     TYPE                
 	# 8          0     a          int                 
+	# -4         1     x          unsigned int        
+	# -8         2     y          unsigned int        
 	.globl _foo
 _foo:
 	push   ebp
 	mov    ebp, esp
-	sub    esp, 0
+	sub    esp, 8
 	# a += 1
 	# 1
 	mov    eax, 1
@@ -33,6 +35,46 @@ _foo:
 	mov    eax, dword ptr [eax + 0]
 	add    eax, ebx
 	pop    ebx
+	mov    dword ptr [ebx + 0], eax
+	# x = (unsigned int)(1)
+	# (unsigned int)(1)
+	# 1
+	mov    eax, 1
+	push   eax
+	# x
+	lea    eax, dword ptr [ebp - 4]
+	mov    ebx, eax
+	pop    eax
+	mov    dword ptr [ebx + 0], eax
+	# y = (unsigned int)(2)
+	# (unsigned int)(2)
+	# 2
+	mov    eax, 2
+	push   eax
+	# y
+	lea    eax, dword ptr [ebp - 8]
+	mov    ebx, eax
+	pop    eax
+	mov    dword ptr [ebx + 0], eax
+	# x = % ((unsigned int)(x)) ((unsigned int)(y))
+	# % ((unsigned int)(x)) ((unsigned int)(y))
+	# (unsigned int)(x)
+	# x
+	lea    eax, dword ptr [ebp - 4]
+	push   dword ptr [eax + 0]
+	# (unsigned int)(y)
+	# y
+	lea    eax, dword ptr [ebp - 8]
+	mov    ebx, dword ptr [eax + 0]
+	pop    eax
+	xor    edx, edx
+	div    ebx
+	mov    eax, edx
+	push   eax
+	# x
+	lea    eax, dword ptr [ebp - 4]
+	mov    ebx, eax
+	pop    eax
 	mov    dword ptr [ebx + 0], eax
 	# return a
 	# a
@@ -40,7 +82,7 @@ _foo:
 	mov    eax, dword ptr [eax + 0]
 	jmp    __foo_return
 __foo_return:
-	add    esp, 0
+	add    esp, 8
 	pop    ebp
 	ret
 	# Frame Size: 0

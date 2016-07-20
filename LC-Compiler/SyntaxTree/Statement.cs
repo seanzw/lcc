@@ -319,6 +319,7 @@ namespace lcc.SyntaxTree {
     }
 
     public abstract class Loop : Breakable {
+        public readonly CompoundStmt body;
         /// <summary>
         /// The continuation label.
         /// </summary>
@@ -331,13 +332,16 @@ namespace lcc.SyntaxTree {
         /// The first iteration start label.
         /// </summary>
         public string firstLabel;
+        public Loop(CompoundStmt body) {
+            this.body = body;
+        }
     }
 
     public sealed class While : Loop, IEquatable<While> {
 
-        public While(Expr expr, Stmt statement) {
+        public While(Expr expr, Stmt stmt)
+            : base(new CompoundStmt(new List<Stmt> { stmt })) {
             this.expr = expr;
-            this.stmt = statement;
         }
 
         public override Position Pos => expr.Pos;
@@ -349,11 +353,11 @@ namespace lcc.SyntaxTree {
         public bool Equals(While x) {
             return x != null
                 && x.expr.Equals(expr)
-                && x.stmt.Equals(stmt);
+                && x.body.Equals(body);
         }
 
         public override int GetHashCode() {
-            return expr.GetHashCode() | stmt.GetHashCode();
+            return expr.GetHashCode() | body.GetHashCode();
         }
 
         public override AST.Node ToAST(Env env) {
@@ -373,25 +377,24 @@ namespace lcc.SyntaxTree {
             /// Add this loop to the environemnt.
             env.PushLoop(this);
 
-            AST.Node s = stmt.ToAST(env);
+            var b = body.ToASTCompoundStmt(env);
 
             env.PopBreakable();
 
             env.PopScope();
             env.PopScope();
 
-            return new AST.While(breakLabel, continueLabel, secondPlusLabel, firstLabel, e, s);
+            return new AST.While(breakLabel, continueLabel, secondPlusLabel, firstLabel, e, b);
         }
 
         public readonly Expr expr;
-        public readonly Stmt stmt;
     }
 
     public sealed class Do : Loop, IEquatable<Do> {
 
-        public Do(Expr expr, Stmt statement) {
+        public Do(Expr expr, Stmt stmt)
+            : base(new CompoundStmt(new List<Stmt> { stmt })) {
             this.expr = expr;
-            this.stmt = statement;
         }
 
         public override Position Pos => expr.Pos;
@@ -404,11 +407,11 @@ namespace lcc.SyntaxTree {
         public bool Equals(Do x) {
             return x != null
                 && x.expr.Equals(expr)
-                && x.stmt.Equals(stmt);
+                && x.body.Equals(body);
         }
 
         public override int GetHashCode() {
-            return expr.GetHashCode() | stmt.GetHashCode();
+            return expr.GetHashCode() | body.GetHashCode();
         }
 
         public override AST.Node ToAST(Env env) {
@@ -416,7 +419,7 @@ namespace lcc.SyntaxTree {
             env.PushBlockScope();
             env.PushLoop(this);
 
-            AST.Node s = stmt.ToAST(env);
+            var b = body.ToASTCompoundStmt(env);
 
             env.PopBreakable();
             env.PopScope();
@@ -427,11 +430,10 @@ namespace lcc.SyntaxTree {
             }
 
             env.PopScope();
-            return new AST.Do(breakLabel, continueLabel, secondPlusLabel, firstLabel, e, s);
+            return new AST.Do(breakLabel, continueLabel, secondPlusLabel, firstLabel, e, b);
         }
 
         public readonly Expr expr;
-        public readonly Stmt stmt;
     }
 
     public sealed class For : Loop, IEquatable<For> {
@@ -441,12 +443,12 @@ namespace lcc.SyntaxTree {
             Expr init,
             Expr pred,
             Expr iter,
-            Stmt body) {
+            Stmt body
+            ) : base(new CompoundStmt(new List<Stmt> { body })) {
             this.pos = new Position(line);
             this.init = init;
             this.pred = pred;
             this.iter = iter;
-            this.body = new CompoundStmt(new List<Stmt> { body });
         }
 
         public override Position Pos => pos;
@@ -500,7 +502,6 @@ namespace lcc.SyntaxTree {
         public readonly Expr init;
         public readonly Expr pred;
         public readonly Expr iter;
-        public readonly CompoundStmt body;
     }
 
     public sealed class Continue : Stmt, IEquatable<Continue> {

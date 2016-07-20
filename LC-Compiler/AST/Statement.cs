@@ -101,6 +101,13 @@ namespace lcc.AST {
     }
 
     public abstract class Loop : Breakable {
+        /// <summary>
+        /// Body is a block.
+        /// </summary>
+        public readonly CompoundStmt body;
+        /// <summary>
+        /// Should be placed at the end of the body.
+        /// </summary>
         public readonly string continueLabel;
         /// <summary>
         /// Second or more iteration start label.
@@ -110,10 +117,17 @@ namespace lcc.AST {
         /// The first iteration start label.
         /// </summary>
         public readonly string firstLabel;
-        public Loop(string breakLabel, string continueLabel, string secondPlusLabel, string firstLabel) : base(breakLabel) {
+        public Loop(
+            string breakLabel,
+            string continueLabel,
+            string secondPlusLabel,
+            string firstLabel,
+            CompoundStmt body
+            ) : base(breakLabel) {
             this.continueLabel = continueLabel;
             this.secondPlusLabel = secondPlusLabel;
             this.firstLabel = firstLabel;
+            this.body = body;
         }
     }
 
@@ -133,33 +147,53 @@ namespace lcc.AST {
 
     public sealed class While : Loop {
         public readonly Expr expr;
-        public readonly Node stmt;
         public While(
             string breakLabel, 
             string continueLabel,
             string secondPlusLabel, 
             string firstLabel,
             Expr expr,
-            Node stmt
-            ) : base(breakLabel, continueLabel, secondPlusLabel, firstLabel) {
+            CompoundStmt body
+            ) : base(breakLabel, continueLabel, secondPlusLabel, firstLabel, body) {
             this.expr = expr;
-            this.stmt = stmt;
+        }
+        /// <summary>
+        /// Basic structure:
+        /// 
+        /// first_label:
+        ///     # pred
+        ///     je break_label
+        ///     # body
+        ///     jmp first_label
+        /// break_label:
+        ///     
+        /// </summary>
+        /// <param name="gen"></param>
+        public override void ToX86(X86Gen gen) {
+            gen.Comment(X86Gen.Seg.TEXT, "while pred");
+            gen.Tag(X86Gen.Seg.TEXT, firstLabel);
+            gen.Branch(expr, breakLabel, false);
+
+            gen.Comment(X86Gen.Seg.TEXT, "while body");
+            body.ToX86WithLabel(gen, continueLabel);
+            gen.Inst(X86Gen.jmp, firstLabel);
+
+            gen.Comment(X86Gen.Seg.TEXT, "while end");
+            gen.Tag(X86Gen.Seg.TEXT, breakLabel);
         }
     }
 
     public sealed class Do : Loop {
         public readonly Expr expr;
-        public readonly Node stmt;
         public Do(
             string breakLabel, 
             string continueLabel, 
             string secondPlusLabel,
             string firstLabel,
             Expr expr, 
-            Node stmt
-            ) : base(breakLabel, continueLabel, secondPlusLabel, firstLabel) {
+            CompoundStmt body
+            ) : base(breakLabel, continueLabel, secondPlusLabel, firstLabel, body) {
             this.expr = expr;
-            this.stmt = stmt;
         }
     }
 
@@ -178,10 +212,6 @@ namespace lcc.AST {
         /// Nullable.
         /// </summary>
         public readonly Node iter;
-        /// <summary>
-        /// Body is a block.
-        /// </summary>
-        public readonly CompoundStmt body;
         public For(
             string breakLabel,
             string continueLabel,
@@ -191,11 +221,10 @@ namespace lcc.AST {
             Expr pred, 
             Node iter, 
             CompoundStmt body
-            ) : base(breakLabel, continueLabel, secondPlusLabel, firstLabel) {
+            ) : base(breakLabel, continueLabel, secondPlusLabel, firstLabel, body) {
             this.init = init;
             this.pred = pred;
             this.iter = iter;
-            this.body = body;
         }
         /// <summary>
         /// The basic structure is like:

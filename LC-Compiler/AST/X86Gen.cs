@@ -175,6 +175,7 @@ namespace lcc.AST {
 
         public static readonly Operator mov     = new Operator("mov");
         public static readonly Operator movzx   = new Operator("movzx");
+        public static readonly Operator movsx   = new Operator("movsx");
 
         public static readonly Operator lea     = new Operator("lea");
         public static readonly Operator push    = new Operator("push");
@@ -307,17 +308,35 @@ namespace lcc.AST {
             }
 
             switch (expr.Type.Kind) {
+                case TKind.SHORT:
+                    if (ret == Ret.PTR) Inst(mov, ax, eax.Addr(Size.WORD));
+                    switch (type.Kind) {
+                        case TKind.CHAR:
+                        case TKind.SCHAR:
+                        case TKind.UCHAR:
+                        case TKind.USHORT:
+                            return Ret.REG;
+                        case TKind.INT:
+                        case TKind.UINT:
+                        case TKind.LONG:
+                        case TKind.ULONG:
+                            /// Sign extension.
+                            Inst(movsx, eax, ax);
+                            return Ret.REG;
+                    }
+                    break;
                 case TKind.INT:
+                    if (ret == Ret.PTR) Inst(mov, eax, eax.Addr());
                     switch (type.Kind) {
                         case TKind.UCHAR:
                         case TKind.CHAR:
                         case TKind.SCHAR:
                         case TKind.SHORT:
                         case TKind.USHORT:
-                            if (ret == Ret.PTR) Inst(mov, eax, eax.Addr());
-                            return Ret.REG;
                         case TKind.UINT:
-                            return ret;
+                        case TKind.LONG:
+                        case TKind.ULONG:
+                            return Ret.REG;
                     }
                     break;
                 case TKind.UCHAR:

@@ -92,6 +92,8 @@
     <Content Include="ASTTests\code\quick_sort\quick_sort_clang.s" />
     <Content Include="ASTTests\code\quick_sort\quick_sort_lcc.s" />
     <Content Include="ASTTests\code\quick_sort\quick_sort_main.c" />
+    <Content Include="ASTTests\code\singly_linked_list\singly_linked_list.c" />
+    <Content Include="ASTTests\code\singly_linked_list\singly_linked_list_main.c" />
     <Content Include="ASTTests\code\stack_array\stack_array.c" />
     <Content Include="ASTTests\code\stack_array\stack_array_clang.s" />
     <Content Include="ASTTests\code\stack_array\stack_array_lcc.s" />
