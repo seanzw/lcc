@@ -63,13 +63,14 @@ namespace LC_CompilerTests {
             string main_s = string.Format("{0}_main.s", source.Substring(0, source.Length - 2));
 
             // If the exe exists, delete first.
-            if (File.Exists(clang_exe)) {
-                File.Delete(clang_exe);
-            }
-
-            if (File.Exists(lcc_exe)) {
-                File.Delete(lcc_exe);
-            }
+            Action<string> clear = (fn) => {
+                if (File.Exists(fn)) File.Delete(fn);
+            };
+            clear(lcc_s);
+            clear(clang_s);
+            clear(main_s);
+            clear(lcc_exe);
+            clear(clang_exe);
 
             // Compile with lcc.
             string src = File.ReadAllText(source);
@@ -115,6 +116,12 @@ namespace LC_CompilerTests {
             p.WaitForExit();
 
             Assert.AreEqual(clang_out, lcc_out);
+
+            clear(lcc_s);
+            clear(clang_s);
+            clear(main_s);
+            clear(lcc_exe);
+            clear(clang_exe);
 
             p.Close();
         }
