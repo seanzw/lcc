@@ -16,7 +16,7 @@ typedef struct LinkedListNode {
 
 
 /// Doubly linked list with two nil, non-circular.
-/// 0 <--> head <--> E0 <--> ... <--> tail <--
+/// 0 <--> head <--> E0 <--> ... <--> tail <--> 0
 typedef struct LinkedList {
     LinkedListNode* head;
     LinkedListNode* tail;

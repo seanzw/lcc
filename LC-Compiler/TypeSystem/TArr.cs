@@ -16,11 +16,76 @@ namespace lcc.TypeSystem {
     }
 
     /// <summary>
-    /// Represent a complete array or incomplete array, with constant size.
+    /// Represent an incomplete array.
+    /// </summary>
+    public sealed class TIArr : TArr, IEquatable<TIArr> {
+        public TIArr(T element) : base(TKind.IARR, element) { }
+        public override bool IsComplete => false;
+        public override bool IsDefined => false;
+        public override int Bits {
+            get {
+                throw new InvalidOperationException("Can't take size of an incomplete array.");
+            }
+        }
+
+        /// <summary>
+        /// Complete this array with length n.
+        /// </summary>
+        /// <param name="n"></param>
+        public override TCArr DefArr(int n) {
+            if (n <= 0) throw new ArgumentException("Illegal length of an array!");
+            else return new TCArr(element, n);
+        }
+
+        public bool Equals(TIArr t) {
+            return t != null && t.element.Equals(element);
+        }
+        public override bool Equals(object obj) {
+            return Equals(obj as TIArr);
+        }
+        public override int GetHashCode() {
+            return element.GetHashCode();
+        }
+
+        /// <summary>
+        /// Two array types are compatible if:
+        /// 1. Their element types are compatible.
+        /// 2. If both have constant size, that size is the same.
+        /// 
+        /// Note:
+        /// arrays of unknown bound is compatible with any array of compatible element type.
+        /// arrays of variable length is compatible with any array of compatible element type.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public override bool Compatible(TUnqualified other) {
+            if (other.IsArray) {
+                TArr a = other as TArr;
+                if (element.Compatible(a.element)) {
+                    // They points to compatible type.
+                    // Check if other is VLA.
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
+        public override TUnqualified Composite(TUnqualified other) {
+            throw new NotImplementedException();
+        }
+
+        public override string ToString() {
+            return string.Format("({0})[]", element);
+        }
+    }
+
+    /// <summary>
+    /// Represent a complete array with constant size.
     /// </summary>
     public sealed class TCArr : TArr, IEquatable<TCArr> {
 
-        public TCArr(T element, int n = -1) : base(TKind.CARR, element) {
+        public TCArr(T element, int n) : base(TKind.CARR, element) {
             this.n = n;
         }
         public override bool IsComplete => n != -1;
@@ -31,15 +96,7 @@ namespace lcc.TypeSystem {
                 else return n * element.Bits;
             }
         }
-        /// <summary>
-        /// Complete this array with length n.
-        /// </summary>
-        /// <param name="n"></param>
-        public override void DefArr(int n) {
-            if (this.n != -1) throw new InvalidOperationException("Can't complete an array which is already completed");
-            else if (n <= 0) throw new ArgumentException("Illegal length of an array!");
-            else this.n = n;
-        }
+
 
         public bool Equals(TCArr t) {
             return t != null && t.n == n && t.element.Equals(element);

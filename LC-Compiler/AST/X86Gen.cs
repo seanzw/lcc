@@ -261,8 +261,9 @@ namespace lcc.AST {
         /// </summary>
         /// <param name="type"></param>
         /// <param name="ret"></param>
-        public void Push(T type, Ret ret) {
-            switch (type.Kind) {
+        public void Push(Expr expr) {
+            var ret = expr.ToX86Expr(this);
+            switch (expr.Type.Kind) {
                 case TKind.PTR:
                 case TKind.ULONG:
                 case TKind.LONG:
@@ -282,6 +283,10 @@ namespace lcc.AST {
         /// <param name="which"></param>
         public void Branch(Expr expr, string label, bool which) {
             switch (expr.Type.Kind) {
+                case TKind.PTR:
+                case TKind.LONG:
+                case TKind.ULONG:
+                case TKind.UINT:
                 case TKind.INT:
                     if (expr.ToX86Expr(this) == Ret.PTR) {
                         Inst(mov, eax, eax.Addr());

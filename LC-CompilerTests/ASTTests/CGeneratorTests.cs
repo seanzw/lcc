@@ -56,6 +56,11 @@ namespace LC_CompilerTests {
             Aux("doubly_linked_list");
         }
 
+        [TestMethod]
+        public void LCCCGeneratorTestHomogeneousPool() {
+            Aux("homogeneous_pool");
+        }
+
 
         private void Aux(string test) {
             var source = string.Format("../../ASTTests/code/{0}/{0}.c", test);

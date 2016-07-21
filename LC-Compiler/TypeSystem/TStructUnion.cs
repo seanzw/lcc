@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace lcc.TypeSystem {
@@ -114,7 +115,18 @@ namespace lcc.TypeSystem {
                 } else {
                     offset = AlignTo(offset);
                     tmp.AddLast(new Field(field.Item1, field.Item2, offset));
-                    offset += field.Item2.AlignBit;
+
+                    /// Special case for the last flexible array member.
+                    /// Since the caller guarantee that only the last field can
+                    /// be an incomplete array.
+                    if (field.Item2.Kind != TKind.IARR) {
+                        offset += field.Item2.AlignBit;
+                    } else {
+                        /// Assert this is the last field.
+                        /// And there are more than two named field.
+                        Debug.Assert(fields.Count(f => f.Item1 != null) > 1);
+                        Debug.Assert(field == fields.Last());
+                    }
                 }
             }
             this.fields = tmp;

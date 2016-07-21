@@ -222,7 +222,7 @@ namespace lcc.SyntaxTree {
 
         public readonly DeclSpecs specifiers;
         public readonly IEnumerable<InitDeclarator> declarators;
-        
+
     }
 
     public sealed class DeclSpecs : Node, IEquatable<DeclSpecs> {
@@ -326,7 +326,7 @@ namespace lcc.SyntaxTree {
         public static TQualifiers GetQualifiers(IEnumerable<TypeQual.Kind> qualifiers) {
             var tuple = new Tuple<bool, bool, bool>(
                 qualifiers.Contains(TypeQual.Kind.CONST),
-                qualifiers.Contains(TypeQual.Kind.RESTRICT), 
+                qualifiers.Contains(TypeQual.Kind.RESTRICT),
                 qualifiers.Contains(TypeQual.Kind.VOLATILE));
             return TQualifiers.dict[tuple];
         }
@@ -630,6 +630,7 @@ namespace lcc.SyntaxTree {
         /// <param name="type"></param>
         /// <returns></returns>
         public Tuple<string, T, IEnumerable<AST.Expr>> Declare(Env env, T type) {
+            if (initializer != null) throw new NotImplementedException();
             var result = declarator.Declare(env, type, null);
             return new Tuple<string, T, IEnumerable<AST.Expr>>(result.Item1, result.Item2, null);
         }
@@ -789,7 +790,7 @@ namespace lcc.SyntaxTree {
             if (declarations == null) {
                 // struct/union tag
                 var tag = id.symbol;
-                
+
                 // Check the tag in all scopes.
                 var tagEntry = env.GetTag(tag, false);
                 if (tagEntry != null) {
@@ -841,14 +842,36 @@ namespace lcc.SyntaxTree {
                     Enumerable.Empty<Tuple<string, T>>(),
                     (acc, decl) => acc.Concat(decl.GetFields(env)));
 
-                // Complete the definition of the struct/union with all these structs.
-                type.Define(fields);
-
                 // If the struct-declaration-list contains no named members, the behavior is undefined.
                 // I choose to throw an error.
-                if (type.fields.Count() == 0) {
+                int numNamed = fields.Count(field => field.Item1 != null);
+                if (numNamed == 0) {
                     throw new Error(Pos, "no named members in the declaration list");
                 }
+
+                /// All the fields should be complete type.
+                /// As a special case, the last element of structure with more than one
+                /// named memeber may have an incomplete array type; this is called a
+                /// flexible array member.
+                if (kind == Kind.STRUCT && numNamed > 1) {
+                    int i = 0;
+                    foreach (var field in fields) {
+                        if (i != fields.Count() - 1 && !field.Item2.IsComplete) {
+                            // This is not the last element, should be complete.
+                            throw new ETypeError(Pos, string.Format("incomplete field {0} : {1} in union.", field.Item1, field.Item2));
+                        }
+                        ++i;
+                    }
+                } else {
+                    foreach (var field in fields) {
+                        if (!field.Item2.IsComplete) {
+                            throw new ETypeError(Pos, string.Format("incomplete field {0} : {1} in union.", field.Item1, field.Item2));
+                        }
+                    }
+                }
+
+                // Complete the definition of the struct/union with all these structs.
+                type.Define(fields);
 
                 // Update the entry and set the node to this syntax tree node.
                 entry.node = this;
@@ -964,7 +987,8 @@ namespace lcc.SyntaxTree {
                 if (result.Item2.IsFunc) {
                     throw new Error(Pos, "Function type in a struct.");
                 }
-                if (!result.Item2.IsComplete) {
+                /// Allow incomplete array in the struct.
+                if (!result.Item2.IsComplete && result.Item2.Kind != TKind.IARR) {
                     throw new Error(Pos, "Incomplete type in a struct.");
                 }
                 // Check the name.
@@ -998,7 +1022,7 @@ namespace lcc.SyntaxTree {
                 if (c.value == 0 && declarator != null) {
                     throw new Error(Pos, "bit-field width 0 shall have no declarator");
                 }
-                
+
                 if (type.nake.Equals(TInt.Instance)) {
                     type = TIntBit.New((int)(c.value)).Qualify(type.qualifiers);
                 } else if (type.nake.Equals(TUInt.Instance)) {
@@ -1643,11 +1667,11 @@ namespace lcc.SyntaxTree {
             } else if (absDeclarator != null) {
                 // parameter-declaration: declaration-specifiers abstract-declarator
                 type = absDeclarator.Declare(env, type);
-            } 
+            }
 
             // 2. A declaration of a parameter as "array of type" shall be adjusted to "qualified pointer to type".
             if (type.IsArray) {
-                type = (type.nake as TCArr).element.Ptr(type.qualifiers);
+                type = (type.nake as TArr).element.Ptr(type.qualifiers);
             }
 
             // 3. A declaration of a parameter as "function returning type" shall be adjusted to "pointer to function returning type".

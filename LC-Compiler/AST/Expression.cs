@@ -265,7 +265,7 @@ namespace lcc.AST {
         }
         public override X86Gen.Ret ToX86Expr(X86Gen gen) {
             gen.Comment(X86Gen.Seg.TEXT, ToString());
-            gen.Push(rhs.Type, rhs.ToX86Expr(gen));
+            gen.Push(rhs);
             var lhsRet = lhs.ToX86Expr(gen);
             Debug.Assert(lhsRet == X86Gen.Ret.PTR);
             if (lhs.Type.IsArithmetic) {
@@ -282,8 +282,12 @@ namespace lcc.AST {
                             return X86Gen.Ret.REG;
                         default: throw new NotImplementedException();
                     }
+                } else {
+                    /// These are not the same type.
+                    /// First convert to rhs.Type since it's universal arithmetic conversion.
+                    
+                    throw new NotImplementedException();
                 }
-                throw new NotImplementedException();
             } else {
                 /// lhs should have pointer type.
                 Debug.Assert(lhs.Type.IsPtr);
@@ -420,7 +424,7 @@ namespace lcc.AST {
             Debug.Assert(type.Kind == lhs.Type.Kind);
             Debug.Assert(op == SyntaxTree.BiExpr.Op.MUL || op == SyntaxTree.BiExpr.Op.DIV || op == SyntaxTree.BiExpr.Op.MOD);
 
-            gen.Push(lhs.Type, lhs.ToX86Expr(gen));
+            gen.Push(lhs);
             switch (type.Kind) {
                 case TKind.UINT:
                 case TKind.ULONG:
@@ -475,7 +479,7 @@ namespace lcc.AST {
             Debug.Assert(type.Kind == lhs.Type.Kind);
             Debug.Assert(op == SyntaxTree.BiExpr.Op.PLUS || op == SyntaxTree.BiExpr.Op.MINUS);
 
-            gen.Push(lhs.Type, lhs.ToX86Expr(gen));
+            gen.Push(lhs);
             switch (lhs.Type.Kind) {
                 case TKind.ULONG:
                 case TKind.UINT:
@@ -487,6 +491,35 @@ namespace lcc.AST {
                     switch (op) {
                         case SyntaxTree.BiExpr.Op.PLUS: gen.Inst(X86Gen.add, X86Gen.eax, X86Gen.ebx); break;
                         case SyntaxTree.BiExpr.Op.MINUS: gen.Inst(X86Gen.sub, X86Gen.eax, X86Gen.ebx); break;
+                    }
+                    break;
+                case TKind.PTR:
+                    var elementSize = (lhs.Type.nake as TPtr).element.Bytes;
+                    Debug.Assert(rhs.Type.IsPtr || rhs.Type.IsInteger);
+                    if (rhs.Type.IsInteger) {
+                        var promoted = rhs.IntPromote();
+                        var ret = promoted.ToX86Expr(gen);
+                        switch (promoted.Type.Kind) {
+                            case TKind.INT:
+                            case TKind.LONG:
+                                gen.Inst(X86Gen.imul, X86Gen.ebx,
+                                    ret == X86Gen.Ret.REG ? X86Gen.eax as X86Gen.Operand : X86Gen.eax.Addr(),
+                                    elementSize);
+                                gen.Inst(X86Gen.pop, X86Gen.eax);
+                                gen.Inst(op == SyntaxTree.BiExpr.Op.PLUS ? X86Gen.add : X86Gen.sub, X86Gen.eax, X86Gen.ebx);
+                                break;
+                            case TKind.UINT:
+                            case TKind.ULONG:
+                                if (ret == X86Gen.Ret.PTR) {
+                                    gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
+                                }
+                                gen.Inst(X86Gen.mov, X86Gen.ebx, elementSize);
+                                gen.Inst(X86Gen.mul, X86Gen.ebx);
+                                gen.Inst(X86Gen.mov, X86Gen.ebx, X86Gen.eax);
+                                gen.Inst(X86Gen.pop, X86Gen.eax);
+                                gen.Inst(op == SyntaxTree.BiExpr.Op.PLUS ? X86Gen.add : X86Gen.sub, X86Gen.eax, X86Gen.ebx);
+                                break;
+                        }
                     }
                     break;
                 default: throw new NotImplementedException();
@@ -507,7 +540,7 @@ namespace lcc.AST {
                 op == SyntaxTree.BiExpr.Op.NEQ);
             Debug.Assert(lhs.Type.Kind == rhs.Type.Kind);
 
-            gen.Push(lhs.Type, lhs.ToX86Expr(gen));
+            gen.Push(lhs);
 
             /// Both lhs and rhs should have the same type (either pointer or result from usual arithmetic conversion).
             switch (lhs.Type.Kind) {
@@ -560,7 +593,7 @@ namespace lcc.AST {
             Debug.Assert(lhs.Type.Kind == rhs.Type.Kind);
             Debug.Assert(op == SyntaxTree.BiExpr.Op.AND || op == SyntaxTree.BiExpr.Op.XOR || op == SyntaxTree.BiExpr.Op.OR);
 
-            gen.Push(lhs.Type, lhs.ToX86Expr(gen));
+            gen.Push(lhs);
             switch (lhs.Type.Kind) {
                 case TKind.UINT:
                 case TKind.ULONG:
@@ -661,6 +694,41 @@ namespace lcc.AST {
         }
     }
 
+    public sealed class PreStep : Expr {
+        public readonly SyntaxTree.PreStep.Op op;
+        public readonly Expr expr;
+        public PreStep(T type, Env env, Expr expr, SyntaxTree.PreStep.Op op) : base(type, env) {
+            this.expr = expr;
+            this.op = op;
+        }
+        public override string ToString() {
+            return string.Format("{0}({1})", op == SyntaxTree.PreStep.Op.DEC ? "--" : "++", expr);
+        }
+        public override X86Gen.Ret ToX86Expr(X86Gen gen) {
+            gen.Comment(X86Gen.Seg.TEXT, ToString());
+            var ret = expr.ToX86Expr(gen);
+            Debug.Assert(ret == X86Gen.Ret.PTR);
+            gen.Inst(X86Gen.mov, X86Gen.ebx, X86Gen.eax);
+            switch (type.Kind) {
+                case TKind.INT:
+                case TKind.UINT:
+                case TKind.LONG:
+                case TKind.ULONG:
+                    gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.ebx.Addr());
+                    gen.Inst(op == SyntaxTree.PreStep.Op.INC ? X86Gen.inc : X86Gen.dec, X86Gen.eax);
+                    gen.Inst(X86Gen.mov, X86Gen.ebx.Addr(), X86Gen.eax);
+                    break;
+                case TKind.PTR:
+                    var elementBytes = (type.nake as TPtr).element.Bytes;
+                    gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.ebx.Addr());
+                    gen.Inst(op == SyntaxTree.PreStep.Op.INC ? X86Gen.add : X86Gen.sub, X86Gen.eax, elementBytes);
+                    gen.Inst(X86Gen.mov, X86Gen.ebx.Addr(), X86Gen.eax);
+                    break;
+            }
+            return X86Gen.Ret.REG;
+        }
+    }
+
     public sealed class UnaryOp : Expr {
         public readonly Expr expr;
         public readonly SyntaxTree.UnaryOp.Op op;
@@ -707,8 +775,7 @@ namespace lcc.AST {
             gen.Comment(X86Gen.Seg.TEXT, ToString());
 
             /// Evaluate arr.
-            var arrRet = arr.ToX86Expr(gen);
-            gen.Push(arr.Type, arrRet);
+            gen.Push(arr);
 
             /// Evaluate the offset and store in ebx.
             var idxRet = idx.ToX86Expr(gen);
@@ -811,8 +878,7 @@ namespace lcc.AST {
             /// Reversely evaluate all the arguments.
             int paramSize = args.Aggregate(0, (acc, arg) => acc + arg.Type.AlignByte);
             foreach (var arg in args.Reverse()) {
-                var ret = arg.ToX86Expr(gen);
-                gen.Push(arg.Type, ret);
+                gen.Push(arg);
             }
 
             /// Generate code for function.

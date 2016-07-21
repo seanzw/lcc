@@ -82,6 +82,7 @@ namespace lcc.TypeSystem {
         STRUCT,
         UNION,
         PTR,
+        IARR,
         CARR,
         VARR,
         FUNC,
@@ -136,7 +137,7 @@ namespace lcc.TypeSystem {
         /// This also completes an incomplete array.
         /// </summary>
         /// <param name="n"></param>
-        public virtual void DefArr(int n) {
+        public virtual TCArr DefArr(int n) {
             throw new InvalidOperationException("Can't define an array which is not an undefined array!");
         }
 
@@ -606,7 +607,7 @@ namespace lcc.TypeSystem {
         /// <returns></returns>
         public T IArr(TQualifiers qualifiers = null) {
             qualifiers = qualifiers ?? TQualifiers.N;
-            return new T(new TCArr(this), qualifiers);
+            return new T(new TIArr(this), qualifiers);
         }
 
         /// <summary>
@@ -620,7 +621,7 @@ namespace lcc.TypeSystem {
             return new T(new TVArr(this), qualifiers);
         }
 
-        public void DefArr(int n) { nake.DefArr(n); }
+        public TCArr DefArr(int n) { return nake.DefArr(n); }
         public void DefFunc() { nake.DefFunc(); }
 
 

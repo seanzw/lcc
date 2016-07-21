@@ -11,6 +11,8 @@ namespace lcc.TypeSystem {
             this.bits = bits;
         }
         public override bool IsBitField => true;
+        public override bool IsDefined => true;
+        public override bool IsComplete => true;
         public override int Bits => bits;
         public override int Bytes {
             get {

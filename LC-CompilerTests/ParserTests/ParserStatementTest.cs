@@ -256,7 +256,7 @@ for (i = 0; i < length; ++i) {
                             BiExpr.Op.LT),
                         new PreStep(
                             new Id(new T_IDENTIFIER(2, "i")),
-                            PreStep.Kind.INC),
+                            PreStep.Op.INC),
                         new CompoundStmt(
                             new List<Stmt> {
                                 new Assign(

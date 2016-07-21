@@ -453,7 +453,7 @@ namespace lcc.SyntaxTree {
                     }
                     if (lExpr.Type.IsPtr) {
                         lElement = (lExpr.Type.nake as TPtr).element;
-                        if (lElement.IsObject) {
+                        if (lElement.IsObject || lElement.IsVoid) {
                             if (rExpr.Type.IsInteger) {
                                 return new AST.BiExpr(lExpr.Type, env.ASTEnv, lExpr, rExpr, Op.MINUS);
                             } else if (rExpr.Type.IsPtr) {
@@ -652,14 +652,14 @@ namespace lcc.SyntaxTree {
     /// </summary>
     public sealed class PreStep : Expr, IEquatable<PreStep> {
 
-        public enum Kind {
+        public enum Op {
             INC,
             DEC
         }
 
-        public PreStep(Expr expr, Kind kind) {
+        public PreStep(Expr expr, Op op) {
             this.expr = expr;
-            this.kind = kind;
+            this.op = op;
         }
 
         public override Position Pos => expr.Pos;
@@ -669,7 +669,7 @@ namespace lcc.SyntaxTree {
         }
 
         public bool Equals(PreStep x) {
-            return x != null && x.expr.Equals(expr) && x.kind == kind;
+            return x != null && x.expr.Equals(expr) && x.op == op;
         }
 
         public override int GetHashCode() {
@@ -684,7 +684,7 @@ namespace lcc.SyntaxTree {
         public override AST.Expr ToASTExpr(Env env) {
             AST.Expr e = expr.ToASTExpr(env).VTArr().VTFunc();
             if (!e.Type.IsReal && !e.Type.IsPtr) {
-                throw new Error(expr.Pos, string.Format("{0} on type {1}", kind, e.Type));
+                throw new Error(expr.Pos, string.Format("{0} on type {1}", op, e.Type));
             }
             if (!e.IsLValue) {
                 throw new Error(Pos, "cannot modify rvalue");
@@ -692,12 +692,11 @@ namespace lcc.SyntaxTree {
             if (e.Type.qualifiers.isConstant) {
                 throw new Error(Pos, "cannot modify constant value");
             }
-            return new AST.AdditiveAssign(e.Type.nake.None(), env.ASTEnv, e,
-                new AST.ConstIntExpr(TInt.Instance, 1, env.ASTEnv), kind == Kind.INC ? Assign.Op.PLUSEQ : Assign.Op.MINUSEQ);
+            return new AST.PreStep(e.Type, env.ASTEnv, e, op);
         }
 
         public readonly Expr expr;
-        public readonly Kind kind;
+        public readonly Op op;
     }
 
     /// <summary>

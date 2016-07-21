@@ -175,7 +175,7 @@ namespace LC_CompilerTests {
                         new PostStep(
                             new Id(new T_IDENTIFIER(1, "x")),
                             PostStep.Op.DEC),
-                        PreStep.Kind.INC
+                        PreStep.Op.INC
                     )
                 },
                 {
@@ -184,7 +184,7 @@ namespace LC_CompilerTests {
                         new ArrSub(
                             new Id(new T_IDENTIFIER(1, "x")),
                             new ConstInt(new T_CONST_INT(1, "2", 10))),
-                        PreStep.Kind.DEC
+                        PreStep.Op.DEC
                     )
                 },
                 {
@@ -268,7 +268,7 @@ namespace LC_CompilerTests {
                         new PostStep(
                             new Id(new T_IDENTIFIER(1, "x")),
                             PostStep.Op.DEC),
-                        PreStep.Kind.INC
+                        PreStep.Op.INC
                     )
                 },
                 {
