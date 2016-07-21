@@ -238,56 +238,56 @@ int main(int argc, char* argv[]) {
 
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException), "Unmatched quote.")]
+        [ExpectedException(typeof(LexerException), "Unmatched quote.")]
         public void LCCLexerIllegal1() {
             string src = "'\n'";
             var tokens = Lexer.Instance.Scan(src);
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException), "Unmatched quote.")]
+        [ExpectedException(typeof(LexerException), "Unmatched quote.")]
         public void LCCLexerIllegalEscaped() {
             string src = "'\\'";
             var tokens = Lexer.Instance.Scan(src);
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException), "Unmatched quote.")]
+        [ExpectedException(typeof(LexerException), "Unmatched quote.")]
         public void LCCLexerIllegal2() {
             string src = "'a";
             var tokens = Lexer.Instance.Scan(src);
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException), "Long char.")]
+        [ExpectedException(typeof(LexerException), "Long char.")]
         public void LCCLexerIllegal3() {
             string src = "'\\1234'";
             var tokens = Lexer.Instance.Scan(src);
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException), "Unmatched double quote.")]
+        [ExpectedException(typeof(LexerException), "Unmatched double quote.")]
         public void LCCLexerIllegal4() {
             string src = "\"abc";
             var tokens = Lexer.Instance.Scan(src);
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException), "Unmatched double quote.")]
+        [ExpectedException(typeof(LexerException), "Unmatched double quote.")]
         public void LCCLexerIllegal5() {
             string src = "abc\"";
             var tokens = Lexer.Instance.Scan(src);
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException), "Illegal new line inside string.")]
+        [ExpectedException(typeof(LexerException), "Illegal new line inside string.")]
         public void LCCLexerIllegal6() {
             string src = "\"\n\"";
             var tokens = Lexer.Instance.Scan(src);
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException), "Illegal character.")]
+        [ExpectedException(typeof(LexerException), "Illegal character.")]
         public void LCCLexerIllegal7() {
             string src = "$";
             var tokens = Lexer.Instance.Scan(src);

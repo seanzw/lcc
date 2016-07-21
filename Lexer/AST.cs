@@ -6,7 +6,7 @@ using RegEx;
 
 namespace Lexer {
 
-    
+
     public abstract class ASTNode {
         public ASTNode() { }
 
@@ -93,7 +93,7 @@ namespace Lexer {
                 for (int i = 0; i < ss.GetLength(0); ++i) {
                     src.Append(Tab(level + 1));
                     src.Append("{ ");
-                    for (int j = 0; j < ss.GetLength(1); ++j) { 
+                    for (int j = 0; j < ss.GetLength(1); ++j) {
                         src.Append(ss[i, j] + ", ");
                     }
                     src.AppendLine("},");
@@ -116,6 +116,13 @@ namespace Lexer {
 
             #region LexerBody.
             src.AppendLine("namespace LLexer {");
+
+            #region LexerException.
+            src.AppendLine(Tab(1) + "public sealed class LexerException : Exception {");
+            src.AppendLine(Tab(2) + "public LexerException(string msg) : base(\"Lexer Error: \" + msg) { }");
+            src.AppendLine(Tab(1) + "}");
+            #endregion
+
             src.AppendLine(Tab(1) + "public sealed class Lexer {");
 
             #region Attributes.
@@ -237,7 +244,7 @@ namespace Lexer {
 
             string llerror = @"
         private void Error(string msg) {
-            throw new ArgumentException(""Lexer Error: "" + msg);
+            throw new LexerException(msg);
         }";
             src.AppendLine(llerror);
 

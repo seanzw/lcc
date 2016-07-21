@@ -3,6 +3,7 @@
 void* malloc(size_t size);
 void free(void* ptr);
 
+/// Question:
 /// Let L be a doubly linked list of length n stored in arrays key, pre,and next of
 /// length m. Suppose that these arrays are managed by ALLOCATE - OBJECT and
 /// FREE - OBJECT procedures that keep a doubly linked free list F. Suppose further

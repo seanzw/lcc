@@ -5,6 +5,9 @@ using System.Collections.Generic;
 using RegEx;
 using lcc.Token;
 namespace LLexer {
+    public sealed class LexerException : Exception {
+        public LexerException(string msg) : base("Lexer Error: " + msg) { }
+    }
     public sealed class Lexer {
         private int _idx;
         private int _line;
@@ -104,7 +107,7 @@ namespace LLexer {
         }
 
         private void Error(string msg) {
-            throw new ArgumentException("Lexer Error: " + msg);
+            throw new LexerException(msg);
         }
 
         private string text {
