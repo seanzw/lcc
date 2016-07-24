@@ -325,6 +325,13 @@ namespace lcc.AST {
         public GoTo(string label) {
             this.label = label;
         }
+        public override string ToString() {
+            return string.Format("goto {0}", label);
+        }
+        public override void ToX86(X86Gen gen) {
+            gen.Comment(X86Gen.Seg.TEXT, ToString());
+            gen.Inst(X86Gen.jmp, label);
+        }
     }
 
     public sealed class VoidStmt : Node {
