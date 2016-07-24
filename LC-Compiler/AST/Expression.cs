@@ -320,6 +320,14 @@ namespace lcc.AST {
             this.t = t;
             this.f = f;
         }
+        public override string ToString() {
+            return string.Format("{0} ? {1} : {2}", p, t, f);
+        }
+        public override X86Gen.Ret ToX86Expr(X86Gen gen) {
+            gen.Comment(X86Gen.Seg.TEXT, ToString());
+
+            throw new NotImplementedException();
+        }
     }
 
     public sealed class BiExpr : Expr {
@@ -752,6 +760,22 @@ namespace lcc.AST {
                         gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
                     }
                     return X86Gen.Ret.PTR;
+                case SyntaxTree.UnaryOp.Op.NOT:
+                    Debug.Assert(type.Kind == TKind.INT);
+                    switch (expr.Type.Kind) {
+                        case TKind.PTR:
+                        case TKind.INT:
+                        case TKind.LONG:
+                        case TKind.UINT:
+                        case TKind.ULONG:
+                            if (ret == X86Gen.Ret.PTR) gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
+                            gen.Inst(X86Gen.cmp, X86Gen.eax, 0);
+                            break;
+                    }
+                    gen.Inst(X86Gen.sete, X86Gen.al);
+                    gen.Inst(X86Gen.and, X86Gen.al, 1);
+                    gen.Inst(X86Gen.movzx, X86Gen.eax, X86Gen.al);
+                    return X86Gen.Ret.REG;
                 default:
                     throw new NotImplementedException();
             }

@@ -285,7 +285,7 @@ namespace lcc.SyntaxTree {
         public override AST.Expr ToASTExpr(Env env) {
             AST.Expr p = predicator.ToASTExpr(env);
             AST.Expr t = trueExpr.ToASTExpr(env);
-            AST.Expr f = trueExpr.ToASTExpr(env);
+            AST.Expr f = falseExpr.ToASTExpr(env);
             if (!p.Type.IsScalar) {
                 throw new ETypeError(Pos, "the predicator shall have scalar type");
             }
@@ -298,8 +298,20 @@ namespace lcc.SyntaxTree {
                     return new AST.CondExpr(t.Type, env.ASTEnv, p, t, f);
                 }
             }
-            if (t.Type.IsVoid && p.Type.IsVoid) {
+            if (t.Type.IsVoid && f.Type.IsVoid) {
                 return new AST.CondExpr(t.Type, env.ASTEnv, p, t, f);
+            }
+
+            /// If both the second and third operands are pointers or one is a null
+            /// pointer constant and the other is a pointer, the result is a pointer
+            /// to a type qualified with all the type qualifiers of the types qualifiers
+            /// of the types pointed-to by both operands.
+            if (t.Type.IsPtr) {
+                /// If one operand is a null pointer constant, the result has the type
+                /// of the other operand.
+                if (f.IsConstZero || f.IsNullPtr) {
+                    return new AST.CondExpr(t.Type, env.ASTEnv, p, t, new AST.ConstNullPtr(TVoid.Instance.None(), f.Envrionment));
+                }
             }
 
             //if (t.Type.IsPtr && f.Type.IsPtr) {

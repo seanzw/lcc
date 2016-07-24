@@ -46,7 +46,13 @@ namespace lcc {
                 }
 
                 /// Stage 3: type check and build ast.
-                var ast = results.First().Value.ToAST(new SyntaxTree.Env());
+                AST.Node ast = null;
+                try {
+                    ast = results.First().Value.ToAST(new SyntaxTree.Env());
+                } catch (Error e) {
+                    Console.WriteLine(e.Message);
+                    return;
+                }
 
                 /// Stage 4: code generation and write to file.
                 var gen = new X86Gen();

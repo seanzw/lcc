@@ -16,7 +16,6 @@
     return i + 1;
 }
 
-/// SORT ARR[LHS, RHS].
 void quick_sort(int* arr, int lhs, int rhs) {
     if (lhs < rhs) {
         int mid;
