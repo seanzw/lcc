@@ -50,7 +50,7 @@ namespace lcc.Parser {
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<T, Labeled> LabeledStatement() {
-            return Identifier()
+            return IdentifierNotTypedefName()
                 .Bind(identifier => Match<T_PUNC_COLON>()
                 .Then(Ref(Statement))
                 .Select(statement => new Labeled(identifier, statement)));
@@ -199,7 +199,7 @@ namespace lcc.Parser {
         /// <returns></returns>
         public static Parserc.Parser<T, Stmt> JumpStatement() {
             return Get<T_KEY_GOTO>()
-                    .Bind(t => Identifier()
+                    .Bind(t => IdentifierNotTypedefName()
                     .Bind(label => Match<T_PUNC_SEMICOLON>()
                     .Return(new GoTo(t.line, label.symbol) as Stmt)))
                 .Else(Get<T_KEY_CONTINUE>()

@@ -385,7 +385,7 @@ namespace lcc.Parser {
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<Token.Token, Expr> PrimaryExpression() {
-            return Identifier().Select(x => x as Expr)
+            return IdentifierNotTypedefName().Select(x => x as Expr)
                 .Else(Get<T_CONST_CHAR>().Select(x => new ConstChar(x)))
                 .Else(Get<T_CONST_INT>().Select(x => new ConstInt(x)))
                 .Else(Get<T_CONST_FLOAT>().Select(x => new ConstFloat(x)))
@@ -394,14 +394,22 @@ namespace lcc.Parser {
         }
 
         /// <summary>
-        /// identifier
+        /// Match an identifier, regardless whether it is a typedef name.
+        /// </summary>
+        /// <returns></returns>
+        public static Parserc.Parser<Token.Token, Id> Identifier() {
+            return Get<T_IDENTIFIER>().Select(id => new Id(id));
+        }
+
+        /// <summary>
+        /// identifier-not-typedef-name
         ///     : T_IDENTIFIER
         ///     ;
         ///     
         /// Fail if the identifier is a typedef name.
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<Token.Token, Id> Identifier() {
+        public static Parserc.Parser<Token.Token, Id> IdentifierNotTypedefName() {
             return Get<T_IDENTIFIER>()
                 .Bind(id => Env.IsTypedefName(id.name) ? 
                 Zero<Token.Token, Id>() : Result<Token.Token, Id>(new Id(id)));

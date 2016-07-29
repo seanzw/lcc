@@ -337,5 +337,12 @@ namespace lcc.AST {
     public sealed class VoidStmt : Node {
         private static VoidStmt instance = new VoidStmt();
         public static VoidStmt Instance => instance;
+        /// <summary>
+        /// Do nothing.
+        /// </summary>
+        /// <param name="gen"></param>
+        public override void ToX86(X86Gen gen) {
+            
+        }
     }
 }

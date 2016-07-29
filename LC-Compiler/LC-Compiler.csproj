@@ -52,7 +52,7 @@
     <Compile Include="AST\Expression.cs" />
     <Compile Include="AST\Statement.cs" />
     <Compile Include="SyntaxTree\Env.cs" />
-    <Compile Include="SyntaxTree\Exception.cs" />
+    <Compile Include="SyntaxTree\Error.cs" />
     <Compile Include="SyntaxTree\Node.cs" />
     <Compile Include="SyntaxTree\Declaration.cs" />
     <Compile Include="SyntaxTree\Definition.cs" />

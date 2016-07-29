@@ -78,6 +78,14 @@ namespace LC_CompilerTests {
                 );
         }
 
+        [TestMethod]
+        public void LCCCGeneratorTestRedBlackTree() {
+            Aux("rb_tree", "rb_tree_main",
+                "rb_tree",
+                "quick_sort"
+                );
+        }
+
 
         private void Aux(string name, string test, params string[] srcs) {
 

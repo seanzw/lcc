@@ -48,6 +48,9 @@ namespace lcc.AST {
         }
     }
 
+    /// <summary>
+    /// Basically this just represent a frame.
+    /// </summary>
     public sealed class Env {
 
         /// <summary>

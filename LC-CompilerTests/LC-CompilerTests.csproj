@@ -96,6 +96,9 @@
     <Content Include="ASTTests\code\binary_search_tree\quick_sort.c" />
     <Content Include="ASTTests\code\quick_sort\quick_sort.c" />
     <Content Include="ASTTests\code\quick_sort\quick_sort_main.c" />
+    <Content Include="ASTTests\code\rb_tree\quick_sort.c" />
+    <Content Include="ASTTests\code\rb_tree\rb_tree.c" />
+    <Content Include="ASTTests\code\rb_tree\rb_tree_main.c" />
     <Content Include="ASTTests\code\singly_linked_list\singly_linked_list.c" />
     <Content Include="ASTTests\code\singly_linked_list\singly_linked_list_main.c" />
     <Content Include="ASTTests\code\stack_array\stack_array.c" />

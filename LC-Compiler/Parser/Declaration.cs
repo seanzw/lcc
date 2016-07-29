@@ -228,7 +228,7 @@ namespace lcc.Parser {
         /// <param name="line"></param>
         /// <returns></returns>
         public static Parserc.Parser<T, StructUnionSpec> StructUnionSpecifierTail(TypeSpec.Kind kind, int line) {
-            return Identifier()
+            return IdentifierNotTypedefName()
                     .Bind(identifier => StructDeclarationList().BracelLR().ElseNull()
                     .Select(declarations => new StructUnionSpec(line, identifier, declarations, kind)))
                 .Or(StructDeclarationList().BracelLR()
@@ -340,7 +340,7 @@ namespace lcc.Parser {
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<T, SyntaxTree.Enum> Enumerator() {
-            return Identifier().Bind(i => Match<T_PUNC_ASSIGN>().Then(ConstantExpression()).ElseNull()
+            return IdentifierNotTypedefName().Bind(i => Match<T_PUNC_ASSIGN>().Then(ConstantExpression()).ElseNull()
                 .Select(expr => new SyntaxTree.Enum(i, expr)));
         }
 
@@ -388,7 +388,7 @@ namespace lcc.Parser {
         /// </summary>
         /// <returns></returns>
         public static Parserc.Parser<T, DirDeclarator> DirectDeclarator() {
-            return Identifier().Bind(identifier => DirectDeclaratorPrime(new IdDeclarator(identifier)))
+            return IdentifierNotTypedefName().Bind(identifier => DirectDeclaratorPrime(new IdDeclarator(identifier)))
                 .Else(Ref(Declarator).ParentLR().Bind(declarator => DirectDeclaratorPrime(new ParDeclarator(declarator))));
         }
 
@@ -415,7 +415,7 @@ namespace lcc.Parser {
         public static Parserc.Parser<T, DirDeclarator> DirectDeclaratorPrime(DirDeclarator direct) {
             return ParameterTypeList().ParentLR()
                     .Bind(tuple => DirectDeclaratorPrime(new FuncDeclarator(direct, tuple.Item1, tuple.Item2)))
-                .Or(Identifier().ManySeperatedBy(Match<T_PUNC_COMMA>()).ParentLR()
+                .Or(IdentifierNotTypedefName().ManySeperatedBy(Match<T_PUNC_COMMA>()).ParentLR()
                     .Bind(identifiers => DirectDeclaratorPrime(new FuncDeclarator(direct, identifiers))))
                 .Or(Match<T_PUNC_SUBSCRIPTL>().Then(TypeQualifier().Many())
                     .Bind(qualifiers => AssignmentExpression().ElseNull()
@@ -618,7 +618,7 @@ namespace lcc.Parser {
         /// <returns></returns>
         public static Parserc.Parser<T, STDesignator> Designator() {
             return ConstantExpression().SubLR().Select(expr => new STDesignator(expr))
-                .Or(Match<T_PUNC_DOT>().Then(Identifier()).Select(identifier => new STDesignator(identifier)));
+                .Or(Match<T_PUNC_DOT>().Then(IdentifierNotTypedefName()).Select(identifier => new STDesignator(identifier)));
         }
     }
 }

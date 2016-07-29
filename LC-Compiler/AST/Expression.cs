@@ -157,6 +157,24 @@ namespace lcc.AST {
             return type.IsFunc ? new FuncCast(type, env, this) : this;
         }
 
+        /// <summary>
+        /// 4. (MY OWN DEFINITION)
+        ///    A enum constant is transformed into an constant integer.
+        ///    EXCEPT: operands of assignment. (To make sure that enum A cannot be assigned to enum B).
+        /// </summary>
+        public Expr VTEnum() {
+            if (type.Kind == TKind.ENUM) {
+                var c = this as ConstEnumExpr;
+                if (c != null) {
+                    return new ConstIntExpr(TInt.Instance, (this as ConstEnumExpr).value, env);
+                } else {
+                    return new EnumCast(env, this);
+                }
+            } else {
+                return this;
+            }
+        }
+
         public virtual X86Gen.Ret ToX86Expr(X86Gen gen) {
             throw new NotImplementedException();
         }
@@ -217,6 +235,7 @@ namespace lcc.AST {
                 case TKind.SHORT:
                 case TKind.USHORT:
                 case TKind.PTR:
+                case TKind.ENUM:
                 case TKind.UINT:
                 case TKind.ULONG:
                 case TKind.LONG:
@@ -702,6 +721,21 @@ namespace lcc.AST {
         }
     }
 
+    public sealed class EnumCast : Cast {
+        public EnumCast(Env env, Expr expr) : base(TInt.Instance, env, expr) {
+            Debug.Assert(expr.Type.Kind == TKind.ENUM);
+        }
+        /// <summary>
+        /// Cast from enum to int.
+        /// </summary>
+        /// <param name="gen"></param>
+        /// <returns></returns>
+        public override X86Gen.Ret ToX86Expr(X86Gen gen) {
+            gen.Comment(X86Gen.Seg.TEXT, ToString());
+            return expr.ToX86Expr(gen);
+        }
+    }
+
     public sealed class PreStep : Expr {
         public readonly SyntaxTree.PreStep.Op op;
         public readonly Expr expr;
@@ -954,6 +988,55 @@ namespace lcc.AST {
         }
     }
 
+    /// <summary>
+    /// Represent a character string literal.
+    /// This is just a static label.
+    /// </summary>
+    public sealed class CharStr : Expr {
+        public string uid;
+        public IEnumerable<ushort> values;
+        public CharStr(T type, Env env, string uid, IEnumerable<ushort> values) 
+            : base(type, env) {
+            Debug.Assert(type.Equals(TChar.Instance.None().Arr(values.Count())));
+            this.uid = uid;
+            this.values = values;
+        }
+        public override string ToString() {
+            return string.Format("character string literal: {0}", uid);
+        }
+        private void LayData(X86Gen gen) {
+
+            Func<ushort, bool> Printable = v => v >= 0x20 && v <= 0x7E;
+            Func<ushort, bool> Escape = v => v == 0x22 || v == 0x27 || v == 0x5C;
+
+            gen.Tag(X86Gen.Seg.DATA, uid);
+            StringBuilder sb = new StringBuilder(values.Count() * 2);
+            foreach (var value in values) {
+                Debug.Assert(value <= 127);
+                if (Printable(value)) {
+                    if (Escape(value)) sb.AppendFormat("\\{0}", (char)value);
+                    else sb.Append((char)value);
+                } else {
+                    /// Cannot find an elegant way to format value 
+                    /// int octal string with 0 as place holder...
+                    /// System.Convert.ToString(value, 8) doesn't have a place holder...
+                    sb.AppendFormat("\\{0}{1}{2}", (value / 64) % 8, (value / 8) % 8, value % 8);
+                }
+            }
+
+            gen.Ascii(sb.ToString());
+        }
+        public override X86Gen.Ret ToX86Expr(X86Gen gen) {
+
+            /// Lay down this character string literal in data segment.
+            LayData(gen);
+
+            gen.Comment(X86Gen.Seg.TEXT, ToString());
+            gen.Inst(X86Gen.lea, X86Gen.eax, new X86Gen.Label(uid).Addr());
+            return X86Gen.Ret.PTR;
+        }
+    }
+
     public abstract class ConstExpr : Expr {
         public ConstExpr(TUnqualified type, Env env) : base(type.None(), env) { }
     }
@@ -967,6 +1050,26 @@ namespace lcc.AST {
         public ConstArithExpr(TUnqualified type, Env env) : base(type, env) { }
         public virtual ConstArithExpr Neg() {
             throw new NotImplementedException();
+        }
+    }
+
+    public sealed class ConstEnumExpr : ConstArithExpr {
+        public readonly string name;
+        public readonly TEnum t;
+        public readonly BigInteger value;
+        public override bool IsConstZero => value == 0;
+        public ConstEnumExpr(string name, TEnum t, BigInteger value, Env env) : base(t, env) {
+            this.name = name;
+            this.t = t;
+            this.value = value;
+        }
+        public override string ToString() {
+            return string.Format("{0}.{1} {2}", t, name, value.ToString());
+        }
+        public override X86Gen.Ret ToX86Expr(X86Gen gen) {
+            gen.Comment(X86Gen.Seg.TEXT, ToString());
+            gen.Inst(X86Gen.mov, X86Gen.eax, value);
+            return X86Gen.Ret.REG;
         }
     }
 
@@ -998,6 +1101,8 @@ namespace lcc.AST {
             switch (t.Kind) {
                 case TKind.UINT:
                 case TKind.INT:
+                case TKind.LONG:
+                case TKind.ULONG:
                     gen.Inst(X86Gen.mov, X86Gen.eax, value);
                     return X86Gen.Ret.REG;
             }

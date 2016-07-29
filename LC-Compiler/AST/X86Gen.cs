@@ -256,6 +256,10 @@ namespace lcc.AST {
             sb.Append(string.Format("\t# {0}\n", cmt));
         }
 
+        public void Ascii(string value) {
+            data.AppendFormat("\t.ascii \"{0}\"\n", value);
+        }
+
         /// <summary>
         /// Push the result into the stack.
         /// </summary>

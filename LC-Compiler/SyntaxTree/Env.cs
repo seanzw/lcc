@@ -307,6 +307,7 @@ namespace lcc.SyntaxTree {
             staticId = 0;
             dynamicId = 0;
             logicalId = 0;
+            strId = 0;
             breakables = new Stack<Breakable>();
         }
 
@@ -491,7 +492,7 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <param name="s"></param>
         public void PushSwitch(Switch s) {
-            s.breakLabel = string.Format("__switch_break_{0}", switchId++);
+            s.breakLabel = string.Format("___switch_break_{0}", switchId++);
             breakables.Push(s);
         }
 
@@ -512,10 +513,10 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <param name="l"></param>
         public void PushLoop(Loop l) {
-            l.secondPlusLabel = string.Format("__loop_second_plus_{0}", loopId);
-            l.firstLabel = string.Format("__loop_first_{0}", loopId);
-            l.breakLabel = string.Format("__loop_break_{0}", loopId);
-            l.continueLabel = string.Format("__loop_continure{0}", loopId++);
+            l.secondPlusLabel = string.Format("___loop_second_plus_{0}", loopId);
+            l.firstLabel = string.Format("___loop_first_{0}", loopId);
+            l.breakLabel = string.Format("___loop_break_{0}", loopId);
+            l.continueLabel = string.Format("___loop_continure{0}", loopId++);
             breakables.Push(l);
         }
 
@@ -577,7 +578,7 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <returns></returns>
         public string AllocCaseLabel() {
-            return string.Format("__case_{0}", caseId++);
+            return string.Format("___case_{0}", caseId++);
         }
 
         /// <summary>
@@ -585,7 +586,15 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <returns></returns>
         public string AllocDefaultLabel() {
-            return string.Format("__default_{0}", defaultId++);
+            return string.Format("___default_{0}", defaultId++);
+        }
+
+        /// <summary>
+        /// Allocate a string literal label.
+        /// </summary>
+        /// <returns></returns>
+        public string AllocStrLabel() {
+            return string.Format("___str_literal_{0}", strId++);
         }
 
         /// <summary>
@@ -595,7 +604,7 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <returns></returns>
         public Tuple<string, string> AllocIfLabel() {
-            return new Tuple<string, string>(string.Format("__else_block_{0}", ifId), string.Format("__endif_{0}", ifId++));
+            return new Tuple<string, string>(string.Format("___else_block_{0}", ifId), string.Format("___endif_{0}", ifId++));
         }
 
         /// <summary>
@@ -603,7 +612,7 @@ namespace lcc.SyntaxTree {
         /// </summary>
         /// <returns></returns>
         public Tuple<string, string> AllocLogicalLabel() {
-            return new Tuple<string, string>(string.Format("__logical_shortcut_{0}", logicalId), string.Format("__logical_end_{0}", logicalId++));
+            return new Tuple<string, string>(string.Format("___logical_shortcut_{0}", logicalId), string.Format("___logical_end_{0}", logicalId++));
         }
 
         /// <summary>
@@ -635,6 +644,7 @@ namespace lcc.SyntaxTree {
         private int staticId;
         private int dynamicId;
         private int logicalId;
+        private int strId;
 
         private Stack<Breakable> breakables;
         private Stack<Scope> scopes;

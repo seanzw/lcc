@@ -98,7 +98,7 @@ namespace LC_CompilerTests {
         [TestMethod]
         public void LCCTCStringConcat() {
             string src = "\"a\" \"b\"";
-            var truth = new List<ushort> { 'a', 'b' };
+            var truth = new List<ushort> { 'a', 'b', 0 };
             var result = Utility.parse(src, Parser.PrimaryExpression().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());

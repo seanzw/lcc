@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -211,6 +212,10 @@ namespace lcc.SyntaxTree {
             /// - the left operand has type _Bool and the right is a pointer.
             /// 
             /// The value of the right operand is converted to the type of the assignment expression.
+            if (lType.Equals(rExpr.Type)) {
+                return true;
+            }
+
             if (lType.IsArithmetic && rExpr.Type.IsArithmetic) {
                 return true;
             }
@@ -407,8 +412,8 @@ namespace lcc.SyntaxTree {
         }
 
         public override AST.Expr ToASTExpr(Env env) {
-            AST.Expr lExpr = lhs.ToASTExpr(env).ValueTransform();
-            AST.Expr rExpr = rhs.ToASTExpr(env).ValueTransform();
+            AST.Expr lExpr = lhs.ToASTExpr(env).ValueTransform().VTEnum();
+            AST.Expr rExpr = rhs.ToASTExpr(env).ValueTransform().VTEnum();
 
             var typeError = new ETypeError(Pos, string.Format("{0} {1} {2}", lExpr.Type, op, rExpr.Type));
 
@@ -1294,6 +1299,12 @@ namespace lcc.SyntaxTree {
                         }
                     case SymbolEntry.Kind.FUNC:
                         return new AST.FuncDesignator(entry.type, env.ASTEnv, symbol);
+                    case SymbolEntry.Kind.ENUM: {
+                            var e = entry as EEnum;
+                            Debug.Assert(e.expr.t.Kind == TKind.INT);
+                            return new AST.ConstEnumExpr(e.symbol, e.type.nake as TEnum, e.expr.value, env.ASTEnv);
+                        }
+
                     default:
                         throw new NotImplementedException();
                 }
@@ -1742,6 +1753,7 @@ namespace lcc.SyntaxTree {
             pos = new Position(tokens.First());
             values = Evaluate(tokens);
             type = TChar.Instance.None().Arr(values.Count());
+            isCharacter = true;
         }
 
         public override Position Pos => pos;
@@ -1759,23 +1771,33 @@ namespace lcc.SyntaxTree {
         }
 
         public override AST.Expr ToASTExpr(Env env) {
+            if (isCharacter) {
+                string uid = env.AllocStrLabel();
+                return new AST.CharStr(type, env.ASTEnv, uid, values);
+            }
             throw new NotImplementedException();
         }
 
         public static IEnumerable<ushort> Evaluate(LinkedList<T_STRING_LITERAL> tokens) {
 
-            IEnumerable<ushort> values = new LinkedList<ushort>();
+            var values = new LinkedList<ushort>();
 
             foreach (var t in tokens) {
                 Position pos = new Position(t);
                 if (t.prefix == T_STRING_LITERAL.Prefix.L) {
                     throw new EUnknownType(pos, "multi-character");
                 }
-                values = values.Concat(ConstChar.Evaluate(pos, t.text));
+                foreach (var x in ConstChar.Evaluate(pos, t.text)) {
+                    values.AddLast(x);
+                }
             }
+
+            /// Append the 0.
+            values.AddLast(0);
             return values;
         }
 
+        private readonly bool isCharacter;
         public readonly Position pos;
         public readonly IEnumerable<ushort> values;
         public readonly T type;
