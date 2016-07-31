@@ -1099,15 +1099,20 @@ namespace lcc.AST {
         public override X86Gen.Ret ToX86Expr(X86Gen gen) {
             gen.Comment(X86Gen.Seg.TEXT, ToString());
             switch (t.Kind) {
+                case TKind.UCHAR:
+                case TKind.SCHAR:
+                case TKind.CHAR:
+                    gen.Inst(X86Gen.mov, X86Gen.al, value); break;
                 case TKind.UINT:
                 case TKind.INT:
                 case TKind.LONG:
                 case TKind.ULONG:
-                    gen.Inst(X86Gen.mov, X86Gen.eax, value);
-                    return X86Gen.Ret.REG;
+                    gen.Inst(X86Gen.mov, X86Gen.eax, value); break;
+                default:
+                    throw new NotImplementedException();
             }
 
-            throw new NotImplementedException();
+            return X86Gen.Ret.REG;
         }
     }
 

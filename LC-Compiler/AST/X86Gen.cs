@@ -319,6 +319,28 @@ namespace lcc.AST {
             }
 
             switch (expr.Type.Kind) {
+                case TKind.CHAR:
+                    if (ret == Ret.PTR) Inst(mov, al, eax.Addr(Size.BYTE));
+                    switch (type.Kind) {
+                        case TKind.CHAR:
+                        case TKind.SCHAR:
+                        case TKind.UCHAR:
+                            /// Preserve bit pattern.
+                            return Ret.REG;
+                        case TKind.SHORT:
+                        case TKind.USHORT:
+                            /// Sign extend.
+                            Inst(movsx, ax, al);
+                            return Ret.REG;
+                        case TKind.INT:
+                        case TKind.UINT:
+                        case TKind.LONG:
+                        case TKind.ULONG:
+                            /// Sign extend.
+                            Inst(movsx, eax, al);
+                            return Ret.REG;
+                    }
+                    break;
                 case TKind.UCHAR:
                     if (ret == Ret.PTR) Inst(mov, al, eax.Addr(Size.BYTE));
                     switch (type.Kind) {

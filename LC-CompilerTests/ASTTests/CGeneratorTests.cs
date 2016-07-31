@@ -86,6 +86,13 @@ namespace LC_CompilerTests {
                 );
         }
 
+        [TestMethod]
+        public void LCCCGeneratorTestMatrixChain() {
+            Aux("matrix_chain", "matrix_chain_main",
+                "matrix_chain"
+                );
+        }
+
 
         private void Aux(string name, string test, params string[] srcs) {
 
