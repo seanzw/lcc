@@ -128,6 +128,15 @@ namespace LC_CompilerTests {
                 );
         }
 
+        [TestMethod]
+        public void LCCCGeneratorTestLTLongestConsecutiveSequence() {
+            Aux("leetcode/longest_consecutive_sequence", "test",
+                "solution",
+                "doubly_linked_list",
+                "hash_table"
+                );
+        }
+
 
         private void Aux(string name, string test, params string[] srcs) {
 

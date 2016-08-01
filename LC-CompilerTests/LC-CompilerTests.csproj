@@ -86,11 +86,15 @@
     <Content Include="ASTTests\code\doubly_linked_list\doubly_linked_list_main.c" />
     <Content Include="ASTTests\code\hash_table\doubly_linked_list.c" />
     <Content Include="ASTTests\code\hash_table\hash_table.c" />
+    <Content Include="ASTTests\code\leetcode\longest_consecutive_sequence\doubly_linked_list.c" />
+    <Content Include="ASTTests\code\leetcode\longest_consecutive_sequence\hash_table.c" />
     <Content Include="ASTTests\code\hash_table\hash_table_main.c" />
     <Content Include="ASTTests\code\heap_sort\heap_sort.c" />
     <Content Include="ASTTests\code\heap_sort\heap_sort_main.c" />
     <Content Include="ASTTests\code\homogeneous_pool\homogeneous_pool.c" />
     <Content Include="ASTTests\code\homogeneous_pool\homogeneous_pool_main.c" />
+    <Content Include="ASTTests\code\leetcode\longest_consecutive_sequence\solution.c" />
+    <Content Include="ASTTests\code\leetcode\longest_consecutive_sequence\test.c" />
     <Content Include="ASTTests\code\leetcode\median_of_two_sorted_arrays\solution.c" />
     <Content Include="ASTTests\code\leetcode\median_of_two_sorted_arrays\test.c" />
     <Content Include="ASTTests\code\leetcode\remove_duplicates_from_sorted_array\solution.c" />

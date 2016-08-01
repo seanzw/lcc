@@ -937,6 +937,10 @@ namespace lcc.AST {
                 gen.Inst(X86Gen.add, X86Gen.eax, f.Value.offset / 8);
                 return X86Gen.Ret.PTR;
             } else {
+                if (ret == X86Gen.Ret.PTR) {
+                    gen.Inst(X86Gen.add, X86Gen.eax, f.Value.offset / 8);
+                    return X86Gen.Ret.PTR;
+                }
                 throw new NotImplementedException();
             }
         }
