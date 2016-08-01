@@ -7,6 +7,8 @@ int uint2int(unsigned int x);
 
 int main(int argc, char* argv[]) {
     unsigned char uc128 = 128u;
+    double d100 = 100;
     test(uchar2schar, uc128);
+    test(int2double, d100);
     return 0;
 }

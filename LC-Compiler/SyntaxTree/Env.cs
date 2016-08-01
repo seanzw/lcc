@@ -301,6 +301,7 @@ namespace lcc.SyntaxTree {
             ASTEnv = new AST.Env();
             loopId = 0;
             ifId = 0;
+            condId = 0;
             switchId = 0;
             caseId = 0;
             defaultId = 0;
@@ -308,6 +309,7 @@ namespace lcc.SyntaxTree {
             dynamicId = 0;
             logicalId = 0;
             strId = 0;
+            realId = 0;
             breakables = new Stack<Breakable>();
         }
 
@@ -608,11 +610,25 @@ namespace lcc.SyntaxTree {
         }
 
         /// <summary>
+        /// Allocate a conditional expression label.
+        /// Item1: falseLabel;
+        /// Item2: endLabel;
+        /// </summary>
+        /// <returns></returns>
+        public Tuple<string, string> AllocCondLabel() {
+            return new Tuple<string, string>(string.Format("___false_expr_{0}", condId), string.Format("___endcond_{0}", condId++));
+        }
+
+        /// <summary>
         /// Allocate labels for logical operator to ensure the short circuit evaluation.
         /// </summary>
         /// <returns></returns>
         public Tuple<string, string> AllocLogicalLabel() {
             return new Tuple<string, string>(string.Format("___logical_shortcut_{0}", logicalId), string.Format("___logical_end_{0}", logicalId++));
+        }
+
+        public string AllocRealLabel() {
+            return string.Format("___real_label_{0}", realId++);
         }
 
         /// <summary>
@@ -638,6 +654,7 @@ namespace lcc.SyntaxTree {
 
         private int loopId;
         private int ifId;
+        private int condId;
         private int switchId;
         private int caseId;
         private int defaultId;
@@ -645,6 +662,7 @@ namespace lcc.SyntaxTree {
         private int dynamicId;
         private int logicalId;
         private int strId;
+        private int realId;
 
         private Stack<Breakable> breakables;
         private Stack<Scope> scopes;

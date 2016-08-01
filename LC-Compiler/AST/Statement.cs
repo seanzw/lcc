@@ -314,6 +314,16 @@ namespace lcc.AST {
                     }
                     gen.Inst(X86Gen.jmp, label);
                     return;
+                case TKind.DOUBLE:
+                    if (ret == X86Gen.Ret.PTR) {
+                        gen.Inst(X86Gen.movsd, X86Gen.xmm0, X86Gen.eax.Addr(X86Gen.Size.QWORD));
+                    }
+                    gen.Inst(X86Gen.sub, X86Gen.esp, 8);
+                    gen.Inst(X86Gen.movsd, X86Gen.esp.Addr(X86Gen.Size.QWORD), X86Gen.xmm0);
+                    gen.Inst(X86Gen.fld, X86Gen.esp.Addr(X86Gen.Size.QWORD));
+                    gen.Inst(X86Gen.add, X86Gen.esp, 8);
+                    gen.Inst(X86Gen.jmp, label);
+                    return;
             }
 
             throw new NotImplementedException();

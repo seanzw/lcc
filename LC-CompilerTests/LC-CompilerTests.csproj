@@ -91,6 +91,16 @@
     <Content Include="ASTTests\code\heap_sort\heap_sort_main.c" />
     <Content Include="ASTTests\code\homogeneous_pool\homogeneous_pool.c" />
     <Content Include="ASTTests\code\homogeneous_pool\homogeneous_pool_main.c" />
+    <Content Include="ASTTests\code\leetcode\median_of_two_sorted_arrays\solution.c" />
+    <Content Include="ASTTests\code\leetcode\median_of_two_sorted_arrays\test.c" />
+    <Content Include="ASTTests\code\leetcode\remove_duplicates_from_sorted_array\solution.c" />
+    <Content Include="ASTTests\code\leetcode\remove_duplicates_from_sorted_array\test.c" />
+    <Content Include="ASTTests\code\leetcode\remove_duplicates_from_sorted_array_2\solution.c" />
+    <Content Include="ASTTests\code\leetcode\remove_duplicates_from_sorted_array_2\test.c" />
+    <Content Include="ASTTests\code\leetcode\search_in_rotated_sorted_array\solution.c" />
+    <Content Include="ASTTests\code\leetcode\search_in_rotated_sorted_array\test.c" />
+    <Content Include="ASTTests\code\leetcode\search_in_rotated_sorted_array_2\solution.c" />
+    <Content Include="ASTTests\code\leetcode\search_in_rotated_sorted_array_2\test.c" />
     <Content Include="ASTTests\code\matrix_chain\matrix_chain.c" />
     <Content Include="ASTTests\code\matrix_chain\matrix_chain_main.c" />
     <Content Include="ASTTests\code\queue_array\queue_array.c" />

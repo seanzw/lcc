@@ -263,6 +263,10 @@ namespace lcc.AST {
                         gen.Inst(X86Gen.mov, X86Gen.ebx.Addr(s), o);
                         return X86Gen.Ret.REG;
                     }
+                //case TKind.DOUBLE: {
+
+                //    }
+
                 default:
                     throw new NotImplementedException();
             }
@@ -334,18 +338,49 @@ namespace lcc.AST {
         public readonly Expr p;
         public readonly Expr t;
         public readonly Expr f;
-        public CondExpr(T type, Env env, Expr p, Expr t, Expr f) : base(type, env) {
+        public readonly string falseLabel;
+        public readonly string endLabel;
+        public CondExpr(T type, Env env, Expr p, Expr t, Expr f, string falseLabel, string endLabel) : base(type, env) {
             this.p = p;
             this.t = t;
             this.f = f;
+            this.falseLabel = falseLabel;
+            this.endLabel = endLabel;
         }
         public override string ToString() {
             return string.Format("{0} ? {1} : {2}", p, t, f);
         }
         public override X86Gen.Ret ToX86Expr(X86Gen gen) {
             gen.Comment(X86Gen.Seg.TEXT, ToString());
+            gen.Branch(p, falseLabel, false);
 
-            throw new NotImplementedException();
+
+            var tRet = t.ToX86Expr(gen);
+            if (tRet == X86Gen.Ret.PTR) tRet = Load(gen, t.Type);
+            gen.Inst(X86Gen.jmp, endLabel);
+
+            gen.Tag(X86Gen.Seg.TEXT, falseLabel);
+            var fRet = f.ToX86Expr(gen);
+            if (fRet == X86Gen.Ret.PTR) fRet = Load(gen, f.Type);
+            gen.Tag(X86Gen.Seg.TEXT, endLabel);
+
+            Debug.Assert(tRet == fRet);
+            return tRet;
+        }
+
+        private X86Gen.Ret Load(X86Gen gen, T type) {
+            switch (type.Kind) {
+                case TKind.PTR:
+                case TKind.ENUM:
+                case TKind.INT:
+                case TKind.UINT:
+                case TKind.LONG:
+                case TKind.ULONG:
+                    gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
+                    return X86Gen.Ret.REG;
+                default:
+                    throw new NotImplementedException();
+            }
         }
     }
 
@@ -488,9 +523,22 @@ namespace lcc.AST {
                             gen.Inst(X86Gen.cdq);
                             gen.Inst(X86Gen.idiv, X86Gen.ebx);
                             if (op == SyntaxTree.BiExpr.Op.MOD) {
-                                gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.ebx);
+                                gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.edx);
                             }
                             break;
+                    }
+                    break;
+                case TKind.DOUBLE:
+                    // Generate the code for rhs and move the result to xmm1.
+                    Debug.Assert(op != SyntaxTree.BiExpr.Op.MOD);
+                    gen.Inst(X86Gen.movsd, X86Gen.xmm1, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr(X86Gen.Size.QWORD) as X86Gen.Operand : X86Gen.xmm0);
+                    gen.Inst(X86Gen.movsd, X86Gen.xmm0, X86Gen.esp.Addr(X86Gen.Size.QWORD));
+                    gen.Inst(X86Gen.add, X86Gen.esp, 8);
+                    switch (op) {
+                        case SyntaxTree.BiExpr.Op.MUL:
+                            gen.Inst(X86Gen.mulsd, X86Gen.xmm0, X86Gen.xmm1); break;
+                        case SyntaxTree.BiExpr.Op.DIV:
+                            gen.Inst(X86Gen.divsd, X86Gen.xmm0, X86Gen.xmm1); break;
                     }
                     break;
                 default: throw new NotImplementedException();
@@ -1020,7 +1068,8 @@ namespace lcc.AST {
                     /// Cannot find an elegant way to format value 
                     /// int octal string with 0 as place holder...
                     /// System.Convert.ToString(value, 8) doesn't have a place holder...
-                    sb.AppendFormat("\\{0}{1}{2}", (value / 64) % 8, (value / 8) % 8, value % 8);
+                    sb.AppendFormat("\\{0}", Convert.ToString(value, 8));
+                    //sb.AppendFormat("\\{0}{1}{2}", (value / 64) % 8, (value / 8) % 8, value % 8);
                 }
             }
 
@@ -1088,7 +1137,7 @@ namespace lcc.AST {
         public override Expr IntPromote() {
             T promoted = type.IntPromote();
             if (promoted.IsInteger) return new ConstIntExpr(promoted.nake as TInteger, value, env);
-            else return new ConstFloatExpr(promoted.nake as TArithmetic, (double)value, env);
+            else return new Cast(promoted.nake, env, this); // ConstFloatExpr(promoted.nake as TArithmetic, (double)value, env);
         }
         public override ConstArithExpr Neg() {
             return new ConstIntExpr(t, -value, env);
@@ -1122,9 +1171,29 @@ namespace lcc.AST {
     public sealed class ConstFloatExpr : ConstArithExpr {
         public readonly TArithmetic t;
         public readonly double value;
-        public ConstFloatExpr(TArithmetic t, double value, Env env) : base(t, env) {
+        public readonly string label;
+        public ConstFloatExpr(TArithmetic t, double value, Env env, string label) : base(t, env) {
             this.t = t;
             this.value = value;
+            this.label = label;
+        }
+        public override string ToString() {
+            return value.ToString();
+        }
+        public override X86Gen.Ret ToX86Expr(X86Gen gen) {
+            gen.Comment(X86Gen.Seg.TEXT, ToString());
+
+            switch (t.Kind) {
+                case TKind.DOUBLE:
+                    gen.Tag(X86Gen.Seg.DATA, label);
+                    gen.Comment(X86Gen.Seg.DATA, string.Format("double {0}", value));
+                    gen.Data(X86Gen.Size.QWORD, BitConverter.DoubleToInt64Bits(value).ToString());
+                    gen.Inst(X86Gen.movsd, X86Gen.xmm0, (new X86Gen.Label(label)).Addr(X86Gen.Size.QWORD));
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+            return X86Gen.Ret.REG;
         }
     }
 

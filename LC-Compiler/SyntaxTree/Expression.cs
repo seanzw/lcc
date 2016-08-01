@@ -291,20 +291,21 @@ namespace lcc.SyntaxTree {
             AST.Expr p = predicator.ToASTExpr(env);
             AST.Expr t = trueExpr.ToASTExpr(env);
             AST.Expr f = falseExpr.ToASTExpr(env);
+            var labels = env.AllocCondLabel();
             if (!p.Type.IsScalar) {
                 throw new ETypeError(Pos, "the predicator shall have scalar type");
             }
             if (t.Type.IsArithmetic && f.Type.IsArithmetic) {
                 var uac = AST.Expr.UsualArithConvert(t, f);
-                return new AST.CondExpr(uac.Item1, env.ASTEnv, p, uac.Item2, uac.Item3);
+                return new AST.CondExpr(uac.Item1, env.ASTEnv, p, uac.Item2, uac.Item3, labels.Item1, labels.Item2);
             }
             if ((t.Type.IsStruct || t.Type.IsUnion) && (f.Type.IsStruct || f.Type.IsUnion)) {
                 if (t.Type.Equals(f.Type)) {
-                    return new AST.CondExpr(t.Type, env.ASTEnv, p, t, f);
+                    return new AST.CondExpr(t.Type, env.ASTEnv, p, t, f, labels.Item1, labels.Item2);
                 }
             }
             if (t.Type.IsVoid && f.Type.IsVoid) {
-                return new AST.CondExpr(t.Type, env.ASTEnv, p, t, f);
+                return new AST.CondExpr(t.Type, env.ASTEnv, p, t, f, labels.Item1, labels.Item2);
             }
 
             /// If both the second and third operands are pointers or one is a null
@@ -315,7 +316,7 @@ namespace lcc.SyntaxTree {
                 /// If one operand is a null pointer constant, the result has the type
                 /// of the other operand.
                 if (f.IsConstZero || f.IsNullPtr) {
-                    return new AST.CondExpr(t.Type, env.ASTEnv, p, t, new AST.ConstNullPtr(TVoid.Instance.None(), f.Envrionment));
+                    return new AST.CondExpr(t.Type, env.ASTEnv, p, t, new AST.ConstNullPtr(TVoid.Instance.None(), f.Envrionment), labels.Item1, labels.Item2);
                 }
             }
 
@@ -1687,7 +1688,7 @@ namespace lcc.SyntaxTree {
         }
 
         public override AST.Expr ToASTExpr(Env env) {
-            return new AST.ConstFloatExpr(t, value, env.ASTEnv);
+            return new AST.ConstFloatExpr(t, value, env.ASTEnv, env.AllocRealLabel());
         }
 
         private static double Evaluate(T_CONST_FLOAT token) {

@@ -93,6 +93,41 @@ namespace LC_CompilerTests {
                 );
         }
 
+        [TestMethod]
+        public void LCCCGeneratorTestLTRemoveDuplicatesFromSortedArray() {
+            Aux("leetcode/remove_duplicates_from_sorted_array", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTRemoveDuplicatesFromSortedArrayII() {
+            Aux("leetcode/remove_duplicates_from_sorted_array_2", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTSearchInRotatedSortedArray() {
+            Aux("leetcode/search_in_rotated_sorted_array", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTSearchInRotatedSortedArrayII() {
+            Aux("leetcode/search_in_rotated_sorted_array_2", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTMedianOfTwoSortedArrays() {
+            Aux("leetcode/median_of_two_sorted_arrays", "test",
+                "solution"
+                );
+        }
+
 
         private void Aux(string name, string test, params string[] srcs) {
 
@@ -143,8 +178,8 @@ namespace LC_CompilerTests {
                 p.WaitForExit();
             }
 
-            var clang_exe = string.Format("{0}/{1}_clang.exe", path, name);
-            var lcc_exe = string.Format("{0}/{1}_lcc.exe", path, name);
+            var clang_exe = string.Format("{0}/{1}_clang.exe", path, test);
+            var lcc_exe = string.Format("{0}/{1}_lcc.exe", path, test);
             clear(clang_exe);
             clear(lcc_exe);
 

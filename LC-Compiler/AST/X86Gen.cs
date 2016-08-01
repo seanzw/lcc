@@ -24,6 +24,7 @@ namespace lcc.AST {
         public enum Ret {
             /// <summary>
             /// The result is in register, maybe al, ax, eax, or edx:eax.
+            /// For double, the result is in xmm0.
             /// </summary>
             REG,
             /// <summary>
@@ -145,6 +146,12 @@ namespace lcc.AST {
         public static readonly Reg ebx = new Reg("ebx");
 
         /// <summary>
+        /// For float point.
+        /// </summary>
+        public static readonly Reg xmm0 = new Reg("xmm0");
+        public static readonly Reg xmm1 = new Reg("xmm1");
+
+        /// <summary>
         /// Special attention!
         /// This is used like ebp to point to the base of a block.
         /// </summary>
@@ -162,6 +169,9 @@ namespace lcc.AST {
             public override string Intel => label;
             public Mem Addr(int offset = 0, Size size = Size.DWORD) {
                 return new MemLabel(this, offset, size);
+            }
+            public Mem Addr(Size size) {
+                return new MemLabel(this, 0, size);
             }
         }
 
@@ -189,8 +199,10 @@ namespace lcc.AST {
         public static readonly Operator dec = new Operator("dec");
         public static readonly Operator imul = new Operator("imul");
         public static readonly Operator mul = new Operator("mul");
+        public static readonly Operator mulsd = new Operator("mulsd");
         public static readonly Operator idiv = new Operator("idiv");
         public static readonly Operator div = new Operator("div");
+        public static readonly Operator divsd = new Operator("divsd");
         public static readonly Operator cdq = new Operator("cdq");
 
 
@@ -214,6 +226,10 @@ namespace lcc.AST {
         public static readonly Operator jmp = new Operator("jmp");
         public static readonly Operator je = new Operator("je");
         public static readonly Operator jne = new Operator("jne");
+
+        public static readonly Operator cvtsi2sd = new Operator("cvtsi2sd");
+        public static readonly Operator movsd = new Operator("movsd");
+        public static readonly Operator fld = new Operator("fld");
         #endregion
 
 
@@ -260,6 +276,13 @@ namespace lcc.AST {
             data.AppendFormat("\t.ascii \"{0}\"\n", value);
         }
 
+        public void Data(Size size, string data) {
+            switch (size) {
+                case Size.QWORD: this.data.AppendFormat("\t.quad {0}\n", data); break;
+                default: throw new NotImplementedException();
+            }
+        }
+
         /// <summary>
         /// Push the result into the stack.
         /// </summary>
@@ -269,11 +292,17 @@ namespace lcc.AST {
             var ret = expr.ToX86Expr(this);
             switch (expr.Type.Kind) {
                 case TKind.PTR:
+                case TKind.ENUM:
                 case TKind.ULONG:
                 case TKind.LONG:
                 case TKind.UINT:
                 case TKind.INT:
                     Inst(push, ret == Ret.PTR ? eax.Addr() as Operand : eax);
+                    break;
+                case TKind.DOUBLE:
+                    Inst(sub, esp, 8);
+                    if (ret == Ret.PTR) Inst(movsd, xmm0, eax.Addr(Size.DWORD));
+                    Inst(movsd, esp.Addr(Size.QWORD), xmm0);
                     break;
                 default: throw new NotImplementedException();
             }
@@ -411,6 +440,9 @@ namespace lcc.AST {
                         case TKind.LONG:
                         case TKind.ULONG:
                         case TKind.PTR:
+                            return Ret.REG;
+                        case TKind.DOUBLE:
+                            Inst(cvtsi2sd, xmm0, eax);
                             return Ret.REG;
                     }
                     break;
