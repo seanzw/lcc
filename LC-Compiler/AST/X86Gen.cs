@@ -143,7 +143,17 @@ namespace lcc.AST {
         public static readonly Reg ax = new Reg("ax");
         public static readonly Reg al = new Reg("al");
 
+        /// <summary>
+        /// Special attention!
+        /// This is used like ebp to point to the base of a block.
+        /// </summary>
         public static readonly Reg ebx = new Reg("ebx");
+
+        public static readonly Reg ecx = new Reg("ecx");
+        public static readonly Reg cl = new Reg("cl");
+        public static readonly Reg edx = new Reg("edx");
+        public static readonly Reg ebp = new Reg("ebp");
+        public static readonly Reg esp = new Reg("esp");
 
         /// <summary>
         /// For float point.
@@ -151,14 +161,8 @@ namespace lcc.AST {
         public static readonly Reg xmm0 = new Reg("xmm0");
         public static readonly Reg xmm1 = new Reg("xmm1");
 
-        /// <summary>
-        /// Special attention!
-        /// This is used like ebp to point to the base of a block.
-        /// </summary>
-        public static readonly Reg ecx = new Reg("ecx");
-        public static readonly Reg edx = new Reg("edx");
-        public static readonly Reg ebp = new Reg("ebp");
-        public static readonly Reg esp = new Reg("esp");
+        
+
         #endregion
 
         public sealed class Label : Operand {
@@ -205,7 +209,8 @@ namespace lcc.AST {
         public static readonly Operator divsd = new Operator("divsd");
         public static readonly Operator cdq = new Operator("cdq");
 
-
+        public static readonly Operator shl = new Operator("shl");
+        public static readonly Operator shr = new Operator("shr");
 
         public static readonly Operator cmp = new Operator("cmp");
         public static readonly Operator setle = new Operator("setle");
@@ -316,6 +321,15 @@ namespace lcc.AST {
         /// <param name="which"></param>
         public void Branch(Expr expr, string label, bool which) {
             switch (expr.Type.Kind) {
+                case TKind.CHAR:
+                case TKind.UCHAR:
+                case TKind.SCHAR:
+                    if (expr.ToX86Expr(this) == Ret.PTR) {
+                        Inst(mov, al, eax.Addr(Size.BYTE));
+                    }
+                    Inst(cmp, al, 0);
+                    Inst(which ? jne : je, label);
+                    break;
                 case TKind.PTR:
                 case TKind.LONG:
                 case TKind.ULONG:

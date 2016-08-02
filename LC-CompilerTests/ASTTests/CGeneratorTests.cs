@@ -137,6 +137,110 @@ namespace LC_CompilerTests {
                 );
         }
 
+        [TestMethod]
+        public void LCCCGeneratorTestLTRemoveElement() {
+            Aux("leetcode/remove_element", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTNextPermutation() {
+            Aux("leetcode/next_permutation", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTPermutationSequence() {
+            Aux("leetcode/permutation_sequence", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTTrappingRainWater() {
+            Aux("leetcode/trapping_rain_water", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTRotateImage() {
+            Aux("leetcode/rotate_image", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTPlusOne() {
+            Aux("leetcode/plus_one", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTCandy() {
+            Aux("leetcode/candy", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTSingleNumber() {
+            Aux("leetcode/single_number", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTSingleNumberII() {
+            Aux("leetcode/single_number_2", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTAddTwoNumbers() {
+            Aux("leetcode/add_two_numbers", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTReverseLinkedListII() {
+            Aux("leetcode/reverse_linked_list_2", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTRegularExpressionMatching() {
+            Aux("leetcode/regular_expression_matching", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTMergeKSortedLists() {
+            Aux("leetcode/merge_k_sorted_lists", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTReverseNodesInKGroup() {
+            Aux("leetcode/reverse_nodes_in_k_group", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTSubstringWithConcatenationOfAllWords() {
+            Aux("leetcode/substring_with_concatenation_of_all_words", "test",
+                "solution"
+                );
+        }
 
         private void Aux(string name, string test, params string[] srcs) {
 

@@ -243,14 +243,14 @@ namespace lcc.AST {
                         gen.Inst(X86Gen.push, X86Gen.eax);
                         var lhsRet = lhs.ToX86Expr(gen);
                         Debug.Assert(lhsRet == X86Gen.Ret.PTR);
-                        gen.Inst(X86Gen.mov, X86Gen.ebx, X86Gen.eax);
+                        gen.Inst(X86Gen.mov, X86Gen.ecx, X86Gen.eax);
                         gen.Inst(X86Gen.pop, X86Gen.eax);
                         X86Gen.Operand o;
                         X86Gen.Size s;
-                        if (lhs.Type.AlignByte == 4) {
+                        if (lhs.Type.Bytes == 4) {
                             o = X86Gen.eax;
                             s = X86Gen.Size.DWORD;
-                        } else if (lhs.Type.AlignByte == 2) {
+                        } else if (lhs.Type.Bytes == 2) {
                             o = X86Gen.ax;
                             s = X86Gen.Size.WORD;
                         } else {
@@ -260,7 +260,7 @@ namespace lcc.AST {
                         if (rhsRet == X86Gen.Ret.PTR) {
                             gen.Inst(X86Gen.mov, o, X86Gen.eax.Addr(s));
                         }
-                        gen.Inst(X86Gen.mov, X86Gen.ebx.Addr(s), o);
+                        gen.Inst(X86Gen.mov, X86Gen.ecx.Addr(s), o);
                         return X86Gen.Ret.REG;
                     }
                 //case TKind.DOUBLE: {
@@ -279,6 +279,40 @@ namespace lcc.AST {
                 op == SyntaxTree.Assign.Op.DIVEQ ||
                 op == SyntaxTree.Assign.Op.MODEQ);
         }
+        public override X86Gen.Ret ToX86Expr(X86Gen gen) {
+            gen.Comment(X86Gen.Seg.TEXT, ToString());
+            gen.Push(rhs);
+            var lhsRet = lhs.ToX86Expr(gen);
+            Debug.Assert(lhsRet == X86Gen.Ret.PTR);
+            switch (lhs.Type.Kind) {
+                case TKind.INT:
+                case TKind.LONG:
+                    gen.Inst(X86Gen.pop, X86Gen.ecx);
+                    gen.Inst(X86Gen.push, X86Gen.eax);
+                    gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
+                    switch (op) {
+                        case SyntaxTree.Assign.Op.MULEQ:
+                            gen.Inst(X86Gen.imul, X86Gen.eax, X86Gen.ecx); break;
+                        case SyntaxTree.Assign.Op.DIVEQ:
+                            // Sign extension to edx:eax.
+                            gen.Inst(X86Gen.cdq);
+                            gen.Inst(X86Gen.idiv, X86Gen.ecx);
+                            break;
+                        case SyntaxTree.Assign.Op.MODEQ:
+                            // Sign extension to edx:eax.
+                            gen.Inst(X86Gen.cdq);
+                            gen.Inst(X86Gen.idiv, X86Gen.ecx);
+                            gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.edx);
+                            break;
+                    }
+                    
+                    gen.Inst(X86Gen.pop, X86Gen.ecx);
+                    gen.Inst(X86Gen.mov, X86Gen.ecx.Addr(), X86Gen.eax);
+                    return X86Gen.Ret.REG;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
     }
 
     public sealed class AdditiveAssign : Assign {
@@ -295,13 +329,16 @@ namespace lcc.AST {
                 if (lhs.Type.Kind == rhs.Type.Kind) {
                     /// Same type.
                     switch (lhs.Type.Kind) {
+                        case TKind.UINT:
+                        case TKind.ULONG:
+                        case TKind.LONG:
                         case TKind.INT:
-                            gen.Inst(X86Gen.pop, X86Gen.ebx);
+                            gen.Inst(X86Gen.pop, X86Gen.ecx);
                             gen.Inst(X86Gen.push, X86Gen.eax);
                             gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
-                            gen.Inst(op == SyntaxTree.Assign.Op.PLUSEQ ? X86Gen.add : X86Gen.sub, X86Gen.eax, X86Gen.ebx);
-                            gen.Inst(X86Gen.pop, X86Gen.ebx);
-                            gen.Inst(X86Gen.mov, X86Gen.ebx.Addr(), X86Gen.eax);
+                            gen.Inst(op == SyntaxTree.Assign.Op.PLUSEQ ? X86Gen.add : X86Gen.sub, X86Gen.eax, X86Gen.ecx);
+                            gen.Inst(X86Gen.pop, X86Gen.ecx);
+                            gen.Inst(X86Gen.mov, X86Gen.ecx.Addr(), X86Gen.eax);
                             return X86Gen.Ret.REG;
                         default: throw new NotImplementedException();
                     }
@@ -331,6 +368,29 @@ namespace lcc.AST {
             Debug.Assert(op == SyntaxTree.Assign.Op.ANDEQ ||
                 op == SyntaxTree.Assign.Op.XOREQ ||
                 op == SyntaxTree.Assign.Op.OREQ);
+        }
+        public override X86Gen.Ret ToX86Expr(X86Gen gen) {
+            gen.Comment(X86Gen.Seg.TEXT, ToString());
+            gen.Push(rhs);
+            var lhsRet = lhs.ToX86Expr(gen);
+            Debug.Assert(lhsRet == X86Gen.Ret.PTR);
+            switch (lhs.Type.Kind) {
+                case TKind.INT:
+                case TKind.LONG:
+                    gen.Inst(X86Gen.pop, X86Gen.ecx);
+                    gen.Inst(X86Gen.push, X86Gen.eax);
+                    gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
+                    switch (op) {
+                        case SyntaxTree.Assign.Op.XOREQ: gen.Inst(X86Gen.xor, X86Gen.eax, X86Gen.ecx); break;
+                        case SyntaxTree.Assign.Op.OREQ: gen.Inst(X86Gen.or, X86Gen.eax, X86Gen.ecx); break;
+                        case SyntaxTree.Assign.Op.ANDEQ: gen.Inst(X86Gen.and, X86Gen.eax, X86Gen.ecx); break;
+                    }
+                    gen.Inst(X86Gen.pop, X86Gen.ecx);
+                    gen.Inst(X86Gen.mov, X86Gen.ecx.Addr(), X86Gen.eax);
+                    return X86Gen.Ret.REG;
+                default:
+                    throw new NotImplementedException();
+            }
         }
     }
 
@@ -455,7 +515,8 @@ namespace lcc.AST {
                     break;
                 case SyntaxTree.BiExpr.Op.LEFT:
                 case SyntaxTree.BiExpr.Op.RIGHT:
-                    throw new NotImplementedException();
+                    Shift(gen);
+                    break;
                 case SyntaxTree.BiExpr.Op.LE:
                 case SyntaxTree.BiExpr.Op.GE:
                 case SyntaxTree.BiExpr.Op.LT:
@@ -491,37 +552,37 @@ namespace lcc.AST {
                 case TKind.UINT:
                 case TKind.ULONG:
                     // Generate code for rhs and move the result to ebx.
-                    gen.Inst(X86Gen.mov, X86Gen.ebx, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr() as X86Gen.Operand : X86Gen.eax);
+                    gen.Inst(X86Gen.mov, X86Gen.ecx, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr() as X86Gen.Operand : X86Gen.eax);
                     gen.Inst(X86Gen.pop, X86Gen.eax);
                     switch (op) {
                         case SyntaxTree.BiExpr.Op.MOD:
                         case SyntaxTree.BiExpr.Op.DIV:
                             // Clear edx.
                             gen.Inst(X86Gen.xor, X86Gen.edx, X86Gen.edx);
-                            gen.Inst(X86Gen.div, X86Gen.ebx);
+                            gen.Inst(X86Gen.div, X86Gen.ecx);
                             if (op == SyntaxTree.BiExpr.Op.MOD) {
                                 gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.edx);
                             }
                             break;
                         case SyntaxTree.BiExpr.Op.MUL:
-                            gen.Inst(X86Gen.mul, X86Gen.ebx);
+                            gen.Inst(X86Gen.mul, X86Gen.ecx);
                             break;
                     }
                     break;
                 case TKind.LONG:
                 case TKind.INT:
                     // Generate code for rhs and move the result to ebx.
-                    gen.Inst(X86Gen.mov, X86Gen.ebx, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr() as X86Gen.Operand : X86Gen.eax);
+                    gen.Inst(X86Gen.mov, X86Gen.ecx, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr() as X86Gen.Operand : X86Gen.eax);
                     gen.Inst(X86Gen.pop, X86Gen.eax);
                     switch (op) {
                         case SyntaxTree.BiExpr.Op.MUL:
-                            gen.Inst(X86Gen.imul, X86Gen.eax, X86Gen.ebx);
+                            gen.Inst(X86Gen.imul, X86Gen.eax, X86Gen.ecx);
                             break;
                         case SyntaxTree.BiExpr.Op.MOD:
                         case SyntaxTree.BiExpr.Op.DIV:
                             // Sign extension to edx:eax.
                             gen.Inst(X86Gen.cdq);
-                            gen.Inst(X86Gen.idiv, X86Gen.ebx);
+                            gen.Inst(X86Gen.idiv, X86Gen.ecx);
                             if (op == SyntaxTree.BiExpr.Op.MOD) {
                                 gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.edx);
                             }
@@ -561,11 +622,11 @@ namespace lcc.AST {
                 case TKind.LONG:
                 case TKind.INT:
                     // Generate code for rhs and move the result to ebx.
-                    gen.Inst(X86Gen.mov, X86Gen.ebx, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr() as X86Gen.Operand : X86Gen.eax);
+                    gen.Inst(X86Gen.mov, X86Gen.ecx, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr() as X86Gen.Operand : X86Gen.eax);
                     gen.Inst(X86Gen.pop, X86Gen.eax);
                     switch (op) {
-                        case SyntaxTree.BiExpr.Op.PLUS: gen.Inst(X86Gen.add, X86Gen.eax, X86Gen.ebx); break;
-                        case SyntaxTree.BiExpr.Op.MINUS: gen.Inst(X86Gen.sub, X86Gen.eax, X86Gen.ebx); break;
+                        case SyntaxTree.BiExpr.Op.PLUS: gen.Inst(X86Gen.add, X86Gen.eax, X86Gen.ecx); break;
+                        case SyntaxTree.BiExpr.Op.MINUS: gen.Inst(X86Gen.sub, X86Gen.eax, X86Gen.ecx); break;
                     }
                     break;
                 case TKind.PTR:
@@ -577,22 +638,22 @@ namespace lcc.AST {
                         switch (promoted.Type.Kind) {
                             case TKind.INT:
                             case TKind.LONG:
-                                gen.Inst(X86Gen.imul, X86Gen.ebx,
+                                gen.Inst(X86Gen.imul, X86Gen.ecx,
                                     ret == X86Gen.Ret.REG ? X86Gen.eax as X86Gen.Operand : X86Gen.eax.Addr(),
                                     elementSize);
                                 gen.Inst(X86Gen.pop, X86Gen.eax);
-                                gen.Inst(op == SyntaxTree.BiExpr.Op.PLUS ? X86Gen.add : X86Gen.sub, X86Gen.eax, X86Gen.ebx);
+                                gen.Inst(op == SyntaxTree.BiExpr.Op.PLUS ? X86Gen.add : X86Gen.sub, X86Gen.eax, X86Gen.ecx);
                                 break;
                             case TKind.UINT:
                             case TKind.ULONG:
                                 if (ret == X86Gen.Ret.PTR) {
                                     gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
                                 }
-                                gen.Inst(X86Gen.mov, X86Gen.ebx, elementSize);
-                                gen.Inst(X86Gen.mul, X86Gen.ebx);
-                                gen.Inst(X86Gen.mov, X86Gen.ebx, X86Gen.eax);
+                                gen.Inst(X86Gen.mov, X86Gen.ecx, elementSize);
+                                gen.Inst(X86Gen.mul, X86Gen.ecx);
+                                gen.Inst(X86Gen.mov, X86Gen.ecx, X86Gen.eax);
                                 gen.Inst(X86Gen.pop, X86Gen.eax);
-                                gen.Inst(op == SyntaxTree.BiExpr.Op.PLUS ? X86Gen.add : X86Gen.sub, X86Gen.eax, X86Gen.ebx);
+                                gen.Inst(op == SyntaxTree.BiExpr.Op.PLUS ? X86Gen.add : X86Gen.sub, X86Gen.eax, X86Gen.ecx);
                                 break;
                         }
                     }
@@ -622,9 +683,9 @@ namespace lcc.AST {
                 case TKind.PTR:
                 case TKind.ULONG:
                 case TKind.UINT:
-                    gen.Inst(X86Gen.mov, X86Gen.ebx, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr() as X86Gen.Operand : X86Gen.eax);
+                    gen.Inst(X86Gen.mov, X86Gen.ecx, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr() as X86Gen.Operand : X86Gen.eax);
                     gen.Inst(X86Gen.pop, X86Gen.eax);
-                    gen.Inst(X86Gen.cmp, X86Gen.eax, X86Gen.ebx);
+                    gen.Inst(X86Gen.cmp, X86Gen.eax, X86Gen.ecx);
                     switch (op) {
                         case SyntaxTree.BiExpr.Op.LE: gen.Inst(X86Gen.setbe, X86Gen.al); break;
                         case SyntaxTree.BiExpr.Op.LT: gen.Inst(X86Gen.setb, X86Gen.al); break;
@@ -639,11 +700,11 @@ namespace lcc.AST {
                 case TKind.LONG:
                 case TKind.INT:
                     // Generate code for rhs and move the result to ebx.
-                    gen.Inst(X86Gen.mov, X86Gen.ebx, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr() as X86Gen.Operand : X86Gen.eax);
+                    gen.Inst(X86Gen.mov, X86Gen.ecx, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr() as X86Gen.Operand : X86Gen.eax);
 
                     // Pop the result of lhs to eax.
                     gen.Inst(X86Gen.pop, X86Gen.eax);
-                    gen.Inst(X86Gen.cmp, X86Gen.eax, X86Gen.ebx);
+                    gen.Inst(X86Gen.cmp, X86Gen.eax, X86Gen.ecx);
                     switch (op) {
                         case SyntaxTree.BiExpr.Op.LE: gen.Inst(X86Gen.setle, X86Gen.al); break;
                         case SyntaxTree.BiExpr.Op.LT: gen.Inst(X86Gen.setl, X86Gen.al); break;
@@ -656,6 +717,30 @@ namespace lcc.AST {
                     gen.Inst(X86Gen.movzx, X86Gen.eax, X86Gen.al);
                     break;
                 default: throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Handle bitwise shift operator.
+        /// </summary>
+        /// <param name="gen"></param>
+        private void Shift(X86Gen gen) {
+            Debug.Assert(lhs.Type.IsInteger && rhs.Type.IsInteger);
+            Debug.Assert(lhs.Type.Kind == rhs.Type.Kind);
+            Debug.Assert(op == SyntaxTree.BiExpr.Op.LEFT || op == SyntaxTree.BiExpr.Op.RIGHT);
+
+            gen.Push(lhs);
+            switch (lhs.Type.Kind) {
+                case TKind.INT:
+                case TKind.LONG:
+                    // Generate code for rhs and move the result to ecx.
+                    gen.Inst(X86Gen.mov, X86Gen.ecx, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr() as X86Gen.Operand : X86Gen.eax);
+                    gen.Inst(X86Gen.pop, X86Gen.eax);
+                    switch (op) {
+                        case SyntaxTree.BiExpr.Op.LEFT: gen.Inst(X86Gen.shl, X86Gen.eax, X86Gen.cl); break;
+                        case SyntaxTree.BiExpr.Op.RIGHT: gen.Inst(X86Gen.shr, X86Gen.eax, X86Gen.cl); break;
+                    }
+                    break;
             }
         }
 
@@ -675,12 +760,12 @@ namespace lcc.AST {
                 case TKind.INT:
                 case TKind.LONG:
                     // Generate code for rhs and move the result to ebx.
-                    gen.Inst(X86Gen.mov, X86Gen.ebx, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr() as X86Gen.Operand : X86Gen.eax);
+                    gen.Inst(X86Gen.mov, X86Gen.ecx, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr() as X86Gen.Operand : X86Gen.eax);
                     gen.Inst(X86Gen.pop, X86Gen.eax);
                     switch (op) {
-                        case SyntaxTree.BiExpr.Op.AND: gen.Inst(X86Gen.and, X86Gen.eax, X86Gen.ebx); break;
-                        case SyntaxTree.BiExpr.Op.XOR: gen.Inst(X86Gen.xor, X86Gen.eax, X86Gen.ebx); break;
-                        case SyntaxTree.BiExpr.Op.OR: gen.Inst(X86Gen.or, X86Gen.eax, X86Gen.ebx); break;
+                        case SyntaxTree.BiExpr.Op.AND: gen.Inst(X86Gen.and, X86Gen.eax, X86Gen.ecx); break;
+                        case SyntaxTree.BiExpr.Op.XOR: gen.Inst(X86Gen.xor, X86Gen.eax, X86Gen.ecx); break;
+                        case SyntaxTree.BiExpr.Op.OR: gen.Inst(X86Gen.or, X86Gen.eax, X86Gen.ecx); break;
                     }
                     break;
                 default: throw new NotImplementedException();
@@ -798,21 +883,21 @@ namespace lcc.AST {
             gen.Comment(X86Gen.Seg.TEXT, ToString());
             var ret = expr.ToX86Expr(gen);
             Debug.Assert(ret == X86Gen.Ret.PTR);
-            gen.Inst(X86Gen.mov, X86Gen.ebx, X86Gen.eax);
+            gen.Inst(X86Gen.mov, X86Gen.ecx, X86Gen.eax);
             switch (type.Kind) {
                 case TKind.INT:
                 case TKind.UINT:
                 case TKind.LONG:
                 case TKind.ULONG:
-                    gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.ebx.Addr());
+                    gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.ecx.Addr());
                     gen.Inst(op == SyntaxTree.PreStep.Op.INC ? X86Gen.inc : X86Gen.dec, X86Gen.eax);
-                    gen.Inst(X86Gen.mov, X86Gen.ebx.Addr(), X86Gen.eax);
+                    gen.Inst(X86Gen.mov, X86Gen.ecx.Addr(), X86Gen.eax);
                     break;
                 case TKind.PTR:
                     var elementBytes = (type.nake as TPtr).element.Bytes;
-                    gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.ebx.Addr());
+                    gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.ecx.Addr());
                     gen.Inst(op == SyntaxTree.PreStep.Op.INC ? X86Gen.add : X86Gen.sub, X86Gen.eax, elementBytes);
-                    gen.Inst(X86Gen.mov, X86Gen.ebx.Addr(), X86Gen.eax);
+                    gen.Inst(X86Gen.mov, X86Gen.ecx.Addr(), X86Gen.eax);
                     break;
             }
             return X86Gen.Ret.REG;
@@ -845,6 +930,12 @@ namespace lcc.AST {
                 case SyntaxTree.UnaryOp.Op.NOT:
                     Debug.Assert(type.Kind == TKind.INT);
                     switch (expr.Type.Kind) {
+                        case TKind.CHAR:
+                        case TKind.UCHAR:
+                        case TKind.SCHAR:
+                            if (ret == X86Gen.Ret.PTR) gen.Inst(X86Gen.mov, X86Gen.al, X86Gen.eax.Addr(X86Gen.Size.BYTE));
+                            gen.Inst(X86Gen.cmp, X86Gen.al, 0);
+                            break;
                         case TKind.PTR:
                         case TKind.INT:
                         case TKind.LONG:
@@ -853,6 +944,7 @@ namespace lcc.AST {
                             if (ret == X86Gen.Ret.PTR) gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
                             gen.Inst(X86Gen.cmp, X86Gen.eax, 0);
                             break;
+                        default: throw new NotImplementedException();
                     }
                     gen.Inst(X86Gen.sete, X86Gen.al);
                     gen.Inst(X86Gen.and, X86Gen.al, 1);
@@ -889,14 +981,14 @@ namespace lcc.AST {
                 case TKind.UINT:
                 case TKind.ULONG:
                     if (idxRet == X86Gen.Ret.PTR) gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
-                    gen.Inst(X86Gen.mov, X86Gen.ebx, element.Bytes);
-                    gen.Inst(X86Gen.mul, X86Gen.ebx);
-                    gen.Inst(X86Gen.mov, X86Gen.ebx, X86Gen.eax);
+                    gen.Inst(X86Gen.mov, X86Gen.ecx, element.Bytes);
+                    gen.Inst(X86Gen.mul, X86Gen.ecx);
+                    gen.Inst(X86Gen.mov, X86Gen.ecx, X86Gen.eax);
                     break;
                 case TKind.LONG:
                 case TKind.INT:
-                    if (idxRet == X86Gen.Ret.PTR) gen.Inst(X86Gen.imul, X86Gen.ebx, X86Gen.eax.Addr(), element.Bytes);
-                    else gen.Inst(X86Gen.imul, X86Gen.ebx, X86Gen.eax, element.Bytes);
+                    if (idxRet == X86Gen.Ret.PTR) gen.Inst(X86Gen.imul, X86Gen.ecx, X86Gen.eax.Addr(), element.Bytes);
+                    else gen.Inst(X86Gen.imul, X86Gen.ecx, X86Gen.eax, element.Bytes);
                     break;
                 default:
                     throw new NotImplementedException();
@@ -904,7 +996,7 @@ namespace lcc.AST {
 
             /// Compute the new address.
             gen.Inst(X86Gen.pop, X86Gen.eax);
-            gen.Inst(X86Gen.add, X86Gen.eax, X86Gen.ebx);
+            gen.Inst(X86Gen.add, X86Gen.eax, X86Gen.ecx);
 
             return X86Gen.Ret.PTR;
         }
@@ -962,9 +1054,9 @@ namespace lcc.AST {
             Debug.Assert(ret == X86Gen.Ret.PTR);
             switch (type.Kind) {
                 case TKind.INT:
-                    gen.Inst(X86Gen.mov, X86Gen.ebx, X86Gen.eax.Addr());
+                    gen.Inst(X86Gen.mov, X86Gen.ecx, X86Gen.eax.Addr());
                     gen.Inst(op == SyntaxTree.PostStep.Op.DEC ? X86Gen.dec : X86Gen.inc, X86Gen.eax.Addr());
-                    gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.ebx);
+                    gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.ecx);
                     return X86Gen.Ret.REG;
                 default:
                     throw new NotImplementedException();

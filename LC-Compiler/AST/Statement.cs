@@ -283,10 +283,14 @@ namespace lcc.AST {
             this.expr = expr;
         }
         public override string ToString() {
-            return string.Format("return {0}", expr.ToString());
+            return string.Format("return {0}", expr == null ? "" : expr.ToString());
         }
         public override void ToX86(X86Gen gen) {
             gen.Comment(X86Gen.Seg.TEXT, ToString());
+            if (expr == null) {
+                gen.Inst(X86Gen.jmp, label);
+                return;
+            }
             var ret = expr.ToX86Expr(gen);
             switch (expr.Type.Kind) {
                 case TKind.CHAR:
