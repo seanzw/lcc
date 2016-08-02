@@ -242,6 +242,13 @@ namespace LC_CompilerTests {
                 );
         }
 
+        [TestMethod]
+        public void LCCCGeneratorTestLTLongestValidParentheses() {
+            Aux("leetcode/longest_valid_parentheses", "test",
+                "solution"
+                );
+        }
+
         private void Aux(string name, string test, params string[] srcs) {
 
             // If the exe exists, delete first.

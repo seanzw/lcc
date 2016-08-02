@@ -87,6 +87,8 @@
     <Content Include="ASTTests\code\hash_table\doubly_linked_list.c" />
     <Content Include="ASTTests\code\hash_table\hash_table.c" />
     <Content Include="ASTTests\code\leetcode\merge_k_sorted_lists\solution.c" />
+    <Content Include="ASTTests\code\leetcode\longest_valid_parentheses\solution.c" />
+    <Content Include="ASTTests\code\leetcode\longest_valid_parentheses\test.c" />
     <Content Include="ASTTests\code\leetcode\regular_expression_matching\test.c" />
     <Content Include="ASTTests\code\leetcode\regular_expression_matching\solution.c" />
     <Content Include="ASTTests\code\leetcode\merge_k_sorted_lists\test.c" />
