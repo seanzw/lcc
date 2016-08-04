@@ -266,7 +266,31 @@ namespace lcc.AST {
                 //case TKind.DOUBLE: {
 
                 //    }
-
+                case TKind.STRUCT:
+                case TKind.UNION: {
+                        Debug.Assert(rhsRet == X86Gen.Ret.PTR);
+                        gen.Inst(X86Gen.push, X86Gen.eax);
+                        var lhsRet = lhs.ToX86Expr(gen);
+                        Debug.Assert(lhsRet == X86Gen.Ret.PTR);
+                        gen.Inst(X86Gen.pop, X86Gen.ecx);
+                        int offset = 0;
+                        while (offset + 4 <= lhs.Type.Bytes) {
+                            gen.Inst(X86Gen.mov, X86Gen.edx, X86Gen.ecx.Addr(offset));
+                            gen.Inst(X86Gen.mov, X86Gen.eax.Addr(offset), X86Gen.edx);
+                            offset += 4;
+                        }
+                        while (offset + 2 <= lhs.Type.Bytes) {
+                            gen.Inst(X86Gen.mov, X86Gen.dx, X86Gen.ecx.Addr(offset, X86Gen.Size.WORD));
+                            gen.Inst(X86Gen.mov, X86Gen.eax.Addr(offset, X86Gen.Size.WORD), X86Gen.dx);
+                            offset += 2;
+                        }
+                        while (offset + 1 <= lhs.Type.Bytes) {
+                            gen.Inst(X86Gen.mov, X86Gen.dl, X86Gen.ecx.Addr(offset, X86Gen.Size.BYTE));
+                            gen.Inst(X86Gen.mov, X86Gen.eax.Addr(offset, X86Gen.Size.BYTE), X86Gen.dl);
+                            offset += 1;
+                        }
+                        return X86Gen.Ret.PTR;
+                    }
                 default:
                     throw new NotImplementedException();
             }

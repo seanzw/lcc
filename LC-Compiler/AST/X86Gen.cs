@@ -151,7 +151,11 @@ namespace lcc.AST {
 
         public static readonly Reg ecx = new Reg("ecx");
         public static readonly Reg cl = new Reg("cl");
+
         public static readonly Reg edx = new Reg("edx");
+        public static readonly Reg dx = new Reg("dx");
+        public static readonly Reg dl = new Reg("dl");
+
         public static readonly Reg ebp = new Reg("ebp");
         public static readonly Reg esp = new Reg("esp");
 

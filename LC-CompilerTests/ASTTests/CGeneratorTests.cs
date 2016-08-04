@@ -249,6 +249,69 @@ namespace LC_CompilerTests {
                 );
         }
 
+        [TestMethod]
+        public void LCCCGeneratorTestLTSudokuSolver() {
+            Aux("leetcode/sudoku_solver", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTFirstMissingPositive() {
+            Aux("leetcode/first_missing_positive", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTWildcardMatching() {
+            Aux("leetcode/wildcard_matching", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTJumpGameII() {
+            Aux("leetcode/jump_game_2", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTJumpGame() {
+            Aux("leetcode/jump_game", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTNQueens() {
+            Aux("leetcode/n_queens", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTNQueensII() {
+            Aux("leetcode/n_queens_2", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTInsertInterval() {
+            Aux("leetcode/insert_interval", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTMergeIntervals() {
+            Aux("leetcode/merge_intervals", "test",
+                "solution"
+                );
+        }
+
         private void Aux(string name, string test, params string[] srcs) {
 
             // If the exe exists, delete first.
