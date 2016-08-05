@@ -312,6 +312,20 @@ namespace LC_CompilerTests {
                 );
         }
 
+        [TestMethod]
+        public void LCCCGeneratorTestLTEditDistance() {
+            Aux("leetcode/edit_distance", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTMinimumWindowSubstring() {
+            Aux("leetcode/minimum_window_substring", "test",
+                "solution"
+                );
+        }
+
         private void Aux(string name, string test, params string[] srcs) {
 
             // If the exe exists, delete first.

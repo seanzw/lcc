@@ -300,6 +300,12 @@ namespace lcc.AST {
         public void Push(Expr expr) {
             var ret = expr.ToX86Expr(this);
             switch (expr.Type.Kind) {
+                case TKind.CHAR:
+                case TKind.SCHAR:
+                case TKind.UCHAR:
+                    if (ret == Ret.PTR) Inst(mov, al, eax.Addr(Size.BYTE));
+                    Inst(push, eax);
+                    break;
                 case TKind.PTR:
                 case TKind.ENUM:
                 case TKind.ULONG:

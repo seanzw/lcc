@@ -86,6 +86,8 @@
     <Content Include="ASTTests\code\doubly_linked_list\doubly_linked_list_main.c" />
     <Content Include="ASTTests\code\hash_table\doubly_linked_list.c" />
     <Content Include="ASTTests\code\hash_table\hash_table.c" />
+    <Content Include="ASTTests\code\leetcode\minimum_window_substring\solution.c" />
+    <Content Include="ASTTests\code\leetcode\minimum_window_substring\test.c" />
     <Content Include="ASTTests\code\leetcode\first_missing_positive\test.c" />
     <Content Include="ASTTests\code\leetcode\jump_game\solution.c" />
     <Content Include="ASTTests\code\leetcode\jump_game\test.c" />
@@ -93,6 +95,8 @@
     <Content Include="ASTTests\code\leetcode\insert_interval\test.c" />
     <Content Include="ASTTests\code\leetcode\merge_intervals\solution.c" />
     <Content Include="ASTTests\code\leetcode\merge_intervals\test.c" />
+    <Content Include="ASTTests\code\leetcode\edit_distance\solution.c" />
+    <Content Include="ASTTests\code\leetcode\edit_distance\test.c" />
     <Content Include="ASTTests\code\leetcode\n_queens_2\solution.c" />
     <Content Include="ASTTests\code\leetcode\n_queens_2\test.c" />
     <Content Include="ASTTests\code\leetcode\n_queens\solution.c" />

@@ -636,7 +636,7 @@ namespace lcc.AST {
         /// <param name="gen"></param>
         private void Additive(X86Gen gen) {
             Debug.Assert((lhs.Type.IsPtr) || (lhs.Type.Kind == rhs.Type.Kind));
-            Debug.Assert(type.Kind == lhs.Type.Kind);
+            Debug.Assert((lhs.Type.IsPtr && rhs.Type.IsPtr) || type.Kind == lhs.Type.Kind);
             Debug.Assert(op == SyntaxTree.BiExpr.Op.PLUS || op == SyntaxTree.BiExpr.Op.MINUS);
 
             gen.Push(lhs);
@@ -680,6 +680,23 @@ namespace lcc.AST {
                                 gen.Inst(op == SyntaxTree.BiExpr.Op.PLUS ? X86Gen.add : X86Gen.sub, X86Gen.eax, X86Gen.ecx);
                                 break;
                         }
+                    } else {
+                        /// The other one is also a pointer.
+                        Debug.Assert(rhs.Type.IsPtr);
+                        Debug.Assert(op == SyntaxTree.BiExpr.Op.MINUS);
+                        Debug.Assert(type.Kind == TKind.INT);
+                        /// Get rhs to ecx.
+                        var rhsRet = rhs.ToX86Expr(gen);
+                        if (rhsRet == X86Gen.Ret.REG) gen.Inst(X86Gen.mov, X86Gen.ecx, X86Gen.eax);
+                        else gen.Inst(X86Gen.mov, X86Gen.ecx, X86Gen.eax.Addr());
+                        /// Get lhs to eax.
+                        gen.Inst(X86Gen.pop, X86Gen.eax);
+                        gen.Inst(X86Gen.sub, X86Gen.eax, X86Gen.ecx);
+                        /// Do integer divsion.
+                        /// Remember to do sign extension.
+                        gen.Inst(X86Gen.cdq);
+                        gen.Inst(X86Gen.mov, X86Gen.ecx, elementSize);
+                        gen.Inst(X86Gen.idiv, X86Gen.ecx);
                     }
                     break;
                 default: throw new NotImplementedException();
@@ -1077,10 +1094,22 @@ namespace lcc.AST {
             var ret = expr.ToX86Expr(gen);
             Debug.Assert(ret == X86Gen.Ret.PTR);
             switch (type.Kind) {
+                case TKind.LONG:
                 case TKind.INT:
                     gen.Inst(X86Gen.mov, X86Gen.ecx, X86Gen.eax.Addr());
                     gen.Inst(op == SyntaxTree.PostStep.Op.DEC ? X86Gen.dec : X86Gen.inc, X86Gen.eax.Addr());
                     gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.ecx);
+                    return X86Gen.Ret.REG;
+                case TKind.PTR:
+                    gen.Inst(X86Gen.mov, X86Gen.ecx, X86Gen.eax.Addr());
+                    gen.Inst(X86Gen.push, X86Gen.ecx);
+                    int bytes = (type.nake as TPtr).element.Bytes;
+                    switch (op) {
+                        case SyntaxTree.PostStep.Op.DEC: gen.Inst(X86Gen.sub, X86Gen.ecx, bytes); break;
+                        case SyntaxTree.PostStep.Op.INC: gen.Inst(X86Gen.add, X86Gen.ecx, bytes); break;
+                    }
+                    gen.Inst(X86Gen.mov, X86Gen.eax.Addr(), X86Gen.ecx);
+                    gen.Inst(X86Gen.pop, X86Gen.eax);
                     return X86Gen.Ret.REG;
                 default:
                     throw new NotImplementedException();

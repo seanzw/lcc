@@ -609,7 +609,7 @@ namespace lcc.SyntaxTree {
                 if (f.ret.IsVoid) {
                     throw new Error(Pos, "a return statement with an expression shall not appear a function whose return type is void");
                 }
-                AST.Expr e = expr.ToASTExpr(env);
+                AST.Expr e = expr.ToASTExpr(env).ValueTransform();
                 if (!Assign.SimpleAssignable(f.ret, e)) {
                     throw new ETypeError(Pos, string.Format("cannot assign {0} to {1}", e.Type, f.ret));
                 }

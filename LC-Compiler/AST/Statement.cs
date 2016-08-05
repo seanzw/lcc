@@ -195,6 +195,28 @@ namespace lcc.AST {
             ) : base(breakLabel, continueLabel, secondPlusLabel, firstLabel, body) {
             this.expr = expr;
         }
+        /// <summary>
+        /// structure:
+        /// first_label:
+        ///     # body {
+        ///     ...
+        ///     continue_label: ;
+        ///     }
+        ///     # pred
+        ///     jmp first_label    
+        /// break_label:
+        /// 
+        /// </summary>
+        /// <param name="gen"></param>
+        public override void ToX86(X86Gen gen) {
+            gen.Comment(X86Gen.Seg.TEXT, "do body");
+            gen.Tag(X86Gen.Seg.TEXT, firstLabel);
+            body.ToX86WithLabel(gen, continueLabel);
+            gen.Comment(X86Gen.Seg.TEXT, "do pred");
+            gen.Branch(expr, firstLabel, true);
+            gen.Comment(X86Gen.Seg.TEXT, "do end");
+            gen.Tag(X86Gen.Seg.TEXT, breakLabel);
+        }
     }
 
     public sealed class For : Loop {
