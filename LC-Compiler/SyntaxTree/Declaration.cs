@@ -1271,7 +1271,7 @@ namespace lcc.SyntaxTree {
         }
 
         /// <summary>
-        /// Get the identifier and the type of the declarator.
+        /// Get the identifier and the type of the declarator, and optional the parameter if this is a function.
         /// </summary>
         /// <param name="env"> Environment </param>
         /// <param name="type"> Type specified by declaration specifiers. </param>

@@ -326,6 +326,41 @@ namespace LC_CompilerTests {
                 );
         }
 
+        [TestMethod]
+        public void LCCCGeneratorTestLTLargestRectangleInHistogram() {
+            Aux("leetcode/largest_rectangle_in_histogram", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTClimbingStairs() {
+            Aux("leetcode/climbing_stairs", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTGasStation() {
+            Aux("leetcode/gas_station", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTLinkedListCycle() {
+            Aux("leetcode/linked_list_cycle", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTLinkedListCycleII() {
+            Aux("leetcode/linked_list_cycle_2", "test",
+                "solution"
+                );
+        }
+
         private void Aux(string name, string test, params string[] srcs) {
 
             // If the exe exists, delete first.
