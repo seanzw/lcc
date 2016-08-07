@@ -27,7 +27,7 @@ namespace LC_CompilerTests {
             R truth,
             bool clear = true
             ) {
-            var result = Utility.parse(src, parser, clear);
+            var result = Utility.Parse(src, parser, clear);
 
             // Check the first result.
             Assert.AreEqual(1, result.Count());
@@ -40,7 +40,7 @@ namespace LC_CompilerTests {
             Parser<Token, IEnumerable<R>> parser,
             IEnumerable<R> truth
             ) {
-            var result = Utility.parse(src, parser);
+            var result = Utility.Parse(src, parser);
 
             // Check the first result.
             Assert.AreEqual(1, result.Count());

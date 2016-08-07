@@ -116,7 +116,7 @@ namespace LC_CompilerTests {
             
             foreach (var test in tests) {
                 var env = new Env();
-                var result = Utility.parse(test.Key, lcc.Parser.Parser.Declarator());
+                var result = Utility.Parse(test.Key, lcc.Parser.Parser.Declarator());
                 Assert.AreEqual(1, result.Count());
                 Assert.IsFalse(result.First().Remain.More());
                 var root = result.First().Value as Declarator;
@@ -144,7 +144,7 @@ static int bar();
 x foo2(x);
 ";
             var env = new Env();
-            var result = Utility.parse(source, lcc.Parser.Parser.Declaration().Plus().End());
+            var result = Utility.Parse(source, lcc.Parser.Parser.Declaration().Plus().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
             foreach (var declaration in result.First().Value) {
@@ -165,7 +165,7 @@ struct A {
     unsigned int w:3, ww:5;
 }";
             var env = new Env();
-            var result = Utility.parse(source, lcc.Parser.Parser.StructUnionSpecifier().End());
+            var result = Utility.Parse(source, lcc.Parser.Parser.StructUnionSpecifier().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
             TStruct t = result.First().Value.GetT(env).nake as TStruct;
@@ -182,7 +182,7 @@ struct Node {
     struct Node* next;
 }";
             var env = new Env();
-            var result = Utility.parse(source, lcc.Parser.Parser.StructUnionSpecifier().End());
+            var result = Utility.Parse(source, lcc.Parser.Parser.StructUnionSpecifier().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
             TStruct t = result.First().Value.GetT(env).nake as TStruct;
@@ -202,7 +202,7 @@ enum hue {
     winedark
 }";
             var env = new Env();
-            var result = Utility.parse(source, lcc.Parser.Parser.EnumSpecifier().End());
+            var result = Utility.Parse(source, lcc.Parser.Parser.EnumSpecifier().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
             TEnum t = result.First().Value.GetT(env).nake as TEnum;

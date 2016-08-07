@@ -58,8 +58,8 @@ namespace lcc.SyntaxTree {
             : base(pos, string.Format("declare tag {0} as different type, previous declared at {1} as {2}", tag, previous, previoudType)) { }
     }
 
-    public sealed class ErrIllegalInitializer : Error {
-        public ErrIllegalInitializer(Position pos) : base(pos, "illegal initializer (only variables can be initialized.") { }
+    public sealed class EIllegalInitializer : Error {
+        public EIllegalInitializer(Position pos) : base(pos, "illegal initializer (only variables can be initialized.") { }
     }
 
     public sealed class EIllegalStorageSpecifier : Error {

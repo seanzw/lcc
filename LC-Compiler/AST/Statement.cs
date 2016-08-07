@@ -330,6 +330,7 @@ namespace lcc.AST {
                     }
                     gen.Inst(X86Gen.jmp, label);
                     return;
+                case TKind.ENUM:
                 case TKind.PTR:
                 case TKind.UINT:
                 case TKind.ULONG:

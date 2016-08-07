@@ -47,7 +47,7 @@ namespace lcc.SyntaxTree {
         public override AST.Node ToAST(Env env) {
             T baseType = specifiers.GetT(env);
 
-            var nodes = new LinkedList<AST.Node>();
+            var nodes = new LinkedList<AST.Declaration>();
             foreach (var declarator in declarators) {
                 var result = declarator.Declare(env, baseType);
 
@@ -59,8 +59,8 @@ namespace lcc.SyntaxTree {
                     }
 
                     // There is no initializer for a typedef.
-                    if (result.Item3 != null) {
-                        throw new ErrIllegalInitializer(declarator.Pos);
+                    if (declarator.initializer != null) {
+                        throw new EIllegalInitializer(declarator.Pos);
                     }
                     // Check if there is already a definition.
                     SymbolEntry entry = env.GetSymbol(result.Item1, true);
@@ -80,8 +80,8 @@ namespace lcc.SyntaxTree {
                 } else if (result.Item2.IsFunc) {
                     // This is a function declaration.
                     // There is no initializer for a function.
-                    if (result.Item3 != null) {
-                        throw new ErrIllegalInitializer(declarator.Pos);
+                    if (declarator.initializer != null) {
+                        throw new EIllegalInitializer(declarator.Pos);
                     }
 
                     // Do not support 'inline' function now.
@@ -210,14 +210,48 @@ namespace lcc.SyntaxTree {
                         }
                         throw new ERedefineObject(declarator.Pos, result.Item1, entry.Pos);
                     } else {
-                        // Add this to the environment.
-                        env.AddObj(result.Item1, result.Item2, link, storage, Pos);
+                        // Remember to check the initializer.
+                        // If the storage is external, then there shall be no initializer.
+                        if (storage == EObj.Storage.EXTERNAL && declarator.initializer != null) {
+                            throw new EIllegalInitializer(declarator.Pos);
+                        }
+
+                        if (storage == EObj.Storage.AUTO || storage == EObj.Storage.REGISTER) {
+                            // If the storage is auto or register (which in lcc is the same as auto),
+                            // call the InitDynamicObj method.
+                            var initializer = declarator.InitDynamicObj(env, result.Item2);
+
+                            // Add this to the environment.
+                            env.AddObj(result.Item1, result.Item2, link, storage, Pos);
+
+                            var e = env.GetSymbol(result.Item1) as EObj;
+                            var obj = new AST.DynamicObjExpr(e.type, env.ASTEnv, e.uid, e.symbol);
+
+                            // Create the DynamicDeclaration node.
+                            nodes.AddLast(new AST.DynamicDeclaration(obj, initializer));
+                        } else {
+                            // If the storage is static, call the InitStaticObj method.
+                            // Notice: 6.7.8: "If the declarationof an identifier has block scope, and
+                            //                 the identifier has external or internal linkage, the declaration
+                            //                 shall have no initializer for the identifier."
+                            // However I compiled the following code using clang and get no error or warning:
+                            // void foo() {
+                            //     static int a = 5;
+                            //     {
+                            //         static int b = 6;
+                            //     }
+                            // }
+                            // Therefore here I stick with clang and initialize b as a static object.
+
+                            // Add this to the environment.
+                            env.AddObj(result.Item1, result.Item2, link, storage, Pos);
+                        }
                     }
                 }
             }
 
             // Return the nodes.
-            return new AST.Declaraion(nodes);
+            return new AST.Declaraions(nodes);
         }
 
         public readonly DeclSpecs specifiers;
@@ -623,17 +657,20 @@ namespace lcc.SyntaxTree {
         }
 
         /// <summary>
-        /// Get the name, the type and (optional) initializer expression.
-        /// TODO: Support initializer.
+        /// Get the name, the type.
         /// </summary>
         /// <param name="env"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public Tuple<string, T, IEnumerable<AST.Expr>> Declare(Env env, T type) {
-            if (initializer != null) throw new NotImplementedException();
+        public Tuple<string, T> Declare(Env env, T type) {
             var result = declarator.Declare(env, type, null);
-            return new Tuple<string, T, IEnumerable<AST.Expr>>(result.Item1, result.Item2, null);
+            return new Tuple<string, T>(result.Item1, result.Item2);
         }
+
+        public AST.Initializer InitDynamicObj(Env env, T obj) {
+            return initializer != null ? initializer.InitDynamicObj(env, obj) : null;
+        }
+
 
         public override Position Pos => declarator.Pos;
 
@@ -1272,6 +1309,7 @@ namespace lcc.SyntaxTree {
 
         /// <summary>
         /// Get the identifier and the type of the declarator, and optional the parameter if this is a function.
+        /// The parameter types and names are only for function definition.
         /// </summary>
         /// <param name="env"> Environment </param>
         /// <param name="type"> Type specified by declaration specifiers. </param>
@@ -1991,6 +2029,29 @@ namespace lcc.SyntaxTree {
         }
 
         public override Position Pos => expr != null ? expr.Pos : items.First().Pos;
+
+        public AST.Initializer InitDynamicObj(Env env, T obj) {
+            if (expr != null) {
+
+                AST.Expr e = expr.ToASTExpr(env);
+
+                /// Special case: initialize a char array with a string literal.
+
+                /// Simple initializer.
+                /// Check if assignable.
+                if (!Assign.SimpleAssignable(obj, e)) {
+                    throw new EIllegalInitializer(expr.Pos);
+                }
+                AST.Expr c = e.ImplicitConvert(obj);
+                if (c == null) {
+                    throw new ETypeError(Pos, string.Format("cannot implicitly convert from {0} to {1}", e.Type, obj));
+                }
+                return new AST.SimpleInitializer(obj, c);
+            } else {
+                /// Aggregate initializer.
+                throw new NotImplementedException();
+            }
+        }
 
         public readonly Expr expr;
         public readonly IEnumerable<STInitItem> items;

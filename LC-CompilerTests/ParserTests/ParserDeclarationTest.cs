@@ -697,7 +697,7 @@ int a, int b, double c, ...
             };
 
             foreach (var test in dict) {
-                var result = Utility.parse(test.Key, Parser.ParameterTypeList().End());
+                var result = Utility.Parse(test.Key, Parser.ParameterTypeList().End());
 
                 // Check the first result.
                 Assert.AreEqual(1, result.Count());

@@ -17,7 +17,7 @@ namespace LC_CompilerTests {
     public class Utility {
 
         public static string CGen(string src) {
-            var results = parse(src, Parser.TranslationUnit().End(), true);
+            var results = Parse(src, Parser.TranslationUnit().End(), true);
             Assert.AreEqual(1, results.Count());
             Assert.IsFalse(results.First().Remain.More());
             var ast = results.First().Value.ToAST(new lcc.SyntaxTree.Env());
@@ -26,7 +26,7 @@ namespace LC_CompilerTests {
             return gen.ToString();
         }
 
-        public static IEnumerable<IParserResult<Token, R>> parse<R>(
+        public static IEnumerable<IParserResult<Token, R>> Parse<R>(
             string src,
             Parser<Token, R> parser,
             bool clear = true

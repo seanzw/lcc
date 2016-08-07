@@ -200,6 +200,7 @@ namespace lcc.SyntaxTree {
         public static bool SimpleAssignable(T lType, AST.Expr rExpr) {
 
             /// Simple assignment.
+            /// - one of the operand has integer type and the other one has enum type.
             /// - the left operand has qualified or unqualified arithmetic type and the right has arithmetic type;
             /// - the left operand has a qualified or unqualified version of a structure or union type compatible
             ///   with the type of the right;
@@ -213,6 +214,14 @@ namespace lcc.SyntaxTree {
             /// 
             /// The value of the right operand is converted to the type of the assignment expression.
             if (lType.Equals(rExpr.Type)) {
+                return true;
+            }
+
+            if (lType.Kind == TKind.ENUM && rExpr.Type.IsInteger) {
+                return true;
+            }
+
+            if (lType.IsInteger && rExpr.Type.Kind == TKind.ENUM) {
                 return true;
             }
 

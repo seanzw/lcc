@@ -28,6 +28,11 @@ namespace LC_CompilerTests {
         }
 
         [TestMethod]
+        public void LCCCGeneratorTestInitializer() {
+            Aux("initializer", "initializer_main", "initializer");
+        }
+
+        [TestMethod]
         public void LCCCGeneratorTestQuickSort() {
             Aux("quick_sort", "quick_sort_main", "quick_sort");
         }

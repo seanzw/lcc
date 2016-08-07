@@ -28,7 +28,7 @@ namespace LC_CompilerTests {
 }
 ";
             var env = new Env();
-            var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
+            var result = Utility.Parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
             lcc.AST.Node stmt = result.First().Value.ToAST(env);
@@ -60,7 +60,7 @@ namespace LC_CompilerTests {
                 TInt.Instance.Const()
             };
             var env = new Env();
-            var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
+            var result = Utility.Parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
             lcc.AST.Node stmt = result.First().Value.ToAST(env);
@@ -103,7 +103,7 @@ namespace LC_CompilerTests {
                 TInt.Instance.None()
             };
             var env = new Env();
-            var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
+            var result = Utility.Parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
             lcc.AST.Node stmt = result.First().Value.ToAST(env);
@@ -144,7 +144,7 @@ namespace LC_CompilerTests {
                 4
             };
             var env = new Env();
-            var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
+            var result = Utility.Parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
             lcc.AST.Node stmt = result.First().Value.ToAST(env);
@@ -184,7 +184,7 @@ namespace LC_CompilerTests {
                 TInt.Instance.None().Ptr()
             };
             var env = new Env();
-            var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
+            var result = Utility.Parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
             lcc.AST.Node stmt = result.First().Value.ToAST(env);
@@ -252,7 +252,7 @@ namespace LC_CompilerTests {
                 TInt.Instance.None(),
             };
             var env = new Env();
-            var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
+            var result = Utility.Parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
             lcc.AST.Node stmt = result.First().Value.ToAST(env);
@@ -283,7 +283,7 @@ namespace LC_CompilerTests {
                 TInt.Instance.None()
             };
             var env = new Env();
-            var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
+            var result = Utility.Parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
             lcc.AST.Node stmt = result.First().Value.ToAST(env);
@@ -311,7 +311,7 @@ namespace LC_CompilerTests {
                 TInt.Instance.None(),
             };
             var env = new Env();
-            var result = Utility.parse(source, lcc.Parser.Parser.CompoundStatement().End());
+            var result = Utility.Parse(source, lcc.Parser.Parser.CompoundStatement().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
             lcc.AST.Node stmt = result.First().Value.ToAST(env);
@@ -387,5 +387,54 @@ namespace LC_CompilerTests {
             }
         }
 
+        [TestMethod]
+        public void LCCTCAssignEnumFromOtherEnum() {
+            string src = @"
+enum a {
+    I
+};
+enum b {
+    J
+};
+void foo() {
+    enum a a;
+    a = J;
+}
+";
+            Assert.IsTrue(ExpectException<ETypeError>(src));
+        }
+
+        [TestMethod]
+        public void LCCTCInitializeEnumFromOtherEnum() {
+            string src = @"
+enum a {
+    I
+};
+enum b {
+    J
+};
+void foo() {
+    enum a a = J;
+}
+";
+            Assert.IsTrue(ExpectException<EIllegalInitializer>(src));
+        }
+
+        public bool ExpectException<E>(string src) where E : Error {
+            try {
+                var env = new Env();
+                var result = Utility.Parse(src, lcc.Parser.Parser.TranslationUnit().End());
+                Assert.AreEqual(1, result.Count());
+                Assert.IsFalse(result.First().Remain.More());
+                lcc.AST.Node stmt = result.First().Value.ToAST(env);
+            } catch (E) {
+                /// Get the expect exception.
+                return true;
+            } catch (Exception e) {
+                /// This is not what we expected.
+                throw e;
+            }
+            return false;
+        }
     }
 }

@@ -99,7 +99,7 @@ namespace LC_CompilerTests {
         public void LCCTCStringConcat() {
             string src = "\"a\" \"b\"";
             var truth = new List<ushort> { 'a', 'b', 0 };
-            var result = Utility.parse(src, Parser.PrimaryExpression().End());
+            var result = Utility.Parse(src, Parser.PrimaryExpression().End());
             Assert.AreEqual(1, result.Count());
             Assert.IsFalse(result.First().Remain.More());
             Assert.IsTrue(result.First().Value is Str);
@@ -132,7 +132,7 @@ namespace LC_CompilerTests {
                 }
             };
             foreach (var test in tests) {
-                var result = Utility.parse(test.Key, Parser.PrimaryExpression().End());
+                var result = Utility.Parse(test.Key, Parser.PrimaryExpression().End());
                 Assert.AreEqual(1, result.Count());
                 Assert.IsFalse(result.First().Remain.More());
                 Assert.IsTrue(result.First().Value is ConstInt);
@@ -166,7 +166,7 @@ namespace LC_CompilerTests {
                 }
             };
             foreach (var test in tests) {
-                var result = Utility.parse(test.Key, Parser.PrimaryExpression().End());
+                var result = Utility.Parse(test.Key, Parser.PrimaryExpression().End());
                 Assert.AreEqual(1, result.Count());
                 Assert.IsFalse(result.First().Remain.More());
                 Assert.IsTrue(result.First().Value is ConstInt);
@@ -213,7 +213,7 @@ namespace LC_CompilerTests {
             };
 
             foreach (var test in tests) {
-                var result = Utility.parse(test.Key, Parser.PrimaryExpression().End());
+                var result = Utility.Parse(test.Key, Parser.PrimaryExpression().End());
                 Assert.AreEqual(1, result.Count());
                 Assert.IsFalse(result.First().Remain.More());
                 Assert.IsTrue(result.First().Value is ConstFloat);
