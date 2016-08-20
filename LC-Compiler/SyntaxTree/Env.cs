@@ -397,8 +397,16 @@ namespace lcc.SyntaxTree {
             scopes.Peek().AddSymbol(new EField(symbol, type, declarator));
         }
 
+        /// <summary>
+        /// Only add enum constant to block scope or file scope.
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <param name="type"></param>
+        /// <param name="expr"></param>
+        /// <param name="declarator"></param>
         public void AddEnum(string symbol, TEnum type, AST.ConstIntExpr expr, Enum declarator) {
-            scopes.Peek().AddSymbol(new EEnum(symbol, type, expr, declarator));
+            scopes.First(s => s.kind == ScopeKind.BLOCK || s.kind == ScopeKind.FILE)
+                .AddSymbol(new EEnum(symbol, type, expr, declarator));
         }
 
         /// <summary>

@@ -38,7 +38,8 @@ namespace lcc.Parser {
                 .Or(SwitchStatement())
                 .Or(WhileStatement())
                 .Or(DoStatement())
-                .Or(ForStatement())
+                .Or(ForStatementExpr())
+                .Or(ForStatementDecl())
                 .Or(JumpStatement())
                 ;
         }
@@ -170,12 +171,13 @@ namespace lcc.Parser {
         }
 
         /// <summary>
-        /// for-statement
+        /// for-statement-expr
         ///     : for ( expression_opt ; expression_opt ; expression_opt ) statement
+        ///     | for ( declaration expresion_opt ; expression_opt ) statement
         ///     ;
         /// </summary>
         /// <returns></returns>
-        public static Parserc.Parser<T, For> ForStatement() {
+        public static Parserc.Parser<T, For> ForStatementExpr() {
             return Get<T_KEY_FOR>()
                 .Bind(t => Match<T_PUNC_PARENTL>()
                 .Then(Expression().ElseNull())
@@ -185,7 +187,25 @@ namespace lcc.Parser {
                 .Then(Expression().ElseNull())
                 .Bind(iter => Match<T_PUNC_PARENTR>()
                 .Then(Ref(Statement))
-                .Select(statement => new For(t.line, init, pred, iter, statement))))));
+                .Select(stmt => new For(t.line, init, pred, iter, stmt))))));
+        }
+
+        /// <summary>
+        /// for-statment-decl
+        ///     : for ( declaration expresion_opt ; expression_opt ) statement
+        ///     ;
+        /// </summary>
+        /// <returns></returns>
+        public static Parserc.Parser<T, For> ForStatementDecl() {
+            return Get<T_KEY_FOR>()
+                .Bind(t => Match<T_PUNC_PARENTL>()
+                .Then(Declaration())
+                .Bind(init => Expression().ElseNull()
+                .Bind(pred => Match<T_PUNC_SEMICOLON>()
+                .Then(Expression().ElseNull())
+                .Bind(iter => Match<T_PUNC_PARENTR>()
+                .Then(Ref(Statement))
+                .Select(stmt => new For(t.line, init, pred, iter, stmt))))));
         }
 
         /// <summary>

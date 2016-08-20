@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Numerics;
 using System.Linq;
 using System.Text;
@@ -132,16 +133,46 @@ namespace lcc.AST {
     }
 
     public sealed class Switch : Breakable {
-        public readonly LinkedList<Tuple<string, ConstIntExpr>> cases;
+        public readonly LinkedList<Tuple<string, ConstIntegerExpr>> cases;
         public readonly string defaultLabel;
         public readonly Expr expr;
         public readonly Node stmt;
-        public Switch(string breakLabel, LinkedList<Tuple<string, ConstIntExpr>> cases,
+        public Switch(string breakLabel, LinkedList<Tuple<string, ConstIntegerExpr>> cases,
             string defaultLabel, Expr expr, Node stmt) : base(breakLabel) {
             this.cases = cases;
             this.defaultLabel = defaultLabel;
             this.expr = expr;
             this.stmt = stmt;
+        }
+        public override void ToX86(X86Gen gen) {
+            var ret = expr.ToX86Expr(gen);
+            switch (expr.Type.Kind) {
+                case TKind.INT:
+                case TKind.LONG:
+
+                    /// Move the result to ecx.
+                    if (ret == X86Gen.Ret.PTR) gen.Inst(X86Gen.mov, X86Gen.ecx, X86Gen.eax.Addr());
+                    else gen.Inst(X86Gen.mov, X86Gen.ecx, X86Gen.eax);
+
+                    /// For each case.
+                    foreach (var c in cases) {
+                        var cRet = c.Item2.ToX86Expr(gen);
+                        Debug.Assert(cRet == X86Gen.Ret.REG);
+                        gen.Inst(X86Gen.cmp, X86Gen.eax, X86Gen.ecx);
+                        gen.Inst(X86Gen.je, c.Item1);
+                    }
+
+                    /// Jump to default label.
+                    gen.Inst(X86Gen.jmp, defaultLabel);
+                    break;
+                default: throw new NotImplementedException();
+            }
+
+            /// Lay the code for the body.
+            stmt.ToX86(gen);
+
+            /// Lay down the break label.
+            gen.Tag(X86Gen.Seg.TEXT, breakLabel);
         }
     }
 

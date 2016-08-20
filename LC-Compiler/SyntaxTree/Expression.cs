@@ -136,6 +136,8 @@ namespace lcc.SyntaxTree {
                 return new AST.SimpleAssign(resultType, env.ASTEnv, lExpr, converted, op);
             };
 
+            Tuple<T, AST.Expr, AST.Expr> uac;
+
             switch (op) {
                 case Op.ASSIGN:
                     /// Simple assign. See SimpleAssignable.
@@ -157,7 +159,9 @@ namespace lcc.SyntaxTree {
                             throw typeError;
                         }
                     }
-                    return new AST.MultiplicativeAssign(resultType, env.ASTEnv, lExpr, rExpr, op);
+                    /// Remember to do usual arithmetic conversion on rExpr.
+                    uac = AST.Expr.UsualArithConvert(lExpr, rExpr);
+                    return new AST.MultiplicativeAssign(resultType, env.ASTEnv, lExpr, uac.Item3, op);
                 case Op.PLUSEQ:
                 case Op.MINUSEQ:
                     /// Either the left operand shall be a pointer to an object type and the right shall have integer type,
@@ -450,19 +454,23 @@ namespace lcc.SyntaxTree {
                 case Op.PLUS:
                     /// + operator.
                     /// For addition, either both operands shall have arithmetic type
-                    /// or one operand shall be a pointer to an object type and the other shall have integer type.
+                    /// or one operand shall be a pointer to an object type or void type and the other shall have integer type.
                     if (lExpr.Type.IsArithmetic && rExpr.Type.IsArithmetic) {
                         /// If both operands have arithmetic type, the usual arithmetic conversions are performed on them.
                         uac = AST.Expr.UsualArithConvert(lExpr, rExpr);
                         return new AST.BiExpr(uac.Item1, env.ASTEnv, uac.Item2, uac.Item3, Op.PLUS);
                     }
-                    if ((lExpr.Type.IsPtr && (lExpr.Type.nake as TPtr).element.IsObject && rExpr.Type.IsInteger) ||
-                        (rExpr.Type.IsPtr && (rExpr.Type.nake as TPtr).element.IsObject && lExpr.Type.IsInteger)) {
-                        AST.Expr ptr = lExpr.Type.IsPtr ? lExpr : rExpr;
-                        AST.Expr dif = lExpr.Type.IsPtr ? rExpr : lExpr;
-                        /// The result has the type of the pointer operand.
-                        /// Make sure that the first operand is the pointer operand in AST node.
-                        return new AST.BiExpr(ptr.Type, env.ASTEnv, ptr, dif, Op.PLUS);
+                    if (lExpr.Type.IsPtr) {
+                        T element = (lExpr.Type.nake as TPtr).element;
+                        if ((element.IsObject || element.IsVoid) && rExpr.Type.IsInteger) {
+                            return new AST.BiExpr(lExpr.Type, env.ASTEnv, lExpr, rExpr, Op.PLUS);
+                        }
+                    }
+                    if (rExpr.Type.IsPtr) {
+                        T element = (rExpr.Type.nake as TPtr).element;
+                        if ((element.IsObject || element.IsVoid) && lExpr.Type.IsInteger) {
+                            return new AST.BiExpr(rExpr.Type, env.ASTEnv, rExpr, lExpr, Op.PLUS);
+                        }
                     }
                     throw typeError;
                 case Op.MINUS:

@@ -37,6 +37,10 @@ namespace lcc.TypeSystem {
             else this.enums = enums;
         }
 
+        public override TArithmetic IntPromote() {
+            return TInt.Instance;
+        }
+
         /// <summary>
         /// The enumerated type is incomplete untill after the } that terminates
         /// the list of enumerator declarators.

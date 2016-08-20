@@ -1152,6 +1152,7 @@ namespace lcc.SyntaxTree {
                 }
 
                 // Add all the constant enums.
+                // Notice that enum doesn't make a new scope.
                 int v = 0;
                 LinkedList<Tuple<string, int>> results = new LinkedList<Tuple<string, int>>();
                 foreach (var item in enums) {
@@ -1218,6 +1219,21 @@ namespace lcc.SyntaxTree {
                 throw new Error(Pos, "enumeration constant shall be representable as an int");
             }
 
+            /// If the declarator or type specifier that declared the identifier
+            /// appears outside of any block or list of parameters, the identifier
+            /// has file scope, which terminates at the end of the translation unit.
+            /// This is useful to understand the following code:
+            /// struct {
+            ///     enum {
+            ///         DATA
+            ///     } type;
+            /// } x;
+            /// void foo() {
+            ///     if (x.type == DATA);
+            /// }
+            /// Why is DATA visibile in foo?
+            /// Since DATA is not in the block scope or list of parameters,
+            /// DATA would be file scope.
             env.AddEnum(id.symbol, type, e, this);
             return new Tuple<string, int>(id.symbol, (int)(e.value));
         }

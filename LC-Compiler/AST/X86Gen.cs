@@ -452,6 +452,7 @@ namespace lcc.AST {
                     break;
                 case TKind.INT:
                 case TKind.LONG:
+                case TKind.ENUM:
                     if (ret == Ret.PTR) Inst(mov, eax, eax.Addr());
                     switch (type.Kind) {
                         case TKind.UCHAR:
@@ -464,6 +465,7 @@ namespace lcc.AST {
                         case TKind.LONG:
                         case TKind.ULONG:
                         case TKind.PTR:
+                        case TKind.ENUM:
                             return Ret.REG;
                         case TKind.DOUBLE:
                             Inst(cvtsi2sd, xmm0, eax);

@@ -366,6 +366,70 @@ namespace LC_CompilerTests {
                 );
         }
 
+        [TestMethod]
+        public void LCCCGeneratorTestLTBinaryTreePostorderTraversal() {
+            Aux("leetcode/binary_tree_postorder_traversal", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTCopyListWithRandomPointer() {
+            Aux("leetcode/copy_list_with_random_pointer", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTPalindromePartitioningII() {
+            Aux("leetcode/palindrome_partitioning_2", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTPopulatingNextRightPointersInEachNode() {
+            Aux("leetcode/populating_next_right_pointers_in_each_node", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTPopulatingNextRightPointersInEachNodeII() {
+            Aux("leetcode/populating_next_right_pointers_in_each_node_2", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTBestTimeToBuyAndSellStock() {
+            Aux("leetcode/best_time_to_buy_and_sell_stock", "test",
+                "solution"
+                );
+        }
+
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTBestTimeToBuyAndSellStockII() {
+            Aux("leetcode/best_time_to_buy_and_sell_stock_2", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTBestTimeToBuyAndSellStockIII() {
+            Aux("leetcode/best_time_to_buy_and_sell_stock_3", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTBestTimeToBuyAndSellStockIV() {
+            Aux("leetcode/best_time_to_buy_and_sell_stock_4", "test",
+                "solution"
+                );
+        }
+
         private void Aux(string name, string test, params string[] srcs) {
 
             // If the exe exists, delete first.

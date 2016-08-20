@@ -311,28 +311,63 @@ namespace lcc.AST {
             switch (lhs.Type.Kind) {
                 case TKind.INT:
                 case TKind.LONG:
-                    gen.Inst(X86Gen.pop, X86Gen.ecx);
-                    gen.Inst(X86Gen.push, X86Gen.eax);
-                    gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
-                    switch (op) {
-                        case SyntaxTree.Assign.Op.MULEQ:
-                            gen.Inst(X86Gen.imul, X86Gen.eax, X86Gen.ecx); break;
-                        case SyntaxTree.Assign.Op.DIVEQ:
-                            // Sign extension to edx:eax.
-                            gen.Inst(X86Gen.cdq);
-                            gen.Inst(X86Gen.idiv, X86Gen.ecx);
-                            break;
-                        case SyntaxTree.Assign.Op.MODEQ:
-                            // Sign extension to edx:eax.
-                            gen.Inst(X86Gen.cdq);
-                            gen.Inst(X86Gen.idiv, X86Gen.ecx);
-                            gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.edx);
-                            break;
+                    switch (rhs.Type.Kind) {
+                        case TKind.INT:
+                        case TKind.LONG:
+                            gen.Inst(X86Gen.pop, X86Gen.ecx);
+                            gen.Inst(X86Gen.push, X86Gen.eax);
+                            gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
+                            switch (op) {
+                                case SyntaxTree.Assign.Op.MULEQ:
+                                    gen.Inst(X86Gen.imul, X86Gen.eax, X86Gen.ecx); break;
+                                case SyntaxTree.Assign.Op.DIVEQ:
+                                    // Sign extension to edx:eax.
+                                    gen.Inst(X86Gen.cdq);
+                                    gen.Inst(X86Gen.idiv, X86Gen.ecx);
+                                    break;
+                                case SyntaxTree.Assign.Op.MODEQ:
+                                    // Sign extension to edx:eax.
+                                    gen.Inst(X86Gen.cdq);
+                                    gen.Inst(X86Gen.idiv, X86Gen.ecx);
+                                    gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.edx);
+                                    break;
+                            }
+
+                            gen.Inst(X86Gen.pop, X86Gen.ecx);
+                            gen.Inst(X86Gen.mov, X86Gen.ecx.Addr(), X86Gen.eax);
+                            return X86Gen.Ret.REG;
+                        default:
+                            throw new NotImplementedException();
                     }
-                    
-                    gen.Inst(X86Gen.pop, X86Gen.ecx);
-                    gen.Inst(X86Gen.mov, X86Gen.ecx.Addr(), X86Gen.eax);
-                    return X86Gen.Ret.REG;
+                case TKind.UINT:
+                case TKind.ULONG:
+                    switch (rhs.Type.Kind) {
+                        case TKind.UINT:
+                        case TKind.ULONG:
+                            gen.Inst(X86Gen.pop, X86Gen.ecx);
+                            gen.Inst(X86Gen.push, X86Gen.eax);
+                            gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.eax.Addr());
+                            switch (op) {
+                                case SyntaxTree.Assign.Op.MULEQ:
+                                    gen.Inst(X86Gen.mul, X86Gen.ecx); break;
+                                case SyntaxTree.Assign.Op.DIVEQ:
+                                    // Clear edx.
+                                    gen.Inst(X86Gen.xor, X86Gen.edx, X86Gen.edx);
+                                    gen.Inst(X86Gen.div, X86Gen.ecx);
+                                    break;
+                                case SyntaxTree.Assign.Op.MODEQ:
+                                    // Clear edx.
+                                    gen.Inst(X86Gen.xor, X86Gen.edx, X86Gen.edx);
+                                    gen.Inst(X86Gen.div, X86Gen.ecx);
+                                    gen.Inst(X86Gen.mov, X86Gen.eax, X86Gen.edx);
+                                    break;
+                            }
+
+                            gen.Inst(X86Gen.pop, X86Gen.ecx);
+                            gen.Inst(X86Gen.mov, X86Gen.ecx.Addr(), X86Gen.eax);
+                            return X86Gen.Ret.REG;
+                        default: throw new NotImplementedException();
+                    }
                 default:
                     throw new NotImplementedException();
             }
@@ -575,7 +610,7 @@ namespace lcc.AST {
             switch (type.Kind) {
                 case TKind.UINT:
                 case TKind.ULONG:
-                    // Generate code for rhs and move the result to ebx.
+                    // Generate code for rhs and move the result to ecx.
                     gen.Inst(X86Gen.mov, X86Gen.ecx, rhs.ToX86Expr(gen) == X86Gen.Ret.PTR ? X86Gen.eax.Addr() as X86Gen.Operand : X86Gen.eax);
                     gen.Inst(X86Gen.pop, X86Gen.eax);
                     switch (op) {
@@ -1251,18 +1286,30 @@ namespace lcc.AST {
         }
     }
 
-    public sealed class ConstEnumExpr : ConstArithExpr {
-        public readonly string name;
-        public readonly TEnum t;
+    /// <summary>
+    /// Integer constant expression.
+    /// </summary>
+    public abstract class ConstIntegerExpr : ConstArithExpr {
         public readonly BigInteger value;
         public override bool IsConstZero => value == 0;
-        public ConstEnumExpr(string name, TEnum t, BigInteger value, Env env) : base(t, env) {
-            this.name = name;
-            this.t = t;
+        public ConstIntegerExpr(TUnqualified t, BigInteger value, Env env) : base(t, env) {
             this.value = value;
         }
+    }
+
+    /// <summary>
+    /// Constant enum expression is also a constant integer expression.
+    /// </summary>
+    public sealed class ConstEnumExpr : ConstIntegerExpr {
+        public readonly string name;
+        public readonly TEnum enumType;
+        
+        public ConstEnumExpr(string name, TEnum enumType, BigInteger value, Env env) : base(enumType, value, env) {
+            this.name = name;
+            this.enumType = enumType;
+        }
         public override string ToString() {
-            return string.Format("{0}.{1} {2}", t, name, value.ToString());
+            return string.Format("{0}.{1} {2}", enumType, name, value.ToString());
         }
         public override X86Gen.Ret ToX86Expr(X86Gen gen) {
             gen.Comment(X86Gen.Seg.TEXT, ToString());
@@ -1274,19 +1321,16 @@ namespace lcc.AST {
     /// <summary>
     /// Integer constant expression.
     /// </summary>
-    public sealed class ConstIntExpr : ConstArithExpr {
+    public sealed class ConstIntExpr : ConstIntegerExpr {
         public readonly TInteger t;
-        public readonly BigInteger value;
-        public override bool IsConstZero => value == 0;
-        public ConstIntExpr(TInteger t, BigInteger value, Env env) : base(t, env) {
+        public ConstIntExpr(TInteger t, BigInteger value, Env env) : base(t, value, env) {
             this.t = t;
-            this.value = value;
             Debug.Assert(t.IsSigned || value >= 0);
         }
         public override Expr IntPromote() {
             T promoted = type.IntPromote();
             if (promoted.IsInteger) return new ConstIntExpr(promoted.nake as TInteger, value, env);
-            else return new Cast(promoted.nake, env, this); // ConstFloatExpr(promoted.nake as TArithmetic, (double)value, env);
+            else return new Cast(promoted.nake, env, this); 
         }
         public override ConstArithExpr Neg() {
             return new ConstIntExpr(t, -value, env);

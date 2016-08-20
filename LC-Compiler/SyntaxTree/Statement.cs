@@ -76,7 +76,7 @@ namespace lcc.SyntaxTree {
             }
 
             /// The expression of a case should be constant integer expression.
-            AST.ConstIntExpr c = expr.ToASTExpr(env) as AST.ConstIntExpr;
+            AST.ConstIntegerExpr c = expr.ToASTExpr(env) as AST.ConstIntegerExpr;
             if (c == null) {
                 throw new Error(Pos, "the expression of a case should be constant integer expression");
             }
@@ -91,7 +91,7 @@ namespace lcc.SyntaxTree {
 
             string label = env.AllocCaseLabel();
 
-            sw.cases.AddLast(new Tuple<string, ConstIntExpr>(label, c));
+            sw.cases.AddLast(new Tuple<string, ConstIntegerExpr>(label, c));
 
             AST.Node s = stmt.ToAST(env);
 
@@ -261,7 +261,7 @@ namespace lcc.SyntaxTree {
             this.pos = new Position(line);
             this.expr = expr;
             this.stmt = statement;
-            this.cases = new LinkedList<Tuple<string, ConstIntExpr>>();
+            this.cases = new LinkedList<Tuple<string, ConstIntegerExpr>>();
         }
 
         public override Position Pos => pos;
@@ -285,7 +285,7 @@ namespace lcc.SyntaxTree {
 
             /// The controlling expression shall have integer type.
             e = expr.ToASTExpr(env);
-            if (!e.Type.IsInteger) {
+            if (!e.Type.IsInteger && e.Type.Kind != TKind.ENUM) {
                 throw new ETypeError(Pos, "the controlling expression of switch statement shall have integer type");
             }
 
@@ -305,7 +305,7 @@ namespace lcc.SyntaxTree {
         /// <summary>
         /// For case and default statement.
         /// </summary>
-        public LinkedList<Tuple<string, AST.ConstIntExpr>> cases;
+        public LinkedList<Tuple<string, AST.ConstIntegerExpr>> cases;
         public string defaultLabel;
         public AST.Expr e {
             get;
@@ -440,13 +440,28 @@ namespace lcc.SyntaxTree {
 
         public For(
             int line,
-            Expr init,
+            Expr initExpr,
             Expr pred,
             Expr iter,
             Stmt body
             ) : base(new CompoundStmt(new List<Stmt> { body })) {
             this.pos = new Position(line);
-            this.init = init;
+            this.initExpr = initExpr;
+            this.initDecl = null;
+            this.pred = pred;
+            this.iter = iter;
+        }
+
+        public For(
+            int line,
+            Declaration initDecl,
+            Expr pred,
+            Expr iter,
+            Stmt body
+            ) : base(new CompoundStmt(new List<Stmt> { body })) {
+            this.pos = new Position(line);
+            this.initDecl = initDecl;
+            this.initExpr = null;
             this.pred = pred;
             this.iter = iter;
         }
@@ -460,7 +475,8 @@ namespace lcc.SyntaxTree {
         public bool Equals(For x) {
             return x != null
                 && x.pos.Equals(pos)
-                && NullableEquals(x.init, init)
+                && NullableEquals(x.initExpr, initExpr)
+                && NullableEquals(x.initDecl, initDecl)
                 && NullableEquals(x.pred, pred)
                 && NullableEquals(x.iter, iter)
                 && x.body.Equals(body);
@@ -477,7 +493,7 @@ namespace lcc.SyntaxTree {
 
             /// Check the expressions.
             /// An omitted expression-2 is replaced by a nonzero constant.
-            var i = init != null ? init.ToAST(env) : null;
+            var i = initExpr != null ? initExpr.ToAST(env) : (initDecl != null ? initDecl.ToAST(env) : null);
             var p = pred != null ? pred.ToASTExpr(env) : new AST.ConstIntExpr(TInt.Instance, 1, env.ASTEnv);
             var q = iter != null ? iter.ToAST(env) : null;
 
@@ -499,7 +515,8 @@ namespace lcc.SyntaxTree {
         }
 
         private readonly Position pos;
-        public readonly Expr init;
+        public readonly Expr initExpr;
+        public readonly Declaration initDecl;
         public readonly Expr pred;
         public readonly Expr iter;
     }

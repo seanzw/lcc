@@ -270,7 +270,7 @@ for (i = 0; i < length; ++i) {
 for (;1;) ;",
                     new For(
                         2,
-                        null,
+                        null as Expr,
                         new ConstInt(new T_CONST_INT(2, "1", 10)),
                         null,
                         new VoidStmt(2))
@@ -278,7 +278,7 @@ for (;1;) ;",
             };
 
             foreach (var test in tests) {
-                Aux(test.Key, Parser.ForStatement(), test.Value);
+                Aux(test.Key, Parser.ForStatementExpr(), test.Value);
             }
         }
 
