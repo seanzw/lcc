@@ -88,6 +88,8 @@
     <Content Include="ASTTests\code\hash_table\hash_table.c" />
     <Content Include="ASTTests\code\initializer\initializer.c" />
     <Content Include="ASTTests\code\initializer\initializer_main.c" />
+    <Content Include="ASTTests\code\leetcode\best_time_to_buy_and_sell_stock_with_cooldown\solution.c" />
+    <Content Include="ASTTests\code\leetcode\best_time_to_buy_and_sell_stock_with_cooldown\test.c" />
     <Content Include="ASTTests\code\leetcode\best_time_to_buy_and_sell_stock_4\solution.c" />
     <Content Include="ASTTests\code\leetcode\best_time_to_buy_and_sell_stock_4\test.c" />
     <Content Include="ASTTests\code\leetcode\best_time_to_buy_and_sell_stock_3\solution.c" />
@@ -96,6 +98,12 @@
     <Content Include="ASTTests\code\leetcode\best_time_to_buy_and_sell_stock_2\test.c" />
     <Content Include="ASTTests\code\leetcode\best_time_to_buy_and_sell_stock\solution.c" />
     <Content Include="ASTTests\code\leetcode\best_time_to_buy_and_sell_stock\test.c" />
+    <Content Include="ASTTests\code\leetcode\unique_paths_2\solution.c" />
+    <Content Include="ASTTests\code\leetcode\unique_paths_2\test.c" />
+    <Content Include="ASTTests\code\leetcode\unique_paths\solution.c" />
+    <Content Include="ASTTests\code\leetcode\unique_paths\test.c" />
+    <Content Include="ASTTests\code\leetcode\scramble_string\solution.c" />
+    <Content Include="ASTTests\code\leetcode\scramble_string\test.c" />
     <Content Include="ASTTests\code\leetcode\populating_next_right_pointers_in_each_node_2\solution.c" />
     <Content Include="ASTTests\code\leetcode\populating_next_right_pointers_in_each_node_2\test.c" />
     <Content Include="ASTTests\code\leetcode\populating_next_right_pointers_in_each_node\solution.c" />
@@ -191,6 +199,8 @@
     <Content Include="ASTTests\code\leetcode\sudoku_solver\test.c" />
     <Content Include="ASTTests\code\leetcode\trapping_rain_water\solution.c" />
     <Content Include="ASTTests\code\leetcode\trapping_rain_water\test.c" />
+    <Content Include="ASTTests\code\union_find\union_find.c" />
+    <Content Include="ASTTests\code\union_find\union_find_main.c" />
     <Content Include="ASTTests\code\matrix_chain\matrix_chain.c" />
     <Content Include="ASTTests\code\matrix_chain\matrix_chain_main.c" />
     <Content Include="ASTTests\code\queue_array\queue_array.c" />

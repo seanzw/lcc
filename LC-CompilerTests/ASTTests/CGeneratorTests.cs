@@ -7,11 +7,6 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using lcc.TypeSystem;
-using lcc.Token;
-using lcc.SyntaxTree;
-using Parserc;
-
 namespace LC_CompilerTests {
 
     [TestClass]
@@ -95,6 +90,13 @@ namespace LC_CompilerTests {
         public void LCCCGeneratorTestMatrixChain() {
             Aux("matrix_chain", "matrix_chain_main",
                 "matrix_chain"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestUnionFind() {
+            Aux("union_find", "union_find_main",
+                "union_find"
                 );
         }
 
@@ -426,6 +428,34 @@ namespace LC_CompilerTests {
         [TestMethod]
         public void LCCCGeneratorTestLTBestTimeToBuyAndSellStockIV() {
             Aux("leetcode/best_time_to_buy_and_sell_stock_4", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTBestTimeToBuyAndSellStockWithCooldown() {
+            Aux("leetcode/best_time_to_buy_and_sell_stock_with_cooldown", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTScrambleString() {
+            Aux("leetcode/scramble_string", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTUniquePaths() {
+            Aux("leetcode/unique_paths", "test",
+                "solution"
+                );
+        }
+
+        [TestMethod]
+        public void LCCCGeneratorTestLTUniquePathsII() {
+            Aux("leetcode/unique_paths_2", "test",
                 "solution"
                 );
         }
