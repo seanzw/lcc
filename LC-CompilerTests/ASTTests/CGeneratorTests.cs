@@ -101,6 +101,13 @@ namespace LC_CompilerTests {
         }
 
         [TestMethod]
+        public void LCCCGeneratorTestGraph() {
+            Aux("graph", "graph_main",
+                "graph"
+                );
+        }
+
+        [TestMethod]
         public void LCCCGeneratorTestLTRemoveDuplicatesFromSortedArray() {
             Aux("leetcode/remove_duplicates_from_sorted_array", "test",
                 "solution"

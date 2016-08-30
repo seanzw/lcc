@@ -84,6 +84,7 @@
     <Content Include="ASTTests\code\binary_search_tree\binary_search_tree.c" />
     <Content Include="ASTTests\code\doubly_linked_list\doubly_linked_list.c" />
     <Content Include="ASTTests\code\doubly_linked_list\doubly_linked_list_main.c" />
+    <Content Include="ASTTests\code\graph\graph_main.c" />
     <Content Include="ASTTests\code\hash_table\doubly_linked_list.c" />
     <Content Include="ASTTests\code\hash_table\hash_table.c" />
     <Content Include="ASTTests\code\initializer\initializer.c" />
@@ -199,6 +200,7 @@
     <Content Include="ASTTests\code\leetcode\sudoku_solver\test.c" />
     <Content Include="ASTTests\code\leetcode\trapping_rain_water\solution.c" />
     <Content Include="ASTTests\code\leetcode\trapping_rain_water\test.c" />
+    <Content Include="ASTTests\code\graph\graph.c" />
     <Content Include="ASTTests\code\union_find\union_find.c" />
     <Content Include="ASTTests\code\union_find\union_find_main.c" />
     <Content Include="ASTTests\code\matrix_chain\matrix_chain.c" />
