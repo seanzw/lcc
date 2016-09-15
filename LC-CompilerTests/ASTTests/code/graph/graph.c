@@ -75,6 +75,18 @@ void g_add_edge(Graph* g, int i, int j) {
     g->adjs[i] = edge;
 }
 
+Graph* g_transpose(Graph* g) {
+    Graph* gt = g_init(g->vs, g->nv);
+    for (int i = 0; i < g->nv; ++i) {
+        AdjNode* edge = g->adjs[i];
+        while (edge) {
+            g_add_edge(gt, edge->v, i);
+            edge = edge->next;
+        }
+    }
+    return gt;
+}
+
 typedef struct TPSortRet {
     int v;
     struct TPSortRet* next;
@@ -141,5 +153,167 @@ TPSortRet* g_topological_sort(Graph* g) {
     }
 
     free(stack);
+    return ret;
+}
+
+typedef struct SCComponentRet {
+    TPSortRet* component;
+    struct SCComponentRet* next;
+} SCComponentRet;
+
+static int partition(void* arr, size_t size, int lhs, int rhs, int (*f)(void*, void*)) {
+    int i, j;
+    void* x = arr + rhs * size;
+    void* t = malloc(sizeof(size));
+    i = lhs - 1;
+    for (j = lhs; j <= rhs - 1; j++) {
+        if (f(arr + j * size, x) <= 0) {
+            i++;
+            memcpy(t, arr + i * size, size);
+            memcpy(arr + i * size, arr + j * size, size);
+            memcpy(arr + j * size, t, size);
+        }
+    }
+    memcpy(t, arr + (i + 1) * size, size);
+    memcpy(arr + (i + 1) * size, arr + rhs * size, size);
+    memcpy(arr + rhs * size, t, size);
+    free(t);
+    return i + 1;
+}
+
+/// SORT ARR[LHS, RHS].
+static void quick_sort(void* arr, size_t size, int lhs, int rhs, int (*f)(void*, void*)) {
+    if (lhs < rhs) {
+        int mid;
+        mid = partition(arr, size, lhs, rhs, f);
+        quick_sort(arr, size, lhs, mid - 1, f);
+        quick_sort(arr, size, mid + 1, rhs, f);
+    }
+}
+
+typedef struct {
+    int v;
+    int finishTime;
+} F;
+
+static int FCompare(void* a, void* b) {
+    return ((F*)b)->finishTime - ((F*)a)->finishTime;
+}
+
+SCComponentRet* g_strongly_connected_components(Graph* g) {
+
+    SCComponentRet* ret = 0;
+
+    /// Initial the time.
+    int time = 0;
+
+    /// Array to record the finish time;
+
+    F* fs = malloc(sizeof(F) * g->nv);
+    for (int i = 0; i < g->nv; ++i) {
+        fs[i].v = i;
+    }
+
+    /// First time DFS.
+    int* stack = malloc(sizeof(int) * 2);
+    int stack_top = 0;
+    int stack_capacity = 2;
+
+    for (int i = 0; i < g->nv; ++i) {
+        g->vs[i].color = WHITE;
+    }
+
+    for (int i = 0; i < g->nv; ++i) {
+        if (g->vs[i].color == WHITE) {
+            /// Found a new start point.
+            stack_push(&stack, &stack_capacity, &stack_top, i);
+
+            while (stack_top != 0) {
+                time++;
+                int v = stack[stack_top - 1];
+                if (g->vs[v].color == BLACK) {
+                    /// v has finished, pop out.
+                    stack_top--;
+                }
+                else if (g->vs[v].color == GRAY) {
+                    /// v has really finished, pop out.
+                    g->vs[v].color = BLACK;
+                    stack_top--;
+                    /// Add to the finish time.
+                    fs[v].finishTime = time;
+                }
+                else {
+                    /// v has not been visited.
+                    g->vs[v].color = GRAY;
+                    AdjNode* edge = g->adjs[v];
+                    while (edge) {
+                        if (g->vs[edge->v].color == WHITE) {
+                            stack_push(&stack, &stack_capacity, &stack_top, edge->v);
+                        }
+                        edge = edge->next;
+                    }
+                }
+            }
+        }
+    }
+
+    // Finish the first DFS.
+    // Sort fs.
+    quick_sort(fs, sizeof(F), 0, g->nv - 1, FCompare);
+
+    // Create g_transpose.
+    Graph* transpose = g_transpose(g);
+
+    for (int i = 0; i < g->nv; ++i) {
+        transpose->vs[i].color = WHITE;
+    }
+
+    // Second DFS.
+    for (int i = 0; i < g->nv; ++i) {
+        int v = fs[i].v;
+        if (transpose->vs[v].color == WHITE) {
+            /// Found a new connected component;
+            TPSortRet* cc = 0;
+            stack_push(&stack, &stack_capacity, &stack_top, v);
+
+            while (stack_top != 0) {
+                int u = stack[stack_top - 1];
+
+                if (transpose->vs[u].color == BLACK) {
+                    stack_top--;
+                }
+                else if (transpose->vs[u].color == GRAY) {
+                    // Finish.
+                    TPSortRet* x = malloc(sizeof(TPSortRet));
+                    x->v = u;
+                    x->next = cc;
+                    cc = x;
+                    transpose->vs[u].color = BLACK;
+                    stack_top--;
+                }
+                else {
+                    transpose->vs[u].color = GRAY;
+                    AdjNode* edge = transpose->adjs[u];
+                    while (edge) {
+                        if (transpose->vs[edge->v].color == WHITE) {
+                            stack_push(&stack, &stack_capacity, &stack_top, edge->v);
+                        }
+                        edge = edge->next;
+                    }
+                }
+            }
+
+            SCComponentRet* scc = malloc(sizeof(SCComponentRet));
+            scc->component = cc;
+            scc->next = ret;
+            ret = scc;
+        }
+    }
+
+    // Clear all the malloc data.
+    free(fs);
+    free(stack);
+    g_free(transpose);
+
     return ret;
 }

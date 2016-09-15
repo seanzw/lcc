@@ -42,7 +42,7 @@ typedef struct TPSortRet {
 
 TPSortRet* g_topological_sort(Graph* g);
 
-int main(int argc, char* argv[]) {
+int test_topological_sort() {
     Vertex vs[14];
     for (int i = 0; i < 14; ++i) {
         vs[i].x = i;
@@ -101,6 +101,67 @@ int main(int argc, char* argv[]) {
     assert(iter->v == 7, "7");
     iter = iter->next;
     assert(iter == 0, "end");
+
+    g_free(g);
+
+    return 0;
+}
+
+
+typedef struct SCComponentRet {
+    TPSortRet* component;
+    struct SCComponentRet* next;
+} SCComponentRet;
+
+SCComponentRet* g_strongly_connected_components(Graph* g);
+
+int test_strongly_connected_components() {
+    Vertex vs[8];
+    for (int i = 0; i < 8; ++i) {
+        vs[i].x = i;
+    }
+
+    Graph* g = g_init(vs, 8);
+
+    g_add_edge(g, 0, 1);
+    g_add_edge(g, 1, 4);
+    g_add_edge(g, 4, 0);
+
+    g_add_edge(g, 1, 2);
+    g_add_edge(g, 1, 5);
+
+    g_add_edge(g, 5, 6);
+    g_add_edge(g, 6, 5);
+
+    g_add_edge(g, 4, 5);
+    g_add_edge(g, 2, 3);
+    g_add_edge(g, 3, 2);
+    g_add_edge(g, 2, 6);
+    g_add_edge(g, 3, 7);
+    g_add_edge(g, 6, 7);
+    g_add_edge(g, 7, 7);
+
+    SCComponentRet* ret = g_strongly_connected_components(g);
+    g_free(g);
+
+    SCComponentRet* cc = ret;
+    while (cc) {
+        TPSortRet* tp = cc->component;
+        while (tp) {
+            printf(" %d", tp->v);
+            tp = tp->next;
+        }
+        printf("\n");
+        cc = cc->next;
+    }
+
+    return 1;
+}
+
+int main(int argc, char* argv[]) {
+    
+    test_topological_sort();
+    test_strongly_connected_components();
 
     printf("everything is fine!\n");
     return 0;

@@ -11,7 +11,7 @@ namespace LC_CompilerTests {
 
         private static void Aux(string src, List<Token> truth) {
             var tokens = Lexer.Instance.Scan(src);
-            Assert.AreEqual(tokens.Count, truth.Count);
+            Assert.AreEqual(truth.Count, tokens.Count);
             for (int i = 0; i < tokens.Count; ++i) {
                 Assert.AreEqual(tokens[i], truth[i]);
             }
@@ -188,7 +188,8 @@ L""\xABCD""
 
 */
             ";
-            List<Token> truth = new List<Token>();
+            List<Token> truth = new List<Token> {
+            };
             Aux(src, truth);
         }
 
