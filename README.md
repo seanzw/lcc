@@ -151,6 +151,7 @@ These commands compile `doubly_linked_list.c` with lcc and `doubly_linked_list_m
 ## How does it work
 ### 1. RegEx
 * Simple regular expression library.
+
 It supports 16 bit character set and the following regular expression operator:
 * `*`: appears 0 or more times.
 * `+`: appears 1 or more times.
@@ -159,6 +160,8 @@ It supports 16 bit character set and the following regular expression operator:
 * `.`: wildcard character.
 * `()`: combines elements together.
 * `[-]`: character in range.
+
+First a DFA is constructed from the parsing result, and then compressed into a NFA.
 
 ### 2. Lexer (with RegEx)
 * Flex-like lexer generator.
